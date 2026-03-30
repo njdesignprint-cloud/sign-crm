@@ -3,168 +3,248 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NJ Design Print - CRM</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>NJ DESIGN PRINT | Control System</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #050508; --surface: #0f0f15; --surface2: #161620; --border: #242435;
-    --accent: #ff6b35; --accent2: #ffd166; --blue: #4cc9f0; --green: #06d6a0;
-    --red: #ef233c; --text: #f0f0f5; --muted: #8888aa;
-    --font-head: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+    --brand: #ccff00; /* VERDE LIMÓN NEÓN */
+    --brand-glow: rgba(204, 255, 0, 0.3);
+    --bg: #050505;
+    --card: #0f1110;
+    --border: #222522;
+    --text: #ffffff;
+    --muted: #71717a;
+    --success: #00ff88;
+    --font-main: 'Inter', sans-serif;
+    --font-logo: 'Orbitron', sans-serif;
   }
+
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; overflow:hidden; }
-  
-  /* Layout */
-  .app { display:flex; height:100vh; }
-  .sidebar { width:240px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-  .main { flex:1; overflow-y:auto; background: radial-gradient(circle at top right, #111118, #050508); }
-  
-  /* Brand & Logo */
-  .brand { padding:30px 20px; border-bottom:1px solid var(--border); text-align: center; }
-  .logo-img { width: 80px; height: auto; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,107,53,0.3)); }
-  .brand-name { font-family:var(--font-head); font-size:18px; font-weight:800; letter-spacing: 1px; color: var(--text); text-transform: uppercase; }
-  .brand-name span { color:var(--accent); }
+  body { 
+    background-color: var(--bg); 
+    color: var(--text); 
+    font-family: var(--font-main);
+    letter-spacing: -0.02em;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-  /* Navigation */
-  .nav { padding:20px 12px; flex:1; }
-  .nav-item { display:flex; align-items:center; gap:12px; padding:12px 15px; border-radius:10px; cursor:pointer; color:var(--muted); font-size:14px; font-weight:500; margin-bottom:5px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-  .nav-item:hover { background:var(--surface2); color:var(--text); transform: translateX(5px); }
-  .nav-item.active { background: linear-gradient(90deg, rgba(255,107,53,0.2) 0%, rgba(255,107,53,0.05) 100%); color:var(--accent); border-left: 3px solid var(--accent); }
+  /* --- ESTRUCTURA --- */
+  .app-container { display: flex; height: 100vh; }
+  
+  .sidebar { 
+    width: 260px; 
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 30px 0;
+  }
 
-  /* UI Components */
-  .topbar { display:flex; align-items:center; justify-content:space-between; padding:25px 35px; border-bottom:1px solid var(--border); background: rgba(15,15,21,0.8); backdrop-filter: blur(10px); position:sticky; top:0; z-index:10; }
-  .page-title { font-family:var(--font-head); font-size:22px; font-weight:700; }
-  .btn { padding:10px 22px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:700; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
-  .btn-primary { background:var(--accent); color:white; box-shadow: 0 4px 15px rgba(255,107,53,0.3); }
-  .btn-primary:hover { background: #ff8558; transform: translateY(-2px); }
-  .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+  .main-viewport { 
+    flex: 1; 
+    padding: 40px;
+    overflow-y: auto;
+    background: radial-gradient(circle at 0% 0%, #101510 0%, #050505 50%);
+  }
+
+  /* --- BRANDING --- */
+  .brand-area { padding: 0 30px 40px; text-align: center; }
+  .logo-placeholder { 
+    width: 70px; height: 70px; margin: 0 auto 15px;
+    background: var(--brand);
+    border-radius: 12px;
+    box-shadow: 0 0 20px var(--brand-glow);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-logo); font-weight: 900; color: black; font-size: 24px;
+  }
+  .brand-name { 
+    font-family: var(--font-logo); font-size: 14px; letter-spacing: 3px; 
+    color: var(--text); text-transform: uppercase;
+  }
+  .brand-name span { color: var(--brand); text-shadow: 0 0 10px var(--brand-glow); }
+
+  /* --- NAVEGACIÓN --- */
+  .nav-menu { flex: 1; }
+  .nav-link { 
+    padding: 16px 30px; display: flex; align-items: center; gap: 15px;
+    color: var(--muted); cursor: pointer; transition: 0.3s;
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+  }
+  .nav-link:hover { color: var(--brand); background: rgba(204,255,0,0.05); }
+  .nav-link.active { 
+    color: var(--brand); 
+    background: linear-gradient(90deg, rgba(204,255,0,0.1) 0%, transparent 100%);
+    border-right: 3px solid var(--brand);
+  }
+
+  /* --- DASHBOARD & CARDS --- */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+  .page-title { font-family: var(--font-logo); font-size: 28px; font-weight: 700; }
   
-  /* Tables & Cards */
-  .content { padding:35px; max-width: 1400px; margin: 0 auto; }
-  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:35px; }
-  .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:25px; transition: 0.3s; position: relative; overflow: hidden; }
-  .kpi-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-  .kpi-value { font-family:var(--font-head); font-size:32px; font-weight:800; color: var(--text); }
-  
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-  table { width:100%; border-collapse:collapse; }
-  th { text-align:left; padding:15px 20px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing: 1px; border-bottom:1px solid var(--border); background: rgba(255,255,255,0.02); }
-  td { padding:18px 20px; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.03); }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+  .stat-card { 
+    background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 25px;
+    position: relative; transition: 0.4s;
+  }
+  .stat-card:hover { border-color: var(--brand); transform: translateY(-5px); }
+  .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 800; margin-bottom: 10px; display: block; }
+  .stat-value { font-family: var(--font-logo); font-size: 26px; font-weight: 700; color: var(--brand); }
+
+  /* --- TABLAS --- */
+  .table-container { 
+    background: var(--card); border: 1px solid var(--border); border-radius: 24px; 
+    overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th { 
+    padding: 20px; text-align: left; background: #151816;
+    color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 800;
+  }
+  td { padding: 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(255,255,255,0.02); }
-  
-  /* Status Badges */
-  .badge { padding:4px 12px; border-radius:20px; font-size:10px; font-weight:800; text-transform: uppercase; }
-  .badge.aprobada { background:rgba(6,214,160,0.15); color:var(--green); border: 1px solid rgba(6,214,160,0.3); }
-  .badge.pendiente { background:rgba(255,209,102,0.15); color:var(--accent2); border: 1px solid rgba(255,209,102,0.3); }
-  
-  /* Modals */
-  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
-  .modal-bg.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:24px; width:550px; padding:35px; position: relative; animation: modalAnim 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-  @keyframes modalAnim { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  
-  .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:25px; }
-  .full { grid-column: 1 / -1; }
-  input, select, textarea { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; color:white; width:100%; font-family: inherit; transition: 0.3s; }
-  input:focus { border-color: var(--accent); outline: none; background: #1c1c2b; }
-  label { font-size: 11px; color: var(--muted); margin-bottom: 8px; display: block; text-transform: uppercase; font-weight: 600; }
 
-  .page { display:none; } .page.active { display:block; animation: fadeIn 0.5s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  /* --- BOTONES --- */
+  .btn { 
+    padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer;
+    font-family: var(--font-logo); font-size: 11px; text-transform: uppercase;
+    transition: 0.3s; border: none; outline: none;
+  }
+  .btn-main { background: var(--brand); color: black; box-shadow: 0 0 15px var(--brand-glow); }
+  .btn-main:hover { transform: scale(1.05); filter: brightness(1.1); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--brand); color: var(--brand); }
 
-  #toast-container { position:fixed; bottom:30px; right:30px; z-index:1000; }
-  .toast { background:var(--surface2); color:white; border-left: 4px solid var(--accent); padding:15px 25px; border-radius:12px; margin-top:10px; font-weight:600; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+  /* --- MODALES --- */
+  .overlay { 
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); 
+    z-index:100; backdrop-filter: blur(10px); align-items: center; justify-content: center;
+  }
+  .overlay.active { display: flex; }
+  .modal-box { 
+    background: #0a0a0a; border: 1px solid var(--brand); width: 500px;
+    border-radius: 30px; padding: 40px; box-shadow: 0 0 50px rgba(204,255,0,0.1);
+  }
+  .modal-title { font-family: var(--font-logo); font-size: 20px; margin-bottom: 25px; color: var(--brand); }
+  
+  .input-field { 
+    width: 100%; background: #151515; border: 1px solid var(--border);
+    padding: 15px; border-radius: 12px; color: white; margin-bottom: 15px;
+    font-family: var(--font-main); transition: 0.3s;
+  }
+  .input-field:focus { border-color: var(--brand); outline: none; box-shadow: 0 0 10px rgba(204,255,0,0.1); }
+
+  .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+  .badge-neon { background: rgba(204,255,0,0.1); color: var(--brand); border: 1px solid var(--brand); }
+
+  .page { display:none; } .page.active { display:block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+  #toast { 
+    position:fixed; bottom:30px; right:30px; background:var(--brand); color:black;
+    padding:15px 30px; border-radius:12px; font-weight:800; font-family:var(--font-logo);
+    display:none; animation: slideIn 0.3s;
+  }
+  @keyframes slideIn { from{transform: translateX(100%);} to{transform: translateX(0);} }
 </style>
 </head>
 <body>
 
-<div id="toast-container"></div>
+<div id="toast">MENSAJE ENVIADO</div>
 
-<div class="app">
+<div class="app-container">
   <aside class="sidebar">
-    <div class="brand">
-      <img src="MI Logo.png" alt="NJ Design Print Logo" class="logo-img">
+    <div class="brand-area">
+      <div class="logo-placeholder">NJ</div>
       <div class="brand-name">NJ <span>Design Print</span></div>
     </div>
-    <nav class="nav">
-      <div class="nav-item active" onclick="showPage('dashboard', this)"><span>📊</span> Dashboard</div>
-      <div class="nav-item" onclick="showPage('clientes', this)"><span>👥</span> Clientes</div>
-      <div class="nav-item" onclick="showPage('cotizaciones', this)"><span>📋</span> Cotizaciones</div>
-      <div class="nav-item" onclick="showPage('produccion', this)"><span>🏭</span> Producción</div>
+    <nav class="nav-menu">
+      <div class="nav-link active" onclick="goPage('dashboard', this)">🚀 Dashboard</div>
+      <div class="nav-link" onclick="goPage('clientes', this)">👥 Clientes</div>
+      <div class="nav-link" onclick="goPage('ventas', this)">📋 Ventas</div>
+      <div class="nav-link" onclick="goPage('taller', this)">🏭 Taller</div>
     </nav>
   </aside>
 
-  <main class="main">
-    <div id="page-dashboard" class="page active">
-      <div class="topbar"><div class="page-title">Dashboard</div></div>
-      <div class="content">
-        <div class="kpi-grid">
-          <div class="kpi-card"><div class="kpi-label">Base de Clientes</div><div class="kpi-value" id="kpi-cl">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Cotizaciones</div><div class="kpi-value" id="kpi-co">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">En Taller</div><div class="kpi-value" id="kpi-pr">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Ventas Totales</div><div class="kpi-value" id="kpi-ve">$0</div></div>
-        </div>
-        </div>
-    </div>
-
-    <div id="page-clientes" class="page">
-      <div class="topbar">
-        <div class="page-title">Directorio de Clientes</div>
-        <button class="btn btn-primary" onclick="openModal('modal-cliente')"><span>+</span> Nuevo Cliente</button>
+  <main class="main-viewport">
+    
+    <div id="p-dashboard" class="page active">
+      <div class="header"><h1 class="page-title">Sistema de Control</h1></div>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="stat-label">Clientes Activos</span><div class="stat-value" id="s-cl">0</div></div>
+        <div class="stat-card"><span class="stat-label">Cotizaciones</span><div class="stat-value" id="s-co">0</div></div>
+        <div class="stat-card"><span class="stat-label">Proyectos Taller</span><div class="stat-value" id="s-pr">0</div></div>
+        <div class="stat-card"><span class="stat-label">Ventas Totales</span><div class="stat-value" id="s-ve">$0</div></div>
       </div>
-      <div class="content"><div class="card"><table><thead><tr><th>Cliente / Empresa</th><th>Email</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="tbl-clientes"></tbody></table></div></div>
     </div>
 
-    <div id="page-cotizaciones" class="page">
-      <div class="topbar">
-        <div class="page-title">Gestión Comercial</div>
-        <button class="btn btn-primary" onclick="openModal('modal-cotizacion')"><span>+</span> Nueva Cotización</button>
+    <div id="p-clientes" class="page">
+      <div class="header">
+        <h1 class="page-title">Directorio</h1>
+        <button class="btn btn-main" onclick="toggleModal('m-cliente', true)">+ Nuevo Cliente</button>
       </div>
-      <div class="content"><div class="card"><table><thead><tr><th>Cliente</th><th>Tipo de Trabajo</th><th>Inversión</th><th>Estatus</th><th>Flujo</th></tr></thead><tbody id="tbl-cots"></tbody></table></div></div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Nombre / Empresa</th><th>Contacto</th><th>Tipo</th><th>Estatus</th><th></th></tr></thead>
+          <tbody id="t-clientes"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div id="page-produccion" class="page">
-      <div class="topbar"><div class="page-title">Control de Producción</div></div>
-      <div class="content"><div class="card"><table><thead><tr><th>ID</th><th>Cliente</th><th>Trabajo</th><th>Estado Actual</th><th>Avance</th></tr></thead><tbody id="tbl-prod"></tbody></table></div></div>
+    <div id="p-ventas" class="page">
+      <div class="header">
+        <h1 class="page-title">Comercial</h1>
+        <button class="btn btn-main" onclick="toggleModal('m-venta', true)">+ Crear Cotización</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estatus</th><th>Acción</th></tr></thead>
+          <tbody id="t-ventas"></tbody>
+        </table>
+      </div>
     </div>
+
+    <div id="p-taller" class="page">
+      <div class="header"><h1 class="page-title">Producción</h1></div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>OT</th><th>Cliente</th><th>Trabajo</th><th>Estado</th><th>Progreso</th></tr></thead>
+          <tbody id="t-taller"></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<div class="modal-bg" id="modal-cliente">
-  <div class="modal">
-    <div class="brand-name">Registro de <span>Cliente</span></div>
-    <div class="form-grid">
-      <div class="form-group full"><label>Nombre Completo / Empresa</label><input id="c-nombre" placeholder="Ej: Publicidad Monterrey"></div>
-      <div class="form-group"><label>Correo Electrónico</label><input id="c-email" placeholder="contacto@empresa.com"></div>
-      <div class="form-group"><label>Tipo de Cliente</label><select id="c-estado"><option>Activo</option><option>Prospecto</option></select></div>
-    </div>
-    <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:12px;">
-      <button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCliente()">Guardar Cliente</button>
+<div class="overlay" id="m-cliente">
+  <div class="modal-box">
+    <h2 class="modal-title">Alta de Cliente</h2>
+    <input type="text" id="cnom" class="input-field" placeholder="Nombre Comercial">
+    <input type="text" id="ctel" class="input-field" placeholder="Teléfono">
+    <select id="ctip" class="input-field"><option>Empresa</option><option>Particular</option></select>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="btn btn-outline" style="flex:1" onclick="toggleModal('m-cliente', false)">Cancelar</button>
+      <button class="btn btn-main" style="flex:1" onclick="saveCli()">Guardar</button>
     </div>
   </div>
 </div>
 
-<div class="modal-bg" id="modal-cotizacion">
-  <div class="modal">
-    <div class="brand-name">Crear <span>Cotización</span></div>
-    <div class="form-grid">
-      <div class="form-group full"><label>Seleccionar Cliente</label><select id="cot-cliente"></select></div>
-      <div class="form-group full"><label>Descripción del Trabajo</label><input id="cot-tipo" placeholder="Ej: Letrero acrílico luminoso"></div>
-      <div class="form-group"><label>Precio Unitario ($)</label><input id="cot-precio" type="number" placeholder="0.00"></div>
-      <div class="form-group"><label>Cantidad</label><input id="cot-qty" type="number" value="1"></div>
-    </div>
-    <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:12px;">
-      <button class="btn btn-ghost" onclick="closeModal('modal-cotizacion')">Cerrar</button>
-      <button class="btn btn-primary" onclick="saveCotizacion()">Generar Cotización</button>
+<div class="overlay" id="m-venta">
+  <div class="modal-box">
+    <h2 class="modal-title">Nueva Cotización</h2>
+    <select id="vcli" class="input-field"></select>
+    <input type="text" id="vdes" class="input-field" placeholder="¿Qué vamos a fabricar?">
+    <input type="number" id="vmon" class="input-field" placeholder="Precio Total $">
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="btn btn-outline" style="flex:1" onclick="toggleModal('m-venta', false)">Cerrar</button>
+      <button class="btn btn-main" style="flex:1" onclick="saveVenta()">Crear Registro</button>
     </div>
   </div>
 </div>
 
 <script type="module">
-  // Se mantiene la misma lógica de Firebase de la versión anterior para asegurar que funcione.
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -179,81 +259,76 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  let cache = { clientes: [], cots: [], prod: [] };
+  let dbCache = { c: [], v: [], t: [] };
 
-  window.toast = (msg) => {
-    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-    document.getElementById('toast-container').appendChild(t);
-    setTimeout(() => t.remove(), 3500);
-  };
-
-  window.showPage = (id, el) => {
+  // --- UI CORE ---
+  window.goPage = (id, el) => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-'+id).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    if(el) el.classList.add('active');
+    document.getElementById('p-'+id).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
   };
 
-  window.openModal = (id) => {
-    if(id === 'modal-cotizacion') {
-      document.getElementById('cot-cliente').innerHTML = cache.clientes.map(c => `<option>${c.nombre}</option>`).join('');
+  window.toggleModal = (id, show) => {
+    if(id === 'm-venta') {
+      document.getElementById('vcli').innerHTML = dbCache.c.map(x => `<option>${x.nombre}</option>`).join('');
     }
-    document.getElementById(id).classList.add('open');
-  };
-  window.closeModal = (id) => document.getElementById(id).classList.remove('open');
-
-  window.saveCliente = async () => {
-    const n = document.getElementById('c-nombre').value;
-    if(!n) return alert("Nombre requerido");
-    await addDoc(collection(db, "clientes"), { nombre: n, email: document.getElementById('c-email').value, estado: document.getElementById('c-estado').value });
-    toast("✅ Cliente Registrado"); closeModal('modal-cliente');
+    document.getElementById(id).classList.toggle('active', show);
   };
 
-  window.saveCotizacion = async () => {
+  const notify = (msg) => {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+  };
+
+  // --- LOGICA DATOS ---
+  window.saveCli = async () => {
+    const data = { nombre: document.getElementById('cnom').value, tel: document.getElementById('ctel').value, tipo: document.getElementById('ctip').value, status: 'ACTIVO' };
+    await addDoc(collection(db, "clientes"), data);
+    notify("CLIENTE AGREGADO"); toggleModal('m-cliente', false);
+  };
+
+  window.saveVenta = async () => {
     await addDoc(collection(db, "cotizaciones"), { 
-      cliente: document.getElementById('cot-cliente').value, 
-      tipo: document.getElementById('cot-tipo').value,
-      total: document.getElementById('cot-precio').value * document.getElementById('cot-qty').value,
-      estado: 'Pendiente'
+      cliente: document.getElementById('vcli').value, 
+      desc: document.getElementById('vdes').value,
+      monto: Number(document.getElementById('vmon').value),
+      status: 'PENDIENTE'
     });
-    toast("📋 Cotización guardada con éxito"); closeModal('modal-cotizacion');
+    notify("COTIZACIÓN GENERADA"); toggleModal('m-venta', false);
   };
 
-  window.aprobarCot = async (id) => {
-    const cot = cache.cots.find(c => c.id === id);
-    await updateDoc(doc(db, "cotizaciones", id), { estado: 'Aprobada' });
-    await addDoc(collection(db, "produccion"), {
-      cliente: cot.cliente, trabajo: cot.tipo, estado: 'En Diseño', progreso: 20
-    });
-    toast("🚀 ¡Enviado a Producción!");
+  window.aprobar = async (id) => {
+    const v = dbCache.v.find(x => x.id === id);
+    await updateDoc(doc(db, "cotizaciones", id), { status: 'APROBADA' });
+    await addDoc(collection(db, "produccion"), { cliente: v.cliente, trabajo: v.desc, estado: 'PRE-PRENSA', avance: 15 });
+    notify("PROYECTO ENVIADO A TALLER");
   };
 
-  window.borrarCli = async (id) => { if(confirm("¿Eliminar cliente permanentemente?")) await deleteDoc(doc(db, "clientes", id)); };
-
-  // Listeners
+  // --- REALTIME ---
   onSnapshot(collection(db, "clientes"), s => {
-    cache.clientes = s.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('tbl-clientes').innerHTML = cache.clientes.map(c => `<tr><td><b>${c.nombre}</b></td><td>${c.email}</td><td><span class="badge">${c.estado}</span></td><td><button class="btn-ghost" style="padding:5px 10px;border-radius:6px" onclick="borrarCli('${c.id}')">🗑️</button></td></tr>`).join('');
-    document.getElementById('kpi-cl').textContent = cache.clientes.length;
+    dbCache.c = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('t-clientes').innerHTML = dbCache.c.map(c => `<tr><td><b>${c.nombre}</b></td><td>${c.tel}</td><td>${c.tipo}</td><td><span class="badge badge-neon">${c.status}</span></td><td><button onclick="deleteDoc(doc(db,'clientes','${c.id}'))" style="background:none;border:none;cursor:pointer">🗑️</button></td></tr>`).join('');
+    document.getElementById('s-cl').textContent = dbCache.c.length;
   });
 
   onSnapshot(collection(db, "cotizaciones"), s => {
-    cache.cots = s.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('tbl-cots').innerHTML = cache.cots.map(c => `
+    dbCache.v = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('t-ventas').innerHTML = dbCache.v.map(v => `
       <tr>
-        <td>${c.cliente}</td><td>${c.tipo}</td><td><b>$${Number(c.total).toLocaleString()}</b></td>
-        <td><span class="badge ${c.estado.toLowerCase()}">${c.estado}</span></td>
-        <td>${c.estado === 'Pendiente' ? `<button class="btn btn-primary" style="padding:6px 12px; font-size:11px" onclick="aprobarCot('${c.id}')">✅ Aprobar</button>` : '—'}</td>
+        <td>${v.cliente}</td><td>${v.desc}</td><td><b>$${v.monto.toLocaleString()}</b></td>
+        <td><span class="badge">${v.status}</span></td>
+        <td>${v.status === 'PENDIENTE' ? `<button class="btn btn-main" style="padding:5px 10px" onclick="aprobar('${v.id}')">APROBAR</button>` : '—'}</td>
       </tr>`).join('');
-    document.getElementById('kpi-co').textContent = cache.cots.length;
-    const totalVentas = cache.cots.filter(c=>c.estado==='Aprobada').reduce((a,b)=>a+Number(b.total),0);
-    document.getElementById('kpi-ve').textContent = '$' + totalVentas.toLocaleString();
+    document.getElementById('s-co').textContent = dbCache.v.length;
+    document.getElementById('s-ve').textContent = '$' + dbCache.v.filter(x=>x.status==='APROBADA').reduce((a,b)=>a+b.monto,0).toLocaleString();
   });
 
   onSnapshot(collection(db, "produccion"), s => {
-    cache.prod = s.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('tbl-prod').innerHTML = cache.prod.map(p => `<tr><td>#${p.id.slice(0,5).toUpperCase()}</td><td>${p.cliente}</td><td>${p.trabajo}</td><td>${p.estado}</td><td><b>${p.progreso}%</b></td></tr>`).join('');
-    document.getElementById('kpi-pr').textContent = cache.prod.length;
+    dbCache.t = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('t-taller').innerHTML = dbCache.t.map(t => `<tr><td>#${t.id.slice(0,4)}</td><td>${t.cliente}</td><td>${t.trabajo}</td><td><span class="badge badge-neon">${t.estado}</span></td><td><b>${t.avance}%</b></td></tr>`).join('');
+    document.getElementById('s-pr').textContent = dbCache.t.length;
   });
 
 </script>
