@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SignCRM - Control Total</title>
+<title>SignCRM - Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -15,45 +15,39 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; overflow:hidden; }
   .app { display:flex; height:100vh; }
-  .sidebar { width:220px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+  .sidebar { width:220px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; }
   .main { flex:1; overflow-y:auto; }
-  .logo { padding:24px 20px 20px; border-bottom:1px solid var(--border); }
-  .logo-text { font-family:var(--font-head); font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+  .logo { padding:24px 20px; border-bottom:1px solid var(--border); }
+  .logo-text { font-family:var(--font-head); font-size:22px; font-weight:800; }
   .logo-text span { color:var(--accent); }
-  .logo-sub { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
   .nav { padding:16px 12px; flex:1; }
-  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font-size:13px; font-weight:500; transition:all .2s; margin-bottom:2px; }
-  .nav-item:hover { background:var(--surface2); color:var(--text); }
-  .nav-item.active { background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,107,53,.05)); color:var(--accent); border:1px solid rgba(255,107,53,.2); }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font-size:13px; margin-bottom:2px; transition: 0.2s; }
+  .nav-item:hover, .nav-item.active { background:var(--surface2); color:var(--accent); }
   .topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 28px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
-  .page-title { font-family:var(--font-head); font-size:20px; font-weight:700; }
-  .btn { padding:9px 18px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600; transition:all .2s; }
+  .btn { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600; }
   .btn-primary { background:var(--accent); color:white; }
-  .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
-  .search-box { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 14px; color:var(--text); width:220px; outline:none; }
+  .btn-ghost { background:var(--surface2); color:var(--muted); }
   .content { padding:28px; }
   .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
   .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; border-top:3px solid var(--accent); }
-  .kpi-value { font-family:var(--font-head); font-size:28px; font-weight:800; margin:5px 0; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:20px; }
+  .kpi-value { font-family:var(--font-head); font-size:24px; font-weight:800; margin-top:5px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
   table { width:100%; border-collapse:collapse; }
   th { text-align:left; padding:12px 16px; font-size:11px; color:var(--muted); text-transform:uppercase; border-bottom:1px solid var(--border); }
-  td { padding:12px 16px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.04); }
-  .badge { padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; }
-  .badge.activo { background:rgba(6,214,160,0.1); color:var(--green); }
-  .badge.pendiente { background:rgba(255,209,102,0.1); color:var(--accent2); }
-  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  td { padding:12px 16px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .badge { padding:3px 8px; border-radius:12px; font-size:10px; font-weight:bold; }
+  .badge.aprobada { background:rgba(6,214,160,0.15); color:var(--green); }
+  .badge.pendiente { background:rgba(255,209,102,0.15); color:var(--accent2); }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
   .modal-bg.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; width:540px; padding:24px; }
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:15px; }
-  .form-group { display:flex; flex-direction:column; gap:5px; }
-  .full { grid-column: 1 / -1; }
-  input, select, textarea { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); outline:none; }
-  input:focus { border-color:var(--accent); }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; width:500px; padding:24px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px; }
+  .full { grid-column: 1/-1; }
+  input, select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px; color:white; width:100%; }
   .page { display:none; } .page.active { display:block; }
   #toast-container { position:fixed; bottom:20px; right:20px; z-index:1000; }
-  .toast { background:var(--accent); color:white; padding:12px 20px; border-radius:8px; margin-top:10px; font-weight:bold; animation: slideIn 0.3s ease; }
-  @keyframes slideIn { from { transform:translateX(100%); } to { transform:translateX(0); } }
+  .toast { background:var(--accent); color:white; padding:12px 20px; border-radius:8px; margin-top:10px; font-weight:bold; animation: slide 0.3s; }
+  @keyframes slide { from{transform:translateX(100%)} to{transform:translateX(0)} }
 </style>
 </head>
 <body>
@@ -62,10 +56,7 @@
 
 <div class="app">
   <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-text">Sign<span>CRM</span></div>
-      <div class="logo-sub">En línea</div>
-    </div>
+    <div class="logo"><div class="logo-text">Sign<span>CRM</span></div></div>
     <nav class="nav">
       <div class="nav-item active" onclick="showPage('dashboard', this)"><span>📊</span> Dashboard</div>
       <div class="nav-item" onclick="showPage('clientes', this)"><span>👥</span> Clientes</div>
@@ -76,66 +67,68 @@
 
   <main class="main">
     <div id="page-dashboard" class="page active">
-      <div class="topbar"><div class="page-title">Panel Principal</div></div>
+      <div class="topbar"><div class="page-title">Resumen</div></div>
       <div class="content">
         <div class="kpi-grid">
           <div class="kpi-card"><div>Clientes</div><div class="kpi-value" id="kpi-cl">0</div></div>
-          <div class="kpi-card"><div>Cotizaciones</div><div class="kpi-value" id="kpi-co">0</div></div>
-          <div class="kpi-card"><div>En Producción</div><div class="kpi-value" id="kpi-pr">0</div></div>
-          <div class="kpi-card"><div>Ventas Mes</div><div class="kpi-value" id="kpi-ve">$0</div></div>
+          <div class="kpi-card" style="border-top-color:var(--blue)"><div>Cotizaciones</div><div class="kpi-value" id="kpi-co">0</div></div>
+          <div class="kpi-card" style="border-top-color:var(--green)"><div>Ventas</div><div class="kpi-value" id="kpi-ve">$0</div></div>
+          <div class="kpi-card" style="border-top-color:var(--accent2)"><div>Producción</div><div class="kpi-value" id="kpi-pr">0</div></div>
         </div>
       </div>
     </div>
 
     <div id="page-clientes" class="page">
       <div class="topbar"><div class="page-title">Clientes</div><button class="btn btn-primary" onclick="openModal('modal-cliente')">+ Nuevo Cliente</button></div>
-      <div class="content"><div class="card"><table><thead><tr><th>Nombre</th><th>Contacto</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbl-clientes"></tbody></table></div></div>
+      <div class="content"><div class="card"><table><thead><tr><th>Nombre</th><th>Email</th><th>Estado</th><th></th></tr></thead><tbody id="tbl-clientes"></tbody></table></div></div>
     </div>
 
     <div id="page-cotizaciones" class="page">
-        <div class="topbar"><div class="page-title">Cotizaciones</div><button class="btn btn-primary" onclick="openModal('modal-cotizacion')">+ Nueva Cotización</button></div>
-        <div class="content"><div class="card"><table><thead><tr><th>Cliente</th><th>Tipo Sign</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbl-cots"></tbody></table></div></div>
+      <div class="topbar"><div class="page-title">Cotizaciones</div><button class="btn btn-primary" onclick="openModal('modal-cotizacion')">+ Nueva Cotización</button></div>
+      <div class="content"><div class="card"><table><thead><tr><th>Cliente</th><th>Trabajo</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbl-cots"></tbody></table></div></div>
+    </div>
+
+    <div id="page-produccion" class="page">
+      <div class="topbar"><div class="page-title">Órdenes en Taller</div></div>
+      <div class="content"><div class="card"><table><thead><tr><th>Orden</th><th>Cliente</th><th>Trabajo</th><th>Estado</th><th>Progreso</th></tr></thead><tbody id="tbl-prod"></tbody></table></div></div>
     </div>
   </main>
 </div>
 
 <div class="modal-bg" id="modal-cliente">
   <div class="modal">
-    <div class="logo-text">Nuevo <span>Cliente</span></div>
+    <h3>Nuevo Cliente</h3>
     <div class="form-grid">
-      <div class="form-group full"><label>Empresa / Nombre</label><input id="c-nombre"></div>
-      <div class="form-group"><label>Teléfono</label><input id="c-tel"></div>
-      <div class="form-group"><label>Email</label><input id="c-email"></div>
-      <div class="form-group"><label>Tipo</label><select id="c-tipo"><option>Empresa</option><option>Persona</option></select></div>
-      <div class="form-group"><label>Estado</label><select id="c-estado"><option>Activo</option><option>Prospecto</option></select></div>
+      <div class="form-group full"><input id="c-nombre" placeholder="Nombre de Empresa"></div>
+      <div class="form-group"><input id="c-email" placeholder="Email"></div>
+      <div class="form-group"><select id="c-estado"><option>Activo</option><option>Prospecto</option></select></div>
     </div>
-    <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-      <button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button>
+    <div style="margin-top:20px; text-align:right;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cerrar</button>
       <button class="btn btn-primary" onclick="saveCliente()">Guardar</button>
     </div>
   </div>
 </div>
 
 <div class="modal-bg" id="modal-cotizacion">
-    <div class="modal">
-      <div class="logo-text">Nueva <span>Cotización</span></div>
-      <div class="form-grid">
-        <div class="form-group full"><label>Cliente</label><select id="cot-cliente"></select></div>
-        <div class="form-group"><label>Tipo de Sign</label><input id="cot-tipo" placeholder="Ej: Luminoso"></div>
-        <div class="form-group"><label>Precio ($)</label><input id="cot-precio" type="number"></div>
-        <div class="form-group"><label>Cantidad</label><input id="cot-qty" type="number" value="1"></div>
-        <div class="form-group"><label>Estado</label><select id="cot-estado"><option>Pendiente</option><option>Aprobada</option></select></div>
-      </div>
-      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-ghost" onclick="closeModal('modal-cotizacion')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveCotizacion()">Guardar</button>
-      </div>
+  <div class="modal">
+    <h3>Nueva Cotización</h3>
+    <div class="form-grid">
+      <div class="form-group full"><select id="cot-cliente"></select></div>
+      <div class="form-group full"><input id="cot-tipo" placeholder="¿Qué se va a fabricar?"></div>
+      <div class="form-group"><input id="cot-precio" type="number" placeholder="Precio $"></div>
+      <div class="form-group"><input id="cot-qty" type="number" value="1"></div>
+    </div>
+    <div style="margin-top:20px; text-align:right;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cotizacion')">Cerrar</button>
+      <button class="btn btn-primary" onclick="saveCotizacion()">Crear</button>
     </div>
   </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAAf9HnAJppIMUx3cz2RdrR2dkgLx8InSI",
@@ -148,101 +141,89 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+let cache = { clientes: [], cots: [], prod: [] };
 
-// Variables Globales
-let cache = { clientes: [], cots: [] };
-
-// Notificaciones
 window.toast = (msg) => {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    container.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 };
 
-// Navegación
-window.showPage = (pageId, el) => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + pageId).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    if(el) el.classList.add('active');
+window.showPage = (id, el) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
 };
 
-// Modales
 window.openModal = (id) => {
-    if(id === 'modal-cotizacion') {
-        const sel = document.getElementById('cot-cliente');
-        sel.innerHTML = cache.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-    }
-    document.getElementById(id).classList.add('open');
+  if(id === 'modal-cotizacion') {
+    document.getElementById('cot-cliente').innerHTML = cache.clientes.map(c => `<option>${c.nombre}</option>`).join('');
+  }
+  document.getElementById(id).classList.add('open');
 };
 window.closeModal = (id) => document.getElementById(id).classList.remove('open');
 
-// CRUD Clientes
+// --- ACCIONES ---
+
 window.saveCliente = async () => {
-    const data = {
-        nombre: document.getElementById('c-nombre').value,
-        tel: document.getElementById('c-tel').value,
-        email: document.getElementById('c-email').value,
-        tipo: document.getElementById('c-tipo').value,
-        estado: document.getElementById('c-estado').value
-    };
-    if(!data.nombre) return alert("Nombre obligatorio");
-    await addDoc(collection(db, "clientes"), data);
-    toast("✅ Cliente guardado");
-    closeModal('modal-cliente');
+  const n = document.getElementById('c-nombre').value;
+  if(!n) return alert("Nombre requerido");
+  await addDoc(collection(db, "clientes"), { nombre: n, email: document.getElementById('c-email').value, estado: document.getElementById('c-estado').value });
+  toast("✅ Cliente Guardado"); closeModal('modal-cliente');
 };
 
-window.borrarCliente = async (id) => {
-    if(confirm("¿Borrar cliente?")) {
-        await deleteDoc(doc(db, "clientes", id));
-        toast("🗑️ Cliente eliminado");
-    }
-};
-
-// CRUD Cotizaciones
 window.saveCotizacion = async () => {
-    const data = {
-        cliente: document.getElementById('cot-cliente').value,
-        tipo: document.getElementById('cot-tipo').value,
-        precio: Number(document.getElementById('cot-precio').value),
-        qty: Number(document.getElementById('cot-qty').value),
-        estado: document.getElementById('cot-estado').value
-    };
-    await addDoc(collection(db, "cotizaciones"), data);
-    toast("✅ Cotización creada");
-    closeModal('modal-cotizacion');
+  await addDoc(collection(db, "cotizaciones"), { 
+    cliente: document.getElementById('cot-cliente').value, 
+    tipo: document.getElementById('cot-tipo').value,
+    total: document.getElementById('cot-precio').value * document.getElementById('cot-qty').value,
+    estado: 'Pendiente'
+  });
+  toast("📋 Cotización creada"); closeModal('modal-cotizacion');
 };
 
-// Escuchas en Tiempo Real
-onSnapshot(collection(db, "clientes"), (snap) => {
-    cache.clientes = snap.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('tbl-clientes').innerHTML = cache.clientes.map(c => `
-        <tr>
-            <td><b>${c.nombre}</b></td>
-            <td>${c.tel}</td>
-            <td>${c.tipo}</td>
-            <td><span class="badge ${c.estado.toLowerCase()}">${c.estado}</span></td>
-            <td><button onclick="borrarCliente('${c.id}')" style="background:none;border:none;cursor:pointer">🗑️</button></td>
-        </tr>
-    `).join('');
-    document.getElementById('kpi-cl').textContent = cache.clientes.length;
+// FUNCIÓN MÁGICA: Aprobar y enviar a producción
+window.aprobarCot = async (id) => {
+  const cot = cache.cots.find(c => c.id === id);
+  // 1. Actualizar estado de cotización
+  await updateDoc(doc(db, "cotizaciones", id), { estado: 'Aprobada' });
+  // 2. Crear orden de producción automáticamente
+  await addDoc(collection(db, "produccion"), {
+    cliente: cot.cliente,
+    trabajo: cot.tipo,
+    estado: 'En Taller',
+    progreso: 10
+  });
+  toast("🚀 ¡Enviado a Producción!");
+};
+
+window.borrarCli = async (id) => { if(confirm("¿Borrar?")) await deleteDoc(doc(db, "clientes", id)); };
+
+// --- REALTIME LISTENERS ---
+
+onSnapshot(collection(db, "clientes"), s => {
+  cache.clientes = s.docs.map(d => ({...d.data(), id: d.id}));
+  document.getElementById('tbl-clientes').innerHTML = cache.clientes.map(c => `<tr><td>${c.nombre}</td><td>${c.email}</td><td>${c.estado}</td><td><button onclick="borrarCli('${c.id}')">🗑️</button></td></tr>`).join('');
+  document.getElementById('kpi-cl').textContent = cache.clientes.length;
 });
 
-onSnapshot(collection(db, "cotizaciones"), (snap) => {
-    cache.cots = snap.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('tbl-cots').innerHTML = cache.cots.map(c => `
-        <tr>
-            <td>${c.cliente}</td>
-            <td>${c.tipo}</td>
-            <td><b>$${c.precio * c.qty}</b></td>
-            <td><span class="badge pendiente">${c.estado}</span></td>
-            <td><button style="background:none;border:none;cursor:pointer">📄</button></td>
-        </tr>
-    `).join('');
-    document.getElementById('kpi-co').textContent = cache.cots.length;
+onSnapshot(collection(db, "cotizaciones"), s => {
+  cache.cots = s.docs.map(d => ({...d.data(), id: d.id}));
+  document.getElementById('tbl-cots').innerHTML = cache.cots.map(c => `
+    <tr>
+      <td>${c.cliente}</td><td>${c.tipo}</td><td>$${c.total}</td>
+      <td><span class="badge ${c.estado.toLowerCase()}">${c.estado}</span></td>
+      <td>${c.estado === 'Pendiente' ? `<button onclick="aprobarCot('${c.id}')">✅ Aprobar</button>` : '—'}</td>
+    </tr>`).join('');
+  document.getElementById('kpi-co').textContent = cache.cots.length;
+  document.getElementById('kpi-ve').textContent = '$' + cache.cots.filter(c=>c.estado==='Aprobada').reduce((a,b)=>a+Number(b.total),0);
+});
+
+onSnapshot(collection(db, "produccion"), s => {
+  cache.prod = s.docs.map(d => ({...d.data(), id: d.id}));
+  document.getElementById('tbl-prod').innerHTML = cache.prod.map(p => `<tr><td>#${p.id.slice(0,4)}</td><td>${p.cliente}</td><td>${p.trabajo}</td><td>${p.estado}</td><td>${p.progreso}%</td></tr>`).join('');
+  document.getElementById('kpi-pr').textContent = cache.prod.length;
 });
 
 </script>
