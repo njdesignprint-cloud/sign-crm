@@ -3,131 +3,132 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SignCRM – Sign Business</title>
+<title>SignCRM</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;
-    --accent:#ff6b35;--accent2:#ffd166;--blue:#4cc9f0;--green:#06d6a0;--red:#ef233c;
-    --text:#f0f0f5;--muted:#8888aa;
-    --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+    --bg: #0a0a0f; --surface: #111118; --surface2: #1a1a24; --border: #2a2a3a;
+    --accent: #ff6b35; --accent2: #ffd166; --blue: #4cc9f0; --green: #06d6a0;
+    --red: #ef233c; --text: #f0f0f5; --muted: #8888aa;
+    --font-head: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
   }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;}
-  .app{display:flex;height:100vh;overflow:hidden;}
-  .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
-  .main{flex:1;overflow-y:auto;}
-  .logo{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
-  .logo-text{font-family:var(--font-head);font-size:22px;font-weight:800;letter-spacing:-0.5px;}
-  .logo-text span{color:var(--accent);}
-  .logo-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-  .nav{padding:16px 12px;flex:1;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .2s;margin-bottom:2px;}
-  .nav-item:hover{background:var(--surface2);color:var(--text);}
-  .nav-item.active{background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,107,53,.05));color:var(--accent);border:1px solid rgba(255,107,53,.2);}
-  .nav-item .icon{font-size:16px;width:20px;text-align:center;}
-  .sidebar-footer{padding:16px;border-top:1px solid var(--border);}
-  .user-badge{display:flex;align-items:center;gap:10px;}
-  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;}
-  .user-info{font-size:12px;}
-  .user-name{font-weight:600;color:var(--text);}
-  .user-role{color:var(--muted);font-size:11px;}
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:var(--surface);}
-  .page-title{font-family:var(--font-head);font-size:20px;font-weight:700;}
-  .topbar-right{display:flex;align-items:center;gap:12px;}
-  .btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;transition:all .2s;}
-  .btn-primary{background:var(--accent);color:white;}
-  .btn-primary:hover{background:#ff5522;transform:translateY(-1px);}
-  .btn-ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
-  .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
-  .search-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:var(--font-body);font-size:13px;width:220px;outline:none;transition:border .2s;}
-  .search-box:focus{border-color:var(--accent);}
-  .search-box::placeholder{color:var(--muted);}
-  .content{padding:28px;}
-  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
-  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:transform .2s;}
-  .kpi-card:hover{transform:translateY(-2px);border-color:var(--accent);}
-  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-  .kpi-card.orange::before{background:var(--accent);}
-  .kpi-card.blue::before{background:var(--blue);}
-  .kpi-card.green::before{background:var(--green);}
-  .kpi-card.yellow::before{background:var(--accent2);}
-  .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:10px;}
-  .kpi-value{font-family:var(--font-head);font-size:32px;font-weight:800;line-height:1;}
-  .kpi-value.orange{color:var(--accent);}
-  .kpi-value.blue{color:var(--blue);}
-  .kpi-value.green{color:var(--green);}
-  .kpi-value.yellow{color:var(--accent2);}
-  .kpi-sub{font-size:12px;color:var(--muted);margin-top:6px;}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
-  .card-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-  .card-title{font-family:var(--font-head);font-size:14px;font-weight:700;}
-  .card-action{font-size:12px;color:var(--accent);cursor:pointer;}
-  .card-action:hover{text-decoration:underline;}
-  table{width:100%;border-collapse:collapse;}
-  th{text-align:left;padding:10px 16px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--border);}
-  td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:rgba(255,255,255,.02);}
-  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
-  .badge::before{content:'';width:5px;height:5px;border-radius:50%;}
-  .badge.activo{background:rgba(6,214,160,.12);color:var(--green);}
-  .badge.activo::before{background:var(--green);}
-  .badge.prospecto{background:rgba(76,201,240,.12);color:var(--blue);}
-  .badge.prospecto::before{background:var(--blue);}
-  .badge.pendiente{background:rgba(255,209,102,.12);color:var(--accent2);}
-  .badge.pendiente::before{background:var(--accent2);}
-  .badge.produccion{background:rgba(255,107,53,.12);color:var(--accent);}
-  .badge.produccion::before{background:var(--accent);}
-  .badge.aprobada{background:rgba(6,214,160,.12);color:var(--green);}
-  .badge.aprobada::before{background:var(--green);}
-  .badge.pagada{background:rgba(6,214,160,.12);color:var(--green);}
-  .badge.pagada::before{background:var(--green);}
-  .badge.vencida{background:rgba(239,35,60,.12);color:var(--red);}
-  .badge.vencida::before{background:var(--red);}
-  .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px;}
-  .pipeline-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
-  .pipeline-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
-  .pipeline-count{background:var(--surface2);padding:1px 7px;border-radius:10px;color:var(--text);font-size:11px;}
-  .pipeline-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;}
-  .pipeline-card:hover{border-color:var(--accent);transform:translateX(2px);}
-  .p-client{font-size:12px;font-weight:600;margin-bottom:4px;}
-  .p-value{font-size:14px;font-weight:700;color:var(--accent);}
-  .p-type{font-size:11px;color:var(--muted);margin-top:3px;}
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-  .modal-bg.open{display:flex;}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:540px;max-height:85vh;overflow-y:auto;animation:modalIn .25s ease;}
-  @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-  .modal-header{padding:24px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;}
-  .modal-title{font-family:var(--font-head);font-size:18px;font-weight:700;}
-  .modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:4px;}
-  .modal-close:hover{color:var(--text);}
-  .modal-body{padding:24px;}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-  .form-group{display:flex;flex-direction:column;gap:6px;}
-  .form-group.full{grid-column:1/-1;}
-  label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
-  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border .2s;width:100%;}
-  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
-  select option{background:var(--surface);}
-  .modal-footer{padding:0 24px 24px;display:flex;justify-content:flex-end;gap:10px;}
-  .page{display:none;}
-  .page.active{display:block;}
-  ::-webkit-scrollbar{width:6px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-  ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
-  .empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
-  .amount{font-weight:600;font-family:var(--font-head);}
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; }
+  .app { display:flex; height:100vh; overflow:hidden; }
+  .sidebar { width:220px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+  .main { flex:1; overflow-y:auto; }
+  .logo { padding:24px 20px 20px; border-bottom:1px solid var(--border); }
+  .logo-text { font-family:var(--font-head); font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+  .logo-text span { color:var(--accent); }
+  .logo-sub { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+  .nav { padding:16px 12px; flex:1; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font-size:13px; font-weight:500; transition:all .2s; margin-bottom:2px; }
+  .nav-item:hover { background:var(--surface2); color:var(--text); }
+  .nav-item.active { background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,107,53,.05)); color:var(--accent); border:1px solid rgba(255,107,53,.2); }
+  .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+  .sidebar-footer { padding:16px; border-top:1px solid var(--border); }
+  .user-badge { display:flex; align-items:center; gap:10px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:white; flex-shrink:0; }
+  .user-info { font-size:12px; }
+  .user-name { font-weight:600; color:var(--text); }
+  .user-role { color:var(--muted); font-size:11px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 28px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
+  .page-title { font-family:var(--font-head); font-size:20px; font-weight:700; }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .btn { padding:9px 18px; border-radius:8px; border:none; cursor:pointer; font-family:var(--font-body); font-size:13px; font-weight:500; transition:all .2s; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:#ff5522; transform:translateY(-1px); }
+  .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+  .btn-ghost:hover { color:var(--text); border-color:var(--muted); }
+  .search-box { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 14px; color:var(--text); font-family:var(--font-body); font-size:13px; width:220px; outline:none; transition:border .2s; }
+  .search-box:focus { border-color:var(--accent); }
+  .search-box::placeholder { color:var(--muted); }
+  .content { padding:28px; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; overflow:hidden; transition:transform .2s,border-color .2s; }
+  .kpi-card:hover { transform:translateY(-2px); border-color:var(--accent); }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .kpi-card.orange::before { background:var(--accent); }
+  .kpi-card.blue::before   { background:var(--blue); }
+  .kpi-card.green::before  { background:var(--green); }
+  .kpi-card.yellow::before { background:var(--accent2); }
+  .kpi-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; font-weight:600; margin-bottom:10px; }
+  .kpi-value { font-family:var(--font-head); font-size:32px; font-weight:800; line-height:1; }
+  .kpi-value.orange { color:var(--accent); } .kpi-value.blue { color:var(--blue); }
+  .kpi-value.green  { color:var(--green); }  .kpi-value.yellow { color:var(--accent2); }
+  .kpi-sub { font-size:12px; color:var(--muted); margin-top:6px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:20px; }
+  .card-header { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .card-title { font-family:var(--font-head); font-size:14px; font-weight:700; }
+  .card-action { font-size:12px; color:var(--accent); cursor:pointer; background:none; border:none; font-family:var(--font-body); }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 16px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-weight:600; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:12px 16px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.04); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,.02); }
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+  .badge::before { content:''; width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .badge.activo    { background:rgba(6,214,160,.12); color:var(--green); } .badge.activo::before { background:var(--green); }
+  .badge.prospecto { background:rgba(76,201,240,.12); color:var(--blue); } .badge.prospecto::before { background:var(--blue); }
+  .badge.pendiente { background:rgba(255,209,102,.12); color:var(--accent2); } .badge.pendiente::before { background:var(--accent2); }
+  .badge.produccion{ background:rgba(255,107,53,.12); color:var(--accent); } .badge.produccion::before { background:var(--accent); }
+  .badge.aprobada  { background:rgba(6,214,160,.12); color:var(--green); } .badge.aprobada::before { background:var(--green); }
+  .badge.pagada    { background:rgba(6,214,160,.12); color:var(--green); } .badge.pagada::before { background:var(--green); }
+  .badge.vencida   { background:rgba(239,35,60,.12); color:var(--red); }  .badge.vencida::before { background:var(--red); }
+  .pipeline { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:28px; }
+  .pipeline-col { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .pipeline-col-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
+  .pipeline-count { background:var(--surface2); padding:1px 7px; border-radius:10px; color:var(--text); font-size:11px; }
+  .pipeline-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:8px; cursor:pointer; transition:all .2s; }
+  .pipeline-card:hover { border-color:var(--accent); transform:translateX(2px); }
+  .p-client { font-size:12px; font-weight:600; margin-bottom:4px; }
+  .p-value  { font-size:14px; font-weight:700; color:var(--accent); }
+  .p-type   { font-size:11px; color:var(--muted); margin-top:3px; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-bg.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; width:540px; max-height:85vh; overflow-y:auto; animation:modalIn .25s ease; }
+  @keyframes modalIn { from{opacity:0;transform:scale(.95) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  .modal-header { padding:24px 24px 0; display:flex; justify-content:space-between; align-items:flex-start; }
+  .modal-title { font-family:var(--font-head); font-size:18px; font-weight:700; }
+  .modal-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:20px; }
+  .modal-close:hover { color:var(--text); }
+  .modal-body { padding:24px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group.full { grid-column:1/-1; }
+  label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+  input,select,textarea { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; transition:border .2s; width:100%; }
+  input:focus,select:focus,textarea:focus { border-color:var(--accent); }
+  select option { background:var(--surface); color:var(--text); }
+  .modal-footer { padding:0 24px 24px; display:flex; justify-content:flex-end; gap:10px; }
+  .page { display:none; } .page.active { display:block; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  .empty-state { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+  .amount { font-weight:600; font-family:var(--font-head); }
+  /* Loading overlay */
+  #loading { position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:16px; }
+  #loading .spin { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #loading p { color:var(--muted); font-size:14px; }
+  .sync-dot { width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block; margin-right:6px; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- Loading -->
+<div id="loading">
+  <div class="spin"></div>
+  <p>Conectando con Firebase...</p>
+</div>
+
+<div class="app" style="display:none" id="app-root">
   <aside class="sidebar">
     <div class="logo">
       <div class="logo-text">Sign<span>CRM</span></div>
-      <div class="logo-sub">Sign Business</div>
+      <div class="logo-sub"><span class="sync-dot"></span>En línea</div>
     </div>
     <nav class="nav">
       <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
@@ -139,42 +140,63 @@
     </nav>
     <div class="sidebar-footer">
       <div class="user-badge">
-        <div class="avatar">SB</div>
+        <div class="avatar">NJ</div>
         <div class="user-info">
-          <div class="user-name">Mi Negocio</div>
-          <div class="user-role">Sign Business</div>
+          <div class="user-name">Noel</div>
+          <div class="user-role">Administrador</div>
         </div>
       </div>
     </div>
   </aside>
+
   <main class="main">
+    <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
       <div class="topbar"><div class="page-title">Dashboard</div><div class="topbar-right"><span style="color:var(--muted);font-size:13px" id="fecha-hoy"></span></div></div>
       <div class="content">
         <div class="kpi-grid" id="kpi-grid"></div>
         <div class="grid2">
-          <div class="card"><div class="card-header"><div class="card-title">Cotizaciones Recientes</div><div class="card-action" onclick="showPage('cotizaciones',null)">Ver todas →</div></div><table><thead><tr><th>Cliente</th><th>Tipo</th><th>Total</th><th>Estado</th></tr></thead><tbody id="dash-cots"></tbody></table></div>
-          <div class="card"><div class="card-header"><div class="card-title">Cobranza Pendiente</div><div class="card-action" onclick="showPage('cobranza',null)">Ver todas →</div></div><table><thead><tr><th>Cliente</th><th>Monto</th><th>Vence</th><th>Estado</th></tr></thead><tbody id="dash-cob"></tbody></table></div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Cotizaciones Recientes</div><button class="card-action" onclick="showPage('cotizaciones',null)">Ver todas →</button></div>
+            <table><thead><tr><th>Cliente</th><th>Tipo</th><th>Total</th><th>Estado</th></tr></thead><tbody id="dash-cots"></tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Cobranza Pendiente</div><button class="card-action" onclick="showPage('cobranza',null)">Ver todas →</button></div>
+            <table><thead><tr><th>Cliente</th><th>Monto</th><th>Vence</th><th>Estado</th></tr></thead><tbody id="dash-cob"></tbody></table>
+          </div>
         </div>
-        <div class="card"><div class="card-header"><div class="card-title">Producción Activa</div></div><table><thead><tr><th>Orden</th><th>Cliente</th><th>Tipo</th><th>Responsable</th><th>Avance</th><th>Estado</th></tr></thead><tbody id="dash-prod"></tbody></table></div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Producción Activa</div></div>
+          <table><thead><tr><th>Orden</th><th>Cliente</th><th>Tipo</th><th>Responsable</th><th>Avance</th><th>Estado</th></tr></thead><tbody id="dash-prod"></tbody></table>
+        </div>
       </div>
     </div>
+
+    <!-- CLIENTES -->
     <div id="page-clientes" class="page">
       <div class="topbar"><div class="page-title">Clientes</div><div class="topbar-right"><input class="search-box" placeholder="🔍 Buscar cliente..." oninput="filterTable('tbl-clientes',this.value)"><button class="btn btn-primary" onclick="openModal('modal-cliente')">+ Nuevo Cliente</button></div></div>
       <div class="content"><div class="card"><table><thead><tr><th>ID</th><th>Empresa / Nombre</th><th>Contacto</th><th>Ciudad</th><th>Tipo</th><th>Estado</th><th>Fecha</th><th></th></tr></thead><tbody id="tbl-clientes"></tbody></table></div></div>
     </div>
+
+    <!-- COTIZACIONES -->
     <div id="page-cotizaciones" class="page">
       <div class="topbar"><div class="page-title">Cotizaciones</div><div class="topbar-right"><input class="search-box" placeholder="🔍 Buscar..." oninput="filterTable('tbl-cots',this.value)"><button class="btn btn-primary" onclick="openModal('modal-cotizacion')">+ Nueva Cotización</button></div></div>
       <div class="content"><div class="card"><table><thead><tr><th>#</th><th>Cliente</th><th>Tipo Sign</th><th>Qty</th><th>Total</th><th>Estado</th><th>Fecha</th><th></th></tr></thead><tbody id="tbl-cots"></tbody></table></div></div>
     </div>
+
+    <!-- PIPELINE -->
     <div id="page-pipeline" class="page">
       <div class="topbar"><div class="page-title">Pipeline de Ventas</div><div class="topbar-right"><button class="btn btn-primary" onclick="openModal('modal-seguimiento')">+ Nueva Oportunidad</button></div></div>
       <div class="content"><div class="kpi-grid" id="pipeline-kpis" style="margin-bottom:20px"></div><div class="pipeline" id="pipeline-board"></div></div>
     </div>
+
+    <!-- PRODUCCION -->
     <div id="page-produccion" class="page">
       <div class="topbar"><div class="page-title">Control de Producción</div><div class="topbar-right"><button class="btn btn-primary" onclick="openModal('modal-orden')">+ Nueva Orden</button></div></div>
-      <div class="content"><div class="card"><table><thead><tr><th>Orden</th><th>Cliente</th><th>Tipo</th><th>Descripción</th><th>Responsable</th><th>F. Compromiso</th><th>% Avance</th><th>Estado</th></tr></thead><tbody id="tbl-prod"></tbody></table></div></div>
+      <div class="content"><div class="card"><table><thead><tr><th>Orden</th><th>Cliente</th><th>Tipo</th><th>Descripción</th><th>Responsable</th><th>F. Entrega</th><th>Avance</th><th>Estado</th></tr></thead><tbody id="tbl-prod"></tbody></table></div></div>
     </div>
+
+    <!-- COBRANZA -->
     <div id="page-cobranza" class="page">
       <div class="topbar"><div class="page-title">Cobranza</div><div class="topbar-right"><button class="btn btn-primary" onclick="openModal('modal-factura')">+ Nueva Factura</button></div></div>
       <div class="content"><div class="kpi-grid" id="cob-kpis"></div><div class="card"><table><thead><tr><th>Factura</th><th>Cliente</th><th>Total</th><th>Anticipo</th><th>Saldo</th><th>F. Venc.</th><th>Forma Pago</th><th>Estado</th></tr></thead><tbody id="tbl-cob"></tbody></table></div></div>
@@ -182,281 +204,318 @@
   </main>
 </div>
 
-<!-- MODAL CLIENTE -->
-<div class="modal-bg" id="modal-cliente"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Nuevo Cliente</div><button class="modal-close" onclick="closeModal('modal-cliente')">✕</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group"><label>Empresa / Nombre</label><input id="c-nombre" placeholder="Ej. Constructora Garza S.A."></div>
-    <div class="form-group"><label>Contacto</label><input id="c-contacto" placeholder="Nombre del contacto"></div>
-    <div class="form-group"><label>Teléfono</label><input id="c-tel" placeholder="(81) 0000-0000"></div>
-    <div class="form-group"><label>Email</label><input id="c-email" type="email" placeholder="correo@empresa.com"></div>
-    <div class="form-group"><label>Ciudad</label><input id="c-ciudad" placeholder="Monterrey"></div>
-    <div class="form-group"><label>Tipo</label><select id="c-tipo"><option>Empresa</option><option>Persona</option><option>Gobierno</option><option>Franquicia</option></select></div>
-    <div class="form-group"><label>Canal de Entrada</label><select id="c-canal"><option>Referido</option><option>Google</option><option>Facebook</option><option>Instagram</option><option>Licitación</option><option>Llamada</option><option>Otro</option></select></div>
-    <div class="form-group"><label>Estado</label><select id="c-estado"><option>Activo</option><option>Prospecto</option><option>Inactivo</option><option>VIP</option></select></div>
-    <div class="form-group full"><label>Notas</label><textarea id="c-notas" rows="2" placeholder="Notas adicionales..."></textarea></div>
-  </div></div>
-  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn btn-primary" onclick="saveCliente()">Guardar Cliente</button></div>
-</div></div>
+<!-- MODALS -->
+<div class="modal-bg" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo Cliente</div><button class="modal-close" onclick="closeModal('modal-cliente')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>Empresa / Nombre</label><input id="c-nombre" placeholder="Ej. Constructora Garza S.A."></div>
+      <div class="form-group"><label>Contacto</label><input id="c-contacto" placeholder="Nombre del contacto"></div>
+      <div class="form-group"><label>Teléfono</label><input id="c-tel" placeholder="(81) 0000-0000"></div>
+      <div class="form-group"><label>Email</label><input id="c-email" type="email" placeholder="correo@empresa.com"></div>
+      <div class="form-group"><label>Ciudad</label><input id="c-ciudad" placeholder="Monterrey"></div>
+      <div class="form-group"><label>Tipo</label><select id="c-tipo"><option>Empresa</option><option>Persona</option><option>Gobierno</option><option>Franquicia</option></select></div>
+      <div class="form-group"><label>Canal de Entrada</label><select id="c-canal"><option>Referido</option><option>Google</option><option>Facebook</option><option>Instagram</option><option>Licitación</option><option>Llamada</option><option>Otro</option></select></div>
+      <div class="form-group"><label>Estado</label><select id="c-estado"><option>Activo</option><option>Prospecto</option><option>Inactivo</option><option>VIP</option></select></div>
+      <div class="form-group full"><label>Notas</label><textarea id="c-notas" rows="2" placeholder="Notas adicionales..."></textarea></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn btn-primary" onclick="saveCliente()">Guardar Cliente</button></div>
+  </div>
+</div>
 
-<!-- MODAL COTIZACIÓN -->
-<div class="modal-bg" id="modal-cotizacion"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Nueva Cotización</div><button class="modal-close" onclick="closeModal('modal-cotizacion')">✕</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group"><label>Cliente</label><select id="cot-cliente"></select></div>
-    <div class="form-group"><label>Tipo de Sign</label><select id="cot-tipo"><option>Letrero Luminoso</option><option>Letrero Sencillo</option><option>Vinil</option><option>Banner</option><option>Menús</option><option>Totem</option><option>Placa</option><option>Canal Letter</option><option>Otro</option></select></div>
-    <div class="form-group full"><label>Descripción</label><input id="cot-desc" placeholder="Descripción del trabajo..."></div>
-    <div class="form-group"><label>Material</label><input id="cot-material" placeholder="Acrílico, vinil, lona..."></div>
-    <div class="form-group"><label>Medidas (cm)</label><input id="cot-medidas" placeholder="200 x 80"></div>
-    <div class="form-group"><label>Cantidad</label><input id="cot-qty" type="number" value="1" min="1"></div>
-    <div class="form-group"><label>Precio Unitario ($)</label><input id="cot-precio" type="number" placeholder="0.00"></div>
-    <div class="form-group"><label>Descuento (%)</label><input id="cot-desc-pct" type="number" value="0" min="0" max="100"></div>
-    <div class="form-group"><label>Estado</label><select id="cot-estado"><option>Pendiente</option><option>Aprobada</option><option>Rechazada</option><option>En Producción</option><option>Entregada</option><option>Facturada</option></select></div>
-    <div class="form-group"><label>Fecha</label><input id="cot-fecha" type="date"></div>
-    <div class="form-group full"><label>Notas</label><textarea id="cot-notas" rows="2"></textarea></div>
-  </div></div>
-  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-cotizacion')">Cancelar</button><button class="btn btn-primary" onclick="saveCotizacion()">Guardar Cotización</button></div>
-</div></div>
+<div class="modal-bg" id="modal-cotizacion">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nueva Cotización</div><button class="modal-close" onclick="closeModal('modal-cotizacion')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>Cliente</label><select id="cot-cliente"></select></div>
+      <div class="form-group"><label>Tipo de Sign</label><select id="cot-tipo"><option>Letrero Luminoso</option><option>Letrero Sencillo</option><option>Vinil</option><option>Banner</option><option>Menús</option><option>Totem</option><option>Placa</option><option>Canal Letter</option><option>Otro</option></select></div>
+      <div class="form-group full"><label>Descripción</label><input id="cot-desc" placeholder="Descripción del trabajo..."></div>
+      <div class="form-group"><label>Material</label><input id="cot-material" placeholder="Acrílico, vinil, lona..."></div>
+      <div class="form-group"><label>Medidas (cm)</label><input id="cot-medidas" placeholder="200 x 80"></div>
+      <div class="form-group"><label>Cantidad</label><input id="cot-qty" type="number" value="1" min="1"></div>
+      <div class="form-group"><label>Precio Unitario ($)</label><input id="cot-precio" type="number" placeholder="0.00"></div>
+      <div class="form-group"><label>Descuento (%)</label><input id="cot-desc-pct" type="number" value="0" min="0" max="100"></div>
+      <div class="form-group"><label>Estado</label><select id="cot-estado"><option>Pendiente</option><option>Aprobada</option><option>Rechazada</option><option>En Producción</option><option>Entregada</option><option>Facturada</option></select></div>
+      <div class="form-group"><label>Fecha</label><input id="cot-fecha" type="date"></div>
+      <div class="form-group full"><label>Notas</label><textarea id="cot-notas" rows="2"></textarea></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-cotizacion')">Cancelar</button><button class="btn btn-primary" onclick="saveCotizacion()">Guardar Cotización</button></div>
+  </div>
+</div>
 
-<!-- MODAL ORDEN -->
-<div class="modal-bg" id="modal-orden"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Nueva Orden de Producción</div><button class="modal-close" onclick="closeModal('modal-orden')">✕</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group"><label>Cliente</label><select id="ord-cliente"></select></div>
-    <div class="form-group"><label>Tipo Sign</label><select id="ord-tipo"><option>Letrero Luminoso</option><option>Letrero Sencillo</option><option>Vinil</option><option>Banner</option><option>Menús</option><option>Otro</option></select></div>
-    <div class="form-group full"><label>Descripción</label><input id="ord-desc" placeholder="Descripción del trabajo..."></div>
-    <div class="form-group"><label>Responsable</label><input id="ord-resp" placeholder="Nombre del responsable"></div>
-    <div class="form-group"><label>Fecha Compromiso</label><input id="ord-fecha" type="date"></div>
-    <div class="form-group"><label>% Avance</label><input id="ord-avance" type="number" value="0" min="0" max="100"></div>
-    <div class="form-group"><label>Estado</label><select id="ord-estado"><option>Pendiente</option><option>Esperando Material</option><option>En Proceso</option><option>Control Calidad</option><option>Listo Entregar</option><option>Entregada</option></select></div>
-    <div class="form-group"><label>¿Instalación?</label><select id="ord-inst"><option>No</option><option>Sí</option></select></div>
-    <div class="form-group full"><label>Observaciones</label><textarea id="ord-obs" rows="2"></textarea></div>
-  </div></div>
-  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-orden')">Cancelar</button><button class="btn btn-primary" onclick="saveOrden()">Guardar Orden</button></div>
-</div></div>
+<div class="modal-bg" id="modal-orden">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nueva Orden de Producción</div><button class="modal-close" onclick="closeModal('modal-orden')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>Cliente</label><select id="ord-cliente"></select></div>
+      <div class="form-group"><label>Tipo Sign</label><select id="ord-tipo"><option>Letrero Luminoso</option><option>Letrero Sencillo</option><option>Vinil</option><option>Banner</option><option>Menús</option><option>Otro</option></select></div>
+      <div class="form-group full"><label>Descripción</label><input id="ord-desc" placeholder="Descripción del trabajo..."></div>
+      <div class="form-group"><label>Responsable</label><input id="ord-resp" placeholder="Nombre del responsable"></div>
+      <div class="form-group"><label>Fecha Compromiso</label><input id="ord-fecha" type="date"></div>
+      <div class="form-group"><label>% Avance</label><input id="ord-avance" type="number" value="0" min="0" max="100"></div>
+      <div class="form-group"><label>Estado</label><select id="ord-estado"><option>Pendiente</option><option>Esperando Material</option><option>En Proceso</option><option>Control Calidad</option><option>Listo Entregar</option><option>Entregada</option></select></div>
+      <div class="form-group"><label>¿Instalación?</label><select id="ord-inst"><option>No</option><option>Sí</option></select></div>
+      <div class="form-group full"><label>Observaciones</label><textarea id="ord-obs" rows="2"></textarea></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-orden')">Cancelar</button><button class="btn btn-primary" onclick="saveOrden()">Guardar Orden</button></div>
+  </div>
+</div>
 
-<!-- MODAL FACTURA -->
-<div class="modal-bg" id="modal-factura"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Nueva Factura</div><button class="modal-close" onclick="closeModal('modal-factura')">✕</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group"><label>Cliente</label><select id="fac-cliente"></select></div>
-    <div class="form-group"><label>Total Facturado ($)</label><input id="fac-total" type="number" placeholder="0.00"></div>
-    <div class="form-group"><label>Anticipo ($)</label><input id="fac-anticipo" type="number" value="0"></div>
-    <div class="form-group"><label>Fecha Vencimiento</label><input id="fac-vence" type="date"></div>
-    <div class="form-group"><label>Forma de Pago</label><select id="fac-forma"><option>Transferencia</option><option>Efectivo</option><option>Tarjeta</option><option>Cheque</option><option>PayPal</option></select></div>
-    <div class="form-group"><label>Estado</label><select id="fac-estado"><option>Pendiente</option><option>Parcial</option><option>Pagada</option><option>Vencida</option></select></div>
-    <div class="form-group full"><label>Observaciones</label><textarea id="fac-obs" rows="2"></textarea></div>
-  </div></div>
-  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-factura')">Cancelar</button><button class="btn btn-primary" onclick="saveFactura()">Guardar Factura</button></div>
-</div></div>
+<div class="modal-bg" id="modal-factura">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nueva Factura</div><button class="modal-close" onclick="closeModal('modal-factura')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>Cliente</label><select id="fac-cliente"></select></div>
+      <div class="form-group"><label>Total Facturado ($)</label><input id="fac-total" type="number" placeholder="0.00"></div>
+      <div class="form-group"><label>Anticipo ($)</label><input id="fac-anticipo" type="number" value="0"></div>
+      <div class="form-group"><label>Fecha Vencimiento</label><input id="fac-vence" type="date"></div>
+      <div class="form-group"><label>Forma de Pago</label><select id="fac-forma"><option>Transferencia</option><option>Efectivo</option><option>Tarjeta</option><option>Cheque</option><option>PayPal</option></select></div>
+      <div class="form-group"><label>Estado</label><select id="fac-estado"><option>Pendiente</option><option>Parcial</option><option>Pagada</option><option>Vencida</option></select></div>
+      <div class="form-group full"><label>Observaciones</label><textarea id="fac-obs" rows="2"></textarea></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-factura')">Cancelar</button><button class="btn btn-primary" onclick="saveFactura()">Guardar Factura</button></div>
+  </div>
+</div>
 
-<!-- MODAL SEGUIMIENTO -->
-<div class="modal-bg" id="modal-seguimiento"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Nueva Oportunidad</div><button class="modal-close" onclick="closeModal('modal-seguimiento')">✕</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group"><label>Cliente</label><select id="seg-cliente"></select></div>
-    <div class="form-group"><label>Etapa</label><select id="seg-etapa"><option>Primer Contacto</option><option>Prospectando</option><option>Cotización Enviada</option><option>Negociación</option><option>Cerrado Ganado</option><option>Cerrado Perdido</option></select></div>
-    <div class="form-group"><label>Valor Oportunidad ($)</label><input id="seg-valor" type="number" placeholder="0.00"></div>
-    <div class="form-group"><label>Prob. Cierre (%)</label><input id="seg-prob" type="number" value="50" min="0" max="100"></div>
-    <div class="form-group"><label>Tipo Contacto</label><select id="seg-tipo"><option>Llamada</option><option>WhatsApp</option><option>Email</option><option>Visita</option></select></div>
-    <div class="form-group"><label>Responsable</label><input id="seg-resp" placeholder="Nombre"></div>
-    <div class="form-group full"><label>Próxima Acción</label><input id="seg-accion" placeholder="Descripción de la próxima acción..."></div>
-    <div class="form-group"><label>Fecha Próxima Acción</label><input id="seg-fecha" type="date"></div>
-    <div class="form-group full"><label>Notas</label><textarea id="seg-notas" rows="2"></textarea></div>
-  </div></div>
-  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-seguimiento')">Cancelar</button><button class="btn btn-primary" onclick="saveSeguimiento()">Guardar Oportunidad</button></div>
-</div></div>
+<div class="modal-bg" id="modal-seguimiento">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nueva Oportunidad</div><button class="modal-close" onclick="closeModal('modal-seguimiento')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>Cliente</label><select id="seg-cliente"></select></div>
+      <div class="form-group"><label>Etapa</label><select id="seg-etapa"><option>Primer Contacto</option><option>Prospectando</option><option>Cotización Enviada</option><option>Negociación</option><option>Cerrado Ganado</option><option>Cerrado Perdido</option></select></div>
+      <div class="form-group"><label>Valor Oportunidad ($)</label><input id="seg-valor" type="number" placeholder="0.00"></div>
+      <div class="form-group"><label>Prob. Cierre (%)</label><input id="seg-prob" type="number" value="50" min="0" max="100"></div>
+      <div class="form-group"><label>Tipo Contacto</label><select id="seg-tipo"><option>Llamada</option><option>WhatsApp</option><option>Email</option><option>Visita</option></select></div>
+      <div class="form-group"><label>Responsable</label><input id="seg-resp" placeholder="Nombre"></div>
+      <div class="form-group full"><label>Próxima Acción</label><input id="seg-accion" placeholder="Descripción de la próxima acción..."></div>
+      <div class="form-group"><label>Fecha Próxima Acción</label><input id="seg-fecha" type="date"></div>
+      <div class="form-group full"><label>Notas</label><textarea id="seg-notas" rows="2"></textarea></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-seguimiento')">Cancelar</button><button class="btn btn-primary" onclick="saveSeguimiento()">Guardar Oportunidad</button></div>
+  </div>
+</div>
 
-<script>
-const KEYS={clientes:'scrm_clientes',cots:'scrm_cots',prod:'scrm_prod',cob:'scrm_cob',seg:'scrm_seg'};
-function load(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
-function save(k,d){localStorage.setItem(k,JSON.stringify(d))}
-function fmt$(n){return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0})}
-function today(){return new Date().toISOString().slice(0,10)}
-function calcTotal(c){return(c.qty*c.precio*(1-c.descPct/100))*1.16}
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-function seed(){
-  if(load(KEYS.clientes).length)return;
-  save(KEYS.clientes,[
-    {id:'CLI-001',nombre:'Construcciones Garza S.A.',contacto:'Ing. Mario Garza',tel:'(81) 1234-5678',email:'mgarza@cg.com',ciudad:'Monterrey',tipo:'Empresa',canal:'Referido',estado:'Activo',notas:'Cliente frecuente',fecha:'2025-01-10'},
-    {id:'CLI-002',nombre:'Super Tiendas Luna',contacto:'Ana Luna',tel:'(81) 9876-5432',email:'aluna@luna.mx',ciudad:'San Pedro',tipo:'Empresa',canal:'Google',estado:'Activo',notas:'Descuento en volumen',fecha:'2025-02-20'},
-    {id:'CLI-003',nombre:'Carlos Hernández',contacto:'Carlos Hernández',tel:'(81) 5555-1234',email:'carlos@gmail.com',ciudad:'Guadalupe',tipo:'Persona',canal:'Facebook',estado:'Prospecto',notas:'Cotizó letrero pequeño',fecha:'2025-06-01'},
-    {id:'CLI-004',nombre:'Restaurante El Rancho',contacto:'Chef Pedro Soto',tel:'(81) 3333-9999',email:'pedro@rancho.com',ciudad:'Monterrey',tipo:'Empresa',canal:'Instagram',estado:'Activo',notas:'Menús y exterior',fecha:'2025-08-15'},
-    {id:'CLI-005',nombre:'Gobierno Municipal',contacto:'Lic. Verónica Díaz',tel:'(81) 8888-0000',email:'vdiaz@municipio.gob.mx',ciudad:'Monterrey',tipo:'Gobierno',canal:'Licitación',estado:'Inactivo',notas:'Posible renovación',fecha:'2025-09-01'},
-  ]);
-  save(KEYS.cots,[
-    {id:'COT-001',clienteId:'CLI-001',cliente:'Construcciones Garza',tipo:'Letrero Luminoso',desc:'Letrero fachada LED 3D',material:'Acrílico + LED',medidas:'200x80',qty:3,precio:4500,descPct:10,estado:'Aprobada',fecha:'2026-01-15',notas:'Instalación incluida'},
-    {id:'COT-002',clienteId:'CLI-002',cliente:'Super Tiendas Luna',tipo:'Vinil',desc:'Vinilos decorativos',material:'Vinil impreso',medidas:'150x60',qty:10,precio:800,descPct:5,estado:'Aprobada',fecha:'2026-02-01',notas:'3 sucursales'},
-    {id:'COT-003',clienteId:'CLI-003',cliente:'Carlos Hernández',tipo:'Letrero Sencillo',desc:'Letrero madera pintada',material:'MDF',medidas:'60x40',qty:1,precio:1200,descPct:0,estado:'Pendiente',fecha:'2026-02-15',notas:'Cambio de color'},
-    {id:'COT-004',clienteId:'CLI-004',cliente:'Restaurante El Rancho',tipo:'Menús',desc:'Menús enmarcados PVC',material:'PVC foam',medidas:'40x60',qty:20,precio:450,descPct:15,estado:'En Producción',fecha:'2026-03-01',notas:'Urgente'},
-    {id:'COT-005',clienteId:'CLI-001',cliente:'Construcciones Garza',tipo:'Banner',desc:'Banners evento',material:'Lona impresa',medidas:'200x100',qty:5,precio:600,descPct:10,estado:'Aprobada',fecha:'2026-03-10',notas:''},
-  ]);
-  save(KEYS.prod,[
-    {id:'ORD-001',cliente:'Construcciones Garza',tipo:'Letrero Luminoso',desc:'Letrero fachada LED',responsable:'Luis R.',fechaComp:'2026-02-05',avance:100,estado:'Entregada',obs:'Sin obs.'},
-    {id:'ORD-002',cliente:'Super Tiendas Luna',tipo:'Vinil',desc:'Vinilos tienda',responsable:'María G.',fechaComp:'2026-02-25',avance:100,estado:'Entregada',obs:'Instalación ok'},
-    {id:'ORD-003',cliente:'Rest. El Rancho',tipo:'Menús',desc:'Menús enmarcados',responsable:'Juan P.',fechaComp:'2026-03-15',avance:65,estado:'En Proceso',obs:'Pendiente laminado'},
-    {id:'ORD-004',cliente:'Construcciones Garza',tipo:'Banner',desc:'Banners evento',responsable:'Luis R.',fechaComp:'2026-03-18',avance:20,estado:'Esperando Material',obs:'Falta lona'},
-  ]);
-  save(KEYS.cob,[
-    {id:'FAC-001',cliente:'Construcciones Garza',total:15660,anticipo:5000,vence:'2026-03-06',pagado:10660,forma:'Transferencia',estado:'Pagada',obs:''},
-    {id:'FAC-002',cliente:'Super Tiendas Luna',total:11136,anticipo:3000,vence:'2026-03-26',pagado:8136,forma:'Cheque',estado:'Pagada',obs:''},
-    {id:'FAC-003',cliente:'Rest. El Rancho',total:12528,anticipo:4000,vence:'2026-04-15',pagado:0,forma:'',estado:'Pendiente',obs:'Recordatorio enviado'},
-    {id:'FAC-004',cliente:'Construcciones Garza',total:4176,anticipo:1500,vence:'2026-04-18',pagado:0,forma:'',estado:'Pendiente',obs:''},
-  ]);
-  save(KEYS.seg,[
-    {id:'SEG-001',cliente:'Carlos Hernández',etapa:'Cotización Enviada',valor:1392,prob:50,tipoContacto:'WhatsApp',responsable:'Ana V.',accion:'Llamada seguimiento',fechaAccion:'2026-04-08',notas:'Espera decisión'},
-    {id:'SEG-002',cliente:'Construcciones Garza',etapa:'Negociación',valor:25000,prob:80,tipoContacto:'Visita',responsable:'Luis R.',accion:'Propuesta ampliación',fechaAccion:'2026-04-05',notas:'Sucursal nueva'},
-    {id:'SEG-003',cliente:'Gobierno Municipal',etapa:'Prospectando',valor:150000,prob:20,tipoContacto:'Email',responsable:'Director',accion:'Presentación formal',fechaAccion:'2026-06-01',notas:'Licitación Q3'},
-    {id:'SEG-004',cliente:'Super Tiendas Luna',etapa:'Primer Contacto',valor:8000,prob:30,tipoContacto:'Llamada',responsable:'Ana V.',accion:'Cotizar 5 sucursales',fechaAccion:'2026-04-10',notas:'Referido CLI-001'},
-  ]);
+const firebaseConfig = {
+  apiKey: "AIzaSyAAf9HnAJppIMUx3cz2RdrR2dkgLx8InSI",
+  authDomain: "sign-crm-a7bda.firebaseapp.com",
+  projectId: "sign-crm-a7bda",
+  storageBucket: "sign-crm-a7bda.firebasestorage.app",
+  messagingSenderId: "404561016263",
+  appId: "1:404561016263:web:ae655261c64c41400ed5e2",
+  measurementId: "G-HT33WKFZW1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+window.DB = db;
+window.fbCollection = collection;
+window.fbAddDoc     = addDoc;
+window.fbGetDocs    = getDocs;
+window.fbDeleteDoc  = deleteDoc;
+window.fbDoc        = doc;
+window.fbOnSnapshot = onSnapshot;
+window.fbQuery      = query;
+window.fbOrderBy    = orderBy;
+
+// local cache
+window.cache = { clientes:[], cots:[], prod:[], cob:[], seg:[] };
+
+function fmt$(n){ return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0}); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function calcTotal(c){ const s=c.qty*c.precio; return (s-(s*(c.descPct/100)))*1.16; }
+
+function badge(text){
+  const map={'Activo':'activo','Prospecto':'prospecto','Pendiente':'pendiente','En Producción':'produccion','Aprobada':'aprobada','Pagada':'pagada','Vencida':'vencida','En Proceso':'produccion','Esperando Material':'pendiente','Entregada':'aprobada','Inactivo':'vencida','VIP':'aprobada','Negociación':'produccion','Cerrado Ganado':'aprobada','Cerrado Perdido':'vencida'};
+  return `<span class="badge ${map[text]||'prospecto'}">${text}</span>`;
 }
 
-function showPage(name,navEl){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(navEl)navEl.classList.add('active');
-  else document.querySelectorAll('.nav-item').forEach(i=>{if(i.textContent.toLowerCase().includes(name.slice(0,4)))i.classList.add('active');});
-  renderPage(name);
+function progressBar(pct){
+  const color=pct===100?'var(--green)':pct>50?'var(--accent)':'var(--accent2)';
+  return `<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--border);border-radius:3px"><div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div></div><span style="font-size:11px;color:var(--muted);min-width:30px">${pct}%</span></div>`;
 }
 
-function renderPage(n){
-  if(n==='dashboard')renderDashboard();
-  if(n==='clientes')renderClientes();
-  if(n==='cotizaciones')renderCotizaciones();
-  if(n==='pipeline')renderPipeline();
-  if(n==='produccion')renderProduccion();
-  if(n==='cobranza')renderCobranza();
+// ── realtime listeners ───────────────────────────────────────────────────────
+function listenCol(name, cacheKey, renderFn){
+  fbOnSnapshot(collection(db, name), snap => {
+    window.cache[cacheKey] = snap.docs.map(d=>({...d.data(), _id:d.id}));
+    renderFn();
+  });
 }
 
-function badge(t){
-  const m={'Activo':'activo','Prospecto':'prospecto','Pendiente':'pendiente','En Producción':'produccion','Aprobada':'aprobada','Pagada':'pagada','Vencida':'vencida','En Proceso':'produccion','Esperando Material':'pendiente','Entregada':'aprobada','Inactivo':'vencida','VIP':'aprobada','Negociación':'produccion','Cerrado Ganado':'aprobada','Cerrado Perdido':'vencida'};
-  return`<span class="badge ${m[t]||'prospecto'}">${t}</span>`;
+function startListeners(){
+  listenCol('clientes','clientes', ()=>{ renderClientes(); renderDashboard(); });
+  listenCol('cotizaciones','cots',  ()=>{ renderCotizaciones(); renderDashboard(); });
+  listenCol('produccion','prod',    ()=>{ renderProduccion(); renderDashboard(); });
+  listenCol('cobranza','cob',       ()=>{ renderCobranza(); renderDashboard(); });
+  listenCol('seguimiento','seg',    ()=>{ renderPipeline(); });
 }
 
-function progressBar(p){
-  const c=p===100?'var(--green)':p>50?'var(--accent)':'var(--accent2)';
-  return`<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--border);border-radius:3px"><div style="width:${p}%;height:100%;background:${c};border-radius:3px"></div></div><span style="font-size:11px;color:var(--muted);min-width:30px">${p}%</span></div>`;
-}
-
-function renderDashboard(){
-  const cl=load(KEYS.clientes),co=load(KEYS.cots),pr=load(KEYS.prod),cb=load(KEYS.cob);
-  const tv=co.filter(c=>['Aprobada','Entregada','Facturada'].includes(c.estado)).reduce((s,c)=>s+calcTotal(c),0);
-  const pc=cb.filter(c=>c.estado==='Pendiente'||c.estado==='Parcial').reduce((s,f)=>s+(f.total-f.anticipo-f.pagado),0);
-  document.getElementById('fecha-hoy').textContent='📅 '+new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
+// ── renders ──────────────────────────────────────────────────────────────────
+window.renderDashboard = function(){
+  const cl=cache.clientes, co=cache.cots, pr=cache.prod, cb=cache.cob;
+  const totalV=co.filter(c=>['Aprobada','Entregada','Facturada'].includes(c.estado)).reduce((s,c)=>s+calcTotal(c),0);
+  const porCob=cb.filter(f=>f.estado!=='Pagada').reduce((s,f)=>s+(Number(f.total)-Number(f.anticipo)-Number(f.pagado)),0);
   document.getElementById('kpi-grid').innerHTML=`
     <div class="kpi-card orange"><div class="kpi-label">Total Clientes</div><div class="kpi-value orange">${cl.length}</div><div class="kpi-sub">${cl.filter(c=>c.estado==='Activo').length} activos</div></div>
     <div class="kpi-card blue"><div class="kpi-label">Cotizaciones Activas</div><div class="kpi-value blue">${co.filter(c=>['Aprobada','En Producción'].includes(c.estado)).length}</div><div class="kpi-sub">de ${co.length} totales</div></div>
-    <div class="kpi-card green"><div class="kpi-label">Ventas Aprobadas</div><div class="kpi-value green" style="font-size:22px">${fmt$(tv)}</div><div class="kpi-sub">este periodo</div></div>
-    <div class="kpi-card yellow"><div class="kpi-label">Por Cobrar</div><div class="kpi-value yellow" style="font-size:22px">${fmt$(pc)}</div><div class="kpi-sub">${cb.filter(c=>c.estado==='Pendiente').length} facturas pendientes</div></div>`;
-  document.getElementById('dash-cots').innerHTML=co.slice(-5).reverse().map(c=>`<tr><td>${c.cliente}</td><td>${c.tipo}</td><td class="amount">${fmt$(calcTotal(c))}</td><td>${badge(c.estado)}</td></tr>`).join('');
-  document.getElementById('dash-cob').innerHTML=cb.filter(c=>c.estado!=='Pagada').map(f=>`<tr><td>${f.cliente}</td><td class="amount">${fmt$(f.total-f.anticipo-f.pagado)}</td><td style="color:var(--muted);font-size:12px">${f.vence}</td><td>${badge(f.estado)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty-state">Sin facturas pendientes 🎉</td></tr>';
-  document.getElementById('dash-prod').innerHTML=pr.filter(p=>p.estado!=='Entregada').map(p=>`<tr><td style="font-weight:600">${p.id}</td><td>${p.cliente}</td><td>${p.tipo}</td><td>${p.responsable}</td><td style="min-width:120px">${progressBar(p.avance)}</td><td>${badge(p.estado)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty-state">Sin órdenes activas</td></tr>';
-}
+    <div class="kpi-card green"><div class="kpi-label">Ventas Aprobadas</div><div class="kpi-value green" style="font-size:22px">${fmt$(totalV)}</div><div class="kpi-sub">con IVA incluido</div></div>
+    <div class="kpi-card yellow"><div class="kpi-label">Por Cobrar</div><div class="kpi-value yellow" style="font-size:22px">${fmt$(porCob)}</div><div class="kpi-sub">${cb.filter(f=>f.estado!=='Pagada').length} facturas pendientes</div></div>`;
+  document.getElementById('dash-cots').innerHTML=co.slice(-5).reverse().map(c=>`<tr><td>${c.cliente}</td><td>${c.tipo}</td><td class="amount">${fmt$(calcTotal(c))}</td><td>${badge(c.estado)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty-state">Sin cotizaciones</td></tr>';
+  document.getElementById('dash-cob').innerHTML=cb.filter(f=>f.estado!=='Pagada').map(f=>`<tr><td>${f.cliente}</td><td class="amount">${fmt$(f.total-f.anticipo-Number(f.pagado))}</td><td style="color:var(--muted);font-size:12px">${f.vence}</td><td>${badge(f.estado)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty-state">¡Sin pendientes! 🎉</td></tr>';
+  document.getElementById('dash-prod').innerHTML=pr.filter(p=>p.estado!=='Entregada').map(p=>`<tr><td style="font-weight:700;color:var(--accent)">${p.orden||'—'}</td><td>${p.cliente}</td><td>${p.tipo}</td><td>${p.responsable}</td><td style="min-width:140px">${progressBar(Number(p.avance))}</td><td>${badge(p.estado)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty-state">Sin órdenes activas</td></tr>';
+};
 
-function renderClientes(){
-  const cl=load(KEYS.clientes);
-  document.getElementById('tbl-clientes').innerHTML=cl.map(c=>`<tr><td style="font-weight:700;color:var(--accent)">${c.id}</td><td><div style="font-weight:600">${c.nombre}</div><div style="font-size:11px;color:var(--muted)">${c.email}</div></td><td>${c.contacto}</td><td>${c.ciudad}</td><td style="font-size:12px;color:var(--muted)">${c.tipo}</td><td>${badge(c.estado)}</td><td style="color:var(--muted);font-size:12px">${c.fecha}</td><td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="deleteItem('${KEYS.clientes}','${c.id}','renderClientes')">🗑</button></td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">No hay clientes. ¡Agrega el primero!</td></tr>';
-}
+window.renderClientes = function(){
+  const cl=cache.clientes;
+  document.getElementById('tbl-clientes').innerHTML=cl.map(c=>`<tr>
+    <td style="font-weight:700;color:var(--accent);font-size:11px">${c._id.slice(0,8)}</td>
+    <td><div style="font-weight:600">${c.nombre}</div><div style="font-size:11px;color:var(--muted)">${c.email}</div></td>
+    <td>${c.contacto}<br><span style="font-size:11px;color:var(--muted)">${c.tel}</span></td>
+    <td>${c.ciudad}</td><td style="font-size:12px;color:var(--muted)">${c.tipo}</td>
+    <td>${badge(c.estado)}</td><td style="color:var(--muted);font-size:12px">${c.fecha}</td>
+    <td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="delDoc('clientes','${c._id}')">🗑</button></td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty-state">Sin clientes aún. ¡Agrega el primero!</td></tr>';
+};
 
-function renderCotizaciones(){
-  const co=load(KEYS.cots);
-  document.getElementById('tbl-cots').innerHTML=co.map(c=>`<tr><td style="font-weight:700;color:var(--accent)">${c.id}</td><td><div style="font-weight:600">${c.cliente}</div></td><td>${c.tipo}</td><td style="text-align:center">${c.qty}</td><td class="amount">${fmt$(calcTotal(c))}</td><td>${badge(c.estado)}</td><td style="color:var(--muted);font-size:12px">${c.fecha}</td><td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="deleteItem('${KEYS.cots}','${c.id}','renderCotizaciones')">🗑</button></td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">No hay cotizaciones.</td></tr>';
-}
+window.renderCotizaciones = function(){
+  const co=cache.cots;
+  document.getElementById('tbl-cots').innerHTML=co.map(c=>`<tr>
+    <td style="font-weight:700;color:var(--accent);font-size:11px">${c._id.slice(0,8)}</td>
+    <td><div style="font-weight:600">${c.cliente}</div><div style="font-size:11px;color:var(--muted)">${c.desc}</div></td>
+    <td>${c.tipo}</td><td style="text-align:center">${c.qty}</td>
+    <td class="amount">${fmt$(calcTotal(c))}</td><td>${badge(c.estado)}</td>
+    <td style="color:var(--muted);font-size:12px">${c.fecha}</td>
+    <td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="delDoc('cotizaciones','${c._id}')">🗑</button></td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty-state">Sin cotizaciones aún.</td></tr>';
+};
 
 const ETAPAS=['Primer Contacto','Prospectando','Cotización Enviada','Negociación','Cerrado Ganado'];
-function renderPipeline(){
-  const sg=load(KEYS.seg);
-  const tv=sg.reduce((s,x)=>s+Number(x.valor),0);
-  const te=sg.reduce((s,x)=>s+Number(x.valor)*(Number(x.prob)/100),0);
-  const tg=sg.filter(x=>x.etapa==='Cerrado Ganado').reduce((s,x)=>s+Number(x.valor),0);
+window.renderPipeline = function(){
+  const sg=cache.seg;
+  const total=sg.reduce((s,x)=>s+Number(x.valor),0);
+  const esp=sg.reduce((s,x)=>s+Number(x.valor)*(Number(x.prob)/100),0);
+  const gan=sg.filter(x=>x.etapa==='Cerrado Ganado').reduce((s,x)=>s+Number(x.valor),0);
   document.getElementById('pipeline-kpis').innerHTML=`
     <div class="kpi-card orange"><div class="kpi-label">Oportunidades</div><div class="kpi-value orange">${sg.length}</div></div>
-    <div class="kpi-card blue"><div class="kpi-label">Pipeline Total</div><div class="kpi-value blue" style="font-size:22px">${fmt$(tv)}</div></div>
-    <div class="kpi-card yellow"><div class="kpi-label">Valor Esperado</div><div class="kpi-value yellow" style="font-size:22px">${fmt$(te)}</div></div>
-    <div class="kpi-card green"><div class="kpi-label">Cerrado Ganado</div><div class="kpi-value green" style="font-size:22px">${fmt$(tg)}</div></div>`;
+    <div class="kpi-card blue"><div class="kpi-label">Pipeline Total</div><div class="kpi-value blue" style="font-size:22px">${fmt$(total)}</div></div>
+    <div class="kpi-card yellow"><div class="kpi-label">Valor Esperado</div><div class="kpi-value yellow" style="font-size:22px">${fmt$(esp)}</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Cerrado Ganado</div><div class="kpi-value green" style="font-size:22px">${fmt$(gan)}</div></div>`;
   document.getElementById('pipeline-board').innerHTML=ETAPAS.map(e=>{
     const items=sg.filter(x=>x.etapa===e);
-    return`<div class="pipeline-col"><div class="pipeline-col-title">${e}<span class="pipeline-count">${items.length}</span></div>${items.map(x=>`<div class="pipeline-card"><div class="p-client">${x.cliente}</div><div class="p-value">${fmt$(x.valor)}</div><div class="p-type">${x.prob}% · ${x.tipoContacto}</div></div>`).join('')||'<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">—</div>'}</div>`;
+    return `<div class="pipeline-col"><div class="pipeline-col-title">${e}<span class="pipeline-count">${items.length}</span></div>
+      ${items.map(x=>`<div class="pipeline-card"><div class="p-client">${x.cliente}</div><div class="p-value">${fmt$(x.valor)}</div><div class="p-type">${x.prob}% prob · ${x.tipoContacto}</div></div>`).join('')||'<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Sin oportunidades</div>'}
+    </div>`;
   }).join('');
-}
+};
 
-function renderProduccion(){
-  const pr=load(KEYS.prod);
-  document.getElementById('tbl-prod').innerHTML=pr.map(p=>`<tr><td style="font-weight:700;color:var(--accent)">${p.id}</td><td>${p.cliente}</td><td>${p.tipo}</td><td style="max-width:180px;font-size:12px">${p.desc}</td><td>${p.responsable}</td><td style="color:var(--muted);font-size:12px">${p.fechaComp}</td><td style="min-width:120px">${progressBar(Number(p.avance))}</td><td>${badge(p.estado)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">Sin órdenes.</td></tr>';
-}
+window.renderProduccion = function(){
+  const pr=cache.prod;
+  document.getElementById('tbl-prod').innerHTML=pr.map(p=>`<tr>
+    <td style="font-weight:700;color:var(--accent)">${p.orden||'—'}</td><td>${p.cliente}</td><td>${p.tipo}</td>
+    <td style="max-width:180px;font-size:12px">${p.desc}</td><td>${p.responsable}</td>
+    <td style="color:var(--muted);font-size:12px">${p.fechaComp}</td>
+    <td style="min-width:130px">${progressBar(Number(p.avance))}</td><td>${badge(p.estado)}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty-state">Sin órdenes.</td></tr>';
+};
 
-function renderCobranza(){
-  const cb=load(KEYS.cob);
-  const co=cb.filter(f=>f.estado==='Pagada').reduce((s,f)=>s+Number(f.pagado)+Number(f.anticipo),0);
-  const pe=cb.filter(f=>f.estado!=='Pagada').reduce((s,f)=>s+(Number(f.total)-Number(f.anticipo)-Number(f.pagado)),0);
-  const tf=cb.reduce((s,f)=>s+Number(f.total),0);
+window.renderCobranza = function(){
+  const cb=cache.cob;
+  const cobrado=cb.filter(f=>f.estado==='Pagada').reduce((s,f)=>s+Number(f.pagado)+Number(f.anticipo),0);
+  const pendiente=cb.filter(f=>f.estado!=='Pagada').reduce((s,f)=>s+(Number(f.total)-Number(f.anticipo)-Number(f.pagado)),0);
+  const total=cb.reduce((s,f)=>s+Number(f.total),0);
   document.getElementById('cob-kpis').innerHTML=`
-    <div class="kpi-card green"><div class="kpi-label">Cobrado</div><div class="kpi-value green" style="font-size:22px">${fmt$(co)}</div></div>
-    <div class="kpi-card yellow"><div class="kpi-label">Por Cobrar</div><div class="kpi-value yellow" style="font-size:22px">${fmt$(pe)}</div></div>
-    <div class="kpi-card blue"><div class="kpi-label">Total Facturado</div><div class="kpi-value blue" style="font-size:22px">${fmt$(tf)}</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Cobrado</div><div class="kpi-value green" style="font-size:22px">${fmt$(cobrado)}</div></div>
+    <div class="kpi-card yellow"><div class="kpi-label">Por Cobrar</div><div class="kpi-value yellow" style="font-size:22px">${fmt$(pendiente)}</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Total Facturado</div><div class="kpi-value blue" style="font-size:22px">${fmt$(total)}</div></div>
     <div class="kpi-card orange"><div class="kpi-label">Facturas Pendientes</div><div class="kpi-value orange">${cb.filter(f=>f.estado!=='Pagada').length}</div></div>`;
-  document.getElementById('tbl-cob').innerHTML=cb.map(f=>`<tr><td style="font-weight:700;color:var(--accent)">${f.id}</td><td>${f.cliente}</td><td class="amount">${fmt$(f.total)}</td><td class="amount" style="color:var(--muted)">${fmt$(f.anticipo)}</td><td class="amount" style="color:var(--accent2)">${fmt$(f.total-f.anticipo-Number(f.pagado))}</td><td style="color:var(--muted);font-size:12px">${f.vence}</td><td style="font-size:12px">${f.forma||'—'}</td><td>${badge(f.estado)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">Sin facturas.</td></tr>';
-}
+  document.getElementById('tbl-cob').innerHTML=cb.map(f=>`<tr>
+    <td style="font-weight:700;color:var(--accent);font-size:11px">${f._id.slice(0,8)}</td><td>${f.cliente}</td>
+    <td class="amount">${fmt$(f.total)}</td><td class="amount" style="color:var(--muted)">${fmt$(f.anticipo)}</td>
+    <td class="amount" style="color:var(--accent2)">${fmt$(f.total-f.anticipo-Number(f.pagado))}</td>
+    <td style="color:var(--muted);font-size:12px">${f.vence}</td><td style="font-size:12px">${f.forma||'—'}</td>
+    <td>${badge(f.estado)}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty-state">Sin facturas.</td></tr>';
+};
 
-function openModal(id){
-  const cl=load(KEYS.clientes);
-  const opts=cl.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
-  ['cot-cliente','ord-cliente','fac-cliente','seg-cliente'].forEach(s=>{const e=document.getElementById(s);if(e)e.innerHTML=opts||'<option>—</option>';});
+// ── navigation ───────────────────────────────────────────────────────────────
+window.showPage = function(name, navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(navEl) navEl.classList.add('active');
+  else document.querySelectorAll('.nav-item').forEach(item=>{ if(item.textContent.toLowerCase().includes(name.slice(0,5))) item.classList.add('active'); });
+};
+
+// ── modal ────────────────────────────────────────────────────────────────────
+window.openModal = function(id){
+  const opts=cache.clientes.map(c=>`<option value="${c._id}">${c.nombre}</option>`).join('')||'<option>— Sin clientes —</option>';
+  ['cot-cliente','ord-cliente','fac-cliente','seg-cliente'].forEach(s=>{ const el=document.getElementById(s); if(el) el.innerHTML=opts; });
+  const fd=document.getElementById('cot-fecha'); if(fd) fd.value=today();
   document.getElementById(id).classList.add('open');
-  const fd=document.getElementById('cot-fecha');if(fd)fd.value=today();
-}
+};
+window.closeModal = function(id){ document.getElementById(id).classList.remove('open'); };
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) bg.classList.remove('open'); }));
 
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-bg').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open');}));
+// ── saves ────────────────────────────────────────────────────────────────────
+window.saveCliente = async function(){
+  const n=document.getElementById('c-nombre').value.trim(); if(!n) return alert('Ingresa el nombre');
+  await fbAddDoc(collection(db,'clientes'),{nombre:n,contacto:document.getElementById('c-contacto').value,tel:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,ciudad:document.getElementById('c-ciudad').value,tipo:document.getElementById('c-tipo').value,canal:document.getElementById('c-canal').value,estado:document.getElementById('c-estado').value,notas:document.getElementById('c-notas').value,fecha:today()});
+  closeModal('modal-cliente');
+};
 
-function saveCliente(){
-  const n=document.getElementById('c-nombre').value.trim();if(!n)return alert('Ingresa el nombre');
-  const cl=load(KEYS.clientes);
-  cl.push({id:'CLI-'+String(cl.length+1).padStart(3,'0'),nombre:n,contacto:document.getElementById('c-contacto').value,tel:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,ciudad:document.getElementById('c-ciudad').value,tipo:document.getElementById('c-tipo').value,canal:document.getElementById('c-canal').value,estado:document.getElementById('c-estado').value,notas:document.getElementById('c-notas').value,fecha:today()});
-  save(KEYS.clientes,cl);closeModal('modal-cliente');renderClientes();
-}
+window.saveCotizacion = async function(){
+  const cId=document.getElementById('cot-cliente').value;
+  const c=cache.clientes.find(x=>x._id===cId);
+  await fbAddDoc(collection(db,'cotizaciones'),{clienteId:cId,cliente:c?c.nombre:'—',tipo:document.getElementById('cot-tipo').value,desc:document.getElementById('cot-desc').value,material:document.getElementById('cot-material').value,medidas:document.getElementById('cot-medidas').value,qty:Number(document.getElementById('cot-qty').value),precio:Number(document.getElementById('cot-precio').value),descPct:Number(document.getElementById('cot-desc-pct').value),estado:document.getElementById('cot-estado').value,fecha:document.getElementById('cot-fecha').value,notas:document.getElementById('cot-notas').value});
+  closeModal('modal-cotizacion');
+};
 
-function saveCotizacion(){
-  const cl=load(KEYS.clientes);const cid=document.getElementById('cot-cliente').value;
-  const cliente=cl.find(c=>c.id===cid);const co=load(KEYS.cots);
-  co.push({id:'COT-'+String(co.length+1).padStart(3,'0'),clienteId:cid,cliente:cliente?cliente.nombre:'—',tipo:document.getElementById('cot-tipo').value,desc:document.getElementById('cot-desc').value,material:document.getElementById('cot-material').value,medidas:document.getElementById('cot-medidas').value,qty:Number(document.getElementById('cot-qty').value),precio:Number(document.getElementById('cot-precio').value),descPct:Number(document.getElementById('cot-desc-pct').value),estado:document.getElementById('cot-estado').value,fecha:document.getElementById('cot-fecha').value,notas:document.getElementById('cot-notas').value});
-  save(KEYS.cots,co);closeModal('modal-cotizacion');renderCotizaciones();
-}
+window.saveOrden = async function(){
+  const cId=document.getElementById('ord-cliente').value;
+  const c=cache.clientes.find(x=>x._id===cId);
+  const pr=cache.prod;
+  await fbAddDoc(collection(db,'produccion'),{orden:'ORD-'+String(pr.length+1).padStart(3,'0'),clienteId:cId,cliente:c?c.nombre:'—',tipo:document.getElementById('ord-tipo').value,desc:document.getElementById('ord-desc').value,responsable:document.getElementById('ord-resp').value,fechaComp:document.getElementById('ord-fecha').value,avance:Number(document.getElementById('ord-avance').value),estado:document.getElementById('ord-estado').value,inst:document.getElementById('ord-inst').value,obs:document.getElementById('ord-obs').value});
+  closeModal('modal-orden');
+};
 
-function saveOrden(){
-  const cl=load(KEYS.clientes);const cid=document.getElementById('ord-cliente').value;
-  const cliente=cl.find(c=>c.id===cid);const pr=load(KEYS.prod);
-  pr.push({id:'ORD-'+String(pr.length+1).padStart(3,'0'),clienteId:cid,cliente:cliente?cliente.nombre:'—',tipo:document.getElementById('ord-tipo').value,desc:document.getElementById('ord-desc').value,responsable:document.getElementById('ord-resp').value,fechaComp:document.getElementById('ord-fecha').value,avance:Number(document.getElementById('ord-avance').value),estado:document.getElementById('ord-estado').value,obs:document.getElementById('ord-obs').value});
-  save(KEYS.prod,pr);closeModal('modal-orden');renderProduccion();
-}
+window.saveFactura = async function(){
+  const cId=document.getElementById('fac-cliente').value;
+  const c=cache.clientes.find(x=>x._id===cId);
+  const cb=cache.cob;
+  await fbAddDoc(collection(db,'cobranza'),{factura:'FAC-'+String(cb.length+1).padStart(3,'0'),clienteId:cId,cliente:c?c.nombre:'—',total:Number(document.getElementById('fac-total').value),anticipo:Number(document.getElementById('fac-anticipo').value),vence:document.getElementById('fac-vence').value,pagado:0,forma:document.getElementById('fac-forma').value,estado:document.getElementById('fac-estado').value,obs:document.getElementById('fac-obs').value});
+  closeModal('modal-factura');
+};
 
-function saveFactura(){
-  const cl=load(KEYS.clientes);const cid=document.getElementById('fac-cliente').value;
-  const cliente=cl.find(c=>c.id===cid);const cb=load(KEYS.cob);
-  cb.push({id:'FAC-'+String(cb.length+1).padStart(3,'0'),clienteId:cid,cliente:cliente?cliente.nombre:'—',total:Number(document.getElementById('fac-total').value),anticipo:Number(document.getElementById('fac-anticipo').value),vence:document.getElementById('fac-vence').value,pagado:0,forma:document.getElementById('fac-forma').value,estado:document.getElementById('fac-estado').value,obs:document.getElementById('fac-obs').value});
-  save(KEYS.cob,cb);closeModal('modal-factura');renderCobranza();
-}
+window.saveSeguimiento = async function(){
+  const cId=document.getElementById('seg-cliente').value;
+  const c=cache.clientes.find(x=>x._id===cId);
+  await fbAddDoc(collection(db,'seguimiento'),{clienteId:cId,cliente:c?c.nombre:'—',etapa:document.getElementById('seg-etapa').value,valor:Number(document.getElementById('seg-valor').value),prob:Number(document.getElementById('seg-prob').value),tipoContacto:document.getElementById('seg-tipo').value,responsable:document.getElementById('seg-resp').value,accion:document.getElementById('seg-accion').value,fechaAccion:document.getElementById('seg-fecha').value,notas:document.getElementById('seg-notas').value});
+  closeModal('modal-seguimiento');
+};
 
-function saveSeguimiento(){
-  const cl=load(KEYS.clientes);const cid=document.getElementById('seg-cliente').value;
-  const cliente=cl.find(c=>c.id===cid);const sg=load(KEYS.seg);
-  sg.push({id:'SEG-'+String(sg.length+1).padStart(3,'0'),clienteId:cid,cliente:cliente?cliente.nombre:'—',etapa:document.getElementById('seg-etapa').value,valor:Number(document.getElementById('seg-valor').value),prob:Number(document.getElementById('seg-prob').value),tipoContacto:document.getElementById('seg-tipo').value,responsable:document.getElementById('seg-resp').value,accion:document.getElementById('seg-accion').value,fechaAccion:document.getElementById('seg-fecha').value,notas:document.getElementById('seg-notas').value});
-  save(KEYS.seg,sg);closeModal('modal-seguimiento');renderPipeline();
-}
+window.delDoc = async function(col, id){
+  if(!confirm('¿Eliminar este registro?')) return;
+  await fbDeleteDoc(fbDoc(db,col,id));
+};
 
-function deleteItem(key,id,fn){
-  if(!confirm('¿Eliminar este registro?'))return;
-  save(key,load(key).filter(x=>x.id!==id));
-  window[fn]();
-}
+window.filterTable = function(id,q){
+  document.getElementById(id).querySelectorAll('tr').forEach(r=>{ r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; });
+};
 
-function filterTable(tbId,q){
-  document.getElementById(tbId).querySelectorAll('tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
-}
-
-seed();
-renderDashboard();
+// ── init ─────────────────────────────────────────────────────────────────────
+document.getElementById('fecha-hoy').textContent = '📅 '+new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+startListeners();
+setTimeout(()=>{
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app-root').style.display='flex';
+},1200);
 </script>
 </body>
 </html>
