@@ -325,6 +325,67 @@ window.fbQuery      = query;
 window.fbOrderBy    = orderBy;
 
 // local cache
+// --- COPIA DESDE AQUÍ ---
+
+// Función para obtener valores de los inputs rápidamente
+const v = (id) => {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+};
+
+// Función para mostrar notificaciones (Toasts)
+window.toast = function(msg) {
+  const t = document.createElement('div');
+  t.style = "position:fixed; bottom:20px; right:20px; background:var(--accent); color:white; padding:12px 20px; border-radius:8px; font-weight:bold; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.3); animation: modalIn 0.3s ease;";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transition = '0.5s';
+    setTimeout(() => t.remove(), 500);
+  }, 3000);
+};
+
+// FUNCIÓN MAESTRA PARA GUARDAR (REEMPLAZA A LAS ANTERIORES)
+async function upsertDoc(colName, data, modalId) {
+  try {
+    const id = editId[modalId]; // Verifica si estamos editando o creando
+    if (id) {
+      await upd(colName, id, data);
+      toast('✅ Registro actualizado');
+    } else {
+      await add(colName, data);
+      toast('✅ Guardado exitosamente');
+    }
+    closeModal(modalId);
+  } catch (error) {
+    console.error("Error:", error);
+    alert("❌ Error al conectar con Firebase: " + error.message);
+  }
+}
+
+// NUEVA VERSIÓN DE SAVE CLIENTE (Sustituye a la tuya)
+window.saveCliente = async function() {
+  const nombre = v('c-nombre');
+  if(!nombre) return alert("El nombre es obligatorio");
+
+  const data = {
+    nombre,
+    contacto: v('c-contacto'),
+    tel: v('c-tel'),
+    email: v('c-email'),
+    ciudad: v('c-ciudad'),
+    tipo: v('c-tipo'),
+    canal: v('c-canal'),
+    estado: v('c-estado'),
+    notas: v('c-notas'),
+    fecha: today()
+  };
+  
+  await upsertDoc('clientes', data, 'modal-cliente');
+};
+
+// --- TERMINA AQUÍ ---
 window.cache = { clientes:[], cots:[], prod:[], cob:[], seg:[] };
 
 function fmt$(n){ return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0}); }
