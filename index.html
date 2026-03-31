@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NJ Design Print | Mobile Pro</title>
+<title>NJ Design Print | Pro System</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
@@ -14,90 +13,53 @@
     --brand: #b8ff00; --bg: #0c0c0e; --side: #141417; --card: #1a1a1e;
     --border: rgba(255,255,255,0.1); --text: #e2e2e7; --muted: #8a8a93;
   }
-
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+  /* NAVIGATION */
+  .app { display: flex; min-height: 100vh; flex-direction: row; }
+  .sidebar { width: 240px; background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; }
   
-  body { 
-    background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
-    line-height: 1.5; overflow-x: hidden;
-  }
-
-  /* --- ESTRUCTURA RESPONSIVA --- */
-  .app { display: flex; height: 100vh; flex-direction: row; }
-
-  /* Sidebar para PC / Tab bar para Móvil */
-  .sidebar { 
-    width: 240px; background: var(--side); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; z-index: 90;
-  }
-
   @media (max-width: 768px) {
     .app { flex-direction: column; }
-    .sidebar { 
-      width: 100%; height: 70px; position: fixed; bottom: 0; left: 0;
-      flex-direction: row; padding: 0; border-right: none; border-top: 1px solid var(--border);
-      justify-content: space-around; align-items: center;
-    }
+    .sidebar { width: 100%; height: 70px; position: fixed; bottom: 0; flex-direction: row; padding: 0; border-top: 1px solid var(--border); justify-content: space-around; align-items: center; z-index: 1000; }
     .brand { display: none; }
-    .main { padding: 20px 15px 100px 15px !important; } /* Espacio para la barra inferior */
+    .main { padding: 20px 15px 100px 15px !important; }
   }
 
   .brand { margin-bottom: 40px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; text-align: center; }
   .brand span { color: var(--brand); }
-
-  .nav-item { 
-    padding: 12px 15px; border-radius: 10px; cursor: pointer; color: var(--muted);
-    font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: 0.2s;
-  }
+  .nav-item { padding: 12px 15px; border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
   .nav-item.active { color: var(--brand); background: rgba(184,255,0,0.1); }
 
-  @media (max-width: 768px) {
-    .nav-item { flex-direction: column; gap: 4px; font-size: 10px; padding: 10px; }
-    .nav-item span { display: block; }
-  }
-
   /* MAIN CONTENT */
-  .main { flex: 1; overflow-y: auto; padding: 40px; }
-  .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+  .main { flex: 1; padding: 40px; }
+  .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   
-  /* CARDS & TABLES */
-  .card-table { 
-    background: var(--card); border: 1px solid var(--border); border-radius: 15px; 
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-  }
-  table { width: 100%; border-collapse: collapse; min-width: 500px; }
+  /* TABLES */
+  .card-table { background: var(--card); border: 1px solid var(--border); border-radius: 15px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 600px; }
   th { text-align: left; padding: 15px; font-size: 11px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
   td { padding: 15px; font-size: 14px; border-bottom: 1px solid var(--border); }
 
-  /* BOTONES */
-  .btn { padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; }
-  .btn-primary { background: var(--brand); color: #000; width: auto; }
-  .btn-pdf { background: #333; color: var(--brand); border: 1px solid var(--brand); padding: 6px 12px; font-size: 11px; }
+  /* UI ELEMENTS */
+  .btn { padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+  .btn-primary { background: var(--brand); color: #000; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
 
-  /* MODALES ADAPTADOS */
-  .modal-overlay { 
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); 
-    backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 15px;
-  }
+  /* CALCULATOR STYLE */
+  .mat-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; margin-bottom: 10px; }
+  .cost-summary { background: rgba(184,255,0,0.05); padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px dashed var(--brand); }
+
+  /* MODALS */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; padding: 15px; }
   .modal-overlay.active { display: flex; }
-  .modal { 
-    background: var(--side); width: 100%; max-width: 600px; border-radius: 20px; 
-    padding: 25px; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border);
-  }
-
-  .form-grid { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-  .input { 
-    width: 100%; background: var(--bg); border: 1px solid var(--border); 
-    padding: 14px; border-radius: 12px; color: #fff; font-size: 16px; /* 16px evita zoom en iOS */
-  }
+  .modal { background: var(--side); width: 100%; max-width: 650px; border-radius: 20px; padding: 25px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); }
+  .input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; font-size: 16px; margin-bottom: 10px; }
 
   .page { display:none; } .page.active { display:block; }
-
-  #toast { 
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--brand); color: #000; padding: 12px 25px; 
-    border-radius: 50px; font-weight: 700; z-index: 2000; display: none;
-  }
+  #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand); color: #000; padding: 12px 25px; border-radius: 50px; font-weight: 700; z-index: 3000; display: none; }
 </style>
 </head>
 <body>
@@ -109,58 +71,80 @@
     <div class="brand">NJ <span>Design Print</span></div>
     <div class="nav-item active" onclick="go('dash', this)">🏠 <span>Inicio</span></div>
     <div class="nav-item" onclick="go('clientes', this)">👥 <span>Clientes</span></div>
-    <div class="nav-item" onclick="go('ventas', this)">💼 <span>Ventas</span></div>
+    <div class="nav-item" onclick="go('ventas', this)">💰 <span>Estimados</span></div>
   </aside>
 
   <main class="main">
     <div id="p-dash" class="page active">
-      <div class="header"><h2>Hola, NJ</h2></div>
-      <div style="background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border);">
-        <p style="color: var(--muted); font-size: 12px;">CLIENTES REGISTRADOS</p>
-        <h1 id="s-cl" style="color: var(--brand); font-size: 40px;">0</h1>
+      <div class="header"><h2>Resumen</h2></div>
+      <div style="background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--border);">
+        <p style="color: var(--muted); font-size: 11px;">PROYECTOS ACTIVOS</p>
+        <h1 id="s-count" style="color: var(--brand); font-size: 35px;">0</h1>
       </div>
     </div>
 
     <div id="p-clientes" class="page">
-      <div class="header">
-        <h2>Clientes</h2>
-        <button class="btn btn-primary" onclick="showMod('m-cli')">+ Nuevo</button>
-      </div>
+      <div class="header"><h2>Clientes</h2><button class="btn btn-primary" onclick="openCliModal()">+ Nuevo Cliente</button></div>
       <div class="card-table">
         <table>
-          <thead><tr><th>Nombre</th><th>WhatsApp</th><th>PDF</th><th>Acción</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>WhatsApp</th><th>Acciones</th></tr></thead>
           <tbody id="t-clientes"></tbody>
         </table>
       </div>
     </div>
 
     <div id="p-ventas" class="page">
-      <div class="header"><h2>Ventas</h2></div>
-      <div class="card-table"><table id="t-ventas"></table></div>
+      <div class="header"><h2>Estimados / Costos</h2><button class="btn btn-primary" onclick="openEstModal()">+ Nuevo Estimado</button></div>
+      <div class="card-table">
+        <table>
+          <thead><tr><th>Cliente</th><th>Proyecto</th><th>Costo Mat.</th><th>Venta</th><th>Utilidad</th><th>PDF</th></tr></thead>
+          <tbody id="t-ventas"></tbody>
+        </table>
+      </div>
     </div>
   </main>
 </div>
 
 <div class="modal-overlay" id="m-cli">
   <div class="modal">
-    <h3>Nuevo Cliente</h3>
-    <div class="form-grid">
-      <input id="c-nom" class="input" placeholder="Nombre completo">
-      <input id="c-emp" class="input" placeholder="Nombre de empresa">
-      <input id="c-tel" class="input" placeholder="WhatsApp (Ej: +52...)">
-      <input id="c-ciu" class="input" placeholder="Ciudad">
-      <textarea id="c-not" class="input" placeholder="Notas extras..." style="height:80px"></textarea>
+    <h3 id="cli-title">Nuevo Cliente</h3><br>
+    <input id="c-nom" class="input" placeholder="Nombre">
+    <input id="c-emp" class="input" placeholder="Empresa">
+    <input id="c-tel" class="input" placeholder="WhatsApp">
+    <input id="c-ciu" class="input" placeholder="Ciudad">
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline" style="flex:1" onclick="closeMod()">Cerrar</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveCli()">Guardar Cliente</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-est">
+  <div class="modal">
+    <h3>Calculadora de Producción</h3><br>
+    <select id="e-cli" class="input"></select>
+    <input id="e-job" class="input" placeholder="Nombre del Trabajo (Ej: Lona 3x2)">
+    
+    <label style="font-size:11px; color:var(--muted)">DESGLOSE DE MATERIALES:</label>
+    <div id="mat-list" style="margin-top:10px;"></div>
+    <button class="btn btn-outline btn-sm" onclick="addMatRow()">+ Añadir Material</button>
+
+    <div class="cost-summary">
+      <div style="display:flex; justify-content:space-between"><span>Gasto Materiales:</span><b id="res-cost">$0.00</b></div>
+      <div style="display:flex; justify-content:space-between; margin-top:5px;"><span>Precio de Venta:</span><input type="number" id="e-price" oninput="calcEst()" style="width:80px; background:none; border:none; border-bottom:1px solid var(--brand); color:white; text-align:right"></div>
+      <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--brand); font-weight:700"><span>Utilidad Est.:</span><span id="res-profit">$0.00</span></div>
+    </div>
+
     <div style="margin-top:20px; display:flex; gap:10px;">
       <button class="btn btn-outline" style="flex:1" onclick="closeMod()">Cerrar</button>
-      <button class="btn btn-primary" style="flex:1" onclick="saveCli()">Guardar</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveEst()">Guardar Estimado</button>
     </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAAf9HnAJppIMUx3cz2RdrR2dkgLx8InSI",
@@ -173,9 +157,9 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  let dataStore = { cl: [], ve: [] };
+  let cache = { cl: [], est: [] };
+  let editId = null;
 
-  // NAVEGACIÓN
   window.go = (id, el) => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('p-'+id).classList.add('active');
@@ -183,73 +167,95 @@
     el.classList.add('active');
   };
 
-  window.showMod = (id) => document.getElementById(id).classList.add('active');
   window.closeMod = () => document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 
-  // GUARDAR
-  window.saveCli = async () => {
-    const d = {
-      nombre: document.getElementById('c-nom').value,
-      empresa: document.getElementById('c-emp').value,
-      tel: document.getElementById('c-tel').value,
-      ciu: document.getElementById('c-ciu').value,
-      not: document.getElementById('c-not').value
-    };
-    if(!d.nombre) return alert("Nombre obligatorio");
-    await addDoc(collection(db, "clientes"), d);
-    closeMod();
-    showToast("✅ Cliente guardado");
+  // --- CLIENTES CON EDICIÓN ---
+  window.openCliModal = () => {
+    editId = null; document.getElementById('cli-title').textContent="Nuevo Cliente";
+    document.querySelectorAll('#m-cli .input').forEach(i => i.value="");
+    document.getElementById('m-cli').classList.add('active');
   };
 
-  function showToast(m) {
-    const t = document.getElementById('toast'); t.textContent = m;
-    t.style.display = 'block'; setTimeout(()=>t.style.display='none', 3000);
-  }
+  window.saveCli = async () => {
+    const d = { nombre: document.getElementById('c-nom').value, empresa: document.getElementById('c-emp').value, tel: document.getElementById('c-tel').value, ciu: document.getElementById('c-ciu').value };
+    if(editId) await updateDoc(doc(db, "clientes", editId), d);
+    else await addDoc(collection(db, "clientes"), d);
+    closeMod(); toast("✅ Guardado");
+  };
 
-  // --- MOTOR DE PDF MEJORADO PARA MÓVIL ---
-  window.downloadPDF = async (id) => {
-    const c = dataStore.cl.find(x => x.id === id);
+  window.editCli = (id) => {
+    const c = cache.cl.find(x => x.id === id);
+    editId = id;
+    document.getElementById('cli-title').textContent="Editar Cliente";
+    document.getElementById('c-nom').value = c.nombre;
+    document.getElementById('c-emp').value = c.empresa;
+    document.getElementById('c-tel').value = c.tel;
+    document.getElementById('c-ciu').value = c.ciu;
+    document.getElementById('m-cli').classList.add('active');
+  };
+
+  // --- CALCULADORA DE ESTIMADOS ---
+  window.openEstModal = () => {
+    document.getElementById('e-cli').innerHTML = cache.cl.map(c => `<option>${c.empresa || c.nombre}</option>`).join('');
+    document.getElementById('mat-list').innerHTML = '';
+    addMatRow();
+    document.getElementById('m-est').classList.add('active');
+  };
+
+  window.addMatRow = () => {
+    const div = document.createElement('div');
+    div.className = 'mat-row';
+    div.innerHTML = `<input placeholder="Mat." class="input m-n"><input type="number" placeholder="Cant" class="input m-q" oninput="calcEst()"><input type="number" placeholder="$" class="input m-p" oninput="calcEst()"><button onclick="this.parentElement.remove();calcEst()" style="color:red; background:none; border:none">✕</button>`;
+    document.getElementById('mat-list').appendChild(div);
+  };
+
+  window.calcEst = () => {
+    let cost = 0;
+    document.querySelectorAll('.mat-row').forEach(r => {
+      cost += (Number(r.querySelector('.m-q').value) * Number(r.querySelector('.m-p').value));
+    });
+    const price = Number(document.getElementById('e-price').value) || 0;
+    document.getElementById('res-cost').textContent = `$${cost.toFixed(2)}`;
+    document.getElementById('res-profit').textContent = `$${(price - cost).toFixed(2)}`;
+    return { cost, profit: price - cost };
+  };
+
+  window.saveEst = async () => {
+    const { cost, profit } = calcEst();
+    const mats = Array.from(document.querySelectorAll('.mat-row')).map(r => ({ n: r.querySelector('.m-n').value, q: r.querySelector('.m-q').value, p: r.querySelector('.m-p').value }));
+    await addDoc(collection(db, "cotizaciones"), { cliente: document.getElementById('e-cli').value, trabajo: document.getElementById('e-job').value, costo: cost, venta: Number(document.getElementById('e-price').value), ganancia: profit, materiales: mats });
+    closeMod(); toast("✅ Estimado Guardado");
+  };
+
+  // --- PDF ---
+  window.genPDF = (id) => {
+    const e = cache.est.find(x => x.id === id);
     const { jsPDF } = window.jspdf;
     const docPdf = new jsPDF();
-
-    showToast("Generando PDF...");
-
-    docPdf.setFont("helvetica", "bold");
-    docPdf.text("NJ DESIGN PRINT", 20, 20);
-    docPdf.setFont("helvetica", "normal");
-    docPdf.setFontSize(10);
-    docPdf.text("Resumen de Cliente", 20, 28);
+    docPdf.setFontSize(18); docPdf.text("NJ DESIGN PRINT - ESTIMADO", 20, 20);
+    docPdf.setFontSize(10); docPdf.text(`Cliente: ${e.cliente}`, 20, 30);
+    docPdf.text(`Trabajo: ${e.trabajo}`, 20, 36);
     
-    docPdf.autoTable({
-      startY: 35,
-      head: [['Concepto', 'Detalle']],
-      body: [
-        ['Nombre', c.nombre],
-        ['Empresa', c.empresa || '---'],
-        ['WhatsApp', c.tel || '---'],
-        ['Ciudad', c.ciu || '---'],
-        ['Notas', c.not || '---']
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [184, 255, 0], textColor: [0,0,0] }
-    });
-
-    // En móviles, 'save' es mucho más confiable que 'open' o 'print'
-    docPdf.save(`NJ-Resumen-${c.nombre.replace(/\s+/g, '-')}.pdf`);
-    showToast("✅ Descargado");
+    const rows = e.materiales.map(m => [m.n, m.q, `$${m.p}`, `$${m.q * m.p}`]);
+    docPdf.autoTable({ startY: 45, head: [['Material', 'Cant', 'P. Unit', 'Total']], body: rows, headStyles: {fillColor: [184, 255, 0], textColor: 0} });
+    
+    docPdf.text(`COSTO PRODUCCIÓN: $${e.costo}`, 20, docPdf.lastAutoTable.finalY + 10);
+    docPdf.text(`PRECIO VENTA: $${e.venta}`, 20, docPdf.lastAutoTable.finalY + 16);
+    docPdf.save(`NJ-Estimado-${e.trabajo}.pdf`);
   };
 
-  // REALTIME
+  function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+
+  // LISTENERS
   onSnapshot(collection(db, "clientes"), s => {
-    dataStore.cl = s.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('s-cl').textContent = dataStore.cl.length;
-    document.getElementById('t-clientes').innerHTML = dataStore.cl.map(c => `
-      <tr>
-        <td><b>${c.nombre}</b><br><small>${c.empresa || ''}</small></td>
-        <td><a href="https://wa.me/${c.tel}" style="color:var(--brand); text-decoration:none;">${c.tel}</a></td>
-        <td><button class="btn btn-pdf" onclick="downloadPDF('${c.id}')">PDF</button></td>
-        <td><button onclick="deleteDoc(doc(db,'clientes','${c.id}'))" style="background:none; border:none; color:red;">🗑️</button></td>
-      </tr>`).join('');
+    cache.cl = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('t-clientes').innerHTML = cache.cl.map(c => `<tr><td><b>${c.nombre}</b></td><td>${c.tel}</td><td><button class="btn btn-outline btn-sm" onclick="editCli('${c.id}')">✏️</button> <button onclick="deleteDoc(doc(db,'clientes','${c.id}'))" style="background:none; border:none">🗑️</button></td></tr>`).join('');
+  });
+
+  onSnapshot(collection(db, "cotizaciones"), s => {
+    cache.est = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('s-count').textContent = cache.est.length;
+    document.getElementById('t-ventas').innerHTML = cache.est.map(e => `<tr><td>${e.cliente}</td><td>${e.trabajo}</td><td>$${e.costo}</td><td>$${e.venta}</td><td style="color:var(--brand)">$${e.ganancia}</td><td><button class="btn btn-pdf" onclick="genPDF('${e.id}')">PDF</button></td></tr>`).join('');
   });
 </script>
 </body>
