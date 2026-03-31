@@ -2,80 +2,276 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>NJ Design Print | ERP Logístico</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NJ Design Print | Pro Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY_AQUI&libraries=places"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-  :root { --brand: #b8ff00; --bg: #0c0c0e; --side: #141417; --card: #1a1a1e; --border: rgba(255,255,255,0.1); --text: #e2e2e7; --red: #ff4444; }
+  :root {
+    --brand: #b8ff00; --bg: #0c0c0e; --side: #141417; --card: #1a1a1e;
+    --border: rgba(255,255,255,0.1); --text: #e2e2e7; --muted: #8a8a93;
+    --red: #ff4444; --blue: #00d1ff; --orange: #ff9500; --green: #00ff88;
+  }
   * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-  body { background: var(--bg); color: var(--text); }
+  body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+
   .app { display: flex; min-height: 100vh; }
-  .sidebar { width: 260px; background: var(--side); border-right: 1px solid var(--border); padding: 30px 20px; }
+  .sidebar { width: 260px; background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; }
+  
+  @media (max-width: 768px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: 70px; position: fixed; bottom: 0; flex-direction: row; padding: 0; border-top: 1px solid var(--border); justify-content: space-around; z-index: 1000; background: var(--side); }
+    .brand { display: none; }
+    .main { padding: 20px 15px 100px 15px !important; }
+  }
+
+  .brand { margin-bottom: 40px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; text-align: center; }
+  .brand span { color: var(--brand); }
+  .nav-item { padding: 14px 18px; border-radius: 12px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+  .nav-item.active { color: var(--brand); background: rgba(184,255,0,0.1); }
+
   .main { flex: 1; padding: 40px; }
-  .input { width: 100%; background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; }
-  .btn-primary { background: var(--brand); color: #000; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; }
-  .btn-action { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; }
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; }
-  .modal-overlay.active { display:flex; }
-  .modal { background: var(--side); width: 100%; max-width: 600px; padding: 30px; border-radius: 20px; border: 1px solid var(--border); }
-  .card-table { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  td, th { padding: 15px; border-bottom: 1px solid var(--border); text-align: left; }
+  .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+  
+  .card-table { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+  th { text-align: left; padding: 18px; font-size: 11px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 18px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+  .action-group { display: flex; gap: 6px; }
+  .btn-action { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 14px; }
+  .btn-action:hover { background: var(--brand); color: #000; border-color: var(--brand); }
+  .btn-del:hover { background: var(--red); color: #fff; border-color: var(--red); }
+  .btn-primary { background: var(--brand); color: #000; padding: 12px 24px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; }
+  
+  .btn-pdf-mod { background: rgba(184,255,0,0.1); color: var(--brand); border: 1px solid var(--brand); font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--side); width: 100%; max-width: 700px; border-radius: 24px; padding: 30px; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border); }
+  
+  .input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 12px; }
+  .page { display:none; } .page.active { display:block; }
+  #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand); color: #000; padding: 14px 30px; border-radius: 50px; font-weight: 700; z-index: 3000; display: none; }
 </style>
 </head>
 <body>
 
+<div id="toast">Operación exitosa</div>
+
 <div class="app">
   <aside class="sidebar">
-    <div style="font-weight:700; color:var(--brand); margin-bottom:30px;">NJ DESIGN PRINT</div>
-    <div onclick="go('clientes')" style="cursor:pointer; margin-bottom:15px;">👥 Clientes</div>
-    <div onclick="go('estimados')" style="cursor:pointer; margin-bottom:15px;">💰 Estimados</div>
-    <div onclick="go('produccion')" style="cursor:pointer;">🛠️ Producción</div>
+    <div class="brand">NJ <span>Design Print</span></div>
+    <div class="nav-item active" onclick="go('dash', this)">📊 <span>Dashboard</span></div>
+    <div class="nav-item" onclick="go('clientes', this)">👥 <span>Clientes</span></div>
+    <div class="nav-item" onclick="go('estimados', this)">💰 <span>Estimados</span></div>
+    <div class="nav-item" onclick="go('produccion', this)">🛠️ <span>Producción</span></div>
   </aside>
 
   <main class="main">
-    <div id="p-clientes" class="page">
-        <div class="header"><h2>Clientes</h2><button class="btn-primary" onclick="openCliMod()">+ Nuevo</button></div>
-        <div class="card-table"><table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Dirección</th><th>PDF</th><th>Acciones</th></tr></thead><tbody id="t-clientes"></tbody></table></div>
+    <div id="p-dash" class="page active">
+        <div class="header"><h2>Resumen</h2></div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+            <div style="background:var(--card); padding:25px; border-radius:20px; border:1px solid var(--border); flex:1;">
+                <p style="color:var(--muted); font-size:11px;">UTILIDAD BRUTA</p>
+                <h1 id="stat-profit" style="color:var(--brand);">$0.00</h1>
+            </div>
+            <div style="background:var(--card); padding:25px; border-radius:20px; border:1px solid var(--border); flex:1;">
+                <p style="color:var(--muted); font-size:11px;">SALDOS POR COBRAR</p>
+                <h1 id="stat-debt" style="color:var(--red);">$0.00</h1>
+            </div>
+        </div>
     </div>
-    </main>
+
+    <div id="p-clientes" class="page">
+        <div class="header"><h2>Clientes</h2><button class="btn-primary" onclick="openCliMod()">+ Nuevo Cliente</button></div>
+        <div class="card-table">
+          <table><thead><tr><th>Cliente / Empresa</th><th>Teléfono</th><th>Dirección</th><th>Reportes</th><th>Acciones</th></tr></thead><tbody id="t-clientes"></tbody></table>
+        </div>
+    </div>
+
+    <div id="p-estimados" class="page">
+        <div class="header"><h2>Cotizaciones</h2><button class="btn-primary" onclick="openEstMod()">+ Nuevo Estimado</button></div>
+        <div class="card-table">
+          <table><thead><tr><th>Cliente</th><th>Trabajo</th><th>Venta</th><th>Documento</th><th>Acciones</th></tr></thead><tbody id="t-estimados"></tbody></table>
+        </div>
+    </div>
+
+    <div id="p-produccion" class="page">
+        <div class="header"><h2>Producción</h2></div>
+        <div class="card-table">
+          <table><thead><tr><th>Proyecto</th><th>Entrega</th><th>Saldo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="t-prod"></tbody></table>
+        </div>
+    </div>
+  </main>
 </div>
 
 <div class="modal-overlay" id="m-cli">
   <div class="modal">
-    <h3>Datos Cliente</h3>
-    <input id="c-nom" class="input" placeholder="Nombre">
+    <h3 id="modal-cli-title" style="color:var(--brand)">Cliente</h3><br>
+    <input id="c-nom" class="input" placeholder="Nombre contacto">
+    <input id="c-emp" class="input" placeholder="Empresa">
     <input id="c-tel" class="input" placeholder="Teléfono">
-    <input id="c-dir" class="input" placeholder="Dirección de instalación" onfocus="initAutocomplete()">
-    <button class="btn-primary" onclick="saveCli()">Guardar</button>
+    <input id="c-dir" class="input" placeholder="Dirección para instalación">
+    <textarea id="c-not" class="input" placeholder="Notas..." style="height:80px"></textarea>
+    <div style="display:flex; gap:10px;">
+        <button class="btn-primary" style="flex:1" onclick="saveCli()">Guardar</button>
+        <button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button>
+    </div>
   </div>
 </div>
 
-<script>
-  let baseAddress = "6511 Briar Moss Ln, Katy, TX 77449";
-  
-  function initAutocomplete() {
-    const input = document.getElementById('c-dir');
-    const autocomplete = new google.maps.places.Autocomplete(input);
-  }
+<div class="modal-overlay" id="m-est">
+  <div class="modal">
+    <h3 id="modal-est-title" style="color:var(--brand)">Trabajo</h3><br>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <select id="e-cli" class="input"></select>
+        <input id="e-job" class="input" placeholder="Nombre trabajo">
+        <input id="e-date" type="date" class="input">
+        <input id="e-price" type="number" oninput="calc()" class="input" placeholder="Venta $">
+        <input id="e-paid" type="number" oninput="calc()" class="input" placeholder="Anticipo $">
+    </div>
+    <div id="mat-list"></div>
+    <button class="btn-primary" style="font-size:10px; padding:6px;" onclick="addMatRow()">+ Material</button>
+    <div style="margin-top:15px; background:rgba(0,0,0,0.2); padding:15px; border-radius:10px;">
+        <div style="display:flex; justify-content:space-between"><span>Debe:</span><b id="res-debt" style="color:var(--red)">$0.00</b></div>
+        <div style="display:flex; justify-content:space-between; margin-top:5px;"><span>Utilidad:</span><b id="res-profit" style="color:var(--brand)">$0.00</b></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn-primary" style="flex:1" onclick="saveEst()">Guardar</button>
+        <button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button>
+    </div>
+  </div>
+</div>
 
-  function calculateDistance(dest) {
-    const service = new google.maps.DistanceMatrixService();
-    service.getDistanceMatrix({
-      origins: [baseAddress],
-      destinations: [dest],
-      travelMode: 'DRIVING',
-    }, (response, status) => {
-      if (status == 'OK') {
-        const dist = response.rows[0].elements[0].distance.text;
-        alert("Distancia desde tu base: " + dist);
-        // Aquí puedes guardar 'dist' en tu base de datos si deseas
-      }
-    });
-  }
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAAf9HnAJppIMUx3cz2RdrR2dkgLx8InSI",
+    authDomain: "sign-crm-a7bda.firebaseapp.com",
+    projectId: "sign-crm-a7bda",
+    storageBucket: "sign-crm-a7bda.firebasestorage.app",
+    messagingSenderId: "404561016263",
+    appId: "1:404561016263:web:ae655261c64c41400ed5e2"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  let cache = { cl: [], est: [] };
+  let editIdCli = null, editIdEst = null;
+
+  window.go = (id, el) => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('p-'+id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  };
+  window.closeMod = () => document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+
+  // --- CLIENTES ---
+  window.openCliMod = () => { editIdCli=null; document.querySelectorAll('#m-cli input, #m-cli textarea').forEach(i=>i.value=''); document.getElementById('m-cli').classList.add('active'); };
+  window.saveCli = async () => {
+    const d = { nombre:document.getElementById('c-nom').value, empresa:document.getElementById('c-emp').value, tel:document.getElementById('c-tel').value, dir:document.getElementById('c-dir').value, not:document.getElementById('c-not').value };
+    if(editIdCli) await updateDoc(doc(db,"clientes",editIdCli), d); else await addDoc(collection(db,"clientes"), d);
+    closeMod(); toast("Guardado");
+  };
+  window.editCli = (id) => {
+    const c = cache.cl.find(x=>x.id===id); editIdCli=id;
+    document.getElementById('c-nom').value=c.nombre; document.getElementById('c-emp').value=c.empresa; document.getElementById('c-tel').value=c.tel;
+    document.getElementById('c-dir').value=c.dir || ''; document.getElementById('c-not').value=c.not;
+    document.getElementById('m-cli').classList.add('active');
+  };
+
+  // --- ESTIMADOS ---
+  window.openEstMod = () => {
+    editIdEst=null; document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option>${c.empresa||c.nombre}</option>`).join('');
+    document.getElementById('mat-list').innerHTML=''; addMatRow(); document.getElementById('m-est').classList.add('active');
+  };
+  window.addMatRow = (n='',q='',p='') => {
+    const d = document.createElement('div'); d.style.display='grid'; d.style.gridTemplateColumns='2fr 1fr 1fr 34px'; d.style.gap='5px'; d.style.marginTop='5px';
+    d.innerHTML = `<input placeholder="Mat." class="input m-n" value="${n}" style="margin:0"><input type="number" class="input m-q" oninput="calc()" value="${q}" style="margin:0"><input type="number" class="input m-p" oninput="calc()" value="${p}" style="margin:0"><button class="btn-action btn-del" onclick="this.parentElement.remove();calc()">✕</button>`;
+    document.getElementById('mat-list').appendChild(d);
+  };
+  window.calc = () => {
+    let cost = 0; document.querySelectorAll('.m-q').forEach((q,i)=>{ cost += (Number(q.value)*Number(document.querySelectorAll('.m-p')[i].value)); });
+    const v = Number(document.getElementById('e-price').value);
+    const p = Number(document.getElementById('e-paid').value);
+    document.getElementById('res-debt').innerText=`$${(v-p).toFixed(2)}`;
+    document.getElementById('res-profit').innerText=`$${(v-cost).toFixed(2)}`;
+    return {cost, profit:v-cost, sale:v, paid:p};
+  };
+  window.saveEst = async () => {
+    const {cost, profit, sale, paid} = calc();
+    const mats = Array.from(document.querySelectorAll('#mat-list > div')).map(r=>({n:r.querySelector('.m-n').value, q:r.querySelector('.m-q').value, p:r.querySelector('.m-p').value}));
+    const d = { cliente:document.getElementById('e-cli').value, trabajo:document.getElementById('e-job').value, costo:cost, venta:sale, ganancia:profit, abonado:paid, saldo:sale-paid, materiales:mats, fecha:document.getElementById('e-date').value };
+    if(editIdEst) await updateDoc(doc(db,"cotizaciones",editIdEst), d); else { d.estado='Pendiente'; d.proceso='Diseño'; await addDoc(collection(db,"cotizaciones"), d); }
+    closeMod(); toast("Guardado");
+  };
+  window.editEst = (id) => {
+    const e = cache.est.find(x=>x.id===id); editIdEst=id;
+    document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option ${ (c.empresa||c.nombre)===e.cliente ? 'selected':'' }>${c.empresa||c.nombre}</option>`).join('');
+    document.getElementById('e-job').value=e.trabajo; document.getElementById('e-price').value=e.venta; document.getElementById('e-paid').value=e.abonado||0; document.getElementById('e-date').value=e.fecha||'';
+    document.getElementById('mat-list').innerHTML=''; e.materiales.forEach(m=>addMatRow(m.n,m.q,m.p)); calc();
+    document.getElementById('m-est').classList.add('active');
+  };
+
+  window.approveEst = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Aprobado'}); };
+  window.undoApprove = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Pendiente'}); };
+  window.finishJob = async (id) => { if(confirm("¿Entregar trabajo?")) await updateDoc(doc(db,"cotizaciones",id), {estado:'Entregado'}); };
+  window.updateProceso = async (id, val) => { await updateDoc(doc(db,"cotizaciones",id), {proceso: val}); };
+
+  // --- PDF ---
+  const { jsPDF } = window.jspdf;
+  window.pdfCli = (id) => { 
+    const c = cache.cl.find(x=>x.id===id); const d = new jsPDF(); 
+    d.text(`CLIENTE: ${c.nombre}\nEMPRESA: ${c.empresa}\nTEL: ${c.tel}\nDIR: ${c.dir||'N/A'}`,20,20); d.save(`Cliente_${c.nombre}.pdf`); 
+  };
+  window.pdfEst = (id) => { 
+    const e = cache.est.find(x=>x.id===id); const d = new jsPDF(); 
+    d.text(`COTIZACION: ${e.trabajo}\nCLIENTE: ${e.cliente}`,20,20); 
+    d.autoTable({startY:40, head:[['Mat','Cant','Total']], body:e.materiales.map(m=>[m.n,m.q,`$${m.q*m.p}`])});
+    d.text(`VENTA: $${e.venta} | ABONADO: $${e.abonado} | SALDO: $${e.saldo}`,20, d.lastAutoTable.finalY + 10);
+    d.save(`Cotizacion_${e.trabajo}.pdf`); 
+  };
+
+  function toast(m){ const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
+
+  onSnapshot(collection(db, "clientes"), s => {
+    cache.cl = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('t-clientes').innerHTML = cache.cl.map(c => `<tr>
+        <td><b>${c.nombre}</b><br><small>${c.empresa}</small></td><td>${c.tel}</td><td>${c.dir || '-'}</td>
+        <td><button class="btn-pdf-mod" onclick="pdfCli('${c.id}')">📄 PDF</button></td>
+        <td><div class="action-group"><button class="btn-action" onclick="editCli('${c.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'clientes','${c.id}'))">🗑️</button></div></td>
+    </tr>`).join('');
+  });
+
+  onSnapshot(collection(db, "cotizaciones"), s => {
+    cache.est = s.docs.map(d => ({...d.data(), id: d.id}));
+    document.getElementById('stat-profit').innerText = `$${cache.est.filter(e=>e.estado!=='Pendiente').reduce((a,b)=>a+b.ganancia,0).toLocaleString()}`;
+    document.getElementById('stat-debt').innerText = `$${cache.est.filter(e=>e.estado!=='Pendiente').reduce((a,b)=>a+b.saldo,0).toLocaleString()}`;
+
+    document.getElementById('t-estimados').innerHTML = cache.est.filter(e=>e.estado==='Pendiente').map(e => `<tr>
+        <td>${e.cliente}</td><td>${e.trabajo}</td><td style="color:var(--brand)">$${e.venta}</td>
+        <td><button class="btn-pdf-mod" onclick="pdfEst('${e.id}')">📄 PDF</button></td>
+        <td><div class="action-group"><button class="btn-action" style="color:var(--brand)" onclick="approveEst('${e.id}')">✔️</button><button class="btn-action" onclick="editEst('${e.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'cotizaciones','${e.id}'))">🗑️</button></div></td>
+    </tr>`).join('');
+
+    document.getElementById('t-prod').innerHTML = cache.est.filter(e=>e.estado==='Aprobado').map(e => `<tr>
+        <td><b>${e.trabajo}</b><br><small>${e.cliente}</small></td><td>${e.fecha||'-'}</td>
+        <td style="color:${e.saldo>0?'var(--red)':'var(--green)'}">$${e.saldo}</td>
+        <td><select class="input" style="padding:5px; font-size:11px; margin:0;" onchange="updateProceso('${e.id}', this.value)">
+            <option ${e.proceso==='Diseño'?'selected':''}>Diseño</option><option ${e.proceso==='Impresión'?'selected':''}>Impresión</option><option ${e.proceso==='Listo'?'selected':''}>Listo</option>
+        </select></td>
+        <td><div class="action-group">
+            <button class="btn-action" style="color:var(--green); width:auto; padding:0 8px;" onclick="finishJob('${e.id}')">🏁 ENTREGAR</button>
+            <button class="btn-action" onclick="undoApprove('${e.id}')">↩️</button><button class="btn-action" onclick="editEst('${e.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'cotizaciones','${e.id}'))">🗑️</button>
+        </div></td>
+    </tr>`).join('');
+  });
 </script>
 </body>
 </html>
