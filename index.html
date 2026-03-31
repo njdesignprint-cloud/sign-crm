@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NJ Design Print | Full Production CRM</title>
+<title>NJ Design Print | Pro Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -33,23 +33,23 @@
   .nav-item.active { color: var(--brand); background: rgba(184,255,0,0.1); }
 
   .main { flex: 1; padding: 40px; }
-  .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
   
   .card-table { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  table { width: 100%; border-collapse: collapse; min-width: 1000px; }
   th { text-align: left; padding: 18px; font-size: 11px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-  td { padding: 18px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  td { padding: 18px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
   /* BOTONES */
-  .action-group { display: flex; gap: 8px; }
-  .btn-action { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .action-group { display: flex; gap: 6px; }
+  .btn-action { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 14px; }
   .btn-action:hover { background: var(--brand); color: #000; border-color: var(--brand); }
+  .btn-del:hover { background: var(--red); color: #fff; border-color: var(--red); }
   .btn-primary { background: var(--brand); color: #000; padding: 12px 24px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; }
-  .btn-pdf-mod { background: rgba(184,255,0,0.1); color: var(--brand); border: 1px solid var(--brand); font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+  
+  .btn-pdf-mod { background: rgba(184,255,0,0.1); color: var(--brand); border: 1px solid var(--brand); font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-right: 4px; }
 
-  /* TAGS */
   .status-tag { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid currentColor; }
-  .date-tag { font-size: 11px; color: var(--orange); font-weight: 600; }
 
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.active { display: flex; }
@@ -57,7 +57,7 @@
   
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
   .full { grid-column: 1 / -1; }
-  .input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; }
+  .input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; font-size: 15px; }
   
   .page { display:none; } .page.active { display:block; }
   #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand); color: #000; padding: 14px 30px; border-radius: 50px; font-weight: 700; z-index: 3000; display: none; }
@@ -78,31 +78,31 @@
 
   <main class="main">
     <div id="p-dash" class="page active">
-        <div class="header"><h2>Resumen</h2></div>
+        <div class="header"><h2>Panel de Control</h2></div>
         <div style="background:var(--card); padding:30px; border-radius:20px; border:1px solid var(--border); display:inline-block; min-width:280px;">
-          <p style="color:var(--muted); font-size:12px; margin-bottom:10px;">UTILIDAD TOTAL APROBADA</p>
+          <p style="color:var(--muted); font-size:12px; margin-bottom:10px;">UTILIDAD PROYECTADA</p>
           <h1 id="stat-profit" style="color:var(--brand); font-size:42px;">$0.00</h1>
         </div>
     </div>
 
     <div id="p-clientes" class="page">
-        <div class="header"><h2>Directorio Clientes</h2><button class="btn-primary" onclick="openCliMod()">+ Nuevo Cliente</button></div>
+        <div class="header"><h2>Clientes</h2><button class="btn-primary" onclick="openCliMod()">+ Nuevo Cliente</button></div>
         <div class="card-table">
-          <table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>PDFs</th><th>Acciones</th></tr></thead><tbody id="t-clientes"></tbody></table>
+          <table><thead><tr><th>Nombre / Empresa</th><th>WhatsApp</th><th>Reportes</th><th>Acciones</th></tr></thead><tbody id="t-clientes"></tbody></table>
         </div>
     </div>
 
     <div id="p-estimados" class="page">
         <div class="header"><h2>Estimados Pendientes</h2><button class="btn-primary" onclick="openEstMod()">+ Nuevo Estimado</button></div>
         <div class="card-table">
-          <table><thead><tr><th>Cliente</th><th>Trabajo</th><th>Venta</th><th>PDF</th><th>Aprobar</th><th>Acciones</th></tr></thead><tbody id="t-estimados"></tbody></table>
+          <table><thead><tr><th>Cliente</th><th>Proyecto</th><th>Venta</th><th>Documento</th><th>Acciones</th></tr></thead><tbody id="t-estimados"></tbody></table>
         </div>
     </div>
 
     <div id="p-produccion" class="page">
-        <div class="header"><h2>Cola de Producción 🛠️</h2></div>
+        <div class="header"><h2>Línea de Producción</h2></div>
         <div class="card-table">
-          <table><thead><tr><th>Trabajo</th><th>Cliente</th><th>Fecha Entrega</th><th>Estado Proceso</th><th>Acciones</th></tr></thead><tbody id="t-prod"></tbody></table>
+          <table><thead><tr><th>Proyecto</th><th>Cliente</th><th>Entrega</th><th>Estado Proceso</th><th>Acciones</th></tr></thead><tbody id="t-prod"></tbody></table>
         </div>
     </div>
   </main>
@@ -110,9 +110,9 @@
 
 <div class="modal-overlay" id="m-cli">
   <div class="modal">
-    <h3 style="color:var(--brand)">Ficha Cliente</h3><br>
+    <h3 id="modal-cli-title" style="color:var(--brand)">Cliente</h3><br>
     <div class="form-grid">
-      <input id="c-nom" class="input" placeholder="Nombre">
+      <input id="c-nom" class="input" placeholder="Nombre Contacto">
       <input id="c-emp" class="input" placeholder="Empresa">
       <input id="c-tel" class="input" placeholder="WhatsApp">
       <input id="c-mail" class="input" placeholder="Email">
@@ -120,25 +120,31 @@
       <input id="c-rfc" class="input" placeholder="RFC/Dirección">
       <textarea id="c-not" class="input full" placeholder="Notas..." style="height:100px"></textarea>
     </div>
-    <div style="margin-top:25px; display:flex; gap:10px;"><button class="btn-primary" style="flex:1" onclick="saveCli()">Guardar</button><button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cancelar</button></div>
+    <div style="margin-top:25px; display:flex; gap:10px;">
+        <button class="btn-primary" style="flex:1" onclick="saveCli()">Guardar</button>
+        <button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cancelar</button>
+    </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="m-est">
   <div class="modal">
-    <h3 style="color:var(--brand)">Nueva Cotización</h3><br>
+    <h3 id="modal-est-title" style="color:var(--brand)">Configurar Trabajo</h3><br>
     <div class="form-grid">
       <select id="e-cli" class="input"></select>
-      <input id="e-job" class="input" placeholder="Proyecto">
+      <input id="e-job" class="input" placeholder="Nombre del Trabajo">
       <input type="date" id="e-date" class="input">
     </div>
     <div id="mat-list" style="margin-top:20px;"></div>
-    <button class="btn-primary" style="font-size:10px; padding:5px 10px; background:#222; color:var(--brand); border:1px solid var(--brand)" onclick="addMatRow()">+ Material</button>
+    <button class="btn-primary" style="font-size:10px; padding:6px; background:#222; color:var(--brand); border:1px solid var(--brand)" onclick="addMatRow()">+ Agregar Material</button>
     <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; margin-top:20px;">
-        <div style="display:flex; justify-content:space-between"><span>Venta:</span><input type="number" id="e-price" oninput="calc()" style="background:none; border:none; border-bottom:1px solid var(--brand); color:white; text-align:right"></div>
-        <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--brand)"><span>Utilidad:</span><b id="res-profit">$0.00</b></div>
+        <div style="display:flex; justify-content:space-between"><span>Precio Venta:</span><input type="number" id="e-price" oninput="calc()" style="background:none; border:none; border-bottom:1px solid var(--brand); color:white; text-align:right; font-size:18px;"></div>
+        <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--brand)"><span>Ganancia:</span><b id="res-profit" style="font-size:18px;">$0.00</b></div>
     </div>
-    <div style="margin-top:25px; display:flex; gap:10px;"><button class="btn-primary" style="flex:1" onclick="saveEst()">Guardar</button><button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button></div>
+    <div style="margin-top:25px; display:flex; gap:10px;">
+        <button class="btn-primary" style="flex:1" onclick="saveEst()">Guardar Cambios</button>
+        <button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -168,22 +174,31 @@
   };
   window.closeMod = () => document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 
-  // --- LOGICA CLIENTES ---
-  window.openCliMod = () => { editIdCli=null; document.querySelectorAll('#m-cli input, #m-cli textarea').forEach(i=>i.value=''); document.getElementById('m-cli').classList.add('active'); };
+  // --- CLIENTES ---
+  window.openCliMod = () => { editIdCli=null; document.getElementById('modal-cli-title').innerText="Nuevo Cliente"; document.querySelectorAll('#m-cli input, #m-cli textarea').forEach(i=>i.value=''); document.getElementById('m-cli').classList.add('active'); };
   window.saveCli = async () => {
     const d = { nombre:document.getElementById('c-nom').value, empresa:document.getElementById('c-emp').value, tel:document.getElementById('c-tel').value, mail:document.getElementById('c-mail').value, ciu:document.getElementById('c-ciu').value, rfc:document.getElementById('c-rfc').value, not:document.getElementById('c-not').value };
     if(editIdCli) await updateDoc(doc(db,"clientes",editIdCli), d); else await addDoc(collection(db,"clientes"), d);
-    closeMod(); toast("Cliente Guardado");
+    closeMod(); toast("✅ Cliente actualizado");
+  };
+  window.editCli = (id) => {
+    const c = cache.cl.find(x=>x.id===id); editIdCli=id;
+    document.getElementById('modal-cli-title').innerText="Editar Cliente";
+    document.getElementById('c-nom').value=c.nombre; document.getElementById('c-emp').value=c.empresa; document.getElementById('c-tel').value=c.tel;
+    document.getElementById('c-mail').value=c.mail; document.getElementById('c-ciu').value=c.ciu; document.getElementById('c-rfc').value=c.rfc;
+    document.getElementById('c-not').value=c.not; document.getElementById('m-cli').classList.add('active');
   };
 
-  // --- LOGICA ESTIMADOS ---
+  // --- ESTIMADOS / PRODUCCION ---
   window.openEstMod = () => {
-    editIdEst=null; document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option>${c.empresa||c.nombre}</option>`).join('');
-    document.getElementById('mat-list').innerHTML=''; addMatRow(); document.getElementById('m-est').classList.add('active');
+    editIdEst=null; document.getElementById('modal-est-title').innerText="Nuevo Estimado";
+    document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option>${c.empresa||c.nombre}</option>`).join('');
+    document.getElementById('mat-list').innerHTML=''; addMatRow(); document.getElementById('e-job').value=''; document.getElementById('e-price').value=''; document.getElementById('e-date').value='';
+    document.getElementById('m-est').classList.add('active');
   };
   window.addMatRow = (n='',q='',p='') => {
-    const d = document.createElement('div'); d.style.display='grid'; d.style.gridTemplateColumns='2fr 1fr 1fr 36px'; d.style.gap='8px'; d.style.marginBottom='10px';
-    d.innerHTML = `<input placeholder="Mat." class="input m-n" value="${n}"><input type="number" placeholder="Cant" class="input m-q" oninput="calc()" value="${q}"><input type="number" placeholder="$" class="input m-p" oninput="calc()" value="${p}"><button class="btn-action" onclick="this.parentElement.remove();calc()">✕</button>`;
+    const d = document.createElement('div'); d.style.display='grid'; d.style.gridTemplateColumns='2fr 1fr 1fr 34px'; d.style.gap='8px'; d.style.marginBottom='10px';
+    d.innerHTML = `<input placeholder="Mat." class="input m-n" value="${n}"><input type="number" placeholder="Cant" class="input m-q" oninput="calc()" value="${q}"><input type="number" placeholder="$" class="input m-p" oninput="calc()" value="${p}"><button class="btn-action btn-del" onclick="this.parentElement.remove();calc()">✕</button>`;
     document.getElementById('mat-list').appendChild(d);
   };
   window.calc = () => {
@@ -195,57 +210,84 @@
   window.saveEst = async () => {
     const {cost, profit} = calc();
     const mats = Array.from(document.querySelectorAll('#mat-list > div')).map(r=>({n:r.querySelector('.m-n').value, q:r.querySelector('.m-q').value, p:r.querySelector('.m-p').value}));
-    const d = { cliente:document.getElementById('e-cli').value, trabajo:document.getElementById('e-job').value, costo:cost, venta:Number(document.getElementById('e-price').value), ganancia:profit, materiales:mats, estado:'Pendiente', fecha:document.getElementById('e-date').value, proceso:'Diseño' };
-    if(editIdEst) await updateDoc(doc(db,"cotizaciones",editIdEst), d); else await addDoc(collection(db,"cotizaciones"), d);
-    closeMod(); toast("Estimado Guardado");
+    const d = { cliente:document.getElementById('e-cli').value, trabajo:document.getElementById('e-job').value, costo:cost, venta:Number(document.getElementById('e-price').value), ganancia:profit, materiales:mats, fecha:document.getElementById('e-date').value };
+    if(editIdEst) {
+        await updateDoc(doc(db,"cotizaciones",editIdEst), d);
+    } else {
+        d.estado = 'Pendiente'; d.proceso = 'Diseño';
+        await addDoc(collection(db,"cotizaciones"), d);
+    }
+    closeMod(); toast("💰 Registro guardado");
+  };
+  window.editEst = (id) => {
+    const e = cache.est.find(x=>x.id===id); editIdEst=id;
+    document.getElementById('modal-est-title').innerText="Editar Trabajo";
+    document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option ${ (c.empresa||c.nombre)===e.cliente ? 'selected':'' }>${c.empresa||c.nombre}</option>`).join('');
+    document.getElementById('e-job').value=e.trabajo; document.getElementById('e-price').value=e.venta; document.getElementById('e-date').value=e.fecha || '';
+    document.getElementById('mat-list').innerHTML=''; e.materiales.forEach(m=>addMatRow(m.n,m.q,m.p)); calc();
+    document.getElementById('m-est').classList.add('active');
   };
 
-  // --- LOGICA PRODUCCION ---
-  window.approveEst = async (id) => { if(confirm("¿Aprobar y pasar a PRODUCCIÓN?")) await updateDoc(doc(db,"cotizaciones",id), {estado:'Aprobado'}); };
+  // --- BOTONES DE ESTADO ---
+  window.approveEst = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Aprobado'}); toast("✔️ A producción"); };
+  window.undoApprove = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Pendiente'}); toast("↩️ Regresado a Estimados"); };
+  window.finishJob = async (id) => { if(confirm("¿Confirmar entrega final?")) await updateDoc(doc(db,"cotizaciones",id), {estado:'Entregado'}); };
   window.updateProceso = async (id, val) => { await updateDoc(doc(db,"cotizaciones",id), {proceso: val}); };
-  window.finishJob = async (id) => { if(confirm("¿Trabajo entregado al cliente?")) await updateDoc(doc(db,"cotizaciones",id), {estado:'Entregado'}); };
 
   // --- PDFs ---
   const { jsPDF } = window.jspdf;
-  window.pdfCli = (id) => { const c = cache.cl.find(x=>x.id===id); const d = new jsPDF(); d.text(`CLIENTE: ${c.nombre}\nEMPRESA: ${c.empresa}\nTEL: ${c.tel}`,20,20); d.save(`Info_${c.nombre}.pdf`); };
-  window.pdfEst = (id) => { const e = cache.est.find(x=>x.id===id); const d = new jsPDF(); d.text(`ESTIMADO: ${e.trabajo}`,20,20); d.autoTable({startY:30, head:[['Mat','Cant','Sub']], body:e.materiales.map(m=>[m.n, m.q, `$${m.q*m.p}`])}); d.save(`Est_${e.trabajo}.pdf`); };
+  window.pdfCli = (id) => { const c = cache.cl.find(x=>x.id===id); const d = new jsPDF(); d.text(`CLIENTE: ${c.nombre}\nEMPRESA: ${c.empresa}\nWHATS: ${c.tel}`,20,20); d.save(`Info_${c.nombre}.pdf`); };
+  window.pdfEst = (id) => { const e = cache.est.find(x=>x.id===id); const d = new jsPDF(); d.text(`ESTIMADO: ${e.trabajo}`,20,20); d.autoTable({startY:30, head:[['Mat','Cant','P.U']], body:e.materiales.map(m=>[m.n, m.q, `$${m.p}`])}); d.save(`Est_${e.trabajo}.pdf`); };
   window.pdfFull = (id) => { 
     const c = cache.cl.find(x=>x.id===id); const v = cache.est.filter(e=>e.cliente===(c.empresa||c.nombre));
-    const d = new jsPDF(); d.text(`REPORTE: ${c.nombre}`,20,20); d.autoTable({startY:30, head:[['Proyecto','Venta','Estado']], body:v.map(x=>[x.trabajo, `$${x.venta}`, x.estado])}); d.save(`Gral_${c.nombre}.pdf`);
+    const d = new jsPDF(); d.text(`REPORTE GENERAL: ${c.nombre}`,20,20); d.autoTable({startY:30, head:[['Proyecto','Venta','Estado']], body:v.map(x=>[x.trabajo, `$${x.venta}`, x.estado])}); d.save(`Gral_${c.nombre}.pdf`);
   };
 
   function toast(m){ const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
 
   onSnapshot(collection(db, "clientes"), s => {
     cache.cl = s.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('t-clientes').innerHTML = cache.cl.map(c => `<tr><td><b>${c.nombre}</b><br><small>${c.empresa}</small></td><td>${c.tel}</td><td><button class="btn-pdf-mod" onclick="pdfCli('${c.id}')">INFO</button> <button class="btn-pdf-mod" style="background:#333;color:white;" onclick="pdfFull('${c.id}')">GENERAL</button></td><td><button class="btn-action" onclick="deleteDoc(doc(db,'clientes','${c.id}'))">🗑️</button></td></tr>`).join('');
+    document.getElementById('t-clientes').innerHTML = cache.cl.map(c => `<tr>
+        <td><b>${c.nombre}</b><br><small>${c.empresa}</small></td>
+        <td>${c.tel}</td>
+        <td><button class="btn-pdf-mod" onclick="pdfCli('${c.id}')">INFO</button><button class="btn-pdf-mod" style="background:#333;color:white;" onclick="pdfFull('${c.id}')">GRAL</button></td>
+        <td><div class="action-group">
+            <button class="btn-action" onclick="editCli('${c.id}')">✏️</button>
+            <button class="btn-action btn-del" onclick="deleteDoc(doc(db,'clientes','${c.id}'))">🗑️</button>
+        </div></td>
+    </tr>`).join('');
   });
 
   onSnapshot(collection(db, "cotizaciones"), s => {
     cache.est = s.docs.map(d => ({...d.data(), id: d.id}));
-    // Dash Utility
     const total = cache.est.filter(e=>e.estado==='Aprobado' || e.estado==='Entregado').reduce((a,b)=>a+b.ganancia,0);
     document.getElementById('stat-profit').innerText = `$${total.toLocaleString()}`;
 
-    // Table Estimados
-    document.getElementById('t-estimados').innerHTML = cache.est.filter(e=>e.estado==='Pendiente').map(e => `<tr><td>${e.cliente}</td><td>${e.trabajo}</td><td style="color:var(--brand)">$${e.venta}</td><td><button class="btn-pdf-mod" onclick="pdfEst('${e.id}')">📄 PDF</button></td><td><button class="btn-action" onclick="approveEst('${e.id}')" style="color:var(--brand)">✔️</button></td><td><button class="btn-action" onclick="deleteDoc(doc(db,'cotizaciones','${e.id}'))">🗑️</button></td></tr>`).join('');
+    // Tabla Estimados
+    document.getElementById('t-estimados').innerHTML = cache.est.filter(e=>e.estado==='Pendiente').map(e => `<tr>
+        <td>${e.cliente}</td><td>${e.trabajo}</td><td style="color:var(--brand)">$${e.venta}</td>
+        <td><button class="btn-pdf-mod" onclick="pdfEst('${e.id}')">📄 PDF</button></td>
+        <td><div class="action-group">
+            <button class="btn-action" style="color:var(--brand)" onclick="approveEst('${e.id}')">✔️</button>
+            <button class="btn-action" onclick="editEst('${e.id}')">✏️</button>
+            <button class="btn-action btn-del" onclick="deleteDoc(doc(db,'cotizaciones','${e.id}'))">🗑️</button>
+        </div></td>
+    </tr>`).join('');
 
-    // Table Producción
+    // Tabla Producción
     document.getElementById('t-prod').innerHTML = cache.est.filter(e=>e.estado==='Aprobado').map(e => `<tr>
-        <td><b>${e.trabajo}</b></td>
-        <td>${e.cliente}</td>
-        <td><span class="date-tag">${e.fecha || 'Sin fecha'}</span></td>
-        <td>
-            <select class="input" style="padding:5px; font-size:11px;" onchange="updateProceso('${e.id}', this.value)">
+        <td><b>${e.trabajo}</b></td><td>${e.cliente}</td><td style="color:var(--orange);font-weight:600">${e.fecha || '-'}</td>
+        <td><select class="input" style="padding:5px; font-size:11px;" onchange="updateProceso('${e.id}', this.value)">
                 <option ${e.proceso==='Diseño'?'selected':''}>Diseño</option>
                 <option ${e.proceso==='Impresión'?'selected':''}>Impresión</option>
                 <option ${e.proceso==='Acabado'?'selected':''}>Acabado</option>
                 <option ${e.proceso==='Listo'?'selected':''}>Listo</option>
-            </select>
-        </td>
+            </select></td>
         <td><div class="action-group">
-            <button class="btn-action" style="color:var(--green)" onclick="finishJob('${e.id}')">🏁 ENTREGAR</button>
-            <button class="btn-action" onclick="updateDoc(doc(db,'cotizaciones','${e.id}'), {estado:'Pendiente'})">↩️</button>
+            <button class="btn-action" style="color:var(--green);width:auto;padding:0 10px;" onclick="finishJob('${e.id}')">🏁 ENTREGAR</button>
+            <button class="btn-action" title="Deshacer aprobado" onclick="undoApprove('${e.id}')">↩️</button>
+            <button class="btn-action" onclick="editEst('${e.id}')">✏️</button>
+            <button class="btn-action btn-del" onclick="deleteDoc(doc(db,'cotizaciones','${e.id}'))">🗑️</button>
         </div></td>
     </tr>`).join('');
   });
