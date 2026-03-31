@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NJ Design Print | Pro Finance & Production</title>
+<title>NJ Design Print | Enterprise ERP</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -40,23 +40,18 @@
   th { text-align: left; padding: 18px; font-size: 11px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
   td { padding: 18px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
-  .action-group { display: flex; gap: 6px; }
-  .btn-action { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 14px; }
+  .btn-action { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
   .btn-action:hover { background: var(--brand); color: #000; border-color: var(--brand); }
   .btn-del:hover { background: var(--red); color: #fff; border-color: var(--red); }
   .btn-primary { background: var(--brand); color: #000; padding: 12px 24px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; }
   
-  .btn-pdf-mod { background: rgba(184,255,0,0.1); color: var(--brand); border: 1px solid var(--brand); font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-right: 4px; }
-
   .status-tag { padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; text-transform: uppercase; border: 1px solid currentColor; }
 
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.active { display: flex; }
   .modal { background: var(--side); width: 100%; max-width: 700px; border-radius: 24px; padding: 30px; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border); }
   
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-  .full { grid-column: 1 / -1; }
-  .input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; font-size: 15px; }
+  .input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; }
   
   .page { display:none; } .page.active { display:block; }
   #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand); color: #000; padding: 14px 30px; border-radius: 50px; font-weight: 700; z-index: 3000; display: none; }
@@ -73,82 +68,95 @@
     <div class="nav-item" onclick="go('clientes', this)">👥 <span>Clientes</span></div>
     <div class="nav-item" onclick="go('estimados', this)">💰 <span>Estimados</span></div>
     <div class="nav-item" onclick="go('produccion', this)">🛠️ <span>Producción</span></div>
+    <div class="nav-item" onclick="go('gastos', this)">📉 <span>Gastos Fijos</span></div>
   </aside>
 
   <main class="main">
     <div id="p-dash" class="page active">
-        <div class="header"><h2>Panel Financiero</h2></div>
-        <div style="display:flex; gap:20px; flex-wrap:wrap;">
-            <div style="background:var(--card); padding:25px; border-radius:20px; border:1px solid var(--border); flex:1; min-width:240px;">
-                <p style="color:var(--muted); font-size:11px; margin-bottom:5px;">UTILIDAD PROYECTADA</p>
-                <h1 id="stat-profit" style="color:var(--brand); font-size:32px;">$0.00</h1>
+        <div class="header"><h2>Resumen de Operaciones</h2></div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+            <div style="background:var(--card); padding:20px; border-radius:15px; border:1px solid var(--border);">
+                <p style="color:var(--muted); font-size:11px;">UTILIDAD BRUTA (TRABAJOS)</p>
+                <h2 id="stat-gross" style="color:var(--brand);">$0.00</h2>
             </div>
-            <div style="background:var(--card); padding:25px; border-radius:20px; border:1px solid var(--border); flex:1; min-width:240px;">
-                <p style="color:var(--muted); font-size:11px; margin-bottom:5px;">POR COBRAR (SALDOS)</p>
-                <h1 id="stat-debt" style="color:var(--red); font-size:32px;">$0.00</h1>
+            <div style="background:var(--card); padding:20px; border-radius:15px; border:1px solid var(--border);">
+                <p style="color:var(--muted); font-size:11px;">GASTOS FIJOS</p>
+                <h2 id="stat-expenses" style="color:var(--red);">$0.00</h2>
+            </div>
+            <div style="background:var(--card); padding:20px; border-radius:15px; border:1px solid var(--brand);">
+                <p style="color:var(--brand); font-size:11px; font-weight:700;">UTILIDAD NETA (REAL)</p>
+                <h2 id="stat-net" style="color:#fff;">$0.00</h2>
+            </div>
+            <div style="background:var(--card); padding:20px; border-radius:15px; border:1px solid var(--border);">
+                <p style="color:var(--muted); font-size:11px;">POR COBRAR</p>
+                <h2 id="stat-debt" style="color:var(--orange);">$0.00</h2>
             </div>
         </div>
     </div>
 
     <div id="p-clientes" class="page">
-        <div class="header"><h2>Directorio</h2><button class="btn-primary" onclick="openCliMod()">+ Nuevo Cliente</button></div>
-        <div class="card-table">
-          <table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>PDFs</th><th>Acciones</th></tr></thead><tbody id="t-clientes"></tbody></table>
-        </div>
+        <div class="header"><h2>Clientes</h2><button class="btn-primary" onclick="openCliMod()">+ Nuevo Cliente</button></div>
+        <div class="card-table"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>PDF</th><th>Acciones</th></tr></thead><tbody id="t-clientes"></tbody></table></div>
     </div>
 
     <div id="p-estimados" class="page">
         <div class="header"><h2>Cotizaciones</h2><button class="btn-primary" onclick="openEstMod()">+ Nuevo Estimado</button></div>
-        <div class="card-table">
-          <table><thead><tr><th>Cliente</th><th>Proyecto</th><th>Total</th><th>Acciones</th></tr></thead><tbody id="t-estimados"></tbody></table>
-        </div>
+        <div class="card-table"><table><thead><tr><th>Cliente</th><th>Proyecto</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="t-estimados"></tbody></table></div>
     </div>
 
     <div id="p-produccion" class="page">
-        <div class="header"><h2>Workflow de Producción</h2></div>
-        <div class="card-table">
-          <table><thead><tr><th>Proyecto</th><th>Entrega</th><th>Pago</th><th>Proceso</th><th>Acciones</th></tr></thead><tbody id="t-prod"></tbody></table>
-        </div>
+        <div class="header"><h2>Producción</h2></div>
+        <div class="card-table"><table><thead><tr><th>Proyecto</th><th>Entrega</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="t-prod"></tbody></table></div>
+    </div>
+
+    <div id="p-gastos" class="page">
+        <div class="header"><h2>Gastos Mensuales</h2><button class="btn-primary" onclick="openGasMod()">+ Registrar Gasto</button></div>
+        <div class="card-table"><table><thead><tr><th>Concepto</th><th>Categoría</th><th>Monto</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody id="t-gastos"></tbody></table></div>
     </div>
   </main>
+</div>
+
+<div class="modal-overlay" id="m-gas">
+  <div class="modal">
+    <h3 style="color:var(--red)">Registrar Salida de Dinero</h3><br>
+    <input id="g-con" class="input" placeholder="Concepto (Ej: Renta Local)">
+    <select id="g-cat" class="input">
+        <option>Renta</option><option>Sueldos</option><option>Servicios (Luz/Internet)</option><option>Publicidad</option><option>Otros</option>
+    </select>
+    <input id="g-mon" type="number" class="input" placeholder="Monto $">
+    <input id="g-fec" type="date" class="input">
+    <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn-primary" style="flex:1" onclick="saveGas()">Guardar Gasto</button>
+        <button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="m-cli">
   <div class="modal">
     <h3 id="modal-cli-title" style="color:var(--brand)">Cliente</h3><br>
-    <div class="form-grid">
-      <input id="c-nom" class="input" placeholder="Nombre">
-      <input id="c-emp" class="input" placeholder="Empresa">
-      <input id="c-tel" class="input" placeholder="WhatsApp">
-      <input id="c-mail" class="input" placeholder="Email">
-      <textarea id="c-not" class="input full" placeholder="Notas..." style="height:80px"></textarea>
-    </div>
-    <div style="margin-top:25px; display:flex; gap:10px;"><button class="btn-primary" style="flex:1" onclick="saveCli()">Guardar</button><button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button></div>
+    <input id="c-nom" class="input" placeholder="Nombre">
+    <input id="c-emp" class="input" placeholder="Empresa">
+    <input id="c-tel" class="input" placeholder="WhatsApp">
+    <textarea id="c-not" class="input" placeholder="Notas..."></textarea>
+    <button class="btn-primary" onclick="saveCli()">Guardar</button><button class="btn-primary" style="background:#333;color:white;margin-left:10px" onclick="closeMod()">Cerrar</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="m-est">
   <div class="modal">
-    <h3 id="modal-est-title" style="color:var(--brand)">Configuración de Trabajo</h3><br>
-    <div class="form-grid">
-      <select id="e-cli" class="input"></select>
-      <input id="e-job" class="input" placeholder="Nombre del Trabajo">
-      <input type="date" id="e-date" class="input">
+    <h3 id="modal-est-title" style="color:var(--brand)">Configurar Trabajo</h3><br>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <select id="e-cli" class="input"></select>
+        <input id="e-job" class="input" placeholder="Proyecto">
+        <input id="e-date" type="date" class="input">
+        <input id="e-price" type="number" oninput="calc()" class="input" placeholder="Venta $">
+        <input id="e-paid" type="number" oninput="calc()" class="input" placeholder="Anticipo $">
     </div>
-    <div id="mat-list" style="margin-top:20px;"></div>
-    <button class="btn-primary" style="font-size:10px; padding:6px; background:#222; color:var(--brand); border:1px solid var(--brand)" onclick="addMatRow()">+ Material</button>
-    
-    <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:1px solid var(--border); margin-top:20px;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div><label style="font-size:10px; color:var(--muted)">PRECIO VENTA</label><input type="number" id="e-price" oninput="calc()" class="input" style="border:none; border-bottom:1px solid var(--brand); border-radius:0;"></div>
-            <div><label style="font-size:10px; color:var(--muted)">ANTICIPO RECIBIDO</label><input type="number" id="e-paid" oninput="calc()" class="input" style="border:none; border-bottom:1px solid var(--blue); border-radius:0;"></div>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:15px;">
-            <span style="color:var(--muted)">Resta por cobrar: <b id="res-debt" style="color:var(--red)">$0.00</b></span>
-            <span style="color:var(--brand)">Utilidad: <b id="res-profit">$0.00</b></span>
-        </div>
-    </div>
-    <div style="margin-top:25px; display:flex; gap:10px;"><button class="btn-primary" style="flex:1" onclick="saveEst()">Guardar Todo</button><button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button></div>
+    <div id="mat-list"></div>
+    <button class="btn-primary" style="font-size:10px; padding:5px;" onclick="addMatRow()">+ Material</button>
+    <div style="margin-top:15px; color:var(--brand)">Ganancia Proyectada: <b id="res-profit">$0.00</b></div>
+    <div style="margin-top:20px; display:flex; gap:10px;"><button class="btn-primary" style="flex:1" onclick="saveEst()">Guardar</button><button class="btn-primary" style="background:#333;color:white;flex:1" onclick="closeMod()">Cerrar</button></div>
   </div>
 </div>
 
@@ -167,8 +175,8 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  let cache = { cl: [], est: [] };
-  let editIdCli = null, editIdEst = null;
+  let cache = { cl: [], est: [], gas: [] };
+  let editIdCli = null, editIdEst = null, editIdGas = null;
 
   window.go = (id, el) => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -178,106 +186,108 @@
   };
   window.closeMod = () => document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 
-  // --- CLIENTES ---
-  window.openCliMod = () => { editIdCli=null; document.getElementById('modal-cli-title').innerText="Nuevo Cliente"; document.querySelectorAll('#m-cli input, #m-cli textarea').forEach(i=>i.value=''); document.getElementById('m-cli').classList.add('active'); };
-  window.saveCli = async () => {
-    const d = { nombre:document.getElementById('c-nom').value, empresa:document.getElementById('c-emp').value, tel:document.getElementById('c-tel').value, mail:document.getElementById('c-mail').value, not:document.getElementById('c-not').value };
-    if(editIdCli) await updateDoc(doc(db,"clientes",editIdCli), d); else await addDoc(collection(db,"clientes"), d);
-    closeMod(); toast("Cliente guardado");
+  // --- MODULO GASTOS (NUEVO) ---
+  window.openGasMod = () => { editIdGas=null; document.querySelectorAll('#m-gas input').forEach(i=>i.value=''); document.getElementById('m-gas').classList.add('active'); };
+  window.saveGas = async () => {
+    const d = { concepto:document.getElementById('g-con').value, cat:document.getElementById('g-cat').value, monto:Number(document.getElementById('g-mon').value), fecha:document.getElementById('g-fec').value };
+    if(editIdGas) await updateDoc(doc(db,"gastos",editIdGas), d); else await addDoc(collection(db,"gastos"), d);
+    closeMod(); toast("📉 Gasto registrado");
   };
-  window.editCli = (id) => {
-    const c = cache.cl.find(x=>x.id===id); editIdCli=id; document.getElementById('modal-cli-title').innerText="Editar Cliente";
-    document.getElementById('c-nom').value=c.nombre; document.getElementById('c-emp').value=c.empresa; document.getElementById('c-tel').value=c.tel;
-    document.getElementById('c-mail').value=c.mail; document.getElementById('c-not').value=c.not; document.getElementById('m-cli').classList.add('active');
+  window.editGas = (id) => {
+    const g = cache.gas.find(x=>x.id===id); editIdGas=id;
+    document.getElementById('g-con').value=g.concepto; document.getElementById('g-cat').value=g.cat; document.getElementById('g-mon').value=g.monto; document.getElementById('g-fec').value=g.fecha;
+    document.getElementById('m-gas').classList.add('active');
   };
 
-  // --- ESTIMADOS / PAGOS ---
+  // --- LOGICA CLIENTES Y ESTIMADOS (IGUAL QUE ANTES) ---
+  window.openCliMod = () => { editIdCli=null; document.querySelectorAll('#m-cli input, #m-cli textarea').forEach(i=>i.value=''); document.getElementById('m-cli').classList.add('active'); };
+  window.saveCli = async () => {
+    const d = { nombre:document.getElementById('c-nom').value, empresa:document.getElementById('c-emp').value, tel:document.getElementById('c-tel').value, not:document.getElementById('c-not').value };
+    if(editIdCli) await updateDoc(doc(db,"clientes",editIdCli), d); else await addDoc(collection(db,"clientes"), d);
+    closeMod();
+  };
+  window.editCli = (id) => {
+    const c = cache.cl.find(x=>x.id===id); editIdCli=id;
+    document.getElementById('c-nom').value=c.nombre; document.getElementById('c-emp').value=c.empresa; document.getElementById('c-tel').value=c.tel; document.getElementById('c-not').value=c.not;
+    document.getElementById('m-cli').classList.add('active');
+  };
+
   window.openEstMod = () => {
-    editIdEst=null; document.getElementById('modal-est-title').innerText="Nueva Cotización";
-    document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option>${c.empresa||c.nombre}</option>`).join('');
-    document.getElementById('mat-list').innerHTML=''; addMatRow(); document.getElementById('e-job').value=''; document.getElementById('e-price').value=''; document.getElementById('e-paid').value=''; document.getElementById('e-date').value='';
-    document.getElementById('m-est').classList.add('active');
+    editIdEst=null; document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option>${c.empresa||c.nombre}</option>`).join('');
+    document.getElementById('mat-list').innerHTML=''; addMatRow(); document.getElementById('m-est').classList.add('active');
   };
   window.addMatRow = (n='',q='',p='') => {
-    const d = document.createElement('div'); d.style.display='grid'; d.style.gridTemplateColumns='2fr 1fr 1fr 34px'; d.style.gap='8px'; d.style.marginBottom='10px';
-    d.innerHTML = `<input placeholder="Mat." class="input m-n" value="${n}"><input type="number" placeholder="Cant" class="input m-q" oninput="calc()" value="${q}"><input type="number" placeholder="$" class="input m-p" oninput="calc()" value="${p}"><button class="btn-action btn-del" onclick="this.parentElement.remove();calc()">✕</button>`;
+    const d = document.createElement('div'); d.style.display='grid'; d.style.gridTemplateColumns='2fr 1fr 1fr 34px'; d.style.gap='5px'; d.style.marginTop='5px';
+    d.innerHTML = `<input placeholder="Mat." class="input m-n" value="${n}" style="margin:0"><input type="number" class="input m-q" oninput="calc()" value="${q}" style="margin:0"><input type="number" class="input m-p" oninput="calc()" value="${p}" style="margin:0"><button class="btn-action btn-del" onclick="this.parentElement.remove();calc()">✕</button>`;
     document.getElementById('mat-list').appendChild(d);
   };
   window.calc = () => {
     let cost = 0; document.querySelectorAll('.m-q').forEach((q,i)=>{ cost += (Number(q.value)*Number(document.querySelectorAll('.m-p')[i].value)); });
-    const venta = Number(document.getElementById('e-price').value);
-    const pagado = Number(document.getElementById('e-paid').value);
-    document.getElementById('res-debt').innerText=`$${(venta-pagado).toFixed(2)}`;
-    document.getElementById('res-profit').innerText=`$${(venta-cost).toFixed(2)}`;
-    return {cost, profit:venta-cost, pagado, saldo:venta-pagado};
+    const v = Number(document.getElementById('e-price').value);
+    document.getElementById('res-profit').innerText=`$${(v-cost).toFixed(2)}`;
+    return {cost, profit:v-cost, sale:v, paid:Number(document.getElementById('e-paid').value)};
   };
   window.saveEst = async () => {
-    const {cost, profit, pagado, saldo} = calc();
+    const {cost, profit, sale, paid} = calc();
     const mats = Array.from(document.querySelectorAll('#mat-list > div')).map(r=>({n:r.querySelector('.m-n').value, q:r.querySelector('.m-q').value, p:r.querySelector('.m-p').value}));
-    const d = { cliente:document.getElementById('e-cli').value, trabajo:document.getElementById('e-job').value, costo:cost, venta:Number(document.getElementById('e-price').value), ganancia:profit, materiales:mats, fecha:document.getElementById('e-date').value, abonado:pagado, saldo:saldo };
+    const d = { cliente:document.getElementById('e-cli').value, trabajo:document.getElementById('e-job').value, costo:cost, venta:sale, ganancia:profit, abonado:paid, saldo:sale-paid, materiales:mats, fecha:document.getElementById('e-date').value };
     if(editIdEst) await updateDoc(doc(db,"cotizaciones",editIdEst), d);
     else { d.estado='Pendiente'; d.proceso='Diseño'; await addDoc(collection(db,"cotizaciones"), d); }
-    closeMod(); toast("Registro actualizado");
+    closeMod();
   };
   window.editEst = (id) => {
-    const e = cache.est.find(x=>x.id===id); editIdEst=id; document.getElementById('modal-est-title').innerText="Editar Detalles";
+    const e = cache.est.find(x=>x.id===id); editIdEst=id;
     document.getElementById('e-cli').innerHTML = cache.cl.map(c=>`<option ${ (c.empresa||c.nombre)===e.cliente ? 'selected':'' }>${c.empresa||c.nombre}</option>`).join('');
-    document.getElementById('e-job').value=e.trabajo; document.getElementById('e-price').value=e.venta; document.getElementById('e-paid').value=e.abonado || 0; document.getElementById('e-date').value=e.fecha || '';
+    document.getElementById('e-job').value=e.trabajo; document.getElementById('e-price').value=e.venta; document.getElementById('e-paid').value=e.abonado||0; document.getElementById('e-date').value=e.fecha||'';
     document.getElementById('mat-list').innerHTML=''; e.materiales.forEach(m=>addMatRow(m.n,m.q,m.p)); calc();
     document.getElementById('m-est').classList.add('active');
   };
 
-  // --- LOGICA DE ESTADOS ---
-  window.approveEst = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Aprobado'}); toast("✔️ Aprobado"); };
-  window.undoApprove = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Pendiente'}); toast("↩️ Devuelto a Estimados"); };
-  window.finishJob = async (id) => { if(confirm("¿Confirmar entrega y cierre?")) await updateDoc(doc(db,"cotizaciones",id), {estado:'Entregado'}); };
+  window.approveEst = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Aprobado'}); };
+  window.undoApprove = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Pendiente'}); };
+  window.finishJob = async (id) => { await updateDoc(doc(db,"cotizaciones",id), {estado:'Entregado'}); };
   window.updateProceso = async (id, val) => { await updateDoc(doc(db,"cotizaciones",id), {proceso: val}); };
-
-  // --- PDFs ---
-  const { jsPDF } = window.jspdf;
-  window.pdfCli = (id) => { const c = cache.cl.find(x=>x.id===id); const d = new jsPDF(); d.text(`CLIENTE: ${c.nombre}\nEMPRESA: ${c.empresa}\nWHATS: ${c.tel}`,20,20); d.save(`Info_${c.nombre}.pdf`); };
-  window.pdfEst = (id) => { const e = cache.est.find(x=>x.id===id); const d = new jsPDF(); d.text(`COTIZACION: ${e.trabajo}`,20,20); d.autoTable({startY:30, head:[['Material','Cant','P.U']], body:e.materiales.map(m=>[m.n, m.q, `$${m.p}`])}); d.text(`TOTAL: $${e.venta} | ANTICIPO: $${e.abonado} | SALDO: $${e.saldo}`, 20, d.lastAutoTable.finalY+10); d.save(`Est_${e.trabajo}.pdf`); };
 
   function toast(m){ const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
 
+  // --- SNAPSHOTS (FIREBASE) ---
   onSnapshot(collection(db, "clientes"), s => {
     cache.cl = s.docs.map(d => ({...d.data(), id: d.id}));
-    document.getElementById('t-clientes').innerHTML = cache.cl.map(c => `<tr><td><b>${c.nombre}</b><br><small>${c.empresa}</small></td><td>${c.tel}</td><td><button class="btn-pdf-mod" onclick="pdfCli('${c.id}')">INFO</button></td><td><div class="action-group"><button class="btn-action" onclick="editCli('${c.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'clientes','${c.id}'))">🗑️</button></div></td></tr>`).join('');
+    document.getElementById('t-clientes').innerHTML = cache.cl.map(c => `<tr><td><b>${c.nombre}</b></td><td>${c.tel}</td><td>PDF</td><td><div class="action-group"><button class="btn-action" onclick="editCli('${c.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'clientes','${c.id}'))">🗑️</button></div></td></tr>`).join('');
+  });
+
+  onSnapshot(collection(db, "gastos"), s => {
+    cache.gas = s.docs.map(d => ({...d.data(), id: d.id}));
+    const totalGas = cache.gas.reduce((a,b)=>a+b.monto,0);
+    document.getElementById('stat-expenses').innerText = `$${totalGas.toLocaleString()}`;
+    document.getElementById('t-gastos').innerHTML = cache.gas.map(g => `<tr><td>${g.concepto}</td><td>${g.cat}</td><td style="color:var(--red)">$${g.monto}</td><td>${g.fecha}</td><td><div class="action-group"><button class="btn-action" onclick="editGas('${g.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'gastos','${g.id}'))">🗑️</button></div></td></tr>`).join('');
+    updateNet();
   });
 
   onSnapshot(collection(db, "cotizaciones"), s => {
     cache.est = s.docs.map(d => ({...d.data(), id: d.id}));
-    const totalProfit = cache.est.filter(e=>e.estado!=='Pendiente').reduce((a,b)=>a+b.ganancia,0);
-    const totalDebt = cache.est.filter(e=>e.estado!=='Pendiente').reduce((a,b)=>a+(b.saldo||0),0);
-    document.getElementById('stat-profit').innerText = `$${totalProfit.toLocaleString()}`;
-    document.getElementById('stat-debt').innerText = `$${totalDebt.toLocaleString()}`;
-
-    // Tabla Estimados
-    document.getElementById('t-estimados').innerHTML = cache.est.filter(e=>e.estado==='Pendiente').map(e => `<tr><td>${e.cliente}</td><td>${e.trabajo}</td><td style="color:var(--brand)">$${e.venta}</td><td><div class="action-group"><button class="btn-action" style="color:var(--brand)" onclick="approveEst('${e.id}')">✔️</button><button class="btn-action" onclick="editEst('${e.id}')">✏️</button><button class="btn-action btn-del" onclick="deleteDoc(doc(db,'cotizaciones','${e.id}'))">🗑️</button></div></td></tr>`).join('');
-
-    // Tabla Producción
-    document.getElementById('t-prod').innerHTML = cache.est.filter(e=>e.estado==='Aprobado').map(e => {
-        const payColor = e.saldo <= 0 ? 'var(--green)' : (e.abonado > 0 ? 'var(--blue)' : 'var(--red)');
-        const payText = e.saldo <= 0 ? 'PAGADO' : (e.abonado > 0 ? 'ANTICIPO' : 'DEBE');
-        return `<tr>
-            <td><b>${e.trabajo}</b><br><small>${e.cliente}</small></td>
-            <td><span style="color:var(--orange)">${e.fecha || '-'}</span></td>
-            <td><span class="status-tag" style="color:${payColor}">${payText}</span><br><small>$${e.saldo}</small></td>
-            <td><select class="input" style="padding:5px; font-size:11px;" onchange="updateProceso('${e.id}', this.value)">
-                <option ${e.proceso==='Diseño'?'selected':''}>Diseño</option>
-                <option ${e.proceso==='Impresión'?'selected':''}>Impresión</option>
-                <option ${e.proceso==='Acabado'?'selected':''}>Acabado</option>
-                <option ${e.proceso==='Listo'?'selected':''}>Listo</option>
-            </select></td>
-            <td><div class="action-group">
-                <button class="btn-action" style="color:var(--green);width:auto;padding:0 8px;" onclick="finishJob('${e.id}')">🏁 ENTREGAR</button>
-                <button class="btn-action" onclick="undoApprove('${e.id}')">↩️</button>
-                <button class="btn-action" onclick="editEst('${e.id}')">✏️</button>
-                <button class="btn-action" onclick="pdfEst('${e.id}')">📄</button>
-            </div></td>
-        </tr>`;
-    }).join('');
+    const gross = cache.est.filter(e=>e.estado!=='Pendiente').reduce((a,b)=>a+b.ganancia,0);
+    const debt = cache.est.filter(e=>e.estado!=='Pendiente').reduce((a,b)=>a+b.saldo,0);
+    document.getElementById('stat-gross').innerText = `$${gross.toLocaleString()}`;
+    document.getElementById('stat-debt').innerText = `$${debt.toLocaleString()}`;
+    
+    // Estimados
+    document.getElementById('t-estimados').innerHTML = cache.est.filter(e=>e.estado==='Pendiente').map(e => `<tr><td>${e.cliente}</td><td>${e.trabajo}</td><td>$${e.venta}</td><td><div class="action-group"><button class="btn-action" onclick="approveEst('${e.id}')">✔️</button><button class="btn-action" onclick="editEst('${e.id}')">✏️</button></div></td></tr>`).join('');
+    
+    // Producción
+    document.getElementById('t-prod').innerHTML = cache.est.filter(e=>e.estado==='Aprobado').map(e => `<tr>
+        <td><b>${e.trabajo}</b></td><td>${e.fecha||'-'}</td><td>$${e.saldo}</td>
+        <td><select onchange="updateProceso('${e.id}', this.value)" class="input" style="margin:0; padding:5px; font-size:11px;"><option ${e.proceso==='Diseño'?'selected':''}>Diseño</option><option ${e.proceso==='Impresión'?'selected':''}>Impresión</option><option ${e.proceso==='Listo'?'selected':''}>Listo</option></select></td>
+        <td><div class="action-group"><button class="btn-action" onclick="finishJob('${e.id}')">🏁</button><button class="btn-action" onclick="undoApprove('${e.id}')">↩️</button><button class="btn-action" onclick="editEst('${e.id}')">✏️</button></div></td>
+    </tr>`).join('');
+    updateNet();
   });
+
+  function updateNet() {
+    const gross = Number(document.getElementById('stat-gross').innerText.replace('$','').replace(',',''));
+    const expenses = Number(document.getElementById('stat-expenses').innerText.replace('$','').replace(',',''));
+    document.getElementById('stat-net').innerText = `$${(gross - expenses).toLocaleString()}`;
+  }
 </script>
 </body>
 </html>
