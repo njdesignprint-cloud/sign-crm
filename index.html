@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 2 sin imágenes</title>
+  <title>NJ Design & Print CRM - Fase 3</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -31,7 +31,7 @@
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
     button,input,select,textarea{font:inherit}
-    a{color:inherit;text-decoration:none}
+    a{text-decoration:none;color:inherit}
     .hidden{display:none !important}
 
     .auth-wrap{
@@ -61,6 +61,7 @@
       font-size:15px;
     }
     .logo span{color:var(--brand)}
+
     .auth-sub,.help,.section-note{
       color:var(--muted);
       line-height:1.5;
@@ -98,6 +99,9 @@
     .btn-info{background:rgba(56,189,248,.12);color:#dbeafe;border:1px solid rgba(56,189,248,.25)}
     .btn-danger{background:rgba(239,68,68,.12);color:#fecaca;border:1px solid rgba(239,68,68,.25)}
     .btn-small{padding:8px 10px;border-radius:10px;font-size:13px}
+    .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+    .btn-wa{background:#25D366;color:#07150d}
+    .btn-disabled{opacity:.45;pointer-events:none}
     .full{width:100%}
 
     .stack{display:grid;gap:10px}
@@ -250,11 +254,12 @@
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      align-items:center;
     }
     .filters .input,.filters .select{max-width:230px}
 
     .table-wrap{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:1180px}
+    table{width:100%;border-collapse:collapse;min-width:1220px}
     th,td{
       padding:14px 16px;
       border-bottom:1px solid var(--line);
@@ -370,6 +375,92 @@
     }
     .check-item input{transform:scale(1.15)}
 
+    .calendar-shell{
+      padding:18px;
+    }
+    .calendar-toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .calendar-title{
+      font-size:18px;
+      font-weight:800;
+    }
+    .calendar-grid{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:8px;
+    }
+    .calendar-weekday{
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      text-align:center;
+      padding:6px 0;
+    }
+    .calendar-cell{
+      min-height:92px;
+      background:#101216;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:8px;
+      display:grid;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .calendar-cell:hover{
+      border-color:rgba(184,255,0,.28);
+    }
+    .calendar-cell.outside{
+      opacity:.35;
+      cursor:default;
+    }
+    .calendar-cell.selected{
+      border-color:rgba(184,255,0,.55);
+      box-shadow:0 0 0 2px rgba(184,255,0,.08) inset;
+    }
+    .calendar-cell.today{
+      outline:1px solid rgba(56,189,248,.35);
+    }
+    .calendar-day{
+      font-size:13px;
+      font-weight:800;
+    }
+    .calendar-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:24px;
+      height:24px;
+      padding:0 8px;
+      border-radius:999px;
+      background:rgba(184,255,0,.12);
+      color:var(--brand);
+      font-size:12px;
+      font-weight:800;
+      border:1px solid rgba(184,255,0,.22);
+    }
+    .calendar-daylist{
+      margin-top:16px;
+      display:grid;
+      gap:10px;
+    }
+    .calendar-item{
+      background:#101216;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
     .modal-backdrop{
       position:fixed;
       inset:0;
@@ -431,9 +522,10 @@
       transform:translateY(0);
     }
 
-    @media (max-width:1024px){
+    @media (max-width:1100px){
       .stats,.mini-stats,.summary-box,.checklist-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material{grid-template-columns:1fr}
+      .calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
     }
 
     @media (max-width:780px){
@@ -454,6 +546,10 @@
       .content{padding:18px 18px 92px}
       .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid{grid-template-columns:1fr}
       .filters .input,.filters .select{max-width:none}
+      .calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+      .calendar-cell{min-height:76px;padding:6px}
+      .calendar-day{font-size:12px}
+      .calendar-badge{min-width:20px;height:20px;font-size:11px}
     }
   </style>
 </head>
@@ -461,7 +557,7 @@
   <section id="authScreen" class="auth-wrap">
     <div class="auth-card">
       <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub">CRM privado fase 2 sin imágenes, con checklist de producción y gastos recurrentes automáticos.</div>
+      <div class="auth-sub">CRM privado fase 3 con fechas, calendario de entregas, trabajos por vencer y WhatsApp directo.</div>
 
       <div class="stack">
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
@@ -476,7 +572,7 @@
       <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
 
       <div class="help">
-        Esta versión no usa Firebase Storage. Solo necesitas Authentication y Firestore.
+        Esta versión usa solo Authentication y Firestore.
       </div>
     </div>
   </section>
@@ -485,7 +581,7 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 2 sin imágenes: clientes, trabajos, pagos, checklist y gastos recurrentes.</div>
+        <div class="brand-sub">Fase 3: fechas, calendario, trabajos por vencer y WhatsApp directo.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -527,15 +623,67 @@
           <div class="mini-stats">
             <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
             <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value">0</div></div>
+            <div class="mini-stat"><div class="label">Trabajos por vencer</div><div id="allDueSoonJobs" class="value warn-text">0</div></div>
             <div class="mini-stat"><div class="label">Trabajos vencidos</div><div id="allOverdueJobs" class="value danger-text">0</div></div>
-            <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Trabajos por vencer</h2>
+                <div class="section-note">Próximos 7 días.</div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Entrega</th>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>WhatsApp</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="dueSoonBody"></tbody>
+              </table>
+            </div>
+
+            <div id="dueSoonEmpty" class="empty hidden">No hay trabajos próximos a vencer.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Calendario de entregas</h2>
+                <div class="section-note">Haz clic en un día para ver los trabajos programados.</div>
+              </div>
+            </div>
+
+            <div class="calendar-shell">
+              <div class="calendar-toolbar">
+                <div class="actions-row">
+                  <button id="calendarPrev" class="btn btn-secondary btn-small">← Mes anterior</button>
+                  <button id="calendarToday" class="btn btn-ghost btn-small">Hoy</button>
+                  <button id="calendarNext" class="btn btn-secondary btn-small">Mes siguiente →</button>
+                </div>
+                <div id="calendarTitle" class="calendar-title"></div>
+              </div>
+
+              <div class="calendar-grid" id="calendarGrid"></div>
+
+              <div class="calendar-daylist" id="calendarDayList"></div>
+            </div>
           </div>
 
           <div class="panel">
             <div class="panel-head">
               <div>
                 <h2>Trabajos recientes</h2>
-                <div class="section-note">Con prioridad y avance de checklist.</div>
+                <div class="section-note">Con prioridad, avance y WhatsApp.</div>
               </div>
               <div class="filters">
                 <select id="dashboardStatusFilter" class="select">
@@ -565,6 +713,7 @@
                     <th>Saldo</th>
                     <th>Checklist</th>
                     <th>Estado</th>
+                    <th>WhatsApp</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -598,6 +747,7 @@
                     <th>Email</th>
                     <th>Dirección</th>
                     <th>Notas</th>
+                    <th>WhatsApp</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -614,7 +764,7 @@
             <div class="panel-head">
               <div>
                 <h2>Trabajos</h2>
-                <div class="section-note">Cotización, producción, pagos y checklist.</div>
+                <div class="section-note">Con filtro por fechas, checklist y WhatsApp directo.</div>
               </div>
               <div class="filters">
                 <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
@@ -635,6 +785,8 @@
                   <option value="Media">Media</option>
                   <option value="Alta">Alta</option>
                 </select>
+                <input id="jobDateFrom" type="date" class="input" />
+                <input id="jobDateTo" type="date" class="input" />
               </div>
             </div>
 
@@ -654,6 +806,7 @@
                     <th>Saldo</th>
                     <th>Checklist</th>
                     <th>Estado</th>
+                    <th>WhatsApp</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -968,7 +1121,9 @@
       editingExpenseId: null,
       editingRecurringId: null,
       workingPaymentJobId: null,
-      unsubscribers: []
+      unsubscribers: [],
+      calendarDate: new Date(),
+      selectedCalendarDate: null
     };
 
     const $ = (id) => document.getElementById(id);
@@ -985,7 +1140,7 @@
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
-      trabajos: ["Trabajos", "Cotización, producción, pagos y checklist."],
+      trabajos: ["Trabajos", "Cotización, producción, pagos, checklist y fechas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."]
     };
 
@@ -1111,6 +1266,16 @@
       return job.dueDate < today();
     }
 
+    function isDueSoon(job) {
+      if (!job?.dueDate) return false;
+      if (["Pagado", "Cancelado", "Entregado"].includes(job.status)) return false;
+      const start = new Date(today() + "T00:00:00");
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      const due = new Date(job.dueDate + "T00:00:00");
+      return due >= start && due <= end;
+    }
+
     function formatDate(value) {
       return value || "-";
     }
@@ -1164,6 +1329,26 @@
       const profit = sale - cost;
       const balance = Math.max(sale - paid, 0);
       return { sale, cost, paid, profit, balance };
+    }
+
+    function normalizePhone(phone) {
+      let digits = String(phone || "").replace(/\D/g, "");
+      if (!digits) return "";
+      if (digits.length === 10) digits = "1" + digits;
+      return digits;
+    }
+
+    function whatsappUrl(phone, clientName = "") {
+      const digits = normalizePhone(phone);
+      if (!digits) return "";
+      const msg = encodeURIComponent(`Hola ${clientName || ""}, te escribo de ${COMPANY.name}.`);
+      return `https://wa.me/${digits}?text=${msg}`;
+    }
+
+    function whatsappButton(phone, clientName = "") {
+      const url = whatsappUrl(phone, clientName);
+      if (!url) return `<button class="btn btn-small btn-secondary btn-disabled">Sin WhatsApp</button>`;
+      return `<a class="btn btn-small btn-wa" target="_blank" rel="noopener noreferrer" href="${url}">WhatsApp</a>`;
     }
 
     function fillClientSelect(selectedId = "") {
@@ -1647,6 +1832,19 @@
         .slice(0, 10);
     }
 
+    function getDateRangeFilteredJobs(list) {
+      const from = cleanText($("jobDateFrom").value);
+      const to = cleanText($("jobDateTo").value);
+
+      return list.filter(job => {
+        const baseDate = job.dueDate || job.date || "";
+        if (!baseDate) return !from && !to;
+        if (from && baseDate < from) return false;
+        if (to && baseDate > to) return false;
+        return true;
+      });
+    }
+
     function renderClients() {
       const q = cleanText($("clientSearch").value).toLowerCase();
       const rows = state.clients.filter(client => {
@@ -1662,6 +1860,7 @@
           <td>${safe(client.email || "-")}</td>
           <td>${safe([client.address, client.city].filter(Boolean).join(", ") || "-")}</td>
           <td><small>${safe(client.notes || "-")}</small></td>
+          <td>${whatsappButton(client.phone, client.name || client.company || "")}</td>
           <td>
             <div class="actions-row">
               <button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>
@@ -1681,13 +1880,15 @@
       const statusFilter = cleanText($("jobStatusFilter").value);
       const priorityFilter = cleanText($("jobPriorityFilter").value);
 
-      const rows = state.jobs.filter(job => {
+      let rows = state.jobs.filter(job => {
         const client = getClientById(job.clientId);
         const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""}`.toLowerCase();
         return bag.includes(q)
           && (!statusFilter || job.status === statusFilter)
           && (!priorityFilter || (job.priority || "Media") === priorityFilter);
       });
+
+      rows = getDateRangeFilteredJobs(rows);
 
       $("jobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
@@ -1711,6 +1912,7 @@
             <td>${money(calc.balance)}</td>
             <td>${safe(checklistProgress(job))}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
+            <td>${whatsappButton(client?.phone, client?.name || client?.company || "")}</td>
             <td>
               <div class="actions-row">
                 <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>
@@ -1752,6 +1954,7 @@
             <td>${money(calc.balance)}</td>
             <td>${safe(checklistProgress(job))}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
+            <td>${whatsappButton(client?.phone, client?.name || client?.company || "")}</td>
             <td>
               <div class="actions-row">
                 <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Ver</button>
@@ -1763,6 +1966,8 @@
       }).join("");
 
       $("dashboardEmpty").classList.toggle("hidden", rows.length > 0);
+      renderDueSoon();
+      renderCalendar();
     }
 
     function renderExpenses() {
@@ -1842,6 +2047,7 @@
 
       const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
+      const dueSoonJobs = state.jobs.filter(job => isDueSoon(job)).length;
 
       $("mSales").textContent = money(monthSales);
       $("mCollected").textContent = money(monthCollected);
@@ -1850,6 +2056,7 @@
       $("allReceivable").textContent = money(overallReceivable);
       $("allActiveJobs").textContent = String(activeJobs);
       $("allOverdueJobs").textContent = String(overdueJobs);
+      $("allDueSoonJobs").textContent = String(dueSoonJobs);
     }
 
     function exportJson() {
@@ -1867,7 +2074,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nj_crm_fase2_sin_imagenes_${today()}.json`;
+      a.download = `nj_crm_fase3_${today()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
@@ -1895,6 +2102,7 @@
           ["Ganancia neta del mes", $("mProfit").textContent],
           ["Por cobrar general", $("allReceivable").textContent],
           ["Trabajos activos", $("allActiveJobs").textContent],
+          ["Trabajos por vencer", $("allDueSoonJobs").textContent],
           ["Trabajos vencidos", $("allOverdueJobs").textContent],
           ["Clientes registrados", $("allClients").textContent]
         ]
@@ -2003,6 +2211,153 @@
 
       pdf.save(`Cotizacion_${(job.title || "trabajo").replace(/\s+/g, "_")}_${today()}.pdf`);
       showToast("Cotización PDF generada.");
+    }
+
+    function renderDueSoon() {
+      const rows = state.jobs
+        .filter(job => isDueSoon(job))
+        .slice()
+        .sort((a, b) => String(a.dueDate || "").localeCompare(String(b.dueDate || "")))
+        .slice(0, 12);
+
+      $("dueSoonBody").innerHTML = rows.map(job => {
+        const client = getClientById(job.clientId);
+        return `
+          <tr>
+            <td>${safe(job.dueDate || "-")}</td>
+            <td>${safe(clientLabel(client))}</td>
+            <td>${safe(job.title || "-")}</td>
+            <td>${priorityPill(job.priority || "Media")}</td>
+            <td>${statusPill(job.status || "Cotización")}</td>
+            <td>${whatsappButton(client?.phone, client?.name || client?.company || "")}</td>
+            <td>
+              <div class="actions-row">
+                <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
+    }
+
+    function formatMonthTitle(dateObj) {
+      return dateObj.toLocaleDateString("es-US", { month: "long", year: "numeric" });
+    }
+
+    function getCalendarJobsForDate(dateStr) {
+      return state.jobs
+        .filter(job => job.dueDate === dateStr)
+        .slice()
+        .sort((a, b) => String(a.priority || "").localeCompare(String(b.priority || "")));
+    }
+
+    function renderCalendar() {
+      const grid = $("calendarGrid");
+      grid.innerHTML = "";
+
+      const date = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth(), 1);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekDay = firstDay.getDay();
+      const totalDays = lastDay.getDate();
+      const todayStr = today();
+
+      $("calendarTitle").textContent = formatMonthTitle(date).replace(/^\w/, c => c.toUpperCase());
+
+      const weekDays = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+      weekDays.forEach(label => {
+        const el = document.createElement("div");
+        el.className = "calendar-weekday";
+        el.textContent = label;
+        grid.appendChild(el);
+      });
+
+      for (let i = 0; i < startWeekDay; i++) {
+        const blank = document.createElement("div");
+        blank.className = "calendar-cell outside";
+        grid.appendChild(blank);
+      }
+
+      let firstSelectable = null;
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const jobs = getCalendarJobsForDate(dateStr);
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "calendar-cell";
+        cell.dataset.date = dateStr;
+        if (dateStr === todayStr) cell.classList.add("today");
+        if (state.selectedCalendarDate === dateStr) cell.classList.add("selected");
+        if (!firstSelectable) firstSelectable = dateStr;
+
+        cell.innerHTML = `
+          <div class="calendar-day">${day}</div>
+          ${jobs.length ? `<div class="calendar-badge">${jobs.length}</div>` : `<div style="height:24px"></div>`}
+        `;
+        grid.appendChild(cell);
+      }
+
+      if (!state.selectedCalendarDate) state.selectedCalendarDate = firstSelectable;
+      renderCalendarDayList();
+    }
+
+    function renderCalendarDayList() {
+      const box = $("calendarDayList");
+      const selected = state.selectedCalendarDate;
+
+      if (!selected) {
+        box.innerHTML = `<div class="section-note">Selecciona un día.</div>`;
+        return;
+      }
+
+      const jobs = getCalendarJobsForDate(selected);
+
+      if (!jobs.length) {
+        box.innerHTML = `
+          <div class="calendar-item">
+            <div>
+              <strong>${safe(selected)}</strong>
+              <div class="section-note">No hay entregas programadas para ese día.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      box.innerHTML = jobs.map(job => {
+        const client = getClientById(job.clientId);
+        return `
+          <div class="calendar-item">
+            <div>
+              <strong>${safe(job.title || "-")}</strong>
+              <div class="section-note">${safe(clientLabel(client))} · ${safe(job.status || "Cotización")} · Prioridad ${safe(job.priority || "Media")}</div>
+            </div>
+            <div class="actions-row">
+              ${whatsappButton(client?.phone, client?.name || client?.company || "")}
+              <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function changeCalendarMonth(offset) {
+      const newDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth() + offset, 1);
+      state.calendarDate = newDate;
+      state.selectedCalendarDate = null;
+      renderCalendar();
+    }
+
+    function goCalendarToday() {
+      const now = new Date();
+      state.calendarDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      state.selectedCalendarDate = today();
+      renderCalendar();
     }
 
     function bindRealtime() {
@@ -2119,6 +2474,8 @@
       state.jobs = [];
       state.expenses = [];
       state.recurringExpenses = [];
+      state.selectedCalendarDate = null;
+      state.calendarDate = new Date();
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }
@@ -2177,10 +2534,16 @@
       openModal("paymentModal");
     });
 
+    $("calendarPrev").addEventListener("click", () => changeCalendarMonth(-1));
+    $("calendarNext").addEventListener("click", () => changeCalendarMonth(1));
+    $("calendarToday").addEventListener("click", goCalendarToday);
+
     $("clientSearch").addEventListener("input", renderClients);
     $("jobSearch").addEventListener("input", renderJobs);
     $("jobStatusFilter").addEventListener("change", renderJobs);
     $("jobPriorityFilter").addEventListener("change", renderJobs);
+    $("jobDateFrom").addEventListener("change", renderJobs);
+    $("jobDateTo").addEventListener("change", renderJobs);
     $("dashboardStatusFilter").addEventListener("change", renderDashboardJobs);
     $("expenseSearch").addEventListener("input", renderExpenses);
     $("authPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
@@ -2203,6 +2566,11 @@
 
       if (target.dataset.editRecurring) editRecurring(target.dataset.editRecurring);
       if (target.dataset.deleteRecurring) removeItem("recurring", target.dataset.deleteRecurring, "gasto recurrente");
+
+      if (target.dataset.date) {
+        state.selectedCalendarDate = target.dataset.date;
+        renderCalendar();
+      }
     });
 
     resetJobForm();
