@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 1 Pro</title>
+  <title>NJ Design & Print CRM - Fase 2 sin imágenes</title>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     :root{
       --bg:#0a0b0e;
@@ -25,20 +27,71 @@
       --radius:18px;
       --shadow:0 14px 34px rgba(0,0,0,.25);
     }
+
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
     button,input,select,textarea{font:inherit}
+    a{color:inherit;text-decoration:none}
     .hidden{display:none !important}
-    .app-shell{min-height:100vh}
-    .auth-wrap{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top left,rgba(184,255,0,.08),transparent 30%),radial-gradient(circle at bottom right,rgba(56,189,248,.08),transparent 22%),var(--bg)}
-    .auth-card{width:min(460px,100%);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow)}
-    .logo{font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:15px}.logo span{color:var(--brand)}
-    .auth-sub,.help,.section-note{color:var(--muted);line-height:1.5}.auth-sub{margin:10px 0 18px}
+
+    .auth-wrap{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:20px;
+      background:
+        radial-gradient(circle at top left, rgba(184,255,0,.08), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(56,189,248,.08), transparent 22%),
+        var(--bg);
+    }
+
+    .auth-card{
+      width:min(460px,100%);
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:28px;
+      box-shadow:var(--shadow);
+    }
+
+    .logo{
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size:15px;
+    }
+    .logo span{color:var(--brand)}
+    .auth-sub,.help,.section-note{
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .auth-sub{margin:10px 0 18px}
     .help{font-size:13px;margin-top:14px}
-    .input,.select,.textarea{width:100%;background:#101218;color:var(--text);border:1px solid var(--line);border-radius:13px;padding:13px 14px;outline:none;transition:.18s ease}
-    .input:focus,.select:focus,.textarea:focus{border-color:rgba(184,255,0,.5);box-shadow:0 0 0 3px rgba(184,255,0,.08)}
+
+    .input,.select,.textarea{
+      width:100%;
+      background:#101218;
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:13px 14px;
+      outline:none;
+      transition:.18s ease;
+    }
+    .input:focus,.select:focus,.textarea:focus{
+      border-color:rgba(184,255,0,.5);
+      box-shadow:0 0 0 3px rgba(184,255,0,.08);
+    }
     .textarea{min-height:88px;resize:vertical}
-    .btn{border:none;border-radius:13px;padding:12px 16px;cursor:pointer;font-weight:800;transition:.18s ease}
+
+    .btn{
+      border:none;
+      border-radius:13px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:800;
+      transition:.18s ease;
+    }
     .btn:hover{transform:translateY(-1px)}
     .btn-primary{background:var(--brand);color:#101010}
     .btn-secondary{background:#252932;color:var(--text);border:1px solid var(--line)}
@@ -46,42 +99,194 @@
     .btn-danger{background:rgba(239,68,68,.12);color:#fecaca;border:1px solid rgba(239,68,68,.25)}
     .btn-small{padding:8px 10px;border-radius:10px;font-size:13px}
     .full{width:100%}
+
+    .stack{display:grid;gap:10px}
     .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .stack{display:grid;gap:10px}
-    .mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+    .mt-10{margin-top:10px}
+    .mt-12{margin-top:12px}
+    .mt-16{margin-top:16px}
     .auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-    .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:24px 18px;position:sticky;top:0;height:100vh}
-    .brand{font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.brand span{color:var(--brand)}
-    .brand-sub{color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:22px}
+
+    .app{
+      display:grid;
+      grid-template-columns:260px 1fr;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      background:var(--panel);
+      border-right:1px solid var(--line);
+      padding:24px 18px;
+      position:sticky;
+      top:0;
+      height:100vh;
+    }
+
+    .brand{
+      font-weight:900;
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      margin-bottom:8px;
+    }
+    .brand span{color:var(--brand)}
+    .brand-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+      margin-bottom:22px;
+    }
+
     .nav{display:grid;gap:8px}
-    .nav button{background:transparent;color:var(--muted);border:1px solid transparent;padding:14px;border-radius:14px;text-align:left;cursor:pointer;font-weight:800;transition:.18s ease}
-    .nav button.active,.nav button:hover{color:var(--text);background:rgba(184,255,0,.08);border-color:rgba(184,255,0,.18)}
-    .sidebar-foot{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);display:grid;gap:10px}
-    .user-chip{background:#101116;border:1px solid var(--line);border-radius:14px;padding:12px;color:var(--muted);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+    .nav button{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid transparent;
+      padding:14px;
+      border-radius:14px;
+      text-align:left;
+      cursor:pointer;
+      font-weight:800;
+      transition:.18s ease;
+    }
+    .nav button.active,.nav button:hover{
+      color:var(--text);
+      background:rgba(184,255,0,.08);
+      border-color:rgba(184,255,0,.18);
+    }
+
+    .sidebar-foot{
+      margin-top:24px;
+      padding-top:18px;
+      border-top:1px solid var(--line);
+      display:grid;
+      gap:10px;
+    }
+
+    .user-chip{
+      background:#101116;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+      overflow-wrap:anywhere;
+    }
+
     .content{padding:28px}
-    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:22px}
-    .title h1{margin:0;font-size:28px}.title p{margin:8px 0 0;color:var(--muted)}
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+    .title h1{margin:0;font-size:28px}
+    .title p{margin:8px 0 0;color:var(--muted)}
     .top-actions{display:flex;gap:10px;flex-wrap:wrap}
-    .stats,.mini-stats{display:grid;gap:14px;margin-bottom:22px}
+
+    .stats,.mini-stats{
+      display:grid;
+      gap:14px;
+      margin-bottom:22px;
+    }
     .stats{grid-template-columns:repeat(4,minmax(180px,1fr))}
     .mini-stats{grid-template-columns:repeat(4,minmax(180px,1fr))}
-    .stat,.mini-stat{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
-    .stat .label,.mini-stat .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
-    .stat .value{margin-top:10px;font-size:28px;font-weight:900}
-    .mini-stat .value{margin-top:8px;font-size:21px;font-weight:800}
-    .brand-text{color:var(--brand)}.ok-text{color:#86efac}.warn-text{color:#fcd34d}.danger-text{color:#fca5a5}.info-text{color:#bae6fd}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-    .panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line)}
+
+    .stat,.mini-stat{
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .stat .label,.mini-stat .label{
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+    .stat .value{
+      margin-top:10px;
+      font-size:28px;
+      font-weight:900;
+    }
+    .mini-stat .value{
+      margin-top:8px;
+      font-size:21px;
+      font-weight:800;
+    }
+
+    .brand-text{color:var(--brand)}
+    .ok-text{color:#86efac}
+    .warn-text{color:#fcd34d}
+    .danger-text{color:#fca5a5}
+    .info-text{color:#bae6fd}
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+    }
     .panel-head h2{margin:0;font-size:18px}
-    .filters{display:flex;gap:10px;flex-wrap:wrap}.filters .input,.filters .select{max-width:230px}
-    .table-wrap{overflow:auto} table{width:100%;border-collapse:collapse;min-width:1180px}
-    th,td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
-    th{text-align:left;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+    .filters{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .filters .input,.filters .select{max-width:230px}
+
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:1180px}
+    th,td{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+    }
+    th{
+      text-align:left;
+      font-size:12px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
     td small{color:var(--muted)}
-    .empty{text-align:center;color:var(--muted);padding:36px 18px}
-    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;font-size:12px;font-weight:800;padding:6px 10px;border:1px solid transparent;white-space:nowrap}
+
+    .empty{
+      text-align:center;
+      color:var(--muted);
+      padding:36px 18px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      padding:6px 10px;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+
     .st-cotizacion{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
     .st-aprobado{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
     .st-diseno{background:rgba(99,102,241,.12);color:#c7d2fe;border-color:rgba(99,102,241,.25)}
@@ -90,255 +295,442 @@
     .st-entregado{background:rgba(34,197,94,.12);color:#bbf7d0;border-color:rgba(34,197,94,.25)}
     .st-pagado{background:rgba(184,255,0,.12);color:var(--brand);border-color:rgba(184,255,0,.25)}
     .st-cancelado{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
+
     .pr-baja{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
     .pr-media{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
     .pr-alta{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
+
     .overdue{color:#fecaca;font-weight:800}
     .actions-row{display:flex;gap:8px;flex-wrap:wrap}
-    .summary-box{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;background:#101116;border:1px dashed rgba(184,255,0,.22);border-radius:16px;padding:12px}
-    .summary-box div{background:rgba(255,255,255,.02);padding:10px;border-radius:12px}
-    .summary-box span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}
-    .summary-box strong{display:block;margin-top:8px;font-size:18px}
-    .box{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
-    .row-material{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-top:10px}
+
+    .summary-box{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-top:14px;
+      background:#101116;
+      border:1px dashed rgba(184,255,0,.22);
+      border-radius:16px;
+      padding:12px;
+    }
+    .summary-box div{
+      background:rgba(255,255,255,.02);
+      padding:10px;
+      border-radius:12px;
+    }
+    .summary-box span{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+    }
+    .summary-box strong{
+      display:block;
+      margin-top:8px;
+      font-size:18px;
+    }
+
+    .box{
+      margin-top:16px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .row-material{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr auto;
+      gap:10px;
+      margin-top:10px;
+    }
+
     .list-payments{display:grid;gap:10px;margin-top:12px}
-    .payment-item{background:#101216;border:1px solid var(--line);border-radius:12px;padding:10px}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:18px;z-index:999;backdrop-filter:blur(6px)}
+    .payment-item{
+      background:#101216;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+    }
+
+    .checklist-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+    .check-item{
+      background:#101216;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .check-item input{transform:scale(1.15)}
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:999;
+      backdrop-filter:blur(6px);
+    }
     .modal-backdrop.show{display:flex}
-    .modal{width:min(960px,100%);max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
-    .modal-head,.modal-body,.modal-foot{padding:18px}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0}
-    .modal-foot{border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
-    .toast{position:fixed;right:18px;bottom:18px;background:#111317;border:1px solid var(--line);color:var(--text);padding:12px 14px;border-radius:14px;box-shadow:var(--shadow);opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s ease;z-index:1200}
-    .toast.show{opacity:1;transform:translateY(0)}
-    @media (max-width:1024px){.stats,.mini-stats,.summary-box{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3,.row-material{grid-template-columns:1fr}}
-    @media (max-width:780px){.app{grid-template-columns:1fr}.sidebar{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;padding:10px;z-index:100;border-right:none;border-top:1px solid var(--line)}.brand,.brand-sub{display:none}.nav{grid-template-columns:repeat(4,1fr)}.nav button{text-align:center;padding:10px 8px;font-size:12px}.sidebar-foot{display:none}.content{padding:18px 18px 92px}.stats,.mini-stats,.summary-box,.grid-2,.auth-actions{grid-template-columns:1fr}.filters .input,.filters .select{max-width:none}}
+
+    .modal{
+      width:min(980px,100%);
+      max-height:92vh;
+      overflow:auto;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .modal-head,.modal-body,.modal-foot{padding:18px}
+    .modal-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid var(--line);
+    }
+    .modal-head h3{margin:0}
+    .modal-foot{
+      border-top:1px solid var(--line);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .toast{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      background:#111317;
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:12px 14px;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      opacity:0;
+      transform:translateY(12px);
+      pointer-events:none;
+      transition:.2s ease;
+      z-index:1200;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    @media (max-width:1024px){
+      .stats,.mini-stats,.summary-box,.checklist-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .grid-3,.row-material{grid-template-columns:1fr}
+    }
+
+    @media (max-width:780px){
+      .app{grid-template-columns:1fr}
+      .sidebar{
+        position:fixed;
+        left:0;right:0;bottom:0;top:auto;
+        height:auto;
+        padding:10px;
+        z-index:100;
+        border-right:none;
+        border-top:1px solid var(--line);
+      }
+      .brand,.brand-sub{display:none}
+      .nav{grid-template-columns:repeat(4,1fr)}
+      .nav button{text-align:center;padding:10px 8px;font-size:12px}
+      .sidebar-foot{display:none}
+      .content{padding:18px 18px 92px}
+      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid{grid-template-columns:1fr}
+      .filters .input,.filters .select{max-width:none}
+    }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <section id="authScreen" class="auth-wrap">
-      <div class="auth-card">
-        <div class="logo">NJ <span>Design & Print</span></div>
-        <div class="auth-sub">CRM privado fase 1 para clientes, trabajos, pagos, fechas de entrega, prioridades, gastos y reportes PDF.</div>
-        <div class="stack">
-          <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
-          <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
-        </div>
-        <div class="auth-actions mt-16">
-          <button id="btnLogin" class="btn btn-primary">Entrar</button>
-          <button id="btnRegister" class="btn btn-secondary">Crear cuenta</button>
-        </div>
-        <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
-        <div class="help">Activa Email/Password en Firebase Authentication. Si usas GitHub Pages, recuerda agregar tu dominio en Authorized domains.</div>
+  <section id="authScreen" class="auth-wrap">
+    <div class="auth-card">
+      <div class="logo">NJ <span>Design & Print</span></div>
+      <div class="auth-sub">CRM privado fase 2 sin imágenes, con checklist de producción y gastos recurrentes automáticos.</div>
+
+      <div class="stack">
+        <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
+        <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
       </div>
-    </section>
 
-    <section id="appScreen" class="hidden">
-      <div class="app">
-        <aside class="sidebar">
-          <div class="brand">NJ <span>Design & Print</span></div>
-          <div class="brand-sub">Fase 1 Pro: clientes, trabajos, prioridades, pagos reales, gastos y cotizaciones PDF.</div>
-          <div class="nav">
-            <button class="active" data-view="dashboard">📊 Dashboard</button>
-            <button data-view="clientes">👥 Clientes</button>
-            <button data-view="trabajos">🛠️ Trabajos</button>
-            <button data-view="gastos">💸 Gastos</button>
-          </div>
-          <div class="sidebar-foot">
-            <div class="user-chip">Usuario activo:<br><strong id="activeUserEmail">-</strong></div>
-            <button id="btnLogout" class="btn btn-secondary">Cerrar sesión</button>
-          </div>
-        </aside>
-
-        <main class="content">
-          <div class="topbar">
-            <div class="title">
-              <h1 id="pageTitle">Dashboard</h1>
-              <p id="pageSubtitle">Resumen general del negocio.</p>
-            </div>
-            <div class="top-actions">
-              <button id="btnExportPdf" class="btn btn-info">Reporte PDF</button>
-              <button id="btnExportJson" class="btn btn-secondary">Respaldo JSON</button>
-              <button id="btnNewMain" class="btn btn-primary hidden">+ Nuevo</button>
-            </div>
-          </div>
-
-          <section id="view-dashboard" class="view">
-            <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
-            <div class="stats">
-              <div class="stat"><div class="label">Ventas del mes</div><div id="mSales" class="value brand-text">$0.00</div></div>
-              <div class="stat"><div class="label">Cobrado del mes</div><div id="mCollected" class="value info-text">$0.00</div></div>
-              <div class="stat"><div class="label">Gastos del mes</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
-              <div class="stat"><div class="label">Ganancia neta mes</div><div id="mProfit" class="value ok-text">$0.00</div></div>
-            </div>
-
-            <div class="section-note" style="margin-bottom:10px;">Resumen general</div>
-            <div class="mini-stats">
-              <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
-              <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value">0</div></div>
-              <div class="mini-stat"><div class="label">Trabajos vencidos</div><div id="allOverdueJobs" class="value danger-text">0</div></div>
-              <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
-            </div>
-
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Trabajos recientes</h2>
-                  <div class="section-note">Aquí ves rápidamente el estado, prioridad y fecha de entrega.</div>
-                </div>
-                <div class="filters">
-                  <select id="dashboardStatusFilter" class="select">
-                    <option value="">Todos los estados</option>
-                    <option value="Cotización">Cotización</option>
-                    <option value="Aprobado">Aprobado</option>
-                    <option value="Diseño">Diseño</option>
-                    <option value="Producción">Producción</option>
-                    <option value="Instalación">Instalación</option>
-                    <option value="Entregado">Entregado</option>
-                    <option value="Pagado">Pagado</option>
-                    <option value="Cancelado">Cancelado</option>
-                  </select>
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Cliente</th>
-                      <th>Trabajo</th>
-                      <th>Entrega</th>
-                      <th>Prioridad</th>
-                      <th>Venta</th>
-                      <th>Pagado</th>
-                      <th>Saldo</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody id="dashboardJobsBody"></tbody>
-                </table>
-              </div>
-              <div id="dashboardEmpty" class="empty hidden">Todavía no hay trabajos guardados.</div>
-            </div>
-          </section>
-
-          <section id="view-clientes" class="view hidden">
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Clientes</h2>
-                  <div class="section-note">Base de datos de clientes y empresas.</div>
-                </div>
-                <div class="filters">
-                  <input id="clientSearch" class="input" placeholder="Buscar por nombre, empresa, teléfono o email" />
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Empresa</th>
-                      <th>Teléfono</th>
-                      <th>Email</th>
-                      <th>Dirección</th>
-                      <th>Notas</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody id="clientsBody"></tbody>
-                </table>
-              </div>
-              <div id="clientsEmpty" class="empty hidden">No hay clientes guardados.</div>
-            </div>
-          </section>
-
-          <section id="view-trabajos" class="view hidden">
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Trabajos</h2>
-                  <div class="section-note">Flujo completo: cotización → aprobación → diseño → producción → instalación → entrega → pago.</div>
-                </div>
-                <div class="filters">
-                  <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
-                  <select id="jobStatusFilter" class="select">
-                    <option value="">Todos los estados</option>
-                    <option value="Cotización">Cotización</option>
-                    <option value="Aprobado">Aprobado</option>
-                    <option value="Diseño">Diseño</option>
-                    <option value="Producción">Producción</option>
-                    <option value="Instalación">Instalación</option>
-                    <option value="Entregado">Entregado</option>
-                    <option value="Pagado">Pagado</option>
-                    <option value="Cancelado">Cancelado</option>
-                  </select>
-                  <select id="jobPriorityFilter" class="select">
-                    <option value="">Todas las prioridades</option>
-                    <option value="Baja">Baja</option>
-                    <option value="Media">Media</option>
-                    <option value="Alta">Alta</option>
-                  </select>
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Cliente</th>
-                      <th>Trabajo</th>
-                      <th>Fecha</th>
-                      <th>Entrega</th>
-                      <th>Prioridad</th>
-                      <th>Venta</th>
-                      <th>Costo</th>
-                      <th>Ganancia</th>
-                      <th>Pagado</th>
-                      <th>Saldo</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody id="jobsBody"></tbody>
-                </table>
-              </div>
-              <div id="jobsEmpty" class="empty hidden">No hay trabajos guardados.</div>
-            </div>
-          </section>
-
-          <section id="view-gastos" class="view hidden">
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Gastos</h2>
-                  <div class="section-note">Control de gastos fijos y variables.</div>
-                </div>
-                <div class="filters">
-                  <input id="expenseSearch" class="input" placeholder="Buscar concepto o categoría" />
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Concepto</th>
-                      <th>Categoría</th>
-                      <th>Monto</th>
-                      <th>Fecha</th>
-                      <th>Notas</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody id="expensesBody"></tbody>
-                </table>
-              </div>
-              <div id="expensesEmpty" class="empty hidden">No hay gastos guardados.</div>
-            </div>
-          </section>
-        </main>
+      <div class="auth-actions mt-16">
+        <button id="btnLogin" class="btn btn-primary">Entrar</button>
+        <button id="btnRegister" class="btn btn-secondary">Crear cuenta</button>
       </div>
-    </section>
-  </div>
+
+      <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
+
+      <div class="help">
+        Esta versión no usa Firebase Storage. Solo necesitas Authentication y Firestore.
+      </div>
+    </div>
+  </section>
+
+  <section id="appScreen" class="hidden">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">NJ <span>Design & Print</span></div>
+        <div class="brand-sub">Fase 2 sin imágenes: clientes, trabajos, pagos, checklist y gastos recurrentes.</div>
+
+        <div class="nav">
+          <button class="active" data-view="dashboard">📊 Dashboard</button>
+          <button data-view="clientes">👥 Clientes</button>
+          <button data-view="trabajos">🛠️ Trabajos</button>
+          <button data-view="gastos">💸 Gastos</button>
+        </div>
+
+        <div class="sidebar-foot">
+          <div class="user-chip">Usuario activo:<br><strong id="activeUserEmail">-</strong></div>
+          <button id="btnLogout" class="btn btn-secondary">Cerrar sesión</button>
+        </div>
+      </aside>
+
+      <main class="content">
+        <div class="topbar">
+          <div class="title">
+            <h1 id="pageTitle">Dashboard</h1>
+            <p id="pageSubtitle">Resumen general del negocio.</p>
+          </div>
+
+          <div class="top-actions">
+            <button id="btnExportPdf" class="btn btn-info">Reporte PDF</button>
+            <button id="btnExportJson" class="btn btn-secondary">Respaldo JSON</button>
+            <button id="btnNewMain" class="btn btn-primary hidden">+ Nuevo</button>
+          </div>
+        </div>
+
+        <section id="view-dashboard" class="view">
+          <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
+          <div class="stats">
+            <div class="stat"><div class="label">Ventas del mes</div><div id="mSales" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Cobrado del mes</div><div id="mCollected" class="value info-text">$0.00</div></div>
+            <div class="stat"><div class="label">Gastos del mes</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div class="label">Ganancia neta mes</div><div id="mProfit" class="value ok-text">$0.00</div></div>
+          </div>
+
+          <div class="section-note" style="margin-bottom:10px;">Resumen general</div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
+            <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value">0</div></div>
+            <div class="mini-stat"><div class="label">Trabajos vencidos</div><div id="allOverdueJobs" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Trabajos recientes</h2>
+                <div class="section-note">Con prioridad y avance de checklist.</div>
+              </div>
+              <div class="filters">
+                <select id="dashboardStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="Cotización">Cotización</option>
+                  <option value="Aprobado">Aprobado</option>
+                  <option value="Diseño">Diseño</option>
+                  <option value="Producción">Producción</option>
+                  <option value="Instalación">Instalación</option>
+                  <option value="Entregado">Entregado</option>
+                  <option value="Pagado">Pagado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Entrega</th>
+                    <th>Prioridad</th>
+                    <th>Venta</th>
+                    <th>Pagado</th>
+                    <th>Saldo</th>
+                    <th>Checklist</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardJobsBody"></tbody>
+              </table>
+            </div>
+
+            <div id="dashboardEmpty" class="empty hidden">Todavía no hay trabajos guardados.</div>
+          </div>
+        </section>
+
+        <section id="view-clientes" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Clientes</h2>
+                <div class="section-note">Base de datos de clientes y empresas.</div>
+              </div>
+              <div class="filters">
+                <input id="clientSearch" class="input" placeholder="Buscar por nombre, empresa, teléfono o email" />
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Empresa</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Dirección</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="clientsBody"></tbody>
+              </table>
+            </div>
+
+            <div id="clientsEmpty" class="empty hidden">No hay clientes guardados.</div>
+          </div>
+        </section>
+
+        <section id="view-trabajos" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Trabajos</h2>
+                <div class="section-note">Cotización, producción, pagos y checklist.</div>
+              </div>
+              <div class="filters">
+                <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
+                <select id="jobStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="Cotización">Cotización</option>
+                  <option value="Aprobado">Aprobado</option>
+                  <option value="Diseño">Diseño</option>
+                  <option value="Producción">Producción</option>
+                  <option value="Instalación">Instalación</option>
+                  <option value="Entregado">Entregado</option>
+                  <option value="Pagado">Pagado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+                <select id="jobPriorityFilter" class="select">
+                  <option value="">Todas las prioridades</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Media">Media</option>
+                  <option value="Alta">Alta</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Fecha</th>
+                    <th>Entrega</th>
+                    <th>Prioridad</th>
+                    <th>Venta</th>
+                    <th>Costo</th>
+                    <th>Ganancia</th>
+                    <th>Pagado</th>
+                    <th>Saldo</th>
+                    <th>Checklist</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="jobsBody"></tbody>
+              </table>
+            </div>
+
+            <div id="jobsEmpty" class="empty hidden">No hay trabajos guardados.</div>
+          </div>
+        </section>
+
+        <section id="view-gastos" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Gastos</h2>
+                <div class="section-note">Gastos normales del negocio.</div>
+              </div>
+              <div class="filters">
+                <input id="expenseSearch" class="input" placeholder="Buscar concepto o categoría" />
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th>Categoría</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="expensesBody"></tbody>
+              </table>
+            </div>
+
+            <div id="expensesEmpty" class="empty hidden">No hay gastos guardados.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Gastos recurrentes</h2>
+                <div class="section-note">Se generan automáticamente una vez por mes.</div>
+              </div>
+              <div class="filters">
+                <button id="btnNewRecurring" class="btn btn-primary btn-small">+ Nuevo recurrente</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th>Categoría</th>
+                    <th>Monto</th>
+                    <th>Día del mes</th>
+                    <th>Activo</th>
+                    <th>Último mes generado</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="recurringBody"></tbody>
+              </table>
+            </div>
+
+            <div id="recurringEmpty" class="empty hidden">No hay gastos recurrentes creados.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </section>
 
   <div class="modal-backdrop" id="clientModal">
     <div class="modal">
@@ -384,6 +776,7 @@
             <option>Pagado</option>
             <option>Cancelado</option>
           </select>
+
           <input id="jobDate" type="date" class="input" />
           <input id="jobDueDate" type="date" class="input" />
           <select id="jobPriority" class="select">
@@ -391,8 +784,10 @@
             <option selected>Media</option>
             <option>Alta</option>
           </select>
+
           <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio de venta" />
         </div>
+
         <textarea id="jobDescription" class="textarea mt-12" placeholder="Descripción del trabajo / cotización"></textarea>
         <textarea id="jobNotes" class="textarea mt-12" placeholder="Notas internas"></textarea>
 
@@ -402,6 +797,20 @@
             <button id="addMaterialBtn" class="btn btn-secondary btn-small" type="button">+ Agregar material</button>
           </div>
           <div id="materialsContainer"></div>
+        </div>
+
+        <div class="box">
+          <strong>Checklist de producción</strong>
+          <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" id="ckDesignApproved"> Diseño aprobado</label>
+            <label class="check-item"><input type="checkbox" id="ckMaterialOrdered"> Material comprado</label>
+            <label class="check-item"><input type="checkbox" id="ckPrintingDone"> Impresión hecha</label>
+            <label class="check-item"><input type="checkbox" id="ckCuttingDone"> Corte listo</label>
+            <label class="check-item"><input type="checkbox" id="ckLaminationDone"> Laminado listo</label>
+            <label class="check-item"><input type="checkbox" id="ckInstallationScheduled"> Instalación programada</label>
+            <label class="check-item"><input type="checkbox" id="ckInstalled"> Instalado</label>
+            <label class="check-item"><input type="checkbox" id="ckDelivered"> Entregado al cliente</label>
+          </div>
         </div>
 
         <div class="box">
@@ -419,6 +828,7 @@
           <div><span>Saldo</span><strong id="sumBalance">$0.00</strong></div>
         </div>
       </div>
+
       <div class="modal-foot">
         <button class="btn btn-secondary" data-close="jobModal">Cancelar</button>
         <button id="saveJobBtn" class="btn btn-primary">Guardar trabajo</button>
@@ -486,6 +896,43 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="recurringModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="recurringModalTitle">Nuevo gasto recurrente</h3>
+        <button class="btn btn-secondary btn-small" data-close="recurringModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="recurringConcept" class="input" placeholder="Concepto" />
+          <select id="recurringCategory" class="select">
+            <option>Operación</option>
+            <option>Material</option>
+            <option>Renta</option>
+            <option>Servicios</option>
+            <option>Publicidad</option>
+            <option>Gasolina</option>
+            <option>Nómina</option>
+            <option>Otro</option>
+          </select>
+          <input id="recurringAmount" type="number" min="0" step="0.01" class="input" placeholder="Monto" />
+          <input id="recurringDay" type="number" min="1" max="31" class="input" placeholder="Día del mes" />
+        </div>
+        <textarea id="recurringNotes" class="textarea mt-12" placeholder="Notas"></textarea>
+        <div class="mt-12">
+          <label class="check-item" style="max-width:260px;">
+            <input type="checkbox" id="recurringActive" checked>
+            Activo
+          </label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="recurringModal">Cancelar</button>
+        <button id="saveRecurringBtn" class="btn btn-primary">Guardar recurrente</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script>
@@ -515,9 +962,11 @@
       clients: [],
       jobs: [],
       expenses: [],
+      recurringExpenses: [],
       editingClientId: null,
       editingJobId: null,
       editingExpenseId: null,
+      editingRecurringId: null,
       workingPaymentJobId: null,
       unsubscribers: []
     };
@@ -536,12 +985,22 @@
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
-      trabajos: ["Trabajos", "Cotización, producción, entrega y cobro."],
-      gastos: ["Gastos", "Control de gastos del negocio."]
+      trabajos: ["Trabajos", "Cotización, producción, pagos y checklist."],
+      gastos: ["Gastos", "Control de gastos normales y recurrentes."]
     };
 
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
+    const CHECK_KEYS = [
+      { id: "ckDesignApproved", key: "designApproved" },
+      { id: "ckMaterialOrdered", key: "materialOrdered" },
+      { id: "ckPrintingDone", key: "printingDone" },
+      { id: "ckCuttingDone", key: "cuttingDone" },
+      { id: "ckLaminationDone", key: "laminationDone" },
+      { id: "ckInstallationScheduled", key: "installationScheduled" },
+      { id: "ckInstalled", key: "installed" },
+      { id: "ckDelivered", key: "delivered" }
+    ];
 
     function showToast(message) {
       const toast = $("toast");
@@ -558,6 +1017,7 @@
       $("view-" + view).classList.remove("hidden");
       $("pageTitle").textContent = viewMeta[view][0];
       $("pageSubtitle").textContent = viewMeta[view][1];
+
       const btnNew = $("btnNewMain");
       btnNew.classList.remove("hidden");
       if (view === "dashboard") btnNew.classList.add("hidden");
@@ -573,6 +1033,7 @@
     function clientsRef() { return userRef().collection("clients"); }
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
+    function recurringRef() { return userRef().collection("recurringExpenses"); }
 
     function clearUnsubscribers() {
       state.unsubscribers.forEach(fn => { try { fn(); } catch (_) {} });
@@ -635,6 +1096,15 @@
       return `${y}-${m}`;
     }
 
+    function getMonthDate(dayOfMonth) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const day = Math.min(Number(dayOfMonth || 1), lastDay);
+      return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
     function isOverdue(job) {
       if (!job?.dueDate) return false;
       if (["Pagado", "Cancelado", "Entregado"].includes(job.status)) return false;
@@ -642,8 +1112,7 @@
     }
 
     function formatDate(value) {
-      if (!value) return "-";
-      return value;
+      return value || "-";
     }
 
     function getMaterialsCost(materials = []) {
@@ -658,7 +1127,7 @@
           date: job.date || "",
           amount: Number(job.paid || 0),
           method: "Legacy",
-          note: "Pago anterior migrado desde la versión vieja."
+          note: "Pago migrado desde una versión anterior."
         });
       }
       return payments;
@@ -666,6 +1135,26 @@
 
     function getPaymentsTotal(job = {}) {
       return getPaymentsList(job).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    }
+
+    function getChecklist(job = {}) {
+      return {
+        designApproved: !!job?.checklist?.designApproved,
+        materialOrdered: !!job?.checklist?.materialOrdered,
+        printingDone: !!job?.checklist?.printingDone,
+        cuttingDone: !!job?.checklist?.cuttingDone,
+        laminationDone: !!job?.checklist?.laminationDone,
+        installationScheduled: !!job?.checklist?.installationScheduled,
+        installed: !!job?.checklist?.installed,
+        delivered: !!job?.checklist?.delivered
+      };
+    }
+
+    function checklistProgress(job = {}) {
+      const ck = getChecklist(job);
+      const values = Object.values(ck);
+      const done = values.filter(Boolean).length;
+      return `${done}/${values.length}`;
     }
 
     function computeJob(job) {
@@ -733,6 +1222,20 @@
       })).filter(item => item.name || item.qty || item.price);
     }
 
+    function getFormChecklist() {
+      const result = {};
+      CHECK_KEYS.forEach(item => {
+        result[item.key] = !!$(item.id).checked;
+      });
+      return result;
+    }
+
+    function setChecklistForm(checklist = {}) {
+      CHECK_KEYS.forEach(item => {
+        $(item.id).checked = !!checklist[item.key];
+      });
+    }
+
     function getCurrentJobPaymentsPreviewData() {
       if (!state.editingJobId) return [];
       const job = getJobById(state.editingJobId);
@@ -743,7 +1246,7 @@
       const list = getCurrentJobPaymentsPreviewData();
       const box = $("jobPaymentsPreview");
       if (!list.length) {
-        box.innerHTML = `<div class="section-note">Todavía no hay pagos registrados. Guarda el trabajo primero y luego puedes agregar pagos parciales.</div>`;
+        box.innerHTML = `<div class="section-note">Todavía no hay pagos registrados. Guarda el trabajo primero y luego agrega pagos parciales.</div>`;
         return;
       }
       box.innerHTML = list
@@ -764,17 +1267,19 @@
       const paid = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
       const profit = sale - cost;
       const balance = Math.max(sale - paid, 0);
+
       $("sumCost").textContent = money(cost);
       $("sumProfit").textContent = money(profit);
       $("sumPaid").textContent = money(paid);
       $("sumBalance").textContent = money(balance);
+
       renderJobPaymentsPreview();
     }
 
     function resetClientForm() {
       state.editingClientId = null;
       $("clientModalTitle").textContent = "Nuevo cliente";
-      ["clientName", "clientCompany", "clientPhone", "clientEmail", "clientAddress", "clientCity", "clientNotes"].forEach(id => $(id).value = "");
+      ["clientName","clientCompany","clientPhone","clientEmail","clientAddress","clientCity","clientNotes"].forEach(id => $(id).value = "");
     }
 
     function resetJobForm() {
@@ -791,6 +1296,7 @@
       $("jobNotes").value = "";
       $("materialsContainer").innerHTML = "";
       $("materialsContainer").appendChild(createMaterialRow());
+      setChecklistForm({});
       renderJobPreview();
     }
 
@@ -802,6 +1308,17 @@
       $("expenseAmount").value = "";
       $("expenseDate").value = today();
       $("expenseNotes").value = "";
+    }
+
+    function resetRecurringForm() {
+      state.editingRecurringId = null;
+      $("recurringModalTitle").textContent = "Nuevo gasto recurrente";
+      $("recurringConcept").value = "";
+      $("recurringCategory").value = "Operación";
+      $("recurringAmount").value = "";
+      $("recurringDay").value = "1";
+      $("recurringNotes").value = "";
+      $("recurringActive").checked = true;
     }
 
     function resetPaymentForm(jobId = "") {
@@ -824,10 +1341,9 @@
         notes: cleanText($("clientNotes").value),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
-      if (!payload.name && !payload.company) {
-        showToast("Escribe al menos el nombre o la empresa.");
-        return;
-      }
+
+      if (!payload.name && !payload.company) return showToast("Escribe al menos el nombre o la empresa.");
+
       try {
         if (state.editingClientId) {
           await clientsRef().doc(state.editingClientId).update(payload);
@@ -856,11 +1372,14 @@
         description: cleanText($("jobDescription").value),
         notes: cleanText($("jobNotes").value),
         materials: getCurrentFormMaterials(),
+        checklist: getFormChecklist(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+
       if (!payload.clientId) return showToast("Selecciona un cliente.");
       if (!payload.title) return showToast("Escribe el nombre del trabajo.");
       if (payload.sale < 0) return showToast("La venta no puede ser negativa.");
+
       try {
         if (state.editingJobId) {
           const existing = getJobById(state.editingJobId) || {};
@@ -890,8 +1409,10 @@
         notes: cleanText($("expenseNotes").value),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+
       if (!payload.concept) return showToast("Escribe el concepto del gasto.");
       if (payload.amount <= 0) return showToast("El monto debe ser mayor que 0.");
+
       try {
         if (state.editingExpenseId) {
           await expensesRef().doc(state.editingExpenseId).update(payload);
@@ -908,24 +1429,61 @@
       }
     }
 
+    async function saveRecurring() {
+      const payload = {
+        concept: cleanText($("recurringConcept").value),
+        category: cleanText($("recurringCategory").value),
+        amount: Number($("recurringAmount").value || 0),
+        dayOfMonth: Number($("recurringDay").value || 1),
+        notes: cleanText($("recurringNotes").value),
+        active: !!$("recurringActive").checked,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (!payload.concept) return showToast("Escribe el concepto.");
+      if (payload.amount <= 0) return showToast("El monto debe ser mayor que 0.");
+      if (payload.dayOfMonth < 1 || payload.dayOfMonth > 31) return showToast("El día del mes debe estar entre 1 y 31.");
+
+      try {
+        if (state.editingRecurringId) {
+          await recurringRef().doc(state.editingRecurringId).update(payload);
+          showToast("Recurrente actualizado.");
+        } else {
+          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          payload.lastGeneratedMonth = "";
+          await recurringRef().add(payload);
+          showToast("Gasto recurrente guardado.");
+        }
+        closeModal("recurringModal");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo guardar el gasto recurrente.");
+      }
+    }
+
     async function savePayment() {
       const jobId = cleanText($("paymentJobId").value);
       const amount = Number($("paymentAmount").value || 0);
       const date = cleanText($("paymentDate").value) || today();
       const method = cleanText($("paymentMethod").value) || "Efectivo";
       const note = cleanText($("paymentNote").value);
+
       if (!jobId) return showToast("Selecciona un trabajo.");
       if (amount <= 0) return showToast("El pago debe ser mayor que 0.");
+
       const job = getJobById(jobId);
       if (!job) return showToast("No se encontró el trabajo.");
+
       try {
         const payments = getPaymentsList(job).filter(item => !String(item.id || "").startsWith("legacy-"));
         const legacyPaid = Array.isArray(job.payments) && job.payments.length ? 0 : Number(job.paid || 0);
         const currentPaid = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0) + legacyPaid;
         const sale = Number(job.sale || 0);
+
         if (sale > 0 && currentPaid + amount > sale) {
           return showToast("Ese pago supera el total del trabajo.");
         }
+
         payments.push({
           id: "p-" + Date.now(),
           amount,
@@ -933,17 +1491,20 @@
           method,
           note
         });
+
         await jobsRef().doc(jobId).update({
           payments,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
         showToast("Pago guardado.");
         closeModal("paymentModal");
+
         if (state.editingJobId === jobId) {
           setTimeout(() => {
             const updated = getJobById(jobId);
             if (updated) editJob(jobId);
-          }, 400);
+          }, 350);
         }
       } catch (error) {
         console.error(error);
@@ -951,12 +1512,45 @@
       }
     }
 
+    async function ensureRecurringExpensesForCurrentMonth() {
+      const month = currentMonthKey();
+      const actives = state.recurringExpenses.filter(item => item.active);
+
+      for (const recurring of actives) {
+        const docId = `rec-${recurring.id}-${month}`;
+        const targetDoc = expensesRef().doc(docId);
+        const snapshot = await targetDoc.get();
+
+        if (!snapshot.exists) {
+          await targetDoc.set({
+            concept: recurring.concept,
+            category: recurring.category,
+            amount: Number(recurring.amount || 0),
+            date: getMonthDate(recurring.dayOfMonth),
+            notes: recurring.notes ? `${recurring.notes} · Generado automáticamente` : "Generado automáticamente",
+            recurringId: recurring.id,
+            generatedMonth: month,
+            autoGenerated: true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          await recurringRef().doc(recurring.id).update({
+            lastGeneratedMonth: month,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+    }
+
     async function removeItem(type, id, label) {
       if (!confirm(`¿Seguro que quieres eliminar este ${label}?`)) return;
+
       try {
         if (type === "clients") await clientsRef().doc(id).delete();
         if (type === "jobs") await jobsRef().doc(id).delete();
         if (type === "expenses") await expensesRef().doc(id).delete();
+        if (type === "recurring") await recurringRef().doc(id).delete();
         showToast(`${label} eliminado.`);
       } catch (error) {
         console.error(error);
@@ -995,6 +1589,7 @@
     function editJob(id) {
       const item = getJobById(id);
       if (!item) return;
+
       state.editingJobId = id;
       $("jobModalTitle").textContent = "Editar trabajo";
       fillClientSelect(item.clientId || "");
@@ -1007,8 +1602,11 @@
       $("jobDescription").value = item.description || "";
       $("jobNotes").value = item.notes || "";
       $("materialsContainer").innerHTML = "";
-      const materials = item.materials && item.materials.length ? item.materials : [{ name: "", qty: "", price: "" }];
+
+      const materials = item.materials && item.materials.length ? item.materials : [{ name:"", qty:"", price:"" }];
       materials.forEach(material => $("materialsContainer").appendChild(createMaterialRow(material)));
+
+      setChecklistForm(getChecklist(item));
       renderJobPreview();
       openModal("jobModal");
     }
@@ -1026,6 +1624,20 @@
       openModal("expenseModal");
     }
 
+    function editRecurring(id) {
+      const item = state.recurringExpenses.find(r => r.id === id);
+      if (!item) return;
+      state.editingRecurringId = id;
+      $("recurringModalTitle").textContent = "Editar gasto recurrente";
+      $("recurringConcept").value = item.concept || "";
+      $("recurringCategory").value = item.category || "Operación";
+      $("recurringAmount").value = item.amount ?? "";
+      $("recurringDay").value = item.dayOfMonth ?? 1;
+      $("recurringNotes").value = item.notes || "";
+      $("recurringActive").checked = !!item.active;
+      openModal("recurringModal");
+    }
+
     function getDashboardJobs() {
       const statusFilter = cleanText($("dashboardStatusFilter").value);
       return state.jobs
@@ -1041,6 +1653,7 @@
         const bag = `${client.name || ""} ${client.company || ""} ${client.phone || ""} ${client.email || ""}`.toLowerCase();
         return bag.includes(q);
       });
+
       $("clientsBody").innerHTML = rows.map(client => `
         <tr>
           <td>${safe(client.name || "-")}</td>
@@ -1057,6 +1670,7 @@
           </td>
         </tr>
       `).join("");
+
       $("clientsEmpty").classList.toggle("hidden", rows.length > 0);
       $("allClients").textContent = String(state.clients.length);
       fillClientSelect($("jobClientId").value);
@@ -1066,6 +1680,7 @@
       const q = cleanText($("jobSearch").value).toLowerCase();
       const statusFilter = cleanText($("jobStatusFilter").value);
       const priorityFilter = cleanText($("jobPriorityFilter").value);
+
       const rows = state.jobs.filter(job => {
         const client = getClientById(job.clientId);
         const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""}`.toLowerCase();
@@ -1078,6 +1693,7 @@
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
+
         return `
           <tr>
             <td>${safe(clientLabel(client))}</td>
@@ -1093,6 +1709,7 @@
             <td>${money(calc.profit)}</td>
             <td>${money(calc.paid)}</td>
             <td>${money(calc.balance)}</td>
+            <td>${safe(checklistProgress(job))}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
@@ -1106,17 +1723,21 @@
           </tr>
         `;
       }).join("");
+
       $("jobsEmpty").classList.toggle("hidden", rows.length > 0);
       renderDashboardJobs();
       renderStats();
+      fillPaymentJobSelect($("paymentJobId").value);
     }
 
     function renderDashboardJobs() {
       const rows = getDashboardJobs();
+
       $("dashboardJobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
+
         return `
           <tr>
             <td>${safe(clientLabel(client))}</td>
@@ -1129,6 +1750,7 @@
             <td>${money(calc.sale)}</td>
             <td>${money(calc.paid)}</td>
             <td>${money(calc.balance)}</td>
+            <td>${safe(checklistProgress(job))}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
@@ -1139,12 +1761,18 @@
           </tr>
         `;
       }).join("");
+
       $("dashboardEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
     function renderExpenses() {
       const q = cleanText($("expenseSearch").value).toLowerCase();
-      const rows = state.expenses.filter(expense => `${expense.concept || ""} ${expense.category || ""}`.toLowerCase().includes(q));
+
+      const rows = state.expenses.filter(expense => {
+        const bag = `${expense.concept || ""} ${expense.category || ""} ${expense.notes || ""}`.toLowerCase();
+        return bag.includes(q);
+      });
+
       $("expensesBody").innerHTML = rows.map(expense => `
         <tr>
           <td>${safe(expense.concept || "-")}</td>
@@ -1160,29 +1788,58 @@
           </td>
         </tr>
       `).join("");
+
       $("expensesEmpty").classList.toggle("hidden", rows.length > 0);
       renderStats();
     }
 
+    function renderRecurringExpenses() {
+      $("recurringBody").innerHTML = state.recurringExpenses.map(item => `
+        <tr>
+          <td>${safe(item.concept || "-")}</td>
+          <td>${safe(item.category || "-")}</td>
+          <td>${money(item.amount)}</td>
+          <td>${safe(item.dayOfMonth || "-")}</td>
+          <td>${item.active ? '<span class="pill st-pagado">Sí</span>' : '<span class="pill st-cancelado">No</span>'}</td>
+          <td>${safe(item.lastGeneratedMonth || "-")}</td>
+          <td><small>${safe(item.notes || "-")}</small></td>
+          <td>
+            <div class="actions-row">
+              <button class="btn btn-secondary btn-small" data-edit-recurring="${item.id}">Editar</button>
+              <button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      $("recurringEmpty").classList.toggle("hidden", state.recurringExpenses.length > 0);
+    }
+
     function renderStats() {
       const month = currentMonthKey();
+
       const monthSales = state.jobs
         .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + Number(job.sale || 0), 0);
+
       const monthCollected = state.jobs.reduce((sum, job) => {
         return sum + getPaymentsList(job)
           .filter(payment => monthKey(payment.date) === month)
           .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
       }, 0);
+
       const monthExpenses = state.expenses
         .filter(expense => monthKey(expense.date) === month)
         .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+
       const monthProfitBase = state.jobs
         .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + computeJob(job).profit, 0);
+
       const overallReceivable = state.jobs
         .filter(job => !["Pagado", "Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
+
       const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
 
@@ -1202,13 +1859,15 @@
         user: state.userEmail,
         clients: state.clients,
         jobs: state.jobs,
-        expenses: state.expenses
+        expenses: state.expenses,
+        recurringExpenses: state.recurringExpenses
       };
+
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nj_crm_fase1_backup_${today()}.json`;
+      a.download = `nj_crm_fase2_sin_imagenes_${today()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
@@ -1218,6 +1877,7 @@
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
       const month = currentMonthKey();
+
       pdf.setFontSize(18);
       pdf.text(`${COMPANY.name} - Reporte General`, 14, 18);
       pdf.setFontSize(10);
@@ -1240,26 +1900,31 @@
         ]
       });
 
-      const jobRows = state.jobs.slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))).slice(0, 20).map(job => {
-        const client = getClientById(job.clientId);
-        const calc = computeJob(job);
-        return [
-          clientLabel(client),
-          job.title || "-",
-          job.date || "-",
-          job.dueDate || "-",
-          job.priority || "Media",
-          money(calc.sale),
-          money(calc.paid),
-          money(calc.balance),
-          job.status || "Cotización"
-        ];
-      });
+      const jobRows = state.jobs
+        .slice()
+        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
+        .slice(0, 20)
+        .map(job => {
+          const client = getClientById(job.clientId);
+          const calc = computeJob(job);
+          return [
+            clientLabel(client),
+            job.title || "-",
+            job.date || "-",
+            job.dueDate || "-",
+            job.priority || "Media",
+            money(calc.sale),
+            money(calc.paid),
+            money(calc.balance),
+            checklistProgress(job),
+            job.status || "-"
+          ];
+        });
 
       pdf.autoTable({
         startY: pdf.lastAutoTable.finalY + 10,
-        head: [["Cliente", "Trabajo", "Fecha", "Entrega", "Prioridad", "Venta", "Pagado", "Saldo", "Estado"]],
-        body: jobRows.length ? jobRows : [["-", "-", "-", "-", "-", "-", "-", "-", "-"]],
+        head: [["Cliente", "Trabajo", "Fecha", "Entrega", "Prioridad", "Venta", "Pagado", "Saldo", "Checklist", "Estado"]],
+        body: jobRows.length ? jobRows : [["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]],
         styles: { fontSize: 8 }
       });
 
@@ -1270,10 +1935,12 @@
     function exportQuotePdf(jobId) {
       const job = getJobById(jobId);
       if (!job) return showToast("No se encontró el trabajo.");
+
       const client = getClientById(job.clientId);
       const calc = computeJob(job);
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
+
       pdf.setFontSize(20);
       pdf.text(COMPANY.name, 14, 18);
       pdf.setFontSize(10);
@@ -1296,7 +1963,8 @@
           ["Fecha", job.date || "-"],
           ["Entrega", job.dueDate || "-"],
           ["Prioridad", job.priority || "Media"],
-          ["Estado", job.status || "Cotización"]
+          ["Estado", job.status || "Cotización"],
+          ["Checklist", checklistProgress(job)]
         ],
         styles: { fontSize: 9 }
       });
@@ -1339,6 +2007,7 @@
 
     function bindRealtime() {
       clearUnsubscribers();
+
       const unsubClients = clientsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
         state.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderClients();
@@ -1355,13 +2024,24 @@
         renderExpenses();
       }, error => console.error(error));
 
-      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses);
+      const unsubRecurring = recurringRef().orderBy("createdAt", "desc").onSnapshot(async snapshot => {
+        state.recurringExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderRecurringExpenses();
+        try {
+          await ensureRecurringExpensesForCurrentMonth();
+        } catch (error) {
+          console.error(error);
+        }
+      }, error => console.error(error));
+
+      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring);
     }
 
     async function login() {
       const email = cleanText($("authEmail").value);
       const password = cleanText($("authPassword").value);
       if (!email || !password) return showToast("Escribe correo y contraseña.");
+
       try {
         await auth.signInWithEmailAndPassword(email, password);
       } catch (error) {
@@ -1383,6 +2063,7 @@
       const password = cleanText($("authPassword").value);
       if (!email || !password) return showToast("Escribe correo y contraseña.");
       if (password.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres.");
+
       try {
         await auth.createUserWithEmailAndPassword(email, password);
         showToast("Cuenta creada correctamente.");
@@ -1401,6 +2082,7 @@
     async function resetPassword() {
       const email = cleanText($("authEmail").value);
       if (!email) return showToast("Escribe tu correo primero.");
+
       try {
         await auth.sendPasswordResetEmail(email);
         showToast("Te envié un correo para restablecer la contraseña.");
@@ -1436,6 +2118,7 @@
       state.clients = [];
       state.jobs = [];
       state.expenses = [];
+      state.recurringExpenses = [];
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }
@@ -1452,12 +2135,15 @@
     $("btnRegister").addEventListener("click", register);
     $("btnReset").addEventListener("click", resetPassword);
     $("btnLogout").addEventListener("click", logout);
+
     $("btnExportJson").addEventListener("click", exportJson);
     $("btnExportPdf").addEventListener("click", exportGeneralPdf);
+
     $("saveClientBtn").addEventListener("click", saveClient);
     $("saveJobBtn").addEventListener("click", saveJob);
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("savePaymentBtn").addEventListener("click", savePayment);
+    $("saveRecurringBtn").addEventListener("click", saveRecurring);
 
     $("btnNewMain").addEventListener("click", () => {
       if (state.currentView === "clientes") {
@@ -1473,11 +2159,18 @@
       }
     });
 
+    $("btnNewRecurring").addEventListener("click", () => {
+      resetRecurringForm();
+      openModal("recurringModal");
+    });
+
     $("addMaterialBtn").addEventListener("click", () => {
       $("materialsContainer").appendChild(createMaterialRow());
       renderJobPreview();
     });
+
     $("jobSale").addEventListener("input", renderJobPreview);
+
     $("openPaymentFromJobBtn").addEventListener("click", () => {
       if (!state.editingJobId) return showToast("Primero guarda el trabajo y luego agrega pagos.");
       resetPaymentForm(state.editingJobId);
@@ -1494,20 +2187,27 @@
 
     document.addEventListener("click", (event) => {
       const target = event.target;
+
       if (target.dataset.editClient) editClient(target.dataset.editClient);
       if (target.dataset.deleteClient) removeItem("clients", target.dataset.deleteClient, "cliente");
+
       if (target.dataset.editJob) editJob(target.dataset.editJob);
       if (target.dataset.openJob) { setView("trabajos"); editJob(target.dataset.openJob); }
       if (target.dataset.deleteJob) removeItem("jobs", target.dataset.deleteJob, "trabajo");
       if (target.dataset.statusJob && target.dataset.next) updateJobStatus(target.dataset.statusJob, target.dataset.next);
       if (target.dataset.quoteJob) exportQuotePdf(target.dataset.quoteJob);
       if (target.dataset.payJob) { resetPaymentForm(target.dataset.payJob); openModal("paymentModal"); }
+
       if (target.dataset.editExpense) editExpense(target.dataset.editExpense);
       if (target.dataset.deleteExpense) removeItem("expenses", target.dataset.deleteExpense, "gasto");
+
+      if (target.dataset.editRecurring) editRecurring(target.dataset.editRecurring);
+      if (target.dataset.deleteRecurring) removeItem("recurring", target.dataset.deleteRecurring, "gasto recurrente");
     });
 
     resetJobForm();
     resetExpenseForm();
+    resetRecurringForm();
   </script>
 </body>
 </html>
