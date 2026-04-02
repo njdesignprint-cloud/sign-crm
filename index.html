@@ -31,7 +31,7 @@
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
     button,input,select,textarea{font:inherit}
-    a{text-decoration:none;color:inherit}
+    a{color:inherit;text-decoration:none}
     .hidden{display:none !important}
 
     .auth-wrap{
@@ -99,14 +99,12 @@
     .btn-info{background:rgba(56,189,248,.12);color:#dbeafe;border:1px solid rgba(56,189,248,.25)}
     .btn-danger{background:rgba(239,68,68,.12);color:#fecaca;border:1px solid rgba(239,68,68,.25)}
     .btn-small{padding:8px 10px;border-radius:10px;font-size:13px}
-    .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-    .btn-wa{background:#25D366;color:#07150d}
-    .btn-disabled{opacity:.45;pointer-events:none}
     .full{width:100%}
 
     .stack{display:grid;gap:10px}
     .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
     .mt-10{margin-top:10px}
     .mt-12{margin-top:12px}
     .mt-16{margin-top:16px}
@@ -135,6 +133,7 @@
       margin-bottom:8px;
     }
     .brand span{color:var(--brand)}
+
     .brand-sub{
       color:var(--muted);
       font-size:12px;
@@ -188,6 +187,7 @@
       flex-wrap:wrap;
       margin-bottom:22px;
     }
+
     .title h1{margin:0;font-size:28px}
     .title p{margin:8px 0 0;color:var(--muted)}
     .top-actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -207,17 +207,20 @@
       padding:18px;
       box-shadow:var(--shadow);
     }
+
     .stat .label,.mini-stat .label{
       color:var(--muted);
       font-size:12px;
       text-transform:uppercase;
       letter-spacing:.06em;
     }
+
     .stat .value{
       margin-top:10px;
       font-size:28px;
       font-weight:900;
     }
+
     .mini-stat .value{
       margin-top:8px;
       font-size:21px;
@@ -248,13 +251,13 @@
       padding:16px 18px;
       border-bottom:1px solid var(--line);
     }
+
     .panel-head h2{margin:0;font-size:18px}
 
     .filters{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      align-items:center;
     }
     .filters .input,.filters .select{max-width:230px}
 
@@ -318,17 +321,20 @@
       border-radius:16px;
       padding:12px;
     }
+
     .summary-box div{
       background:rgba(255,255,255,.02);
       padding:10px;
       border-radius:12px;
     }
+
     .summary-box span{
       display:block;
       color:var(--muted);
       font-size:11px;
       text-transform:uppercase;
     }
+
     .summary-box strong{
       display:block;
       margin-top:8px;
@@ -364,6 +370,7 @@
       gap:10px;
       margin-top:12px;
     }
+
     .check-item{
       background:#101216;
       border:1px solid var(--line);
@@ -375,90 +382,79 @@
     }
     .check-item input{transform:scale(1.15)}
 
-    .calendar-shell{
+    .calendar-wrap{
       padding:18px;
     }
+
     .calendar-toolbar{
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      margin-bottom:12px;
+      margin-bottom:14px;
     }
-    .calendar-title{
-      font-size:18px;
+
+    .calendar-label{
       font-weight:800;
+      font-size:18px;
     }
+
     .calendar-grid{
       display:grid;
       grid-template-columns:repeat(7,1fr);
-      gap:8px;
+      gap:10px;
     }
-    .calendar-weekday{
-      color:var(--muted);
+
+    .calendar-day-head{
       font-size:12px;
+      color:var(--muted);
       text-transform:uppercase;
+      padding:6px 4px;
       text-align:center;
-      padding:6px 0;
     }
+
     .calendar-cell{
-      min-height:92px;
+      min-height:120px;
       background:#101216;
       border:1px solid var(--line);
       border-radius:14px;
-      padding:8px;
+      padding:10px;
       display:grid;
       gap:8px;
-      cursor:pointer;
-      transition:.18s ease;
+      align-content:start;
     }
-    .calendar-cell:hover{
-      border-color:rgba(184,255,0,.28);
+
+    .calendar-cell.muted{
+      opacity:.4;
     }
-    .calendar-cell.outside{
-      opacity:.35;
-      cursor:default;
-    }
-    .calendar-cell.selected{
-      border-color:rgba(184,255,0,.55);
-      box-shadow:0 0 0 2px rgba(184,255,0,.08) inset;
-    }
+
     .calendar-cell.today{
-      outline:1px solid rgba(56,189,248,.35);
+      border-color:rgba(184,255,0,.4);
+      box-shadow:0 0 0 1px rgba(184,255,0,.12) inset;
     }
-    .calendar-day{
+
+    .calendar-date{
       font-size:13px;
       font-weight:800;
     }
-    .calendar-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:24px;
-      height:24px;
-      padding:0 8px;
-      border-radius:999px;
-      background:rgba(184,255,0,.12);
-      color:var(--brand);
-      font-size:12px;
-      font-weight:800;
-      border:1px solid rgba(184,255,0,.22);
-    }
-    .calendar-daylist{
-      margin-top:16px;
-      display:grid;
-      gap:10px;
-    }
-    .calendar-item{
-      background:#101216;
+
+    .calendar-job{
+      background:rgba(255,255,255,.04);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
+      border-radius:10px;
+      padding:6px 8px;
+      font-size:11px;
+      line-height:1.35;
+      cursor:pointer;
+    }
+
+    .calendar-job:hover{
+      border-color:rgba(184,255,0,.24);
+    }
+
+    .calendar-job.overdue{
+      border-color:rgba(239,68,68,.28);
     }
 
     .modal-backdrop{
@@ -523,9 +519,9 @@
     }
 
     @media (max-width:1100px){
-      .stats,.mini-stats,.summary-box,.checklist-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material{grid-template-columns:1fr}
-      .calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+      .calendar-grid{grid-template-columns:repeat(7,minmax(110px,1fr));overflow:auto}
     }
 
     @media (max-width:780px){
@@ -544,12 +540,11 @@
       .nav button{text-align:center;padding:10px 8px;font-size:12px}
       .sidebar-foot{display:none}
       .content{padding:18px 18px 92px}
-      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid{grid-template-columns:1fr}
+      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4{grid-template-columns:1fr}
       .filters .input,.filters .select{max-width:none}
-      .calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-      .calendar-cell{min-height:76px;padding:6px}
-      .calendar-day{font-size:12px}
-      .calendar-badge{min-width:20px;height:20px;font-size:11px}
+      .calendar-grid{display:block}
+      .calendar-day-head{display:none}
+      .calendar-cell{margin-bottom:10px}
     }
   </style>
 </head>
@@ -557,7 +552,7 @@
   <section id="authScreen" class="auth-wrap">
     <div class="auth-card">
       <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub">CRM privado fase 3 con fechas, calendario de entregas, trabajos por vencer y WhatsApp directo.</div>
+      <div class="auth-sub">CRM privado fase 3 con filtros por fecha, calendario de entregas, WhatsApp e importación de respaldos.</div>
 
       <div class="stack">
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
@@ -572,7 +567,7 @@
       <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
 
       <div class="help">
-        Esta versión usa solo Authentication y Firestore.
+        Esta versión usa Firebase Authentication y Firestore. No necesita Firebase Storage.
       </div>
     </div>
   </section>
@@ -581,7 +576,7 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 3: fechas, calendario, trabajos por vencer y WhatsApp directo.</div>
+        <div class="brand-sub">Fase 3: fechas, entregas, WhatsApp, checklist y respaldo importable.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -606,7 +601,9 @@
           <div class="top-actions">
             <button id="btnExportPdf" class="btn btn-info">Reporte PDF</button>
             <button id="btnExportJson" class="btn btn-secondary">Respaldo JSON</button>
+            <button id="btnImportJson" class="btn btn-secondary">Importar JSON</button>
             <button id="btnNewMain" class="btn btn-primary hidden">+ Nuevo</button>
+            <input id="importJsonInput" type="file" accept="application/json" class="hidden" />
           </div>
         </div>
 
@@ -619,109 +616,65 @@
             <div class="stat"><div class="label">Ganancia neta mes</div><div id="mProfit" class="value ok-text">$0.00</div></div>
           </div>
 
-          <div class="section-note" style="margin-bottom:10px;">Resumen general</div>
+          <div class="section-note" style="margin-bottom:10px;">Alertas rápidas</div>
           <div class="mini-stats">
             <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
-            <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value">0</div></div>
-            <div class="mini-stat"><div class="label">Trabajos por vencer</div><div id="allDueSoonJobs" class="value warn-text">0</div></div>
-            <div class="mini-stat"><div class="label">Trabajos vencidos</div><div id="allOverdueJobs" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">Vencen hoy</div><div id="dueTodayCount" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">Vencen 7 días</div><div id="due7Count" class="value warn-text">0</div></div>
+            <div class="mini-stat"><div class="label">Vencidos</div><div id="allOverdueJobs" class="value danger-text">0</div></div>
           </div>
 
           <div class="panel">
             <div class="panel-head">
               <div>
                 <h2>Trabajos por vencer</h2>
-                <div class="section-note">Próximos 7 días.</div>
+                <div class="section-note">Mira rápido qué entregas tienes encima.</div>
               </div>
             </div>
-
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Entrega</th>
                     <th>Cliente</th>
                     <th>Trabajo</th>
+                    <th>Entrega</th>
                     <th>Prioridad</th>
+                    <th>Saldo</th>
+                    <th>Checklist</th>
                     <th>Estado</th>
-                    <th>WhatsApp</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody id="dueSoonBody"></tbody>
               </table>
             </div>
-
-            <div id="dueSoonEmpty" class="empty hidden">No hay trabajos próximos a vencer.</div>
+            <div id="dueSoonEmpty" class="empty hidden">No tienes entregas próximas en este momento.</div>
           </div>
 
           <div class="panel">
             <div class="panel-head">
               <div>
                 <h2>Calendario de entregas</h2>
-                <div class="section-note">Haz clic en un día para ver los trabajos programados.</div>
+                <div class="section-note">Haz clic en un trabajo para abrirlo.</div>
+              </div>
+              <div class="actions-row">
+                <button id="btnPrevMonth" class="btn btn-secondary btn-small">← Mes anterior</button>
+                <div id="calendarLabel" class="calendar-label">Mes</div>
+                <button id="btnNextMonth" class="btn btn-secondary btn-small">Mes siguiente →</button>
               </div>
             </div>
-
-            <div class="calendar-shell">
-              <div class="calendar-toolbar">
-                <div class="actions-row">
-                  <button id="calendarPrev" class="btn btn-secondary btn-small">← Mes anterior</button>
-                  <button id="calendarToday" class="btn btn-ghost btn-small">Hoy</button>
-                  <button id="calendarNext" class="btn btn-secondary btn-small">Mes siguiente →</button>
-                </div>
-                <div id="calendarTitle" class="calendar-title"></div>
+            <div class="calendar-wrap">
+              <div class="calendar-grid" id="calendarHead">
+                <div class="calendar-day-head">Lun</div>
+                <div class="calendar-day-head">Mar</div>
+                <div class="calendar-day-head">Mié</div>
+                <div class="calendar-day-head">Jue</div>
+                <div class="calendar-day-head">Vie</div>
+                <div class="calendar-day-head">Sáb</div>
+                <div class="calendar-day-head">Dom</div>
               </div>
-
               <div class="calendar-grid" id="calendarGrid"></div>
-
-              <div class="calendar-daylist" id="calendarDayList"></div>
             </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <h2>Trabajos recientes</h2>
-                <div class="section-note">Con prioridad, avance y WhatsApp.</div>
-              </div>
-              <div class="filters">
-                <select id="dashboardStatusFilter" class="select">
-                  <option value="">Todos los estados</option>
-                  <option value="Cotización">Cotización</option>
-                  <option value="Aprobado">Aprobado</option>
-                  <option value="Diseño">Diseño</option>
-                  <option value="Producción">Producción</option>
-                  <option value="Instalación">Instalación</option>
-                  <option value="Entregado">Entregado</option>
-                  <option value="Pagado">Pagado</option>
-                  <option value="Cancelado">Cancelado</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Trabajo</th>
-                    <th>Entrega</th>
-                    <th>Prioridad</th>
-                    <th>Venta</th>
-                    <th>Pagado</th>
-                    <th>Saldo</th>
-                    <th>Checklist</th>
-                    <th>Estado</th>
-                    <th>WhatsApp</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="dashboardJobsBody"></tbody>
-              </table>
-            </div>
-
-            <div id="dashboardEmpty" class="empty hidden">Todavía no hay trabajos guardados.</div>
           </div>
         </section>
 
@@ -747,7 +700,6 @@
                     <th>Email</th>
                     <th>Dirección</th>
                     <th>Notas</th>
-                    <th>WhatsApp</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -764,9 +716,12 @@
             <div class="panel-head">
               <div>
                 <h2>Trabajos</h2>
-                <div class="section-note">Con filtro por fechas, checklist y WhatsApp directo.</div>
+                <div class="section-note">Ahora con filtros por fecha y acceso a WhatsApp.</div>
               </div>
-              <div class="filters">
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
                 <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
                 <select id="jobStatusFilter" class="select">
                   <option value="">Todos los estados</option>
@@ -785,8 +740,14 @@
                   <option value="Media">Media</option>
                   <option value="Alta">Alta</option>
                 </select>
-                <input id="jobDateFrom" type="date" class="input" />
-                <input id="jobDateTo" type="date" class="input" />
+                <button id="btnClearJobFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+
+              <div class="grid-4 mt-12">
+                <input id="jobCreatedFrom" type="date" class="input" />
+                <input id="jobCreatedTo" type="date" class="input" />
+                <input id="jobDueFrom" type="date" class="input" />
+                <input id="jobDueTo" type="date" class="input" />
               </div>
             </div>
 
@@ -806,7 +767,6 @@
                     <th>Saldo</th>
                     <th>Checklist</th>
                     <th>Estado</th>
-                    <th>WhatsApp</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -823,10 +783,16 @@
             <div class="panel-head">
               <div>
                 <h2>Gastos</h2>
-                <div class="section-note">Gastos normales del negocio.</div>
+                <div class="section-note">Con filtro por fecha.</div>
               </div>
-              <div class="filters">
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
                 <input id="expenseSearch" class="input" placeholder="Buscar concepto o categoría" />
+                <input id="expenseFrom" type="date" class="input" />
+                <input id="expenseTo" type="date" class="input" />
+                <button id="btnClearExpenseFilters" class="btn btn-secondary">Limpiar filtros</button>
               </div>
             </div>
 
@@ -895,7 +861,7 @@
         <div class="grid-2">
           <input id="clientName" class="input" placeholder="Nombre del cliente" />
           <input id="clientCompany" class="input" placeholder="Empresa" />
-          <input id="clientPhone" class="input" placeholder="Teléfono" />
+          <input id="clientPhone" class="input" placeholder="Teléfono con código país si puedes" />
           <input id="clientEmail" class="input" placeholder="Correo electrónico" />
           <input id="clientAddress" class="input" placeholder="Dirección" />
           <input id="clientCity" class="input" placeholder="Ciudad / Estado" />
@@ -1122,8 +1088,7 @@
       editingRecurringId: null,
       workingPaymentJobId: null,
       unsubscribers: [],
-      calendarDate: new Date(),
-      selectedCalendarDate: null
+      calendarDate: new Date()
     };
 
     const $ = (id) => document.getElementById(id);
@@ -1140,12 +1105,13 @@
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
-      trabajos: ["Trabajos", "Cotización, producción, pagos, checklist y fechas."],
+      trabajos: ["Trabajos", "Cotización, producción, pagos y fechas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."]
     };
 
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
+
     const CHECK_KEYS = [
       { id: "ckDesignApproved", key: "designApproved" },
       { id: "ckMaterialOrdered", key: "materialOrdered" },
@@ -1266,19 +1232,14 @@
       return job.dueDate < today();
     }
 
-    function isDueSoon(job) {
-      if (!job?.dueDate) return false;
-      if (["Pagado", "Cancelado", "Entregado"].includes(job.status)) return false;
-      const start = new Date(today() + "T00:00:00");
-      const end = new Date(start);
-      end.setDate(end.getDate() + 7);
-      const due = new Date(job.dueDate + "T00:00:00");
-      return due >= start && due <= end;
+    function isBetween(dateValue, from, to) {
+      if (!dateValue) return false;
+      if (from && dateValue < from) return false;
+      if (to && dateValue > to) return false;
+      return true;
     }
 
-    function formatDate(value) {
-      return value || "-";
-    }
+    function formatDate(value) { return value || "-"; }
 
     function getMaterialsCost(materials = []) {
       return materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
@@ -1331,24 +1292,26 @@
       return { sale, cost, paid, profit, balance };
     }
 
-    function normalizePhone(phone) {
-      let digits = String(phone || "").replace(/\D/g, "");
-      if (!digits) return "";
-      if (digits.length === 10) digits = "1" + digits;
+    function cleanPhoneForWhatsapp(phone) {
+      let digits = String(phone || "").replace(/[^\d]/g, "");
+      if (digits.startsWith("00")) digits = digits.slice(2);
       return digits;
     }
 
-    function whatsappUrl(phone, clientName = "") {
-      const digits = normalizePhone(phone);
-      if (!digits) return "";
-      const msg = encodeURIComponent(`Hola ${clientName || ""}, te escribo de ${COMPANY.name}.`);
-      return `https://wa.me/${digits}?text=${msg}`;
-    }
-
-    function whatsappButton(phone, clientName = "") {
-      const url = whatsappUrl(phone, clientName);
-      if (!url) return `<button class="btn btn-small btn-secondary btn-disabled">Sin WhatsApp</button>`;
-      return `<a class="btn btn-small btn-wa" target="_blank" rel="noopener noreferrer" href="${url}">WhatsApp</a>`;
+    function openWhatsappForClient(clientId) {
+      const client = getClientById(clientId);
+      if (!client?.phone) {
+        showToast("Ese cliente no tiene teléfono guardado.");
+        return;
+      }
+      const digits = cleanPhoneForWhatsapp(client.phone);
+      if (!digits) {
+        showToast("El teléfono no es válido.");
+        return;
+      }
+      const name = client.name || client.company || "cliente";
+      const msg = encodeURIComponent(`Hola ${name}, te escribo de ${COMPANY.name}.`);
+      window.open(`https://wa.me/${digits}?text=${msg}`, "_blank");
     }
 
     function fillClientSelect(selectedId = "") {
@@ -1728,6 +1691,107 @@
       }
     }
 
+    async function importBackupJson(file) {
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        const clients = Array.isArray(data.clients) ? data.clients : [];
+        const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+        const expenses = Array.isArray(data.expenses) ? data.expenses : [];
+        const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
+
+        if (!clients.length && !jobs.length && !expenses.length && !recurring.length) {
+          return showToast("Ese JSON no tiene datos válidos.");
+        }
+
+        const ok = confirm(
+          `Se van a importar:\n` +
+          `Clientes: ${clients.length}\n` +
+          `Trabajos: ${jobs.length}\n` +
+          `Gastos: ${expenses.length}\n` +
+          `Recurrentes: ${recurring.length}\n\n` +
+          `Esto puede duplicar datos si ya los importaste antes.\n¿Quieres continuar?`
+        );
+
+        if (!ok) return;
+
+        for (const item of clients) {
+          const payload = {
+            name: item.name || "",
+            company: item.company || "",
+            phone: item.phone || "",
+            email: item.email || "",
+            address: item.address || "",
+            city: item.city || "",
+            notes: item.notes || "",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await clientsRef().add(payload);
+        }
+
+        for (const item of jobs) {
+          const payload = {
+            clientId: item.clientId || "",
+            title: item.title || "",
+            status: item.status || "Cotización",
+            date: item.date || today(),
+            dueDate: item.dueDate || "",
+            priority: item.priority || "Media",
+            sale: Number(item.sale || 0),
+            description: item.description || "",
+            notes: item.notes || "",
+            materials: Array.isArray(item.materials) ? item.materials : [],
+            checklist: item.checklist || {},
+            payments: Array.isArray(item.payments) ? item.payments : [],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await jobsRef().add(payload);
+        }
+
+        for (const item of expenses) {
+          const payload = {
+            concept: item.concept || "",
+            category: item.category || "Operación",
+            amount: Number(item.amount || 0),
+            date: item.date || today(),
+            notes: item.notes || "",
+            recurringId: item.recurringId || null,
+            generatedMonth: item.generatedMonth || null,
+            autoGenerated: !!item.autoGenerated,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await expensesRef().add(payload);
+        }
+
+        for (const item of recurring) {
+          const payload = {
+            concept: item.concept || "",
+            category: item.category || "Operación",
+            amount: Number(item.amount || 0),
+            dayOfMonth: Number(item.dayOfMonth || 1),
+            notes: item.notes || "",
+            active: item.active !== false,
+            lastGeneratedMonth: item.lastGeneratedMonth || "",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await recurringRef().add(payload);
+        }
+
+        showToast("Importación completada.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo importar el JSON.");
+      } finally {
+        $("importJsonInput").value = "";
+      }
+    }
+
     async function removeItem(type, id, label) {
       if (!confirm(`¿Seguro que quieres eliminar este ${label}?`)) return;
 
@@ -1823,6 +1887,29 @@
       openModal("recurringModal");
     }
 
+    function getFilteredJobs() {
+      const q = cleanText($("jobSearch").value).toLowerCase();
+      const statusFilter = cleanText($("jobStatusFilter").value);
+      const priorityFilter = cleanText($("jobPriorityFilter").value);
+      const createdFrom = cleanText($("jobCreatedFrom").value);
+      const createdTo = cleanText($("jobCreatedTo").value);
+      const dueFrom = cleanText($("jobDueFrom").value);
+      const dueTo = cleanText($("jobDueTo").value);
+
+      return state.jobs.filter(job => {
+        const client = getClientById(job.clientId);
+        const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""}`.toLowerCase();
+
+        const okText = bag.includes(q);
+        const okStatus = !statusFilter || job.status === statusFilter;
+        const okPriority = !priorityFilter || (job.priority || "Media") === priorityFilter;
+        const okCreated = (!createdFrom && !createdTo) || isBetween(job.date, createdFrom, createdTo);
+        const okDue = (!dueFrom && !dueTo) || isBetween(job.dueDate, dueFrom, dueTo);
+
+        return okText && okStatus && okPriority && okCreated && okDue;
+      });
+    }
+
     function getDashboardJobs() {
       const statusFilter = cleanText($("dashboardStatusFilter").value);
       return state.jobs
@@ -1832,17 +1919,28 @@
         .slice(0, 10);
     }
 
-    function getDateRangeFilteredJobs(list) {
-      const from = cleanText($("jobDateFrom").value);
-      const to = cleanText($("jobDateTo").value);
+    function getDueSoonJobs(days = 7) {
+      const now = new Date();
+      const limit = new Date();
+      limit.setDate(limit.getDate() + days);
+      const from = now.toISOString().slice(0, 10);
+      const to = limit.toISOString().slice(0, 10);
 
-      return list.filter(job => {
-        const baseDate = job.dueDate || job.date || "";
-        if (!baseDate) return !from && !to;
-        if (from && baseDate < from) return false;
-        if (to && baseDate > to) return false;
-        return true;
-      });
+      return state.jobs
+        .filter(job =>
+          job.dueDate &&
+          !["Pagado","Cancelado"].includes(job.status) &&
+          job.dueDate >= from &&
+          job.dueDate <= to
+        )
+        .sort((a, b) => String(a.dueDate || "").localeCompare(String(b.dueDate || "")));
+    }
+
+    function getDueTodayJobs() {
+      return state.jobs.filter(job =>
+        job.dueDate === today() &&
+        !["Pagado","Cancelado"].includes(job.status)
+      );
     }
 
     function renderClients() {
@@ -1860,9 +1958,9 @@
           <td>${safe(client.email || "-")}</td>
           <td>${safe([client.address, client.city].filter(Boolean).join(", ") || "-")}</td>
           <td><small>${safe(client.notes || "-")}</small></td>
-          <td>${whatsappButton(client.phone, client.name || client.company || "")}</td>
           <td>
             <div class="actions-row">
+              <button class="btn btn-info btn-small" data-wa-client="${client.id}">WhatsApp</button>
               <button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>
               <button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>
             </div>
@@ -1871,24 +1969,11 @@
       `).join("");
 
       $("clientsEmpty").classList.toggle("hidden", rows.length > 0);
-      $("allClients").textContent = String(state.clients.length);
       fillClientSelect($("jobClientId").value);
     }
 
     function renderJobs() {
-      const q = cleanText($("jobSearch").value).toLowerCase();
-      const statusFilter = cleanText($("jobStatusFilter").value);
-      const priorityFilter = cleanText($("jobPriorityFilter").value);
-
-      let rows = state.jobs.filter(job => {
-        const client = getClientById(job.clientId);
-        const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""}`.toLowerCase();
-        return bag.includes(q)
-          && (!statusFilter || job.status === statusFilter)
-          && (!priorityFilter || (job.priority || "Media") === priorityFilter);
-      });
-
-      rows = getDateRangeFilteredJobs(rows);
+      const rows = getFilteredJobs();
 
       $("jobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
@@ -1912,9 +1997,9 @@
             <td>${money(calc.balance)}</td>
             <td>${safe(checklistProgress(job))}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
-            <td>${whatsappButton(client?.phone, client?.name || client?.company || "")}</td>
             <td>
               <div class="actions-row">
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}">WhatsApp</button>
                 <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>
                 <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
                 <button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>
@@ -1929,12 +2014,13 @@
       $("jobsEmpty").classList.toggle("hidden", rows.length > 0);
       renderDashboardJobs();
       renderStats();
+      renderDueSoonPanel();
+      renderDeliveryCalendar();
       fillPaymentJobSelect($("paymentJobId").value);
     }
 
     function renderDashboardJobs() {
       const rows = getDashboardJobs();
-
       $("dashboardJobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
@@ -1954,28 +2040,56 @@
             <td>${money(calc.balance)}</td>
             <td>${safe(checklistProgress(job))}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
-            <td>${whatsappButton(client?.phone, client?.name || client?.company || "")}</td>
             <td>
               <div class="actions-row">
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}">WhatsApp</button>
                 <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Ver</button>
-                <button class="btn btn-info btn-small" data-quote-job="${job.id}">PDF</button>
               </div>
             </td>
           </tr>
         `;
       }).join("");
 
-      $("dashboardEmpty").classList.toggle("hidden", rows.length > 0);
-      renderDueSoon();
-      renderCalendar();
+      $("dashboardEmpty")?.classList.toggle("hidden", rows.length > 0);
+    }
+
+    function renderDueSoonPanel() {
+      const rows = getDueSoonJobs(7);
+      $("dueSoonBody").innerHTML = rows.map(job => {
+        const client = getClientById(job.clientId);
+        const calc = computeJob(job);
+        const overdue = isOverdue(job);
+        return `
+          <tr>
+            <td>${safe(clientLabel(client))}</td>
+            <td>${safe(job.title || "-")}</td>
+            <td class="${overdue ? "overdue" : ""}">${safe(job.dueDate || "-")}</td>
+            <td>${priorityPill(job.priority || "Media")}</td>
+            <td>${money(calc.balance)}</td>
+            <td>${safe(checklistProgress(job))}</td>
+            <td>${statusPill(job.status || "Cotización")}</td>
+            <td>
+              <div class="actions-row">
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}">WhatsApp</button>
+                <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+      $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
     function renderExpenses() {
       const q = cleanText($("expenseSearch").value).toLowerCase();
+      const from = cleanText($("expenseFrom").value);
+      const to = cleanText($("expenseTo").value);
 
       const rows = state.expenses.filter(expense => {
         const bag = `${expense.concept || ""} ${expense.category || ""} ${expense.notes || ""}`.toLowerCase();
-        return bag.includes(q);
+        const okText = bag.includes(q);
+        const okDate = (!from && !to) || isBetween(expense.date, from, to);
+        return okText && okDate;
       });
 
       $("expensesBody").innerHTML = rows.map(expense => `
@@ -2045,18 +2159,89 @@
         .filter(job => !["Pagado", "Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
 
-      const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
+      const dueToday = getDueTodayJobs().length;
+      const due7 = getDueSoonJobs(7).length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
-      const dueSoonJobs = state.jobs.filter(job => isDueSoon(job)).length;
 
       $("mSales").textContent = money(monthSales);
       $("mCollected").textContent = money(monthCollected);
       $("mExpenses").textContent = money(monthExpenses);
       $("mProfit").textContent = money(monthProfitBase - monthExpenses);
       $("allReceivable").textContent = money(overallReceivable);
-      $("allActiveJobs").textContent = String(activeJobs);
+      $("dueTodayCount").textContent = String(dueToday);
+      $("due7Count").textContent = String(due7);
       $("allOverdueJobs").textContent = String(overdueJobs);
-      $("allDueSoonJobs").textContent = String(dueSoonJobs);
+    }
+
+    function renderDeliveryCalendar() {
+      const grid = $("calendarGrid");
+      grid.innerHTML = "";
+
+      const year = state.calendarDate.getFullYear();
+      const month = state.calendarDate.getMonth();
+
+      const label = state.calendarDate.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+      $("calendarLabel").textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      let firstWeekDay = firstDay.getDay();
+      if (firstWeekDay === 0) firstWeekDay = 7;
+
+      const start = new Date(firstDay);
+      start.setDate(firstDay.getDate() - (firstWeekDay - 1));
+
+      const end = new Date(lastDay);
+      let lastWeekDay = end.getDay();
+      if (lastWeekDay === 0) lastWeekDay = 7;
+      end.setDate(lastDay.getDate() + (7 - lastWeekDay));
+
+      const dueMap = {};
+      state.jobs.forEach(job => {
+        if (!job.dueDate) return;
+        if (!dueMap[job.dueDate]) dueMap[job.dueDate] = [];
+        dueMap[job.dueDate].push(job);
+      });
+
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        const cellDate = cursor.toISOString().slice(0, 10);
+        const cell = document.createElement("div");
+        cell.className = "calendar-cell";
+        if (cursor.getMonth() !== month) cell.classList.add("muted");
+        if (cellDate === today()) cell.classList.add("today");
+
+        const jobs = (dueMap[cellDate] || []).sort((a, b) => {
+          const pa = a.priority || "Media";
+          const pb = b.priority || "Media";
+          const order = { "Alta": 0, "Media": 1, "Baja": 2 };
+          return order[pa] - order[pb];
+        });
+
+        let jobsHtml = jobs.slice(0, 3).map(job => {
+          const client = getClientById(job.clientId);
+          const overdue = isOverdue(job) ? " overdue" : "";
+          return `
+            <div class="calendar-job${overdue}" data-open-job="${job.id}">
+              <strong>${safe(job.title || "-")}</strong><br>
+              <span>${safe(clientLabel(client))}</span>
+            </div>
+          `;
+        }).join("");
+
+        if (jobs.length > 3) {
+          jobsHtml += `<div class="section-note">+${jobs.length - 3} más</div>`;
+        }
+
+        cell.innerHTML = `
+          <div class="calendar-date">${cursor.getDate()}</div>
+          ${jobsHtml || '<div class="section-note">Sin entregas</div>'}
+        `;
+
+        grid.appendChild(cell);
+        cursor.setDate(cursor.getDate() + 1);
+      }
     }
 
     function exportJson() {
@@ -2101,10 +2286,9 @@
           ["Gastos del mes", $("mExpenses").textContent],
           ["Ganancia neta del mes", $("mProfit").textContent],
           ["Por cobrar general", $("allReceivable").textContent],
-          ["Trabajos activos", $("allActiveJobs").textContent],
-          ["Trabajos por vencer", $("allDueSoonJobs").textContent],
-          ["Trabajos vencidos", $("allOverdueJobs").textContent],
-          ["Clientes registrados", $("allClients").textContent]
+          ["Vencen hoy", $("dueTodayCount").textContent],
+          ["Vencen en 7 días", $("due7Count").textContent],
+          ["Trabajos vencidos", $("allOverdueJobs").textContent]
         ]
       });
 
@@ -2211,153 +2395,6 @@
 
       pdf.save(`Cotizacion_${(job.title || "trabajo").replace(/\s+/g, "_")}_${today()}.pdf`);
       showToast("Cotización PDF generada.");
-    }
-
-    function renderDueSoon() {
-      const rows = state.jobs
-        .filter(job => isDueSoon(job))
-        .slice()
-        .sort((a, b) => String(a.dueDate || "").localeCompare(String(b.dueDate || "")))
-        .slice(0, 12);
-
-      $("dueSoonBody").innerHTML = rows.map(job => {
-        const client = getClientById(job.clientId);
-        return `
-          <tr>
-            <td>${safe(job.dueDate || "-")}</td>
-            <td>${safe(clientLabel(client))}</td>
-            <td>${safe(job.title || "-")}</td>
-            <td>${priorityPill(job.priority || "Media")}</td>
-            <td>${statusPill(job.status || "Cotización")}</td>
-            <td>${whatsappButton(client?.phone, client?.name || client?.company || "")}</td>
-            <td>
-              <div class="actions-row">
-                <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-      $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
-    }
-
-    function formatMonthTitle(dateObj) {
-      return dateObj.toLocaleDateString("es-US", { month: "long", year: "numeric" });
-    }
-
-    function getCalendarJobsForDate(dateStr) {
-      return state.jobs
-        .filter(job => job.dueDate === dateStr)
-        .slice()
-        .sort((a, b) => String(a.priority || "").localeCompare(String(b.priority || "")));
-    }
-
-    function renderCalendar() {
-      const grid = $("calendarGrid");
-      grid.innerHTML = "";
-
-      const date = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth(), 1);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startWeekDay = firstDay.getDay();
-      const totalDays = lastDay.getDate();
-      const todayStr = today();
-
-      $("calendarTitle").textContent = formatMonthTitle(date).replace(/^\w/, c => c.toUpperCase());
-
-      const weekDays = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-      weekDays.forEach(label => {
-        const el = document.createElement("div");
-        el.className = "calendar-weekday";
-        el.textContent = label;
-        grid.appendChild(el);
-      });
-
-      for (let i = 0; i < startWeekDay; i++) {
-        const blank = document.createElement("div");
-        blank.className = "calendar-cell outside";
-        grid.appendChild(blank);
-      }
-
-      let firstSelectable = null;
-
-      for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        const jobs = getCalendarJobsForDate(dateStr);
-        const cell = document.createElement("button");
-        cell.type = "button";
-        cell.className = "calendar-cell";
-        cell.dataset.date = dateStr;
-        if (dateStr === todayStr) cell.classList.add("today");
-        if (state.selectedCalendarDate === dateStr) cell.classList.add("selected");
-        if (!firstSelectable) firstSelectable = dateStr;
-
-        cell.innerHTML = `
-          <div class="calendar-day">${day}</div>
-          ${jobs.length ? `<div class="calendar-badge">${jobs.length}</div>` : `<div style="height:24px"></div>`}
-        `;
-        grid.appendChild(cell);
-      }
-
-      if (!state.selectedCalendarDate) state.selectedCalendarDate = firstSelectable;
-      renderCalendarDayList();
-    }
-
-    function renderCalendarDayList() {
-      const box = $("calendarDayList");
-      const selected = state.selectedCalendarDate;
-
-      if (!selected) {
-        box.innerHTML = `<div class="section-note">Selecciona un día.</div>`;
-        return;
-      }
-
-      const jobs = getCalendarJobsForDate(selected);
-
-      if (!jobs.length) {
-        box.innerHTML = `
-          <div class="calendar-item">
-            <div>
-              <strong>${safe(selected)}</strong>
-              <div class="section-note">No hay entregas programadas para ese día.</div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      box.innerHTML = jobs.map(job => {
-        const client = getClientById(job.clientId);
-        return `
-          <div class="calendar-item">
-            <div>
-              <strong>${safe(job.title || "-")}</strong>
-              <div class="section-note">${safe(clientLabel(client))} · ${safe(job.status || "Cotización")} · Prioridad ${safe(job.priority || "Media")}</div>
-            </div>
-            <div class="actions-row">
-              ${whatsappButton(client?.phone, client?.name || client?.company || "")}
-              <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function changeCalendarMonth(offset) {
-      const newDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth() + offset, 1);
-      state.calendarDate = newDate;
-      state.selectedCalendarDate = null;
-      renderCalendar();
-    }
-
-    function goCalendarToday() {
-      const now = new Date();
-      state.calendarDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      state.selectedCalendarDate = today();
-      renderCalendar();
     }
 
     function bindRealtime() {
@@ -2474,8 +2511,6 @@
       state.jobs = [];
       state.expenses = [];
       state.recurringExpenses = [];
-      state.selectedCalendarDate = null;
-      state.calendarDate = new Date();
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }
@@ -2495,6 +2530,12 @@
 
     $("btnExportJson").addEventListener("click", exportJson);
     $("btnExportPdf").addEventListener("click", exportGeneralPdf);
+
+    $("btnImportJson").addEventListener("click", () => $("importJsonInput").click());
+    $("importJsonInput").addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (file) await importBackupJson(file);
+    });
 
     $("saveClientBtn").addEventListener("click", saveClient);
     $("saveJobBtn").addEventListener("click", saveJob);
@@ -2534,22 +2575,46 @@
       openModal("paymentModal");
     });
 
-    $("calendarPrev").addEventListener("click", () => changeCalendarMonth(-1));
-    $("calendarNext").addEventListener("click", () => changeCalendarMonth(1));
-    $("calendarToday").addEventListener("click", goCalendarToday);
-
     $("clientSearch").addEventListener("input", renderClients);
-    $("jobSearch").addEventListener("input", renderJobs);
-    $("jobStatusFilter").addEventListener("change", renderJobs);
-    $("jobPriorityFilter").addEventListener("change", renderJobs);
-    $("jobDateFrom").addEventListener("change", renderJobs);
-    $("jobDateTo").addEventListener("change", renderJobs);
+
+    ["jobSearch","jobStatusFilter","jobPriorityFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
+      $(id).addEventListener("input", renderJobs);
+      $(id).addEventListener("change", renderJobs);
+    });
+
+    ["expenseSearch","expenseFrom","expenseTo"].forEach(id => {
+      $(id).addEventListener("input", renderExpenses);
+      $(id).addEventListener("change", renderExpenses);
+    });
+
     $("dashboardStatusFilter").addEventListener("change", renderDashboardJobs);
-    $("expenseSearch").addEventListener("input", renderExpenses);
+
+    $("btnClearJobFilters").addEventListener("click", () => {
+      ["jobSearch","jobStatusFilter","jobPriorityFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
+      renderJobs();
+    });
+
+    $("btnClearExpenseFilters").addEventListener("click", () => {
+      ["expenseSearch","expenseFrom","expenseTo"].forEach(id => $(id).value = "");
+      renderExpenses();
+    });
+
+    $("btnPrevMonth").addEventListener("click", () => {
+      state.calendarDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth() - 1, 1);
+      renderDeliveryCalendar();
+    });
+
+    $("btnNextMonth").addEventListener("click", () => {
+      state.calendarDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth() + 1, 1);
+      renderDeliveryCalendar();
+    });
+
     $("authPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
 
     document.addEventListener("click", (event) => {
       const target = event.target;
+
+      if (target.dataset.waClient) openWhatsappForClient(target.dataset.waClient);
 
       if (target.dataset.editClient) editClient(target.dataset.editClient);
       if (target.dataset.deleteClient) removeItem("clients", target.dataset.deleteClient, "cliente");
@@ -2566,16 +2631,12 @@
 
       if (target.dataset.editRecurring) editRecurring(target.dataset.editRecurring);
       if (target.dataset.deleteRecurring) removeItem("recurring", target.dataset.deleteRecurring, "gasto recurrente");
-
-      if (target.dataset.date) {
-        state.selectedCalendarDate = target.dataset.date;
-        renderCalendar();
-      }
     });
 
     resetJobForm();
     resetExpenseForm();
     resetRecurringForm();
+    renderDeliveryCalendar();
   </script>
 </body>
 </html>
