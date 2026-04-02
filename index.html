@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 4</title>
+  <title>NJ Design & Print CRM - Fase 5</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -86,6 +86,7 @@
       box-shadow:0 0 0 3px rgba(184,255,0,.08);
     }
     .textarea{min-height:88px;resize:vertical}
+    .readonly{background:#0d0f14}
 
     .btn{
       border:none;
@@ -237,6 +238,10 @@
     .info-text{color:#bae6fd}
     .purple-text{color:#ddd6fe}
 
+    .alert-cobro{border-color:rgba(245,158,11,.25)}
+    .alert-entrega{border-color:rgba(56,189,248,.25)}
+    .alert-vencido{border-color:rgba(239,68,68,.28)}
+
     .panel{
       background:var(--panel);
       border:1px solid var(--line);
@@ -312,10 +317,6 @@
     .pr-media{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
     .pr-alta{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
 
-    .alert-cobro{border-color:rgba(245,158,11,.25)}
-    .alert-entrega{border-color:rgba(56,189,248,.25)}
-    .alert-vencido{border-color:rgba(239,68,68,.28)}
-
     .overdue{color:#fecaca;font-weight:800}
     .actions-row{display:flex;gap:8px;flex-wrap:wrap}
 
@@ -357,15 +358,23 @@
       padding:14px;
     }
 
-    .row-material{
+    .row-material,
+    .row-quote-item{
       display:grid;
       grid-template-columns:2fr 1fr 1fr auto;
       gap:10px;
       margin-top:10px;
     }
 
-    .list-payments{display:grid;gap:10px;margin-top:12px}
-    .payment-item{
+    .list-payments,
+    .list-logs{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .payment-item,
+    .log-item{
       background:#101216;
       border:1px solid var(--line);
       border-radius:12px;
@@ -390,23 +399,8 @@
     }
     .check-item input{transform:scale(1.15)}
 
-    .calendar-wrap{
-      padding:18px;
-    }
-
-    .calendar-toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-
-    .calendar-label{
-      font-weight:800;
-      font-size:18px;
-    }
+    .calendar-wrap{padding:18px}
+    .calendar-label{font-weight:800;font-size:18px}
 
     .calendar-grid{
       display:grid;
@@ -454,13 +448,8 @@
       cursor:pointer;
     }
 
-    .calendar-job:hover{
-      border-color:rgba(184,255,0,.24);
-    }
-
-    .calendar-job.overdue{
-      border-color:rgba(239,68,68,.28);
-    }
+    .calendar-job:hover{border-color:rgba(184,255,0,.24)}
+    .calendar-job.overdue{border-color:rgba(239,68,68,.28)}
 
     .view-switch{
       display:flex;
@@ -496,14 +485,8 @@
       margin-bottom:12px;
     }
 
-    .kanban-col-head strong{
-      font-size:14px;
-    }
-
-    .kanban-count{
-      font-size:12px;
-      color:var(--muted);
-    }
+    .kanban-col-head strong{font-size:14px}
+    .kanban-count{font-size:12px;color:var(--muted)}
 
     .kanban-list{
       display:grid;
@@ -557,7 +540,7 @@
     .modal-backdrop.show{display:flex}
 
     .modal{
-      width:min(980px,100%);
+      width:min(1080px,100%);
       max-height:92vh;
       overflow:auto;
       background:var(--panel);
@@ -606,7 +589,7 @@
 
     @media (max-width:1100px){
       .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .grid-3,.row-material{grid-template-columns:1fr}
+      .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
       .calendar-grid{grid-template-columns:repeat(7,minmax(110px,1fr));overflow:auto}
     }
 
@@ -638,7 +621,7 @@
   <section id="authScreen" class="auth-wrap">
     <div class="auth-card">
       <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub">CRM privado fase 4 con Kanban, alertas visuales, WhatsApp rápido y PDF mejorado.</div>
+      <div class="auth-sub">CRM privado fase 5 con historial, bitácora, cotización avanzada y clientes frecuentes.</div>
 
       <div class="stack">
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
@@ -662,7 +645,7 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 4: Kanban, recordatorios visuales, WhatsApp rápido y PDF mejorado.</div>
+        <div class="brand-sub">Fase 5: historial, bitácora, cotización avanzada y clientes frecuentes.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -755,6 +738,31 @@
           <div class="panel">
             <div class="panel-head">
               <div>
+                <h2>Clientes frecuentes</h2>
+                <div class="section-note">Clientes con más trabajos y movimiento.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Trabajos</th>
+                    <th>Ventas</th>
+                    <th>Por cobrar</th>
+                    <th>Última entrega</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="frequentClientsBody"></tbody>
+              </table>
+            </div>
+            <div id="frequentClientsEmpty" class="empty hidden">Todavía no hay suficiente historial de trabajos.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
                 <h2>Calendario de entregas</h2>
                 <div class="section-note">Haz clic en un trabajo para abrirlo.</div>
               </div>
@@ -817,11 +825,11 @@
             <div class="panel-head">
               <div>
                 <h2>Trabajos</h2>
-                <div class="section-note">Ahora con vista tabla y Kanban.</div>
+                <div class="section-note">Vista tabla y Kanban para organizar producción.</div>
               </div>
               <div class="view-switch">
-                <button id="btnTableView" class="btn btn-secondary btn-small">Vista tabla</button>
-                <button id="btnKanbanView" class="btn btn-info btn-small">Vista Kanban</button>
+                <button id="btnTableView" class="btn btn-info btn-small">Vista tabla</button>
+                <button id="btnKanbanView" class="btn btn-secondary btn-small">Vista Kanban</button>
               </div>
             </div>
 
@@ -993,6 +1001,7 @@
         <h3 id="jobModalTitle">Nuevo trabajo</h3>
         <button class="btn btn-secondary btn-small" data-close="jobModal">Cerrar</button>
       </div>
+
       <div class="modal-body">
         <div class="grid-3">
           <select id="jobClientId" class="select"></select>
@@ -1016,18 +1025,44 @@
             <option>Alta</option>
           </select>
 
-          <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio de venta" />
+          <input id="jobSale" type="number" min="0" step="0.01" class="input readonly" placeholder="Total de venta" readonly />
         </div>
 
         <textarea id="jobDescription" class="textarea mt-12" placeholder="Descripción del trabajo / cotización"></textarea>
-        <textarea id="jobNotes" class="textarea mt-12" placeholder="Notas internas"></textarea>
+        <textarea id="jobNotes" class="textarea mt-12" placeholder="Notas generales internas"></textarea>
 
         <div class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-            <strong>Materiales</strong>
+            <strong>Materiales / costo interno</strong>
             <button id="addMaterialBtn" class="btn btn-secondary btn-small" type="button">+ Agregar material</button>
           </div>
           <div id="materialsContainer"></div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Cotización</strong>
+            <button id="addQuoteItemBtn" class="btn btn-secondary btn-small" type="button">+ Agregar ítem</button>
+          </div>
+
+          <div id="quoteItemsContainer"></div>
+
+          <div class="grid-3 mt-12">
+            <select id="quoteDiscountType" class="select">
+              <option value="none">Sin descuento</option>
+              <option value="percent">Descuento %</option>
+              <option value="fixed">Descuento fijo</option>
+            </select>
+            <input id="quoteDiscountValue" type="number" min="0" step="0.01" class="input" placeholder="Valor descuento" />
+            <input id="quoteTaxPercent" type="number" min="0" step="0.01" class="input" placeholder="Impuesto %" value="0" />
+          </div>
+
+          <div class="summary-box">
+            <div><span>Subtotal</span><strong id="quoteSubtotal">$0.00</strong></div>
+            <div><span>Descuento</span><strong id="quoteDiscount">$0.00</strong></div>
+            <div><span>Impuesto</span><strong id="quoteTax">$0.00</strong></div>
+            <div><span>Total</span><strong id="quoteTotal">$0.00</strong></div>
+          </div>
         </div>
 
         <div class="box">
@@ -1052,8 +1087,22 @@
           <div id="jobPaymentsPreview" class="list-payments"></div>
         </div>
 
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Bitácora interna</strong>
+            <button id="saveInternalNoteBtn" class="btn btn-info btn-small" type="button">Guardar nota</button>
+          </div>
+          <textarea id="jobNewInternalNote" class="textarea mt-12" placeholder="Escribe una nota interna de seguimiento. Guarda primero el trabajo para poder agregar notas."></textarea>
+          <div id="jobNotesLogList" class="list-logs"></div>
+        </div>
+
+        <div class="box">
+          <strong>Historial de cambios</strong>
+          <div id="jobActivityLogList" class="list-logs"></div>
+        </div>
+
         <div class="summary-box">
-          <div><span>Costo</span><strong id="sumCost">$0.00</strong></div>
+          <div><span>Costo interno</span><strong id="sumCost">$0.00</strong></div>
           <div><span>Ganancia</span><strong id="sumProfit">$0.00</strong></div>
           <div><span>Pagado</span><strong id="sumPaid">$0.00</strong></div>
           <div><span>Saldo</span><strong id="sumBalance">$0.00</strong></div>
@@ -1245,6 +1294,16 @@
       showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600);
     }
 
+    function newLogEntry(type, text) {
+      return {
+        id: "log-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+        type,
+        text,
+        by: state.userEmail || "usuario",
+        at: new Date().toISOString()
+      };
+    }
+
     function setView(view) {
       state.currentView = view;
       document.querySelectorAll(".nav button").forEach(btn => btn.classList.toggle("active", btn.dataset.view === view));
@@ -1407,6 +1466,48 @@
       return `${done}/${values.length}`;
     }
 
+    function getJobInternalNotes(job = {}) {
+      return Array.isArray(job.internalNotesLog) ? [...job.internalNotesLog] : [];
+    }
+
+    function getJobActivityLog(job = {}) {
+      return Array.isArray(job.activityLog) ? [...job.activityLog] : [];
+    }
+
+    function getQuote(job = {}) {
+      const q = job.quote || {};
+      return {
+        items: Array.isArray(q.items) ? q.items : [],
+        discountType: q.discountType || "none",
+        discountValue: Number(q.discountValue || 0),
+        taxPercent: Number(q.taxPercent || 0)
+      };
+    }
+
+    function computeQuote(quote = {}) {
+      const items = Array.isArray(quote.items) ? quote.items : [];
+      const subtotal = items.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+      let discountAmount = 0;
+
+      if (quote.discountType === "percent") {
+        discountAmount = subtotal * (Number(quote.discountValue || 0) / 100);
+      } else if (quote.discountType === "fixed") {
+        discountAmount = Number(quote.discountValue || 0);
+      }
+
+      discountAmount = Math.min(discountAmount, subtotal);
+      const taxable = Math.max(subtotal - discountAmount, 0);
+      const taxAmount = taxable * (Number(quote.taxPercent || 0) / 100);
+      const total = taxable + taxAmount;
+
+      return {
+        subtotal,
+        discountAmount,
+        taxAmount,
+        total
+      };
+    }
+
     function computeJob(job) {
       const sale = Number(job.sale || 0);
       const cost = getMaterialsCost(job.materials || []);
@@ -1505,12 +1606,47 @@
       return row;
     }
 
+    function createQuoteItemRow(item = { description: "", qty: "", price: "" }) {
+      const row = document.createElement("div");
+      row.className = "row-quote-item";
+      row.innerHTML = `
+        <input class="input" data-q="description" placeholder="Descripción" value="${safe(item.description || "")}">
+        <input class="input" data-q="qty" type="number" min="0" step="0.01" placeholder="Cantidad" value="${safe(item.qty || "")}">
+        <input class="input" data-q="price" type="number" min="0" step="0.01" placeholder="Precio unitario" value="${safe(item.price || "")}">
+        <button type="button" class="btn btn-danger btn-small remove-quote-item">✕</button>
+      `;
+      row.querySelectorAll("input").forEach(input => input.addEventListener("input", renderJobPreview));
+      row.querySelector(".remove-quote-item").addEventListener("click", () => {
+        row.remove();
+        if (!$("quoteItemsContainer").children.length) $("quoteItemsContainer").appendChild(createQuoteItemRow());
+        renderJobPreview();
+      });
+      return row;
+    }
+
     function getCurrentFormMaterials() {
       return [...document.querySelectorAll(".row-material")].map(row => ({
         name: cleanText(row.querySelector('[data-m="name"]').value),
         qty: Number(row.querySelector('[data-m="qty"]').value || 0),
         price: Number(row.querySelector('[data-m="price"]').value || 0)
       })).filter(item => item.name || item.qty || item.price);
+    }
+
+    function getCurrentQuoteItems() {
+      return [...document.querySelectorAll(".row-quote-item")].map(row => ({
+        description: cleanText(row.querySelector('[data-q="description"]').value),
+        qty: Number(row.querySelector('[data-q="qty"]').value || 0),
+        price: Number(row.querySelector('[data-q="price"]').value || 0)
+      })).filter(item => item.description || item.qty || item.price);
+    }
+
+    function getCurrentQuoteForm() {
+      return {
+        items: getCurrentQuoteItems(),
+        discountType: $("quoteDiscountType").value || "none",
+        discountValue: Number($("quoteDiscountValue").value || 0),
+        taxPercent: Number($("quoteTaxPercent").value || 0)
+      };
     }
 
     function getFormChecklist() {
@@ -1525,6 +1661,40 @@
       CHECK_KEYS.forEach(item => {
         $(item.id).checked = !!checklist[item.key];
       });
+    }
+
+    function renderInternalNotesAndActivity() {
+      const noteBox = $("jobNotesLogList");
+      const logBox = $("jobActivityLogList");
+
+      if (!state.editingJobId) {
+        noteBox.innerHTML = `<div class="section-note">Guarda primero el trabajo para usar la bitácora.</div>`;
+        logBox.innerHTML = `<div class="section-note">El historial aparecerá cuando el trabajo ya exista.</div>`;
+        return;
+      }
+
+      const job = getJobById(state.editingJobId);
+      const notes = getJobInternalNotes(job).sort((a,b) => String(b.at||"").localeCompare(String(a.at||"")));
+      const logs = getJobActivityLog(job).sort((a,b) => String(b.at||"").localeCompare(String(a.at||"")));
+
+      noteBox.innerHTML = notes.length
+        ? notes.map(item => `
+            <div class="log-item">
+              <strong>${safe(item.by || "usuario")}</strong>
+              <div class="section-note">${safe(item.at || "")}</div>
+              <div style="margin-top:8px;">${safe(item.text || "")}</div>
+            </div>
+          `).join("")
+        : `<div class="section-note">Todavía no hay notas internas.</div>`;
+
+      logBox.innerHTML = logs.length
+        ? logs.map(item => `
+            <div class="log-item">
+              <strong>${safe(item.text || "")}</strong>
+              <div class="section-note">${safe(item.type || "cambio")} · ${safe(item.by || "usuario")} · ${safe(item.at || "")}</div>
+            </div>
+          `).join("")
+        : `<div class="section-note">Todavía no hay historial de cambios.</div>`;
     }
 
     function getCurrentJobPaymentsPreviewData() {
@@ -1551,7 +1721,26 @@
         `).join("");
     }
 
+    function renderQuotePreview() {
+      const quote = getCurrentQuoteForm();
+      const calc = computeQuote(quote);
+
+      $("quoteSubtotal").textContent = money(calc.subtotal);
+      $("quoteDiscount").textContent = money(calc.discountAmount);
+      $("quoteTax").textContent = money(calc.taxAmount);
+      $("quoteTotal").textContent = money(calc.total);
+
+      const hasQuoteData = quote.items.some(i => i.description || i.qty || i.price) || quote.discountValue || quote.taxPercent;
+      if (hasQuoteData) {
+        $("jobSale").value = calc.total.toFixed(2);
+      } else if (!$("jobSale").value) {
+        $("jobSale").value = "0.00";
+      }
+    }
+
     function renderJobPreview() {
+      renderQuotePreview();
+
       const sale = Number($("jobSale").value || 0);
       const cost = getMaterialsCost(getCurrentFormMaterials());
       const payments = getCurrentJobPaymentsPreviewData();
@@ -1565,6 +1754,7 @@
       $("sumBalance").textContent = money(balance);
 
       renderJobPaymentsPreview();
+      renderInternalNotesAndActivity();
     }
 
     function resetClientForm() {
@@ -1582,11 +1772,20 @@
       $("jobDate").value = today();
       $("jobDueDate").value = "";
       $("jobPriority").value = "Media";
-      $("jobSale").value = "";
+      $("jobSale").value = "0.00";
       $("jobDescription").value = "";
       $("jobNotes").value = "";
+      $("jobNewInternalNote").value = "";
+
       $("materialsContainer").innerHTML = "";
       $("materialsContainer").appendChild(createMaterialRow());
+
+      $("quoteItemsContainer").innerHTML = "";
+      $("quoteItemsContainer").appendChild(createQuoteItemRow());
+      $("quoteDiscountType").value = "none";
+      $("quoteDiscountValue").value = "";
+      $("quoteTaxPercent").value = "0";
+
       setChecklistForm({});
       renderJobPreview();
     }
@@ -1621,6 +1820,40 @@
       $("paymentNote").value = "";
     }
 
+    async function saveInternalNote() {
+      if (!state.editingJobId) return showToast("Primero guarda el trabajo.");
+      const text = cleanText($("jobNewInternalNote").value);
+      if (!text) return showToast("Escribe una nota interna.");
+
+      const job = getJobById(state.editingJobId);
+      if (!job) return showToast("No se encontró el trabajo.");
+
+      const notes = getJobInternalNotes(job);
+      const logs = getJobActivityLog(job);
+
+      notes.push({
+        id: "note-" + Date.now(),
+        text,
+        by: state.userEmail || "usuario",
+        at: new Date().toISOString()
+      });
+
+      logs.push(newLogEntry("nota", "Se agregó una nota interna."));
+
+      try {
+        await jobsRef().doc(state.editingJobId).update({
+          internalNotesLog: notes,
+          activityLog: logs,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        $("jobNewInternalNote").value = "";
+        showToast("Nota guardada en la bitácora.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo guardar la nota.");
+      }
+    }
+
     async function saveClient() {
       const payload = {
         name: cleanText($("clientName").value),
@@ -1652,6 +1885,11 @@
     }
 
     async function saveJob() {
+      const quote = getCurrentQuoteForm();
+      const quoteCalc = computeQuote(quote);
+      const logsBase = state.editingJobId ? getJobActivityLog(getJobById(state.editingJobId) || {}) : [];
+      const notesBase = state.editingJobId ? getJobInternalNotes(getJobById(state.editingJobId) || {}) : [];
+
       const payload = {
         clientId: cleanText($("jobClientId").value),
         title: cleanText($("jobTitle").value),
@@ -1659,11 +1897,13 @@
         date: cleanText($("jobDate").value) || today(),
         dueDate: cleanText($("jobDueDate").value),
         priority: cleanText($("jobPriority").value) || "Media",
-        sale: Number($("jobSale").value || 0),
+        sale: Number($("jobSale").value || quoteCalc.total || 0),
         description: cleanText($("jobDescription").value),
         notes: cleanText($("jobNotes").value),
         materials: getCurrentFormMaterials(),
+        quote,
         checklist: getFormChecklist(),
+        internalNotesLog: notesBase,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -1675,14 +1915,16 @@
         if (state.editingJobId) {
           const existing = getJobById(state.editingJobId) || {};
           payload.payments = existing.payments || [];
+          payload.activityLog = [...logsBase, newLogEntry("edición", "Trabajo actualizado.")];
           if (existing.paid) payload.paid = existing.paid;
           await jobsRef().doc(state.editingJobId).update(payload);
           showToast("Trabajo actualizado.");
         } else {
           payload.payments = [];
+          payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           await jobsRef().add(payload);
-          showToast("Trabajo guardado. Ahora ya puedes agregar pagos.");
+          showToast("Trabajo guardado. Ahora ya puedes agregar pagos y notas.");
         }
         closeModal("jobModal");
       } catch (error) {
@@ -1783,8 +2025,14 @@
           note
         });
 
+        const totalAfter = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        const newStatus = sale > 0 && totalAfter >= sale ? "Pagado" : job.status;
+        const logs = [...getJobActivityLog(job), newLogEntry("pago", `Pago agregado por ${amount.toFixed(2)}.`)];
+
         await jobsRef().doc(jobId).update({
           payments,
+          status: newStatus,
+          activityLog: logs,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -1860,6 +2108,8 @@
 
         if (!ok) return;
 
+        const clientMap = {};
+
         for (const item of clients) {
           const payload = {
             name: item.name || "",
@@ -1872,12 +2122,13 @@
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };
-          await clientsRef().add(payload);
+          const doc = await clientsRef().add(payload);
+          if (item.id) clientMap[item.id] = doc.id;
         }
 
         for (const item of jobs) {
           const payload = {
-            clientId: item.clientId || "",
+            clientId: clientMap[item.clientId] || item.clientId || "",
             title: item.title || "",
             status: item.status || "Cotización",
             date: item.date || today(),
@@ -1887,8 +2138,11 @@
             description: item.description || "",
             notes: item.notes || "",
             materials: Array.isArray(item.materials) ? item.materials : [],
+            quote: item.quote || { items: [], discountType: "none", discountValue: 0, taxPercent: 0 },
             checklist: item.checklist || {},
             payments: Array.isArray(item.payments) ? item.payments : [],
+            internalNotesLog: Array.isArray(item.internalNotesLog) ? item.internalNotesLog : [],
+            activityLog: Array.isArray(item.activityLog) ? item.activityLog : [newLogEntry("importación", "Trabajo importado desde respaldo JSON.")],
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };
@@ -1952,8 +2206,11 @@
 
     async function updateJobStatus(id, status) {
       try {
+        const job = getJobById(id);
+        const logs = [...getJobActivityLog(job), newLogEntry("estado", `Estado cambiado a ${status}.`)];
         await jobsRef().doc(id).update({
           status,
+          activityLog: logs,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         showToast(`Estado cambiado a ${status}.`);
@@ -1990,13 +2247,22 @@
       $("jobDate").value = item.date || today();
       $("jobDueDate").value = item.dueDate || "";
       $("jobPriority").value = item.priority || "Media";
-      $("jobSale").value = item.sale ?? "";
+      $("jobSale").value = Number(item.sale || 0).toFixed(2);
       $("jobDescription").value = item.description || "";
       $("jobNotes").value = item.notes || "";
-      $("materialsContainer").innerHTML = "";
+      $("jobNewInternalNote").value = "";
 
+      $("materialsContainer").innerHTML = "";
       const materials = item.materials && item.materials.length ? item.materials : [{ name:"", qty:"", price:"" }];
       materials.forEach(material => $("materialsContainer").appendChild(createMaterialRow(material)));
+
+      const quote = getQuote(item);
+      const quoteItems = quote.items.length ? quote.items : [{ description: item.title || "Trabajo", qty: 1, price: item.sale || 0 }];
+      $("quoteItemsContainer").innerHTML = "";
+      quoteItems.forEach(q => $("quoteItemsContainer").appendChild(createQuoteItemRow(q)));
+      $("quoteDiscountType").value = quote.discountType || "none";
+      $("quoteDiscountValue").value = quote.discountValue || "";
+      $("quoteTaxPercent").value = quote.taxPercent ?? 0;
 
       setChecklistForm(getChecklist(item));
       renderJobPreview();
@@ -2051,13 +2317,6 @@
 
         return okText && okStatus && okPriority && okCreated && okDue;
       });
-    }
-
-    function getDashboardJobs() {
-      return state.jobs
-        .slice()
-        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
-        .slice(0, 10);
     }
 
     function getDueSoonJobs(days = 7) {
@@ -2119,6 +2378,7 @@
       $("clientsEmpty").classList.toggle("hidden", rows.length > 0);
       $("allClients").textContent = String(state.clients.length);
       fillClientSelect($("jobClientId").value);
+      renderFrequentClients();
     }
 
     function renderJobs() {
@@ -2164,9 +2424,9 @@
 
       $("jobsEmpty").classList.toggle("hidden", rows.length > 0);
       renderKanban();
-      renderDashboardJobs();
       renderStats();
       renderDueSoonPanel();
+      renderFrequentClients();
       renderDeliveryCalendar();
       fillPaymentJobSelect($("paymentJobId").value);
     }
@@ -2215,41 +2475,6 @@
       });
     }
 
-    function renderDashboardJobs() {
-      const rows = getDashboardJobs();
-      const tbody = $("dashboardJobsBody");
-      if (!tbody) return;
-
-      tbody.innerHTML = rows.map(job => {
-        const client = getClientById(job.clientId);
-        const calc = computeJob(job);
-        const overdue = isOverdue(job);
-
-        return `
-          <tr>
-            <td>${safe(clientLabel(client))}</td>
-            <td>
-              <div><strong>${safe(job.title || "-")}</strong></div>
-              <small>${safe(job.status || "Cotización")}</small>
-            </td>
-            <td class="${overdue ? "overdue" : ""}">${safe(formatDate(job.dueDate))}${overdue ? " · Vencido" : ""}</td>
-            <td>${priorityPill(job.priority || "Media")}</td>
-            <td>${money(calc.sale)}</td>
-            <td>${money(calc.paid)}</td>
-            <td>${money(calc.balance)}</td>
-            <td>${safe(checklistProgress(job))}</td>
-            <td>${statusPill(job.status || "Cotización")}</td>
-            <td>
-              <div class="actions-row">
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-                <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Ver</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
     function renderDueSoonPanel() {
       const rows = getDueSoonJobs(7);
       $("dueSoonBody").innerHTML = rows.map(job => {
@@ -2276,6 +2501,55 @@
         `;
       }).join("");
       $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
+    }
+
+    function renderFrequentClients() {
+      const groups = {};
+
+      state.jobs.forEach(job => {
+        if (!job.clientId) return;
+        const calc = computeJob(job);
+        if (!groups[job.clientId]) {
+          groups[job.clientId] = {
+            clientId: job.clientId,
+            jobs: 0,
+            sales: 0,
+            receivable: 0,
+            latestDue: ""
+          };
+        }
+        groups[job.clientId].jobs += 1;
+        groups[job.clientId].sales += calc.sale;
+        groups[job.clientId].receivable += calc.balance;
+        if (job.dueDate && (!groups[job.clientId].latestDue || job.dueDate > groups[job.clientId].latestDue)) {
+          groups[job.clientId].latestDue = job.dueDate;
+        }
+      });
+
+      const rows = Object.values(groups)
+        .sort((a,b) => b.jobs - a.jobs || b.sales - a.sales)
+        .slice(0, 8);
+
+      $("frequentClientsBody").innerHTML = rows.map(item => {
+        const client = getClientById(item.clientId);
+        return `
+          <tr>
+            <td>${safe(clientLabel(client))}</td>
+            <td>${item.jobs}</td>
+            <td>${money(item.sales)}</td>
+            <td>${money(item.receivable)}</td>
+            <td>${safe(item.latestDue || "-")}</td>
+            <td>
+              <div class="actions-row">
+                <button class="btn btn-info btn-small" data-wa-client="${item.clientId}" data-wa-mode="general">WhatsApp</button>
+                <button class="btn btn-secondary btn-small" data-filter-client-jobs="${item.clientId}">Ver trabajos</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      $("frequentClientsEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
     function renderExpenses() {
@@ -2373,6 +2647,7 @@
       $("allOverdueJobs").textContent = String(overdueJobs);
       $("allActiveJobs").textContent = String(activeJobs);
       $("pendingPaymentsCount").textContent = String(pendingPayments);
+      $("allClients").textContent = String(state.clients.length);
     }
 
     function renderDeliveryCalendar() {
@@ -2461,7 +2736,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nj_crm_fase4_${today()}.json`;
+      a.download = `nj_crm_fase5_${today()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
@@ -2538,6 +2813,8 @@
 
       const client = getClientById(job.clientId);
       const calc = computeJob(job);
+      const quote = getQuote(job);
+      const q = computeQuote(quote);
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
 
@@ -2577,8 +2854,8 @@
         styles: { fontSize: 9 }
       });
 
-      const materialRows = (job.materials || []).map(item => [
-        item.name || "-",
+      const quoteRows = (quote.items || []).map(item => [
+        item.description || "-",
         Number(item.qty || 0),
         money(item.price || 0),
         money(Number(item.qty || 0) * Number(item.price || 0))
@@ -2586,17 +2863,20 @@
 
       pdf.autoTable({
         startY: pdf.lastAutoTable.finalY + 10,
-        head: [["Material", "Cantidad", "Precio", "Total"]],
-        body: materialRows.length ? materialRows : [["-", "-", "-", "-"]],
+        head: [["Ítem", "Cantidad", "Precio", "Total"]],
+        body: quoteRows.length ? quoteRows : [["-", "-", "-", "-"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
 
       pdf.autoTable({
         startY: pdf.lastAutoTable.finalY + 10,
-        head: [["Resumen", "Monto"]],
+        head: [["Resumen cotización", "Monto"]],
         body: [
-          ["Precio de venta", money(calc.sale)],
+          ["Subtotal", money(q.subtotal)],
+          ["Descuento", money(q.discountAmount)],
+          ["Impuesto", money(q.taxAmount)],
+          ["Total cotización", money(q.total)],
           ["Pagado", money(calc.paid)],
           ["Saldo pendiente", money(calc.balance)]
         ],
@@ -2760,6 +3040,7 @@
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("savePaymentBtn").addEventListener("click", savePayment);
     $("saveRecurringBtn").addEventListener("click", saveRecurring);
+    $("saveInternalNoteBtn").addEventListener("click", saveInternalNote);
 
     $("btnNewMain").addEventListener("click", () => {
       if (state.currentView === "clientes") {
@@ -2785,7 +3066,15 @@
       renderJobPreview();
     });
 
+    $("addQuoteItemBtn").addEventListener("click", () => {
+      $("quoteItemsContainer").appendChild(createQuoteItemRow());
+      renderJobPreview();
+    });
+
     $("jobSale").addEventListener("input", renderJobPreview);
+    $("quoteDiscountType").addEventListener("change", renderJobPreview);
+    $("quoteDiscountValue").addEventListener("input", renderJobPreview);
+    $("quoteTaxPercent").addEventListener("input", renderJobPreview);
 
     $("openPaymentFromJobBtn").addEventListener("click", () => {
       if (!state.editingJobId) return showToast("Primero guarda el trabajo y luego agrega pagos.");
@@ -2835,6 +3124,15 @@
 
       if (target.dataset.waClient) {
         openWhatsappForClient(target.dataset.waClient, target.dataset.waMode || "general", target.dataset.waJob || null);
+      }
+
+      if (target.dataset.filterClientJobs) {
+        const client = getClientById(target.dataset.filterClientJobs);
+        if (client) {
+          setView("trabajos");
+          $("jobSearch").value = clientLabel(client);
+          renderJobs();
+        }
       }
 
       if (target.dataset.editClient) editClient(target.dataset.editClient);
