@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 3</title>
+  <title>NJ Design & Print CRM - Fase 4</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -24,6 +24,8 @@
       --ok:#22c55e;
       --warn:#f59e0b;
       --danger:#ef4444;
+      --purple:#8b5cf6;
+      --teal:#14b8a6;
       --radius:18px;
       --shadow:0 14px 34px rgba(0,0,0,.25);
     }
@@ -192,15 +194,16 @@
     .title p{margin:8px 0 0;color:var(--muted)}
     .top-actions{display:flex;gap:10px;flex-wrap:wrap}
 
-    .stats,.mini-stats{
+    .stats,.mini-stats,.alert-grid{
       display:grid;
       gap:14px;
       margin-bottom:22px;
     }
     .stats{grid-template-columns:repeat(4,minmax(180px,1fr))}
     .mini-stats{grid-template-columns:repeat(4,minmax(180px,1fr))}
+    .alert-grid{grid-template-columns:repeat(3,minmax(180px,1fr))}
 
-    .stat,.mini-stat{
+    .stat,.mini-stat,.alert-card{
       background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
       border:1px solid var(--line);
       border-radius:var(--radius);
@@ -208,7 +211,7 @@
       box-shadow:var(--shadow);
     }
 
-    .stat .label,.mini-stat .label{
+    .stat .label,.mini-stat .label,.alert-card .label{
       color:var(--muted);
       font-size:12px;
       text-transform:uppercase;
@@ -221,7 +224,7 @@
       font-weight:900;
     }
 
-    .mini-stat .value{
+    .mini-stat .value,.alert-card .value{
       margin-top:8px;
       font-size:21px;
       font-weight:800;
@@ -232,6 +235,7 @@
     .warn-text{color:#fcd34d}
     .danger-text{color:#fca5a5}
     .info-text{color:#bae6fd}
+    .purple-text{color:#ddd6fe}
 
     .panel{
       background:var(--panel);
@@ -307,6 +311,10 @@
     .pr-baja{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
     .pr-media{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
     .pr-alta{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
+
+    .alert-cobro{border-color:rgba(245,158,11,.25)}
+    .alert-entrega{border-color:rgba(56,189,248,.25)}
+    .alert-vencido{border-color:rgba(239,68,68,.28)}
 
     .overdue{color:#fecaca;font-weight:800}
     .actions-row{display:flex;gap:8px;flex-wrap:wrap}
@@ -425,10 +433,7 @@
       align-content:start;
     }
 
-    .calendar-cell.muted{
-      opacity:.4;
-    }
-
+    .calendar-cell.muted{opacity:.4}
     .calendar-cell.today{
       border-color:rgba(184,255,0,.4);
       box-shadow:0 0 0 1px rgba(184,255,0,.12) inset;
@@ -455,6 +460,87 @@
 
     .calendar-job.overdue{
       border-color:rgba(239,68,68,.28);
+    }
+
+    .view-switch{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .kanban-wrap{
+      padding:18px;
+      overflow:auto;
+    }
+
+    .kanban-board{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(280px,1fr));
+      gap:14px;
+      min-width:1720px;
+    }
+
+    .kanban-col{
+      background:#101216;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      min-height:300px;
+    }
+
+    .kanban-col-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .kanban-col-head strong{
+      font-size:14px;
+    }
+
+    .kanban-count{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .kanban-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .kanban-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      display:grid;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+
+    .kanban-card h4{
+      margin:0;
+      font-size:14px;
+    }
+
+    .kanban-card small{
+      color:var(--muted);
+      line-height:1.4;
+    }
+
+    .kanban-meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .kanban-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:4px;
     }
 
     .modal-backdrop{
@@ -519,7 +605,7 @@
     }
 
     @media (max-width:1100px){
-      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material{grid-template-columns:1fr}
       .calendar-grid{grid-template-columns:repeat(7,minmax(110px,1fr));overflow:auto}
     }
@@ -540,7 +626,7 @@
       .nav button{text-align:center;padding:10px 8px;font-size:12px}
       .sidebar-foot{display:none}
       .content{padding:18px 18px 92px}
-      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4{grid-template-columns:1fr}
+      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid{grid-template-columns:1fr}
       .filters .input,.filters .select{max-width:none}
       .calendar-grid{display:block}
       .calendar-day-head{display:none}
@@ -552,7 +638,7 @@
   <section id="authScreen" class="auth-wrap">
     <div class="auth-card">
       <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub">CRM privado fase 3 con filtros por fecha, calendario de entregas, WhatsApp e importación de respaldos.</div>
+      <div class="auth-sub">CRM privado fase 4 con Kanban, alertas visuales, WhatsApp rápido y PDF mejorado.</div>
 
       <div class="stack">
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
@@ -576,7 +662,7 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 3: fechas, entregas, WhatsApp, checklist y respaldo importable.</div>
+        <div class="brand-sub">Fase 4: Kanban, recordatorios visuales, WhatsApp rápido y PDF mejorado.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -617,11 +703,26 @@
           </div>
 
           <div class="section-note" style="margin-bottom:10px;">Alertas rápidas</div>
+          <div class="alert-grid">
+            <div class="alert-card alert-entrega">
+              <div class="label">Entregas hoy</div>
+              <div id="dueTodayCount" class="value info-text">0</div>
+            </div>
+            <div class="alert-card alert-cobro">
+              <div class="label">Cobros pendientes</div>
+              <div id="pendingPaymentsCount" class="value warn-text">0</div>
+            </div>
+            <div class="alert-card alert-vencido">
+              <div class="label">Trabajos vencidos</div>
+              <div id="allOverdueJobs" class="value danger-text">0</div>
+            </div>
+          </div>
+
           <div class="mini-stats">
             <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
-            <div class="mini-stat"><div class="label">Vencen hoy</div><div id="dueTodayCount" class="value danger-text">0</div></div>
-            <div class="mini-stat"><div class="label">Vencen 7 días</div><div id="due7Count" class="value warn-text">0</div></div>
-            <div class="mini-stat"><div class="label">Vencidos</div><div id="allOverdueJobs" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">Vencen 7 días</div><div id="due7Count" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
           </div>
 
           <div class="panel">
@@ -664,7 +765,7 @@
               </div>
             </div>
             <div class="calendar-wrap">
-              <div class="calendar-grid" id="calendarHead">
+              <div class="calendar-grid">
                 <div class="calendar-day-head">Lun</div>
                 <div class="calendar-day-head">Mar</div>
                 <div class="calendar-day-head">Mié</div>
@@ -716,7 +817,11 @@
             <div class="panel-head">
               <div>
                 <h2>Trabajos</h2>
-                <div class="section-note">Ahora con filtros por fecha y acceso a WhatsApp.</div>
+                <div class="section-note">Ahora con vista tabla y Kanban.</div>
+              </div>
+              <div class="view-switch">
+                <button id="btnTableView" class="btn btn-secondary btn-small">Vista tabla</button>
+                <button id="btnKanbanView" class="btn btn-info btn-small">Vista Kanban</button>
               </div>
             </div>
 
@@ -751,30 +856,37 @@
               </div>
             </div>
 
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Trabajo</th>
-                    <th>Fecha</th>
-                    <th>Entrega</th>
-                    <th>Prioridad</th>
-                    <th>Venta</th>
-                    <th>Costo</th>
-                    <th>Ganancia</th>
-                    <th>Pagado</th>
-                    <th>Saldo</th>
-                    <th>Checklist</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="jobsBody"></tbody>
-              </table>
+            <div id="jobsTableView">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Trabajo</th>
+                      <th>Fecha</th>
+                      <th>Entrega</th>
+                      <th>Prioridad</th>
+                      <th>Venta</th>
+                      <th>Costo</th>
+                      <th>Ganancia</th>
+                      <th>Pagado</th>
+                      <th>Saldo</th>
+                      <th>Checklist</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jobsBody"></tbody>
+                </table>
+              </div>
+              <div id="jobsEmpty" class="empty hidden">No hay trabajos guardados.</div>
             </div>
 
-            <div id="jobsEmpty" class="empty hidden">No hay trabajos guardados.</div>
+            <div id="jobsKanbanView" class="hidden">
+              <div class="kanban-wrap">
+                <div class="kanban-board" id="kanbanBoard"></div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1088,7 +1200,8 @@
       editingRecurringId: null,
       workingPaymentJobId: null,
       unsubscribers: [],
-      calendarDate: new Date()
+      calendarDate: new Date(),
+      jobsViewMode: "table"
     };
 
     const $ = (id) => document.getElementById(id);
@@ -1105,11 +1218,12 @@
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
-      trabajos: ["Trabajos", "Cotización, producción, pagos y fechas."],
+      trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."]
     };
 
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
+    const KANBAN_STATUSES = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
 
     const CHECK_KEYS = [
@@ -1145,6 +1259,16 @@
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
+    }
+
+    function setJobsViewMode(mode) {
+      state.jobsViewMode = mode;
+      $("jobsTableView").classList.toggle("hidden", mode !== "table");
+      $("jobsKanbanView").classList.toggle("hidden", mode !== "kanban");
+      $("btnTableView").classList.toggle("btn-info", mode === "table");
+      $("btnTableView").classList.toggle("btn-secondary", mode !== "table");
+      $("btnKanbanView").classList.toggle("btn-info", mode === "kanban");
+      $("btnKanbanView").classList.toggle("btn-secondary", mode !== "kanban");
     }
 
     function openModal(id) { $(id).classList.add("show"); }
@@ -1298,19 +1422,38 @@
       return digits;
     }
 
-    function openWhatsappForClient(clientId) {
+    function openWhatsappForClient(clientId, mode = "general", jobId = null) {
       const client = getClientById(clientId);
       if (!client?.phone) {
         showToast("Ese cliente no tiene teléfono guardado.");
         return;
       }
+
       const digits = cleanPhoneForWhatsapp(client.phone);
       if (!digits) {
         showToast("El teléfono no es válido.");
         return;
       }
+
       const name = client.name || client.company || "cliente";
-      const msg = encodeURIComponent(`Hola ${name}, te escribo de ${COMPANY.name}.`);
+      let message = `Hola ${name}, te escribo de ${COMPANY.name}.`;
+
+      if (mode === "cobro" && jobId) {
+        const job = getJobById(jobId);
+        if (job) {
+          const calc = computeJob(job);
+          message = `Hola ${name}, te escribo de ${COMPANY.name}. Te recordamos que el trabajo "${job.title}" tiene un saldo pendiente de ${calc.balance.toFixed(2)}.`;
+        }
+      }
+
+      if (mode === "entrega" && jobId) {
+        const job = getJobById(jobId);
+        if (job) {
+          message = `Hola ${name}, te escribo de ${COMPANY.name}. Te recordamos la entrega del trabajo "${job.title}" para la fecha ${job.dueDate || "programada"}.`;
+        }
+      }
+
+      const msg = encodeURIComponent(message);
       window.open(`https://wa.me/${digits}?text=${msg}`, "_blank");
     }
 
@@ -1904,16 +2047,14 @@
         const okStatus = !statusFilter || job.status === statusFilter;
         const okPriority = !priorityFilter || (job.priority || "Media") === priorityFilter;
         const okCreated = (!createdFrom && !createdTo) || isBetween(job.date, createdFrom, createdTo);
-        const okDue = (!dueFrom && !dueTo) || isBetween(job.dueDate, dueFrom, dueTo);
+        const okDue = (!dueFrom && !dueTo) || (job.dueDate && isBetween(job.dueDate, dueFrom, dueTo));
 
         return okText && okStatus && okPriority && okCreated && okDue;
       });
     }
 
     function getDashboardJobs() {
-      const statusFilter = cleanText($("dashboardStatusFilter").value);
       return state.jobs
-        .filter(job => !statusFilter || job.status === statusFilter)
         .slice()
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
         .slice(0, 10);
@@ -1943,6 +2084,13 @@
       );
     }
 
+    function getPendingPaymentJobs() {
+      return state.jobs.filter(job => {
+        const calc = computeJob(job);
+        return calc.balance > 0 && !["Cancelado","Pagado"].includes(job.status);
+      });
+    }
+
     function renderClients() {
       const q = cleanText($("clientSearch").value).toLowerCase();
       const rows = state.clients.filter(client => {
@@ -1960,7 +2108,7 @@
           <td><small>${safe(client.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
-              <button class="btn btn-info btn-small" data-wa-client="${client.id}">WhatsApp</button>
+              <button class="btn btn-info btn-small" data-wa-client="${client.id}" data-wa-mode="general">WhatsApp</button>
               <button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>
               <button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>
             </div>
@@ -1969,6 +2117,7 @@
       `).join("");
 
       $("clientsEmpty").classList.toggle("hidden", rows.length > 0);
+      $("allClients").textContent = String(state.clients.length);
       fillClientSelect($("jobClientId").value);
     }
 
@@ -1999,7 +2148,9 @@
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}">WhatsApp</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
                 <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>
                 <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
                 <button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>
@@ -2012,6 +2163,7 @@
       }).join("");
 
       $("jobsEmpty").classList.toggle("hidden", rows.length > 0);
+      renderKanban();
       renderDashboardJobs();
       renderStats();
       renderDueSoonPanel();
@@ -2019,9 +2171,56 @@
       fillPaymentJobSelect($("paymentJobId").value);
     }
 
+    function renderKanban() {
+      const rows = getFilteredJobs().filter(job => !["Pagado","Cancelado"].includes(job.status));
+      const board = $("kanbanBoard");
+      board.innerHTML = "";
+
+      KANBAN_STATUSES.forEach(status => {
+        const colJobs = rows.filter(job => job.status === status);
+        const col = document.createElement("div");
+        col.className = "kanban-col";
+        col.innerHTML = `
+          <div class="kanban-col-head">
+            <strong>${status}</strong>
+            <span class="kanban-count">${colJobs.length}</span>
+          </div>
+          <div class="kanban-list">
+            ${colJobs.map(job => {
+              const client = getClientById(job.clientId);
+              const calc = computeJob(job);
+              const overdue = isOverdue(job);
+              return `
+                <div class="kanban-card">
+                  <h4>${safe(job.title || "-")}</h4>
+                  <small>${safe(clientLabel(client))}</small>
+                  <div class="kanban-meta">
+                    ${priorityPill(job.priority || "Media")}
+                    ${overdue ? '<span class="pill st-cancelado">Vencido</span>' : ""}
+                  </div>
+                  <small>Entrega: ${safe(job.dueDate || "-")}</small>
+                  <small>Saldo: ${money(calc.balance)}</small>
+                  <small>Checklist: ${safe(checklistProgress(job))}</small>
+                  <div class="kanban-actions">
+                    <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>
+                    <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
+                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
+                  </div>
+                </div>
+              `;
+            }).join("") || `<div class="section-note">Sin trabajos aquí.</div>`}
+          </div>
+        `;
+        board.appendChild(col);
+      });
+    }
+
     function renderDashboardJobs() {
       const rows = getDashboardJobs();
-      $("dashboardJobsBody").innerHTML = rows.map(job => {
+      const tbody = $("dashboardJobsBody");
+      if (!tbody) return;
+
+      tbody.innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
@@ -2042,15 +2241,13 @@
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}">WhatsApp</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
                 <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Ver</button>
               </div>
             </td>
           </tr>
         `;
       }).join("");
-
-      $("dashboardEmpty")?.classList.toggle("hidden", rows.length > 0);
     }
 
     function renderDueSoonPanel() {
@@ -2059,6 +2256,7 @@
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
+
         return `
           <tr>
             <td>${safe(clientLabel(client))}</td>
@@ -2070,7 +2268,7 @@
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}">WhatsApp</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Avisar entrega</button>
                 <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
               </div>
             </td>
@@ -2162,6 +2360,8 @@
       const dueToday = getDueTodayJobs().length;
       const due7 = getDueSoonJobs(7).length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
+      const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
+      const pendingPayments = getPendingPaymentJobs().length;
 
       $("mSales").textContent = money(monthSales);
       $("mCollected").textContent = money(monthCollected);
@@ -2171,6 +2371,8 @@
       $("dueTodayCount").textContent = String(dueToday);
       $("due7Count").textContent = String(due7);
       $("allOverdueJobs").textContent = String(overdueJobs);
+      $("allActiveJobs").textContent = String(activeJobs);
+      $("pendingPaymentsCount").textContent = String(pendingPayments);
     }
 
     function renderDeliveryCalendar() {
@@ -2259,7 +2461,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nj_crm_fase3_${today()}.json`;
+      a.download = `nj_crm_fase4_${today()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
@@ -2268,17 +2470,24 @@
     function exportGeneralPdf() {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
-      const month = currentMonthKey();
 
-      pdf.setFontSize(18);
-      pdf.text(`${COMPANY.name} - Reporte General`, 14, 18);
+      pdf.setFillColor(15, 18, 24);
+      pdf.rect(0, 0, 210, 34, "F");
+
+      pdf.setTextColor(184, 255, 0);
+      pdf.setFontSize(20);
+      pdf.text(COMPANY.name, 14, 18);
+
+      pdf.setTextColor(240, 240, 240);
       pdf.setFontSize(10);
-      pdf.text(`Usuario: ${state.userEmail || "-"}`, 14, 26);
-      pdf.text(`Fecha: ${new Date().toLocaleString()}`, 14, 32);
-      pdf.text(`Mes actual: ${month}`, 14, 38);
+      pdf.text(`Tel: ${COMPANY.phone}`, 14, 25);
+      pdf.text(`Email: ${COMPANY.email}`, 68, 25);
+      pdf.text(`Fecha: ${new Date().toLocaleString()}`, 145, 25);
+
+      pdf.setTextColor(20, 20, 20);
 
       pdf.autoTable({
-        startY: 44,
+        startY: 42,
         head: [["Indicador", "Valor"]],
         body: [
           ["Ventas del mes", $("mSales").textContent],
@@ -2286,38 +2495,37 @@
           ["Gastos del mes", $("mExpenses").textContent],
           ["Ganancia neta del mes", $("mProfit").textContent],
           ["Por cobrar general", $("allReceivable").textContent],
-          ["Vencen hoy", $("dueTodayCount").textContent],
+          ["Entregas hoy", $("dueTodayCount").textContent],
           ["Vencen en 7 días", $("due7Count").textContent],
           ["Trabajos vencidos", $("allOverdueJobs").textContent]
-        ]
+        ],
+        headStyles: { fillColor: [20,22,27] }
       });
 
       const jobRows = state.jobs
         .slice()
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
-        .slice(0, 20)
+        .slice(0, 18)
         .map(job => {
           const client = getClientById(job.clientId);
           const calc = computeJob(job);
           return [
             clientLabel(client),
             job.title || "-",
-            job.date || "-",
             job.dueDate || "-",
             job.priority || "Media",
             money(calc.sale),
-            money(calc.paid),
             money(calc.balance),
-            checklistProgress(job),
             job.status || "-"
           ];
         });
 
       pdf.autoTable({
         startY: pdf.lastAutoTable.finalY + 10,
-        head: [["Cliente", "Trabajo", "Fecha", "Entrega", "Prioridad", "Venta", "Pagado", "Saldo", "Checklist", "Estado"]],
-        body: jobRows.length ? jobRows : [["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]],
-        styles: { fontSize: 8 }
+        head: [["Cliente", "Trabajo", "Entrega", "Prioridad", "Venta", "Saldo", "Estado"]],
+        body: jobRows.length ? jobRows : [["-", "-", "-", "-", "-", "-", "-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 9 }
       });
 
       pdf.save(`Reporte_General_NJ_${today()}.pdf`);
@@ -2333,18 +2541,25 @@
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
 
+      pdf.setFillColor(15, 18, 24);
+      pdf.rect(0, 0, 210, 34, "F");
+
+      pdf.setTextColor(184, 255, 0);
       pdf.setFontSize(20);
       pdf.text(COMPANY.name, 14, 18);
-      pdf.setFontSize(10);
-      pdf.text(`Tel: ${COMPANY.phone}`, 14, 26);
-      pdf.text(`Email: ${COMPANY.email}`, 14, 31);
-      pdf.text(`Fecha de emisión: ${today()}`, 14, 36);
 
+      pdf.setTextColor(240, 240, 240);
+      pdf.setFontSize(10);
+      pdf.text(`Tel: ${COMPANY.phone}`, 14, 25);
+      pdf.text(`Email: ${COMPANY.email}`, 70, 25);
+      pdf.text(`Fecha: ${today()}`, 160, 25);
+
+      pdf.setTextColor(20, 20, 20);
       pdf.setFontSize(15);
-      pdf.text("Cotización / Orden de trabajo", 14, 46);
+      pdf.text("Cotización / Orden de trabajo", 14, 44);
 
       pdf.autoTable({
-        startY: 52,
+        startY: 50,
         head: [["Campo", "Detalle"]],
         body: [
           ["Cliente", clientLabel(client)],
@@ -2358,6 +2573,7 @@
           ["Estado", job.status || "Cotización"],
           ["Checklist", checklistProgress(job)]
         ],
+        headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
 
@@ -2372,6 +2588,7 @@
         startY: pdf.lastAutoTable.finalY + 10,
         head: [["Material", "Cantidad", "Precio", "Total"]],
         body: materialRows.length ? materialRows : [["-", "-", "-", "-"]],
+        headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
 
@@ -2383,13 +2600,14 @@
           ["Pagado", money(calc.paid)],
           ["Saldo pendiente", money(calc.balance)]
         ],
+        headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 10 }
       });
 
       const finalY = pdf.lastAutoTable.finalY + 12;
       pdf.setFontSize(10);
       pdf.text("Términos básicos:", 14, finalY);
-      pdf.text("1. Esta cotización puede cambiar si el alcance, medidas o materiales cambian.", 14, finalY + 6);
+      pdf.text("1. Esta cotización puede cambiar si cambian medidas, materiales o alcance.", 14, finalY + 6);
       pdf.text("2. Producción e instalación avanzan según aprobación y pagos acordados.", 14, finalY + 12);
       pdf.text("3. Gracias por confiar en NJ Design & Print.", 14, finalY + 18);
 
@@ -2575,6 +2793,9 @@
       openModal("paymentModal");
     });
 
+    $("btnTableView").addEventListener("click", () => setJobsViewMode("table"));
+    $("btnKanbanView").addEventListener("click", () => setJobsViewMode("kanban"));
+
     $("clientSearch").addEventListener("input", renderClients);
 
     ["jobSearch","jobStatusFilter","jobPriorityFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
@@ -2586,8 +2807,6 @@
       $(id).addEventListener("input", renderExpenses);
       $(id).addEventListener("change", renderExpenses);
     });
-
-    $("dashboardStatusFilter").addEventListener("change", renderDashboardJobs);
 
     $("btnClearJobFilters").addEventListener("click", () => {
       ["jobSearch","jobStatusFilter","jobPriorityFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
@@ -2614,7 +2833,9 @@
     document.addEventListener("click", (event) => {
       const target = event.target;
 
-      if (target.dataset.waClient) openWhatsappForClient(target.dataset.waClient);
+      if (target.dataset.waClient) {
+        openWhatsappForClient(target.dataset.waClient, target.dataset.waMode || "general", target.dataset.waJob || null);
+      }
 
       if (target.dataset.editClient) editClient(target.dataset.editClient);
       if (target.dataset.deleteClient) removeItem("clients", target.dataset.deleteClient, "cliente");
@@ -2636,6 +2857,7 @@
     resetJobForm();
     resetExpenseForm();
     resetRecurringForm();
+    setJobsViewMode("table");
     renderDeliveryCalendar();
   </script>
 </body>
