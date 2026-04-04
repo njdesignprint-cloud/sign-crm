@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 5</title>
+  <title>NJ Design & Print CRM - Fase 6</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -366,6 +366,27 @@
       margin-top:10px;
     }
 
+    .price-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .price-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .price-mode-note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+      line-height:1.45;
+    }
+
     .list-payments,
     .list-logs{
       display:grid;
@@ -588,7 +609,7 @@
     }
 
     @media (max-width:1100px){
-      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid,.price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
       .calendar-grid{grid-template-columns:repeat(7,minmax(110px,1fr));overflow:auto}
     }
@@ -609,7 +630,7 @@
       .nav button{text-align:center;padding:10px 8px;font-size:12px}
       .sidebar-foot{display:none}
       .content{padding:18px 18px 92px}
-      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid{grid-template-columns:1fr}
+      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid,.price-grid{grid-template-columns:1fr}
       .filters .input,.filters .select{max-width:none}
       .calendar-grid{display:block}
       .calendar-day-head{display:none}
@@ -621,7 +642,7 @@
   <section id="authScreen" class="auth-wrap">
     <div class="auth-card">
       <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub">CRM privado fase 5 con historial, bitácora, cotización avanzada y clientes frecuentes.</div>
+      <div class="auth-sub">CRM privado fase 6 con rentabilidad, precio final al cliente y costos completos.</div>
 
       <div class="stack">
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
@@ -645,7 +666,7 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 5: historial, bitácora, cotización avanzada y clientes frecuentes.</div>
+        <div class="brand-sub">Fase 6: rentabilidad, precio final al cliente y costos completos.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -1025,7 +1046,7 @@
             <option>Alta</option>
           </select>
 
-          <input id="jobSale" type="number" min="0" step="0.01" class="input readonly" placeholder="Total de venta" readonly />
+          <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio final al cliente" />
         </div>
 
         <textarea id="jobDescription" class="textarea mt-12" placeholder="Descripción del trabajo / cotización"></textarea>
@@ -1066,6 +1087,33 @@
         </div>
 
         <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Precio final y rentabilidad</strong>
+            <button id="applySuggestedSaleBtn" class="btn btn-secondary btn-small" type="button">Usar precio sugerido</button>
+          </div>
+
+          <div class="price-grid">
+            <select id="jobPriceMode" class="select">
+              <option value="manual">Precio manual</option>
+              <option value="quote">Usar total de cotización</option>
+            </select>
+            <input id="jobLaborCost" type="number" min="0" step="0.01" class="input" placeholder="Mano de obra" />
+            <input id="jobExtraCost" type="number" min="0" step="0.01" class="input" placeholder="Gastos extra / overhead" />
+            <input id="jobDesiredMargin" type="number" min="0" step="0.01" class="input" placeholder="Utilidad deseada %" />
+
+            <input id="jobMaterialsTotal" type="text" class="input readonly" placeholder="Materiales" readonly />
+            <input id="jobTotalCost" type="text" class="input readonly" placeholder="Costo total" readonly />
+            <input id="jobSuggestedSale" type="text" class="input readonly" placeholder="Precio sugerido" readonly />
+            <input id="jobProfitMargin" type="text" class="input readonly" placeholder="Margen real" readonly />
+          </div>
+
+          <div class="price-mode-note">
+            En <strong>Precio manual</strong> tú escribes el precio final del cliente en el campo de arriba.
+            En <strong>Usar total de cotización</strong>, el sistema pone automáticamente el total calculado en la cotización como precio final.
+          </div>
+        </div>
+
+        <div class="box">
           <strong>Checklist de producción</strong>
           <div class="checklist-grid">
             <label class="check-item"><input type="checkbox" id="ckDesignApproved"> Diseño aprobado</label>
@@ -1102,8 +1150,12 @@
         </div>
 
         <div class="summary-box">
+          <div><span>Materiales</span><strong id="sumMaterials">$0.00</strong></div>
+          <div><span>Mano de obra</span><strong id="sumLabor">$0.00</strong></div>
+          <div><span>Gastos extra</span><strong id="sumExtras">$0.00</strong></div>
           <div><span>Costo interno</span><strong id="sumCost">$0.00</strong></div>
           <div><span>Ganancia</span><strong id="sumProfit">$0.00</strong></div>
+          <div><span>Margen</span><strong id="sumMargin">0.00%</strong></div>
           <div><span>Pagado</span><strong id="sumPaid">$0.00</strong></div>
           <div><span>Saldo</span><strong id="sumBalance">$0.00</strong></div>
         </div>
@@ -1510,11 +1562,27 @@
 
     function computeJob(job) {
       const sale = Number(job.sale || 0);
-      const cost = getMaterialsCost(job.materials || []);
+      const materialsCost = getMaterialsCost(job.materials || []);
+      const pricing = getJobPricing(job);
+      const pricingCalc = computePricing(materialsCost, pricing, sale);
+      const cost = pricingCalc.totalCost;
       const paid = getPaymentsTotal(job);
       const profit = sale - cost;
       const balance = Math.max(sale - paid, 0);
-      return { sale, cost, paid, profit, balance };
+      const margin = sale > 0 ? (profit / sale) * 100 : 0;
+      return {
+        sale,
+        materialsCost,
+        laborCost: pricingCalc.laborCost,
+        extraCost: pricingCalc.extraCost,
+        desiredMargin: pricingCalc.desiredMargin,
+        suggestedSale: pricingCalc.suggestedSale,
+        cost,
+        paid,
+        profit,
+        balance,
+        margin
+      };
     }
 
     function cleanPhoneForWhatsapp(phone) {
@@ -1649,6 +1717,54 @@
       };
     }
 
+    function getJobPricing(job = {}) {
+      return {
+        priceMode: job?.pricing?.priceMode || "manual",
+        laborCost: Number(job?.pricing?.laborCost || 0),
+        extraCost: Number(job?.pricing?.extraCost || 0),
+        desiredMargin: Number(job?.pricing?.desiredMargin || 0)
+      };
+    }
+
+    function getCurrentPricingForm() {
+      return {
+        priceMode: $("jobPriceMode").value || "manual",
+        laborCost: Number($("jobLaborCost").value || 0),
+        extraCost: Number($("jobExtraCost").value || 0),
+        desiredMargin: Number($("jobDesiredMargin").value || 0)
+      };
+    }
+
+    function computePricing(materialsCost = 0, pricing = {}, sale = 0) {
+      const laborCost = Number(pricing.laborCost || 0);
+      const extraCost = Number(pricing.extraCost || 0);
+      const desiredMargin = Number(pricing.desiredMargin || 0);
+      const totalCost = Number(materialsCost || 0) + laborCost + extraCost;
+      const suggestedSale = totalCost + (totalCost * desiredMargin / 100);
+      const realProfit = Number(sale || 0) - totalCost;
+      const realMargin = Number(sale || 0) > 0 ? (realProfit / Number(sale || 0)) * 100 : 0;
+
+      return {
+        materialsCost,
+        laborCost,
+        extraCost,
+        desiredMargin,
+        totalCost,
+        suggestedSale,
+        realProfit,
+        realMargin
+      };
+    }
+
+    function applySuggestedSale() {
+      const materialsCost = getMaterialsCost(getCurrentFormMaterials());
+      const pricing = getCurrentPricingForm();
+      const calc = computePricing(materialsCost, pricing, 0);
+      $("jobSale").value = calc.suggestedSale.toFixed(2);
+      $("jobPriceMode").value = "manual";
+      renderJobPreview();
+    }
+
     function getFormChecklist() {
       const result = {};
       CHECK_KEYS.forEach(item => {
@@ -1731,9 +1847,11 @@
       $("quoteTotal").textContent = money(calc.total);
 
       const hasQuoteData = quote.items.some(i => i.description || i.qty || i.price) || quote.discountValue || quote.taxPercent;
-      if (hasQuoteData) {
+      const priceMode = $("jobPriceMode").value || "manual";
+
+      if (priceMode === "quote" && hasQuoteData) {
         $("jobSale").value = calc.total.toFixed(2);
-      } else if (!$("jobSale").value) {
+      } else if (!hasQuoteData && !$("jobSale").value) {
         $("jobSale").value = "0.00";
       }
     }
@@ -1742,14 +1860,24 @@
       renderQuotePreview();
 
       const sale = Number($("jobSale").value || 0);
-      const cost = getMaterialsCost(getCurrentFormMaterials());
+      const materialsCost = getMaterialsCost(getCurrentFormMaterials());
+      const pricing = getCurrentPricingForm();
+      const pricingCalc = computePricing(materialsCost, pricing, sale);
       const payments = getCurrentJobPaymentsPreviewData();
       const paid = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-      const profit = sale - cost;
       const balance = Math.max(sale - paid, 0);
 
-      $("sumCost").textContent = money(cost);
-      $("sumProfit").textContent = money(profit);
+      $("jobMaterialsTotal").value = money(pricingCalc.materialsCost);
+      $("jobTotalCost").value = money(pricingCalc.totalCost);
+      $("jobSuggestedSale").value = money(pricingCalc.suggestedSale);
+      $("jobProfitMargin").value = pricingCalc.realMargin.toFixed(2) + "%";
+
+      $("sumMaterials").textContent = money(pricingCalc.materialsCost);
+      $("sumLabor").textContent = money(pricingCalc.laborCost);
+      $("sumExtras").textContent = money(pricingCalc.extraCost);
+      $("sumCost").textContent = money(pricingCalc.totalCost);
+      $("sumProfit").textContent = money(pricingCalc.realProfit);
+      $("sumMargin").textContent = pricingCalc.realMargin.toFixed(2) + "%";
       $("sumPaid").textContent = money(paid);
       $("sumBalance").textContent = money(balance);
 
@@ -1772,7 +1900,15 @@
       $("jobDate").value = today();
       $("jobDueDate").value = "";
       $("jobPriority").value = "Media";
+      $("jobPriceMode").value = "manual";
+      $("jobLaborCost").value = "";
+      $("jobExtraCost").value = "";
+      $("jobDesiredMargin").value = "";
       $("jobSale").value = "0.00";
+      $("jobMaterialsTotal").value = money(0);
+      $("jobTotalCost").value = money(0);
+      $("jobSuggestedSale").value = money(0);
+      $("jobProfitMargin").value = "0.00%";
       $("jobDescription").value = "";
       $("jobNotes").value = "";
       $("jobNewInternalNote").value = "";
@@ -1887,8 +2023,12 @@
     async function saveJob() {
       const quote = getCurrentQuoteForm();
       const quoteCalc = computeQuote(quote);
+      const pricing = getCurrentPricingForm();
       const logsBase = state.editingJobId ? getJobActivityLog(getJobById(state.editingJobId) || {}) : [];
       const notesBase = state.editingJobId ? getJobInternalNotes(getJobById(state.editingJobId) || {}) : [];
+
+      const saleValue = Number($("jobSale").value || 0);
+      const fallbackSale = pricing.priceMode === "quote" ? quoteCalc.total : saleValue;
 
       const payload = {
         clientId: cleanText($("jobClientId").value),
@@ -1897,11 +2037,12 @@
         date: cleanText($("jobDate").value) || today(),
         dueDate: cleanText($("jobDueDate").value),
         priority: cleanText($("jobPriority").value) || "Media",
-        sale: Number($("jobSale").value || quoteCalc.total || 0),
+        sale: Number(fallbackSale || 0),
         description: cleanText($("jobDescription").value),
         notes: cleanText($("jobNotes").value),
         materials: getCurrentFormMaterials(),
         quote,
+        pricing,
         checklist: getFormChecklist(),
         internalNotesLog: notesBase,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2248,6 +2389,11 @@
       $("jobDueDate").value = item.dueDate || "";
       $("jobPriority").value = item.priority || "Media";
       $("jobSale").value = Number(item.sale || 0).toFixed(2);
+      const pricing = getJobPricing(item);
+      $("jobPriceMode").value = pricing.priceMode || "manual";
+      $("jobLaborCost").value = pricing.laborCost || "";
+      $("jobExtraCost").value = pricing.extraCost || "";
+      $("jobDesiredMargin").value = pricing.desiredMargin || "";
       $("jobDescription").value = item.description || "";
       $("jobNotes").value = item.notes || "";
       $("jobNewInternalNote").value = "";
@@ -2803,7 +2949,7 @@
         styles: { fontSize: 9 }
       });
 
-      pdf.save(`Reporte_General_NJ_${today()}.pdf`);
+      pdf.save(`Reporte_General_NJ_F6_${today()}.pdf`);
       showToast("PDF general exportado.");
     }
 
@@ -2877,6 +3023,13 @@
           ["Descuento", money(q.discountAmount)],
           ["Impuesto", money(q.taxAmount)],
           ["Total cotización", money(q.total)],
+          ["Materiales", money(calc.materialsCost)],
+          ["Mano de obra", money(calc.laborCost)],
+          ["Gastos extra", money(calc.extraCost)],
+          ["Costo interno total", money(calc.cost)],
+          ["Precio final cliente", money(calc.sale)],
+          ["Ganancia", money(calc.profit)],
+          ["Margen", `${calc.margin.toFixed(2)}%`],
           ["Pagado", money(calc.paid)],
           ["Saldo pendiente", money(calc.balance)]
         ],
@@ -2891,7 +3044,7 @@
       pdf.text("2. Producción e instalación avanzan según aprobación y pagos acordados.", 14, finalY + 12);
       pdf.text("3. Gracias por confiar en NJ Design & Print.", 14, finalY + 18);
 
-      pdf.save(`Cotizacion_${(job.title || "trabajo").replace(/\s+/g, "_")}_${today()}.pdf`);
+      pdf.save(`Cotizacion_F6_${(job.title || "trabajo").replace(/\s+/g, "_")}_${today()}.pdf`);
       showToast("Cotización PDF generada.");
     }
 
@@ -3072,6 +3225,11 @@
     });
 
     $("jobSale").addEventListener("input", renderJobPreview);
+    $("jobPriceMode").addEventListener("change", renderJobPreview);
+    $("jobLaborCost").addEventListener("input", renderJobPreview);
+    $("jobExtraCost").addEventListener("input", renderJobPreview);
+    $("jobDesiredMargin").addEventListener("input", renderJobPreview);
+    $("applySuggestedSaleBtn").addEventListener("click", applySuggestedSale);
     $("quoteDiscountType").addEventListener("change", renderJobPreview);
     $("quoteDiscountValue").addEventListener("input", renderJobPreview);
     $("quoteTaxPercent").addEventListener("input", renderJobPreview);
