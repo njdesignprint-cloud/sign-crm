@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
   <style>
     :root{
@@ -1366,6 +1367,17 @@
           <div id="jobActivityLogList" class="list-logs"></div>
         </div>
 
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Diseños / fotos del trabajo</strong>
+            <button id="uploadDesignBtn" class="btn btn-info btn-small" type="button">Subir foto</button>
+          </div>
+          <div class="section-note mt-12">
+            Aquí puedes guardar diseños, referencias o fotos del trabajo para verlas luego desde cualquier dispositivo.
+          </div>
+          <div id="designImagesGallery" class="list-logs"></div>
+        </div>
+
         <div class="summary-box">
           <div><span>Materiales</span><strong id="sumMaterials">$0.00</strong></div>
           <div><span>Mano de obra</span><strong id="sumLabor">$0.00</strong></div>
@@ -1580,6 +1592,12 @@
       name: "NJ Design & Print",
       phone: "346-213-5545",
       email: "njdesignprint@gmail.com"
+    };
+
+    const CLOUDINARY_CONFIG = {
+      cloudName: "dcsavsm4e",
+      uploadPreset: "njdesignprintcrm",
+      folder: "njdesignprint/disenos"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -1884,6 +1902,10 @@
 
     function getJobActivityLog(job = {}) {
       return Array.isArray(job.activityLog) ? [...job.activityLog] : [];
+    }
+
+    function getJobDesignImages(job = {}) {
+      return Array.isArray(job.designImages) ? [...job.designImages] : [];
     }
 
     function getQuote(job = {}) {
@@ -2406,6 +2428,131 @@
         : `<div class="section-note">Todavía no hay historial de cambios.</div>`;
     }
 
+
+    function renderJobDesignImages() {
+      const box = $("designImagesGallery");
+      if (!box) return;
+
+      if (!state.editingJobId) {
+        box.innerHTML = `<div class="section-note">Guarda primero el trabajo para poder subir fotos.</div>`;
+        return;
+      }
+
+      const job = getJobById(state.editingJobId);
+      const images = getJobDesignImages(job);
+
+      if (!images.length) {
+        box.innerHTML = `<div class="section-note">Todavía no hay fotos subidas para este trabajo.</div>`;
+        return;
+      }
+
+      box.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px;">
+          ${images.map((img, index) => `
+            <div class="log-item" style="padding:10px;">
+              <a href="${img.url}" target="_blank" rel="noopener noreferrer">
+                <img src="${img.url}" alt="${safe(img.fileName || "Diseño")}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.08);">
+              </a>
+              <div style="margin-top:8px;font-size:12px;color:var(--muted);word-break:break-word;">
+                ${safe(img.fileName || "Imagen")}
+              </div>
+              <div class="section-note" style="margin-top:6px;">${safe(img.uploadedAt || "")}</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                <a href="${img.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small">Ver</a>
+                <button type="button" class="btn btn-danger btn-small" onclick="deleteDesignImage(${index})">Eliminar</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function deleteDesignImage(index) {
+      if (!state.editingJobId) return showToast("No hay trabajo abierto.");
+
+      const job = getJobById(state.editingJobId);
+      if (!job) return showToast("No se encontró el trabajo.");
+
+      const images = getJobDesignImages(job);
+      if (index < 0 || index >= images.length) return;
+
+      if (!confirm("¿Eliminar esta foto del trabajo?")) return;
+
+      images.splice(index, 1);
+
+      try {
+        await jobsRef().doc(state.editingJobId).update({
+          designImages: images,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Foto eliminada.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo eliminar la foto.");
+      }
+    }
+
+    function openDesignUploadWidget() {
+      if (!state.editingJobId) {
+        showToast("Primero guarda el trabajo para poder subir fotos.");
+        return;
+      }
+
+      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) {
+        showToast("Cloudinary no cargó correctamente.");
+        return;
+      }
+
+      const widget = cloudinary.createUploadWidget(
+        {
+          cloudName: CLOUDINARY_CONFIG.cloudName,
+          uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+          multiple: true,
+          maxFiles: 10,
+          resourceType: "image",
+          folder: CLOUDINARY_CONFIG.folder,
+          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+          sources: ["local", "camera"],
+          showAdvancedOptions: false,
+          cropping: false
+        },
+        async (error, result) => {
+          if (error) {
+            console.error(error);
+            showToast("Error subiendo la imagen.");
+            return;
+          }
+
+          if (result && result.event === "success") {
+            try {
+              const job = getJobById(state.editingJobId);
+              if (!job) return;
+
+              const images = getJobDesignImages(job);
+              images.push({
+                url: result.info.secure_url,
+                publicId: result.info.public_id,
+                fileName: result.info.original_filename || "imagen",
+                uploadedAt: new Date().toISOString()
+              });
+
+              await jobsRef().doc(state.editingJobId).update({
+                designImages: images,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+              showToast("Foto subida correctamente.");
+            } catch (err) {
+              console.error(err);
+              showToast("La imagen subió, pero no se pudo guardar en el trabajo.");
+            }
+          }
+        }
+      );
+
+      widget.open();
+    }
+
     function getCurrentJobPaymentsPreviewData() {
       if (!state.editingJobId) return [];
       const job = getJobById(state.editingJobId);
@@ -2477,6 +2624,7 @@
 
       renderJobPaymentsPreview();
       renderInternalNotesAndActivity();
+      renderJobDesignImages();
     }
 
     function resetClientForm() {
@@ -2704,12 +2852,14 @@
         if (state.editingJobId) {
           const existing = getJobById(state.editingJobId) || {};
           payload.payments = existing.payments || [];
+          payload.designImages = existing.designImages || [];
           payload.activityLog = [...logsBase, newLogEntry("edición", "Trabajo actualizado.")];
           if (existing.paid) payload.paid = existing.paid;
           await jobsRef().doc(state.editingJobId).update(payload);
           showToast("Trabajo actualizado.");
         } else {
           payload.payments = [];
+          payload.designImages = [];
           payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           await jobsRef().add(payload);
@@ -3201,6 +3351,7 @@
 
       setChecklistForm(getChecklist(item));
       renderJobPreview();
+      renderJobDesignImages();
       openModal("jobModal");
     }
 
