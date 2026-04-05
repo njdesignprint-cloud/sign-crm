@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 9</title>
+  <title>NJ Design & Print CRM - Fase 7</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -316,12 +316,6 @@
     .pr-baja{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
     .pr-media{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
     .pr-alta{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
-    .stock-ok{background:rgba(34,197,94,.12);color:#bbf7d0;border-color:rgba(34,197,94,.25)}
-    .stock-low{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
-    .stock-out{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
-    .mv-entry{background:rgba(34,197,94,.12);color:#bbf7d0;border-color:rgba(34,197,94,.25)}
-    .mv-output{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
-    .mv-adjust{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
 
     .overdue{color:#fecaca;font-weight:800}
     .actions-row{display:flex;gap:8px;flex-wrap:wrap}
@@ -367,38 +361,10 @@
     .row-material,
     .row-quote-item{
       display:grid;
+      grid-template-columns:2fr 1fr 1fr auto;
       gap:10px;
       margin-top:10px;
     }
-
-    .row-material{
-      grid-template-columns:1.45fr 1.5fr .75fr .85fr auto;
-      align-items:start;
-    }
-
-    .row-quote-item{
-      grid-template-columns:2fr 1fr 1fr auto;
-    }
-
-    .material-stock-note{
-      grid-column:1 / -2;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.45;
-      margin-top:-2px;
-      padding-left:2px;
-    }
-
-    .job-inventory-note{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-      margin-top:10px;
-    }
-
-    .inv-applied{background:rgba(34,197,94,.12);color:#bbf7d0;border-color:rgba(34,197,94,.25)}
-    .inv-pending{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
-    .inv-none{background:rgba(255,255,255,.06);color:#cbd5e1;border-color:rgba(255,255,255,.12)}
 
     .price-grid{
       display:grid;
@@ -736,14 +702,13 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 8: estimador rápido, rentabilidad completa e inventario profesional minimalista.</div>
+        <div class="brand-sub">Fase 7: estimador rápido por tipo de trabajo, rentabilidad completa y precios sugeridos.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
           <button data-view="clientes">👥 Clientes</button>
           <button data-view="trabajos">🛠️ Trabajos</button>
           <button data-view="gastos">💸 Gastos</button>
-          <button data-view="inventario">📦 Inventario</button>
         </div>
 
         <div class="sidebar-foot">
@@ -986,7 +951,6 @@
                       <th>Pagado</th>
                       <th>Saldo</th>
                       <th>Checklist</th>
-                      <th>Inventario</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -1074,108 +1038,6 @@
             <div id="recurringEmpty" class="empty hidden">No hay gastos recurrentes creados.</div>
           </div>
         </section>
-        <section id="view-inventario" class="view hidden">
-          <div class="stats">
-            <div class="stat"><div class="label">Items</div><div id="invTotalItems" class="value">0</div></div>
-            <div class="stat"><div class="label">Valor inventario</div><div id="invTotalValue" class="value brand-text">$0.00</div></div>
-            <div class="stat"><div class="label">Stock bajo</div><div id="invLowCount" class="value warn-text">0</div></div>
-            <div class="stat"><div class="label">Sin stock</div><div id="invOutCount" class="value danger-text">0</div></div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <h2>Inventario</h2>
-                <div class="section-note">Control de materiales con stock conectado automáticamente a los trabajos.</div>
-              </div>
-              <div class="filters">
-                <button id="btnNewMovement" class="btn btn-info btn-small">+ Movimiento</button>
-              </div>
-            </div>
-
-            <div style="padding:16px 18px 0;">
-              <div class="grid-4">
-                <input id="inventorySearch" class="input" placeholder="Buscar por nombre, SKU, categoría o proveedor" />
-                <select id="inventoryCategoryFilter" class="select">
-                  <option value="">Todas las categorías</option>
-                  <option>Vinil</option>
-                  <option>Banner</option>
-                  <option>Acrílico</option>
-                  <option>ACM</option>
-                  <option>Policarbonato</option>
-                  <option>Tint</option>
-                  <option>LED</option>
-                  <option>Perfilería</option>
-                  <option>Tornillería</option>
-                  <option>Tinta</option>
-                  <option>Herramientas</option>
-                  <option>Empaque</option>
-                  <option>Otro</option>
-                </select>
-                <select id="inventoryStockFilter" class="select">
-                  <option value="">Todo el stock</option>
-                  <option value="ok">Con stock</option>
-                  <option value="low">Stock bajo</option>
-                  <option value="out">Sin stock</option>
-                </select>
-                <button id="btnClearInventoryFilters" class="btn btn-secondary">Limpiar filtros</button>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>SKU</th>
-                    <th>Material</th>
-                    <th>Categoría</th>
-                    <th>Unidad</th>
-                    <th>Stock</th>
-                    <th>Mínimo</th>
-                    <th>Costo unitario</th>
-                    <th>Valor</th>
-                    <th>Ubicación</th>
-                    <th>Último mov.</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="inventoryBody"></tbody>
-              </table>
-            </div>
-
-            <div id="inventoryEmpty" class="empty hidden">No hay materiales en inventario.</div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <h2>Movimientos recientes</h2>
-                <div class="section-note">Entradas, salidas automáticas y ajustes con historial.</div>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Material</th>
-                    <th>Tipo</th>
-                    <th>Cantidad</th>
-                    <th>Antes</th>
-                    <th>Después</th>
-                    <th>Referencia</th>
-                    <th>Nota</th>
-                  </tr>
-                </thead>
-                <tbody id="inventoryMovementsBody"></tbody>
-              </table>
-            </div>
-
-            <div id="inventoryMovementsEmpty" class="empty hidden">Todavía no hay movimientos registrados.</div>
-          </div>
-        </section>
-
       </main>
     </div>
   </section>
@@ -1246,9 +1108,6 @@
             <button id="addMaterialBtn" class="btn btn-secondary btn-small" type="button">+ Agregar material</button>
           </div>
           <div id="materialsContainer"></div>
-          <div id="jobInventorySyncNote" class="job-inventory-note">
-            Conecta materiales del inventario para que el stock se descuente automáticamente cuando el trabajo pase a producción.
-          </div>
         </div>
 
         <div class="box">
@@ -1500,88 +1359,6 @@
     </div>
   </div>
 
-  
-  <div class="modal-backdrop" id="inventoryModal">
-    <div class="modal">
-      <div class="modal-head">
-        <h3 id="inventoryModalTitle">Nuevo ítem de inventario</h3>
-        <button class="btn btn-secondary btn-small" data-close="inventoryModal">Cerrar</button>
-      </div>
-      <div class="modal-body">
-        <div class="grid-3">
-          <input id="inventoryName" class="input" placeholder="Nombre del material" />
-          <input id="inventorySku" class="input" placeholder="SKU / Código interno" />
-          <select id="inventoryCategory" class="select">
-            <option>Vinil</option>
-            <option>Banner</option>
-            <option>Acrílico</option>
-            <option>ACM</option>
-            <option>Policarbonato</option>
-            <option>Tint</option>
-            <option>LED</option>
-            <option>Perfilería</option>
-            <option>Tornillería</option>
-            <option>Tinta</option>
-            <option>Herramientas</option>
-            <option>Empaque</option>
-            <option>Otro</option>
-          </select>
-          <select id="inventoryUnit" class="select">
-            <option>ft</option>
-            <option>ft²</option>
-            <option>in</option>
-            <option>rollo</option>
-            <option>sheet</option>
-            <option>pieza</option>
-            <option>caja</option>
-            <option>kit</option>
-            <option>lb</option>
-            <option>gal</option>
-          </select>
-          <input id="inventoryStock" type="number" min="0" step="0.01" class="input" placeholder="Stock actual" />
-          <input id="inventoryMinStock" type="number" min="0" step="0.01" class="input" placeholder="Stock mínimo" />
-          <input id="inventoryUnitCost" type="number" min="0" step="0.01" class="input" placeholder="Costo unitario" />
-          <input id="inventoryLocation" class="input" placeholder="Ubicación / rack / estante" />
-          <input id="inventorySupplier" class="input" placeholder="Proveedor" />
-        </div>
-        <textarea id="inventoryNotes" class="textarea mt-12" placeholder="Notas del material"></textarea>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-secondary" data-close="inventoryModal">Cancelar</button>
-        <button id="saveInventoryBtn" class="btn btn-primary">Guardar ítem</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="movementModal">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>Nuevo movimiento</h3>
-        <button class="btn btn-secondary btn-small" data-close="movementModal">Cerrar</button>
-      </div>
-      <div class="modal-body">
-        <div class="grid-2">
-          <select id="movementItemId" class="select"></select>
-          <select id="movementType" class="select">
-            <option value="entrada">Entrada</option>
-            <option value="salida">Salida</option>
-            <option value="ajuste">Ajuste</option>
-          </select>
-          <input id="movementQty" type="number" step="0.01" class="input" placeholder="Cantidad" />
-          <input id="movementDate" type="date" class="input" />
-          <input id="movementUnitCost" type="number" min="0" step="0.01" class="input" placeholder="Costo unitario opcional" />
-          <input id="movementReference" class="input" placeholder="Referencia / factura / orden" />
-        </div>
-        <textarea id="movementNote" class="textarea mt-12" placeholder="Nota del movimiento"></textarea>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-secondary" data-close="movementModal">Cancelar</button>
-        <button id="saveMovementBtn" class="btn btn-primary">Guardar movimiento</button>
-      </div>
-    </div>
-  </div>
-
-
   <div id="toast" class="toast"></div>
 
   <script>
@@ -1612,15 +1389,11 @@
       jobs: [],
       expenses: [],
       recurringExpenses: [],
-      inventoryItems: [],
-      inventoryMovements: [],
       editingClientId: null,
       editingJobId: null,
       editingExpenseId: null,
       editingRecurringId: null,
-      editingInventoryId: null,
       workingPaymentJobId: null,
-      workingMovementItemId: null,
       unsubscribers: [],
       calendarDate: new Date(),
       jobsViewMode: "table"
@@ -1641,14 +1414,12 @@
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
-      gastos: ["Gastos", "Control de gastos normales y recurrentes."],
-      inventario: ["Inventario", "Stock conectado automáticamente con los trabajos."]
+      gastos: ["Gastos", "Control de gastos normales y recurrentes."]
     };
 
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
     const KANBAN_STATUSES = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
-    const INVENTORY_SYNC_STATUSES = ["Producción", "Instalación", "Entregado", "Pagado"];
 
     const ESTIMATOR_TEMPLATES = {
       custom: { label: "Personalizado", mode: "custom", wastePercent: 0, materialRate: 0, saleRate: 0, laborBase: 0 },
@@ -1707,7 +1478,6 @@
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
-      if (view === "inventario") btnNew.textContent = "+ Nuevo ítem";
     }
 
     function setJobsViewMode(mode) {
@@ -1728,8 +1498,6 @@
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
     function recurringRef() { return userRef().collection("recurringExpenses"); }
-    function inventoryRef() { return userRef().collection("inventoryItems"); }
-    function inventoryMovementsRef() { return userRef().collection("inventoryMovements"); }
 
     function clearUnsubscribers() {
       state.unsubscribers.forEach(fn => { try { fn(); } catch (_) {} });
@@ -1744,271 +1512,191 @@
     function getClientById(id) { return state.clients.find(c => c.id === id) || null; }
     function getJobById(id) { return state.jobs.find(j => j.id === id) || null; }
 
-    function getInventoryItemById(id) { return state.inventoryItems.find(item => item.id === id) || null; }
-
-    function getInventoryStockStatus(item = {}) {
-      const stock = Number(item.stock || 0);
-      const min = Number(item.minStock || 0);
-      if (stock <= 0) return "out";
-      if (min > 0 && stock <= min) return "low";
-      return "ok";
-    }
-
-    function stockStatusClass(status) {
-      return { ok: "stock-ok", low: "stock-low", out: "stock-out" }[status] || "stock-ok";
-    }
-
-    function stockStatusLabel(status) {
-      return { ok: "En stock", low: "Stock bajo", out: "Sin stock" }[status] || "En stock";
-    }
-
-    function stockPill(item = {}) {
-      const status = getInventoryStockStatus(item);
-      return `<span class="pill ${stockStatusClass(status)}">${stockStatusLabel(status)}</span>`;
-    }
-
-    function movementTypeClass(type) {
-      return { entrada: "mv-entry", salida: "mv-output", ajuste: "mv-adjust" }[type] || "mv-adjust";
-    }
-
-    function movementTypeLabel(type) {
-      return { entrada: "Entrada", salida: "Salida", ajuste: "Ajuste" }[type] || "Ajuste";
-    }
-
-    function movementPill(type) {
-      return `<span class="pill ${movementTypeClass(type)}">${movementTypeLabel(type)}</span>`;
-    }
-
-    function inventoryValue(item = {}) {
-      return Number(item.stock || 0) * Number(item.unitCost || 0);
-    }
-
-    function shouldSyncInventoryForStatus(status = "") {
-      return INVENTORY_SYNC_STATUSES.includes(status);
-    }
-
-    function roundQty(value) {
-      return Math.round(Number(value || 0) * 10000) / 10000;
-    }
-
-    function formatQty(value) {
-      return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
-    }
-
-    function inventoryOptionsHtml(selectedId = "") {
-      const options = state.inventoryItems
-        .slice()
-        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
-        .map(item => `<option value="${item.id}" ${item.id === selectedId ? "selected" : ""}>${safe(item.name || "Material")} · ${formatQty(item.stock || 0)} ${safe(item.unit || "")}</option>`)
-        .join("");
-
-      return `<option value="">Manual / no conectado</option>${options}`;
-    }
-
-    function getJobInventorySync(job = {}) {
-      const sync = job?.inventorySync || {};
+    function statusClass(status) {
       return {
-        synced: !!sync.synced,
-        pending: !!sync.pending,
-        linkedCount: Number(sync.linkedCount || 0),
-        consumedMap: sync.consumedMap || {},
-        lastStatus: sync.lastStatus || "",
-        lastSyncedAt: sync.lastSyncedAt || "",
-        lastNote: sync.lastNote || ""
-      };
+        "Cotización": "st-cotizacion",
+        "Aprobado": "st-aprobado",
+        "Diseño": "st-diseno",
+        "Producción": "st-produccion",
+        "Instalación": "st-instalacion",
+        "Entregado": "st-entregado",
+        "Pagado": "st-pagado",
+        "Cancelado": "st-cancelado"
+      }[status] || "st-cotizacion";
     }
 
-    function buildInventoryUsageMap(materials = []) {
-      const map = {};
-      materials.forEach(item => {
-        const itemId = cleanText(item.inventoryItemId);
-        const qty = roundQty(item.qty || 0);
-        if (!itemId || qty <= 0) return;
-        map[itemId] = roundQty((map[itemId] || 0) + qty);
-      });
-      return map;
-    }
-
-    function diffInventoryMaps(desiredMap = {}, currentMap = {}) {
-      const delta = {};
-      const keys = new Set([...Object.keys(desiredMap || {}), ...Object.keys(currentMap || {})]);
-      keys.forEach(key => {
-        const value = roundQty((desiredMap[key] || 0) - (currentMap[key] || 0));
-        if (Math.abs(value) > 0.00001) delta[key] = value;
-      });
-      return delta;
-    }
-
-    function buildPendingInventorySync(materials = [], status = "", existingJob = null) {
-      const linkedMap = buildInventoryUsageMap(materials);
-      const linkedCount = Object.keys(linkedMap).length;
-      const previous = getJobInventorySync(existingJob || {});
-
-      if (previous.synced) {
-        return {
-          synced: true,
-          pending: false,
-          linkedCount,
-          consumedMap: previous.consumedMap || {},
-          lastStatus: previous.lastStatus || status || "",
-          lastSyncedAt: previous.lastSyncedAt || "",
-          lastNote: previous.lastNote || "Inventario ya sincronizado automáticamente."
-        };
-      }
-
+    function priorityClass(priority) {
       return {
-        synced: false,
-        pending: linkedCount > 0 && !shouldSyncInventoryForStatus(status),
-        linkedCount,
-        consumedMap: {},
-        lastStatus: status || "",
-        lastSyncedAt: previous.lastSyncedAt || "",
-        lastNote: linkedCount
-          ? (shouldSyncInventoryForStatus(status)
-              ? "Se sincronizará al guardar este trabajo."
-              : "Pendiente. Se descontará automáticamente al pasar a Producción o más.")
-          : "Sin materiales conectados a inventario."
-      };
+        "Baja": "pr-baja",
+        "Media": "pr-media",
+        "Alta": "pr-alta"
+      }[priority] || "pr-media";
     }
 
-    function getInventorySyncPresentation(job = {}) {
-      const sync = getJobInventorySync(job);
-      const linkedCount = sync.linkedCount || Object.keys(buildInventoryUsageMap(job.materials || [])).length;
+    function statusPill(status) { return `<span class="pill ${statusClass(status)}">${safe(status)}</span>`; }
+    function priorityPill(priority) { return `<span class="pill ${priorityClass(priority)}">${safe(priority || "Media")}</span>`; }
 
-      if (!linkedCount) return { label: "Sin vínculo", cls: "inv-none" };
-      if (sync.synced) return { label: "Aplicado", cls: "inv-applied" };
-      return { label: "Pendiente", cls: "inv-pending" };
+    function nextStatus(status) {
+      const idx = STATUS_FLOW.indexOf(status);
+      if (idx === -1) return "Aprobado";
+      if (status === "Pagado" || status === "Cancelado") return status;
+      return STATUS_FLOW[idx + 1] || status;
     }
 
-    function inventorySyncPill(job = {}) {
-      const meta = getInventorySyncPresentation(job);
-      return `<span class="pill ${meta.cls}">${meta.label}</span>`;
+    function nextStatusLabel(status) {
+      if (status === "Pagado") return "Pagado";
+      if (status === "Cancelado") return "Cancelado";
+      return `→ ${nextStatus(status)}`;
     }
 
-    function renderJobInventoryNote() {
-      const box = $("jobInventorySyncNote");
-      if (!box) return;
-
-      const materials = getCurrentFormMaterials();
-      const linkedCount = Object.keys(buildInventoryUsageMap(materials)).length;
-      const currentStatus = cleanText($("jobStatus")?.value);
-      const existing = state.editingJobId ? getJobById(state.editingJobId) : null;
-      const sync = getJobInventorySync(existing || {});
-
-      if (!linkedCount) {
-        box.innerHTML = `Conecta materiales del inventario con el selector de cada fila. El stock se descontará automáticamente cuando el trabajo pase a <strong>Producción</strong>, <strong>Instalación</strong>, <strong>Entregado</strong> o <strong>Pagado</strong>.`;
-        return;
-      }
-
-      if (sync.synced) {
-        box.innerHTML = `Hay <strong>${linkedCount}</strong> material(es) conectado(s). Este trabajo ya tiene inventario aplicado${sync.lastSyncedAt ? ` desde ${safe(sync.lastSyncedAt)}` : ""}. Si cambias cantidades o materiales y guardas, el sistema ajustará el stock automáticamente.`;
-        return;
-      }
-
-      if (shouldSyncInventoryForStatus(currentStatus)) {
-        box.innerHTML = `Hay <strong>${linkedCount}</strong> material(es) conectado(s). Como el trabajo está en <strong>${safe(currentStatus)}</strong>, al guardar se descontarán automáticamente del inventario.`;
-      } else {
-        box.innerHTML = `Hay <strong>${linkedCount}</strong> material(es) conectado(s). Se descontarán automáticamente cuando el trabajo pase a <strong>Producción</strong> o un estado posterior.`;
-      }
+    function monthKey(dateStr) {
+      return String(dateStr || "").slice(0, 7);
     }
 
-    async function applyInventoryDeltaMap(deltaMap = {}, context = {}) {
-      const entries = Object.entries(deltaMap).filter(([, qty]) => Math.abs(Number(qty || 0)) > 0.00001);
-      if (!entries.length) return 0;
+    function currentMonthKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      return `${y}-${m}`;
+    }
 
-      const docs = await Promise.all(entries.map(([itemId]) => inventoryRef().doc(itemId).get()));
-      const batch = db.batch();
+    function getMonthDate(dayOfMonth) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const day = Math.min(Number(dayOfMonth || 1), lastDay);
+      return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
 
-      entries.forEach(([itemId, delta], index) => {
-        const snap = docs[index];
-        if (!snap.exists) {
-          throw new Error(`No se encontró un material del inventario vinculado al trabajo.`);
-        }
+    function isOverdue(job) {
+      if (!job?.dueDate) return false;
+      if (["Pagado", "Cancelado", "Entregado"].includes(job.status)) return false;
+      return job.dueDate < today();
+    }
 
-        const item = { id: snap.id, ...snap.data() };
-        const currentStock = Number(item.stock || 0);
-        const stockChange = -Number(delta || 0);
-        const newStock = roundQty(currentStock + stockChange);
+    function isBetween(dateValue, from, to) {
+      if (!dateValue) return false;
+      if (from && dateValue < from) return false;
+      if (to && dateValue > to) return false;
+      return true;
+    }
 
-        if (newStock < 0) {
-          throw new Error(`No hay suficiente stock de ${item.name || "material"}. Disponible: ${formatQty(currentStock)} ${item.unit || ""}.`);
-        }
+    function formatDate(value) { return value || "-"; }
 
-        const type = Number(delta || 0) > 0 ? "salida" : "entrada";
-        const signedQty = type === "salida" ? -Math.abs(Number(delta || 0)) : Math.abs(Number(delta || 0));
-        const movementRef = inventoryMovementsRef().doc();
+    function getMaterialsCost(materials = []) {
+      return materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+    }
 
-        batch.set(movementRef, {
-          itemId,
-          itemName: item.name || "",
-          itemSku: item.sku || "",
-          type,
-          qty: roundQty(signedQty),
-          beforeStock: currentStock,
-          afterStock: newStock,
-          date: context.date || today(),
-          reference: context.reference || `Trabajo ${context.jobTitle || ""}`,
-          note: Number(delta || 0) > 0
-            ? `Salida automática por trabajo ${context.jobTitle || ""}`
-            : `Entrada automática por ajuste del trabajo ${context.jobTitle || ""}`,
-          unitCost: Number(item.unitCost || 0),
-          jobId: context.jobId || "",
-          jobTitle: context.jobTitle || "",
-          createdBy: state.userEmail || "usuario",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    function getPaymentsList(job = {}) {
+      const payments = Array.isArray(job.payments) ? [...job.payments] : [];
+      if (!payments.length && Number(job.paid || 0) > 0) {
+        payments.push({
+          id: "legacy-" + (job.id || "job"),
+          date: job.date || "",
+          amount: Number(job.paid || 0),
+          method: "Legacy",
+          note: "Pago migrado desde una versión anterior."
         });
-
-        batch.update(inventoryRef().doc(itemId), {
-          stock: newStock,
-          lastMovementAt: context.date || today(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-
-      await batch.commit();
-      return entries.length;
+      }
+      return payments;
     }
 
-    async function resolveInventorySync(jobId, jobData = {}, existingJob = null) {
-      const desiredMap = buildInventoryUsageMap(jobData.materials || []);
-      const linkedCount = Object.keys(desiredMap).length;
-      const previousSync = getJobInventorySync(existingJob || {});
-      const keepSynced = previousSync.synced || shouldSyncInventoryForStatus(jobData.status);
+    function getPaymentsTotal(job = {}) {
+      return getPaymentsList(job).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    }
 
-      if (!keepSynced) {
-        return {
-          synced: false,
-          pending: linkedCount > 0,
-          linkedCount,
-          consumedMap: {},
-          lastStatus: jobData.status || "",
-          lastSyncedAt: previousSync.lastSyncedAt || "",
-          lastNote: linkedCount
-            ? "Pendiente. Se descontará automáticamente al pasar a Producción o más."
-            : "Sin materiales conectados a inventario."
-        };
+    function getChecklist(job = {}) {
+      return {
+        designApproved: !!job?.checklist?.designApproved,
+        materialOrdered: !!job?.checklist?.materialOrdered,
+        printingDone: !!job?.checklist?.printingDone,
+        cuttingDone: !!job?.checklist?.cuttingDone,
+        laminationDone: !!job?.checklist?.laminationDone,
+        installationScheduled: !!job?.checklist?.installationScheduled,
+        installed: !!job?.checklist?.installed,
+        delivered: !!job?.checklist?.delivered
+      };
+    }
+
+    function checklistProgress(job = {}) {
+      const ck = getChecklist(job);
+      const values = Object.values(ck);
+      const done = values.filter(Boolean).length;
+      return `${done}/${values.length}`;
+    }
+
+    function getJobInternalNotes(job = {}) {
+      return Array.isArray(job.internalNotesLog) ? [...job.internalNotesLog] : [];
+    }
+
+    function getJobActivityLog(job = {}) {
+      return Array.isArray(job.activityLog) ? [...job.activityLog] : [];
+    }
+
+    function getQuote(job = {}) {
+      const q = job.quote || {};
+      return {
+        items: Array.isArray(q.items) ? q.items : [],
+        discountType: q.discountType || "none",
+        discountValue: Number(q.discountValue || 0),
+        taxPercent: Number(q.taxPercent || 0)
+      };
+    }
+
+    function computeQuote(quote = {}) {
+      const items = Array.isArray(quote.items) ? quote.items : [];
+      const subtotal = items.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+      let discountAmount = 0;
+
+      if (quote.discountType === "percent") {
+        discountAmount = subtotal * (Number(quote.discountValue || 0) / 100);
+      } else if (quote.discountType === "fixed") {
+        discountAmount = Number(quote.discountValue || 0);
       }
 
-      const currentMap = previousSync.synced ? (previousSync.consumedMap || {}) : {};
-      const deltaMap = diffInventoryMaps(desiredMap, currentMap);
-      const changed = await applyInventoryDeltaMap(deltaMap, {
-        jobId,
-        jobTitle: jobData.title || "Trabajo",
-        date: jobData.date || today(),
-        reference: `Trabajo ${jobData.title || jobId}`
-      });
+      discountAmount = Math.min(discountAmount, subtotal);
+      const taxable = Math.max(subtotal - discountAmount, 0);
+      const taxAmount = taxable * (Number(quote.taxPercent || 0) / 100);
+      const total = taxable + taxAmount;
 
       return {
-        synced: linkedCount > 0 || Object.keys(currentMap).length > 0,
-        pending: false,
-        linkedCount,
-        consumedMap: desiredMap,
-        lastStatus: jobData.status || previousSync.lastStatus || "",
-        lastSyncedAt: new Date().toISOString(),
-        lastNote: linkedCount
-          ? (changed ? "Inventario sincronizado automáticamente." : "Inventario ya estaba sincronizado.")
-          : "Inventario devuelto automáticamente porque el trabajo ya no tiene materiales conectados."
+        subtotal,
+        discountAmount,
+        taxAmount,
+        total
       };
+    }
+
+    function computeJob(job) {
+      const sale = Number(job.sale || 0);
+      const materialsCost = getMaterialsCost(job.materials || []);
+      const pricing = getJobPricing(job);
+      const pricingCalc = computePricing(materialsCost, pricing, sale);
+      const cost = pricingCalc.totalCost;
+      const paid = getPaymentsTotal(job);
+      const profit = sale - cost;
+      const balance = Math.max(sale - paid, 0);
+      const margin = sale > 0 ? (profit / sale) * 100 : 0;
+      return {
+        sale,
+        materialsCost,
+        laborCost: pricingCalc.laborCost,
+        extraCost: pricingCalc.extraCost,
+        desiredMargin: pricingCalc.desiredMargin,
+        suggestedSale: pricingCalc.suggestedSale,
+        cost,
+        paid,
+        profit,
+        balance,
+        margin
+      };
+    }
+
+    function cleanPhoneForWhatsapp(phone) {
+      let digits = String(phone || "").replace(/[^\d]/g, "");
+      if (digits.startsWith("00")) digits = digits.slice(2);
+      return digits;
     }
 
     function openWhatsappForClient(clientId, mode = "general", jobId = null) {
@@ -2076,88 +1764,51 @@
         .join("");
     }
 
-    function createMaterialRow(item = { inventoryItemId: "", name: "", qty: "", price: "" }) {
+    function createMaterialRow(item = { name: "", qty: "", price: "" }) {
       const row = document.createElement("div");
       row.className = "row-material";
       row.innerHTML = `
-        <select class="select" data-m="inventoryItemId">${inventoryOptionsHtml(item.inventoryItemId || "")}</select>
         <input class="input" data-m="name" placeholder="Material" value="${safe(item.name || "")}">
         <input class="input" data-m="qty" type="number" min="0" step="0.01" placeholder="Cantidad" value="${safe(item.qty || "")}">
-        <input class="input" data-m="price" type="number" min="0" step="0.01" placeholder="Costo unitario" value="${safe(item.price || "")}">
+        <input class="input" data-m="price" type="number" min="0" step="0.01" placeholder="Precio" value="${safe(item.price || "")}">
         <button type="button" class="btn btn-danger btn-small remove-material">✕</button>
-        <div class="material-stock-note" data-material-stock></div>
       `;
-
-      const inventorySelect = row.querySelector('[data-m="inventoryItemId"]');
-      const nameInput = row.querySelector('[data-m="name"]');
-      const priceInput = row.querySelector('[data-m="price"]');
-      const qtyInput = row.querySelector('[data-m="qty"]');
-      const stockNote = row.querySelector('[data-material-stock]');
-
-      function updateFromInventory() {
-        const selectedId = cleanText(inventorySelect.value);
-        const inventoryItem = getInventoryItemById(selectedId);
-
-        if (inventoryItem) {
-          if (!cleanText(nameInput.value) || nameInput.dataset.autoFill === "1") {
-            nameInput.value = inventoryItem.name || "";
-            nameInput.dataset.autoFill = "1";
-          }
-          if ((!Number(priceInput.value) && priceInput.value !== "0") || priceInput.dataset.autoFill === "1") {
-            priceInput.value = Number(inventoryItem.unitCost || 0) ? Number(inventoryItem.unitCost || 0).toFixed(2) : "";
-            priceInput.dataset.autoFill = "1";
-          }
-          stockNote.innerHTML = `Disponible: <strong>${formatQty(inventoryItem.stock || 0)}</strong> ${safe(inventoryItem.unit || "") || ""} · ${stockPill(inventoryItem)}`;
-        } else {
-          stockNote.textContent = "Material manual. No descuenta inventario automáticamente.";
-          nameInput.dataset.autoFill = "0";
-          priceInput.dataset.autoFill = "0";
-        }
-
-        renderJobPreview();
-      }
-
-      inventorySelect.addEventListener("change", updateFromInventory);
-      [nameInput, qtyInput, priceInput].forEach(input => {
-        input.addEventListener("input", () => {
-          if (input === nameInput) input.dataset.autoFill = "0";
-          if (input === priceInput) input.dataset.autoFill = "0";
-          renderJobPreview();
-        });
-      });
-
+      row.querySelectorAll("input").forEach(input => input.addEventListener("input", renderJobPreview));
       row.querySelector(".remove-material").addEventListener("click", () => {
         row.remove();
         if (!$("materialsContainer").children.length) $("materialsContainer").appendChild(createMaterialRow());
         renderJobPreview();
       });
-
-      updateFromInventory();
       return row;
     }
 
-    function refreshMaterialRowsInventoryOptions() {
-      document.querySelectorAll(".row-material").forEach(row => {
-        const select = row.querySelector('[data-m="inventoryItemId"]');
-        if (!select) return;
-        const selectedId = cleanText(select.value);
-        select.innerHTML = inventoryOptionsHtml(selectedId);
-        if (selectedId && !getInventoryItemById(selectedId)) select.value = "";
-        select.dispatchEvent(new Event("change"));
+    function createQuoteItemRow(item = { description: "", qty: "", price: "" }) {
+      const row = document.createElement("div");
+      row.className = "row-quote-item";
+      row.innerHTML = `
+        <input class="input" data-q="description" placeholder="Descripción" value="${safe(item.description || "")}">
+        <input class="input" data-q="qty" type="number" min="0" step="0.01" placeholder="Cantidad" value="${safe(item.qty || "")}">
+        <input class="input" data-q="price" type="number" min="0" step="0.01" placeholder="Precio unitario" value="${safe(item.price || "")}">
+        <button type="button" class="btn btn-danger btn-small remove-quote-item">✕</button>
+      `;
+      row.querySelectorAll("input").forEach(input => input.addEventListener("input", renderJobPreview));
+      row.querySelector(".remove-quote-item").addEventListener("click", () => {
+        row.remove();
+        if (!$("quoteItemsContainer").children.length) $("quoteItemsContainer").appendChild(createQuoteItemRow());
+        renderJobPreview();
       });
+      return row;
     }
 
     function getCurrentFormMaterials() {
       return [...document.querySelectorAll(".row-material")].map(row => ({
-        inventoryItemId: cleanText(row.querySelector('[data-m="inventoryItemId"]').value),
         name: cleanText(row.querySelector('[data-m="name"]').value),
         qty: Number(row.querySelector('[data-m="qty"]').value || 0),
         price: Number(row.querySelector('[data-m="price"]').value || 0)
-      })).filter(item => item.name || item.qty || item.price || item.inventoryItemId);
+      })).filter(item => item.name || item.qty || item.price);
     }
 
     function getCurrentQuoteItems() {
-
       return [...document.querySelectorAll(".row-quote-item")].map(row => ({
         description: cleanText(row.querySelector('[data-q="description"]').value),
         qty: Number(row.querySelector('[data-q="qty"]').value || 0),
@@ -2509,7 +2160,6 @@
 
       renderJobPaymentsPreview();
       renderInternalNotesAndActivity();
-      renderJobInventoryNote();
     }
 
     function resetClientForm() {
@@ -2584,46 +2234,6 @@
       $("recurringDay").value = "1";
       $("recurringNotes").value = "";
       $("recurringActive").checked = true;
-    }
-
-
-    function fillMovementItemSelect(selectedId = "") {
-      const select = $("movementItemId");
-      if (!state.inventoryItems.length) {
-        select.innerHTML = `<option value="">Primero crea un ítem</option>`;
-        return;
-      }
-      select.innerHTML = state.inventoryItems
-        .slice()
-        .sort((a, b) => cleanText(a.name).localeCompare(cleanText(b.name)))
-        .map(item => `<option value="${item.id}" ${item.id === selectedId ? "selected" : ""}>${safe(item.name || "Material")} · ${safe(item.sku || "-")}</option>`)
-        .join("");
-    }
-
-    function resetInventoryForm() {
-      state.editingInventoryId = null;
-      $("inventoryModalTitle").textContent = "Nuevo ítem de inventario";
-      $("inventoryName").value = "";
-      $("inventorySku").value = "";
-      $("inventoryCategory").value = "Vinil";
-      $("inventoryUnit").value = "ft";
-      $("inventoryStock").value = "";
-      $("inventoryMinStock").value = "";
-      $("inventoryUnitCost").value = "";
-      $("inventoryLocation").value = "";
-      $("inventorySupplier").value = "";
-      $("inventoryNotes").value = "";
-    }
-
-    function resetMovementForm(itemId = "") {
-      state.workingMovementItemId = itemId || "";
-      fillMovementItemSelect(itemId || "");
-      $("movementType").value = "entrada";
-      $("movementQty").value = "";
-      $("movementDate").value = today();
-      $("movementUnitCost").value = "";
-      $("movementReference").value = "";
-      $("movementNote").value = "";
     }
 
     function resetPaymentForm(jobId = "") {
@@ -2703,9 +2313,8 @@
       const quote = getCurrentQuoteForm();
       const quoteCalc = computeQuote(quote);
       const pricing = getCurrentPricingForm();
-      const existing = state.editingJobId ? (getJobById(state.editingJobId) || {}) : null;
-      const logsBase = existing ? getJobActivityLog(existing) : [];
-      const notesBase = existing ? getJobInternalNotes(existing) : [];
+      const logsBase = state.editingJobId ? getJobActivityLog(getJobById(state.editingJobId) || {}) : [];
+      const notesBase = state.editingJobId ? getJobInternalNotes(getJobById(state.editingJobId) || {}) : [];
 
       const saleValue = Number($("jobSale").value || 0);
       const fallbackSale = pricing.priceMode === "quote" ? quoteCalc.total : saleValue;
@@ -2735,33 +2344,28 @@
       if (payload.sale < 0) return showToast("La venta no puede ser negativa.");
 
       try {
-        const docRef = existing ? jobsRef().doc(existing.id) : jobsRef().doc();
-        const jobId = docRef.id;
-        const inventorySync = await resolveInventorySync(jobId, payload, existing);
-        payload.inventorySync = inventorySync;
-
-        if (existing) {
+        if (state.editingJobId) {
+          const existing = getJobById(state.editingJobId) || {};
           payload.payments = existing.payments || [];
           payload.activityLog = [...logsBase, newLogEntry("edición", "Trabajo actualizado.")];
           if (existing.paid) payload.paid = existing.paid;
-          await docRef.update(payload);
-          showToast(inventorySync.synced ? "Trabajo actualizado e inventario sincronizado." : "Trabajo actualizado.");
+          await jobsRef().doc(state.editingJobId).update(payload);
+          showToast("Trabajo actualizado.");
         } else {
           payload.payments = [];
           payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await docRef.set(payload);
-          showToast(inventorySync.synced ? "Trabajo guardado e inventario sincronizado." : "Trabajo guardado. Ahora ya puedes agregar pagos y notas.");
+          await jobsRef().add(payload);
+          showToast("Trabajo guardado. Ahora ya puedes agregar pagos y notas.");
         }
         closeModal("jobModal");
       } catch (error) {
         console.error(error);
-        showToast(error.message || "No se pudo guardar el trabajo.");
+        showToast("No se pudo guardar el trabajo.");
       }
     }
 
     async function saveExpense() {
-
       const payload = {
         concept: cleanText($("expenseConcept").value),
         category: cleanText($("expenseCategory").value),
@@ -2819,103 +2423,6 @@
       } catch (error) {
         console.error(error);
         showToast("No se pudo guardar el gasto recurrente.");
-      }
-    }
-
-
-    async function saveInventoryItem() {
-      const payload = {
-        name: cleanText($("inventoryName").value),
-        sku: cleanText($("inventorySku").value),
-        category: cleanText($("inventoryCategory").value) || "Otro",
-        unit: cleanText($("inventoryUnit").value) || "pieza",
-        stock: Number($("inventoryStock").value || 0),
-        minStock: Number($("inventoryMinStock").value || 0),
-        unitCost: Number($("inventoryUnitCost").value || 0),
-        location: cleanText($("inventoryLocation").value),
-        supplier: cleanText($("inventorySupplier").value),
-        notes: cleanText($("inventoryNotes").value),
-        lastMovementAt: state.editingInventoryId ? (getInventoryItemById(state.editingInventoryId)?.lastMovementAt || "") : "",
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      if (!payload.name) return showToast("Escribe el nombre del material.");
-      if (payload.stock < 0) return showToast("El stock no puede ser negativo.");
-      if (payload.minStock < 0) return showToast("El stock mínimo no puede ser negativo.");
-      if (payload.unitCost < 0) return showToast("El costo unitario no puede ser negativo.");
-
-      try {
-        if (state.editingInventoryId) {
-          await inventoryRef().doc(state.editingInventoryId).update(payload);
-          showToast("Ítem actualizado.");
-        } else {
-          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await inventoryRef().add(payload);
-          showToast("Ítem guardado.");
-        }
-        closeModal("inventoryModal");
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo guardar el ítem.");
-      }
-    }
-
-    async function saveMovement() {
-      const itemId = cleanText($("movementItemId").value);
-      const type = cleanText($("movementType").value) || "entrada";
-      const rawQty = Number($("movementQty").value || 0);
-      const date = cleanText($("movementDate").value) || today();
-      const unitCost = Number($("movementUnitCost").value || 0);
-      const reference = cleanText($("movementReference").value);
-      const note = cleanText($("movementNote").value);
-
-      if (!itemId) return showToast("Selecciona un material.");
-      if (!rawQty) return showToast("Escribe una cantidad.");
-      if (type !== "ajuste" && rawQty < 0) return showToast("La cantidad debe ser positiva.");
-      if (unitCost < 0) return showToast("El costo unitario no puede ser negativo.");
-
-      const item = getInventoryItemById(itemId);
-      if (!item) return showToast("No se encontró el material.");
-
-      const currentStock = Number(item.stock || 0);
-      let delta = rawQty;
-
-      if (type === "salida") delta = -Math.abs(rawQty);
-      if (type === "entrada") delta = Math.abs(rawQty);
-
-      const newStock = currentStock + delta;
-      if (newStock < 0) return showToast("No puedes dejar el stock en negativo.");
-
-      const movement = {
-        itemId,
-        itemName: item.name || "",
-        itemSku: item.sku || "",
-        type,
-        qty: delta,
-        beforeStock: currentStock,
-        afterStock: newStock,
-        date,
-        reference,
-        note,
-        unitCost: unitCost > 0 ? unitCost : Number(item.unitCost || 0),
-        createdBy: state.userEmail || "usuario",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      try {
-        await inventoryMovementsRef().add(movement);
-        const updatePayload = {
-          stock: newStock,
-          lastMovementAt: date,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        if (unitCost > 0) updatePayload.unitCost = unitCost;
-        await inventoryRef().doc(itemId).update(updatePayload);
-        showToast("Movimiento guardado.");
-        closeModal("movementModal");
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo guardar el movimiento.");
       }
     }
 
@@ -3017,10 +2524,8 @@
         const jobs = Array.isArray(data.jobs) ? data.jobs : [];
         const expenses = Array.isArray(data.expenses) ? data.expenses : [];
         const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
-        const inventory = Array.isArray(data.inventoryItems) ? data.inventoryItems : [];
-        const movements = Array.isArray(data.inventoryMovements) ? data.inventoryMovements : [];
 
-        if (!clients.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
+        if (!clients.length && !jobs.length && !expenses.length && !recurring.length) {
           return showToast("Ese JSON no tiene datos válidos.");
         }
 
@@ -3066,10 +2571,6 @@
             notes: item.notes || "",
             materials: Array.isArray(item.materials) ? item.materials : [],
             quote: item.quote || { items: [], discountType: "none", discountValue: 0, taxPercent: 0 },
-            pricing: item.pricing || { priceMode: "manual", laborCost: 0, extraCost: 0, desiredMargin: 0 },
-            jobType: item.jobType || "Personalizado",
-            estimate: item.estimate || {},
-            inventorySync: item.inventorySync || {},
             checklist: item.checklist || {},
             payments: Array.isArray(item.payments) ? item.payments : [],
             internalNotesLog: Array.isArray(item.internalNotesLog) ? item.internalNotesLog : [],
@@ -3111,46 +2612,6 @@
           await recurringRef().add(payload);
         }
 
-        const inventoryMap = {};
-        for (const item of inventory) {
-          const payload = {
-            name: item.name || "",
-            sku: item.sku || "",
-            category: item.category || "Otro",
-            unit: item.unit || "pieza",
-            stock: Number(item.stock || 0),
-            minStock: Number(item.minStock || 0),
-            unitCost: Number(item.unitCost || 0),
-            location: item.location || "",
-            supplier: item.supplier || "",
-            notes: item.notes || "",
-            lastMovementAt: item.lastMovementAt || "",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          };
-          const doc = await inventoryRef().add(payload);
-          if (item.id) inventoryMap[item.id] = doc.id;
-        }
-
-        for (const item of movements) {
-          const payload = {
-            itemId: inventoryMap[item.itemId] || item.itemId || "",
-            itemName: item.itemName || "",
-            itemSku: item.itemSku || "",
-            type: item.type || "ajuste",
-            qty: Number(item.qty || 0),
-            beforeStock: Number(item.beforeStock || 0),
-            afterStock: Number(item.afterStock || 0),
-            date: item.date || today(),
-            reference: item.reference || "",
-            note: item.note || "",
-            unitCost: Number(item.unitCost || 0),
-            createdBy: item.createdBy || state.userEmail || "usuario",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          };
-          await inventoryMovementsRef().add(payload);
-        }
-
         showToast("Importación completada.");
       } catch (error) {
         console.error(error);
@@ -3168,7 +2629,6 @@
         if (type === "jobs") await jobsRef().doc(id).delete();
         if (type === "expenses") await expensesRef().doc(id).delete();
         if (type === "recurring") await recurringRef().doc(id).delete();
-        if (type === "inventory") await inventoryRef().doc(id).delete();
         showToast(`${label} eliminado.`);
       } catch (error) {
         console.error(error);
@@ -3179,30 +2639,20 @@
     async function updateJobStatus(id, status) {
       try {
         const job = getJobById(id);
-        if (!job) return;
         const logs = [...getJobActivityLog(job), newLogEntry("estado", `Estado cambiado a ${status}.`)];
-        const inventorySync = await resolveInventorySync(id, {
-          title: job.title || "Trabajo",
-          status,
-          date: job.date || today(),
-          materials: Array.isArray(job.materials) ? job.materials : []
-        }, job);
-
         await jobsRef().doc(id).update({
           status,
-          inventorySync,
           activityLog: logs,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showToast(inventorySync.synced ? `Estado cambiado a ${status} e inventario sincronizado.` : `Estado cambiado a ${status}.`);
+        showToast(`Estado cambiado a ${status}.`);
       } catch (error) {
         console.error(error);
-        showToast(error.message || "No se pudo cambiar el estado.");
+        showToast("No se pudo cambiar el estado.");
       }
     }
 
     function editClient(id) {
-
       const item = getClientById(id);
       if (!item) return;
       state.editingClientId = id;
@@ -3282,112 +2732,6 @@
       $("recurringNotes").value = item.notes || "";
       $("recurringActive").checked = !!item.active;
       openModal("recurringModal");
-    }
-
-
-    function editInventoryItem(id) {
-      const item = getInventoryItemById(id);
-      if (!item) return;
-      state.editingInventoryId = id;
-      $("inventoryModalTitle").textContent = "Editar ítem de inventario";
-      $("inventoryName").value = item.name || "";
-      $("inventorySku").value = item.sku || "";
-      $("inventoryCategory").value = item.category || "Otro";
-      $("inventoryUnit").value = item.unit || "pieza";
-      $("inventoryStock").value = item.stock ?? "";
-      $("inventoryMinStock").value = item.minStock ?? "";
-      $("inventoryUnitCost").value = item.unitCost ?? "";
-      $("inventoryLocation").value = item.location || "";
-      $("inventorySupplier").value = item.supplier || "";
-      $("inventoryNotes").value = item.notes || "";
-      openModal("inventoryModal");
-    }
-
-    function getFilteredInventory() {
-      const q = cleanText($("inventorySearch").value).toLowerCase();
-      const category = cleanText($("inventoryCategoryFilter").value);
-      const stockFilter = cleanText($("inventoryStockFilter").value);
-
-      return state.inventoryItems.filter(item => {
-        const bag = `${item.name || ""} ${item.sku || ""} ${item.category || ""} ${item.supplier || ""} ${item.location || ""}`.toLowerCase();
-        const status = getInventoryStockStatus(item);
-        const okText = bag.includes(q);
-        const okCategory = !category || item.category === category;
-        const okStock = !stockFilter || status === stockFilter;
-        return okText && okCategory && okStock;
-      }).sort((a, b) => cleanText(a.name).localeCompare(cleanText(b.name)));
-    }
-
-    function renderInventory() {
-      const rows = getFilteredInventory();
-
-      $("inventoryBody").innerHTML = rows.map(item => `
-        <tr>
-          <td>${safe(item.sku || "-")}</td>
-          <td>
-            <div><strong>${safe(item.name || "-")}</strong></div>
-            <small>${safe(item.supplier || "-")}</small>
-          </td>
-          <td>${safe(item.category || "-")}</td>
-          <td>${safe(item.unit || "-")}</td>
-          <td>
-            <div><strong>${Number(item.stock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></div>
-            <small>${stockPill(item)}</small>
-          </td>
-          <td>${Number(item.minStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-          <td>${money(item.unitCost || 0)}</td>
-          <td>${money(inventoryValue(item))}</td>
-          <td>${safe(item.location || "-")}</td>
-          <td>${safe(item.lastMovementAt || "-")}</td>
-          <td>
-            <div class="actions-row">
-              <button class="btn btn-info btn-small" data-move-item="${item.id}">Movimiento</button>
-              <button class="btn btn-secondary btn-small" data-edit-inventory="${item.id}">Editar</button>
-              <button class="btn btn-danger btn-small" data-delete-inventory="${item.id}">Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      `).join("");
-
-      $("inventoryEmpty").classList.toggle("hidden", rows.length > 0);
-      refreshMaterialRowsInventoryOptions();
-
-      const totalItems = state.inventoryItems.length;
-      const totalValue = state.inventoryItems.reduce((sum, item) => sum + inventoryValue(item), 0);
-      const lowCount = state.inventoryItems.filter(item => getInventoryStockStatus(item) === "low").length;
-      const outCount = state.inventoryItems.filter(item => getInventoryStockStatus(item) === "out").length;
-
-      $("invTotalItems").textContent = String(totalItems);
-      $("invTotalValue").textContent = money(totalValue);
-      $("invLowCount").textContent = String(lowCount);
-      $("invOutCount").textContent = String(outCount);
-
-      fillMovementItemSelect($("movementItemId")?.value || "");
-    }
-
-    function renderInventoryMovements() {
-      const rows = state.inventoryMovements
-        .slice()
-        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
-        .slice(0, 80);
-
-      $("inventoryMovementsBody").innerHTML = rows.map(item => {
-        const material = getInventoryItemById(item.itemId);
-        return `
-          <tr>
-            <td>${safe(item.date || "-")}</td>
-            <td>${safe(material?.name || item.itemName || "-")}<br><small>${safe(material?.sku || item.itemSku || "-")}</small></td>
-            <td>${movementPill(item.type || "ajuste")}</td>
-            <td>${Number(item.qty || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-            <td>${Number(item.beforeStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-            <td>${Number(item.afterStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-            <td>${safe(item.reference || "-")}</td>
-            <td><small>${safe(item.note || "-")}</small></td>
-          </tr>
-        `;
-      }).join("");
-
-      $("inventoryMovementsEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
     function getFilteredJobs() {
@@ -3502,7 +2846,6 @@
             <td>${money(calc.paid)}</td>
             <td>${money(calc.balance)}</td>
             <td>${safe(checklistProgress(job))}</td>
-            <td>${inventorySyncPill(job)}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
@@ -3560,7 +2903,6 @@
                   <small>Entrega: ${safe(job.dueDate || "-")}</small>
                   <small>Saldo: ${money(calc.balance)}</small>
                   <small>Checklist: ${safe(checklistProgress(job))}</small>
-                  <div class="kanban-meta">${inventorySyncPill(job)}</div>
                   <div class="kanban-actions">
                     <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>
                     <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
@@ -3590,7 +2932,6 @@
             <td>${priorityPill(job.priority || "Media")}</td>
             <td>${money(calc.balance)}</td>
             <td>${safe(checklistProgress(job))}</td>
-            <td>${inventorySyncPill(job)}</td>
             <td>${statusPill(job.status || "Cotización")}</td>
             <td>
               <div class="actions-row">
@@ -3830,16 +3171,14 @@
         clients: state.clients,
         jobs: state.jobs,
         expenses: state.expenses,
-        recurringExpenses: state.recurringExpenses,
-        inventoryItems: state.inventoryItems,
-        inventoryMovements: state.inventoryMovements
+        recurringExpenses: state.recurringExpenses
       };
 
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nj_crm_fase8_${today()}.json`;
+      a.download = `nj_crm_fase5_${today()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
@@ -3906,7 +3245,7 @@
         styles: { fontSize: 9 }
       });
 
-      pdf.save(`Reporte_General_NJ_F8_${today()}.pdf`);
+      pdf.save(`Reporte_General_NJ_F6_${today()}.pdf`);
       showToast("PDF general exportado.");
     }
 
@@ -4053,17 +3392,7 @@
         }
       }, error => console.error(error));
 
-      const unsubInventory = inventoryRef().orderBy("name", "asc").onSnapshot(snapshot => {
-        state.inventoryItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderInventory();
-      }, error => console.error(error));
-
-      const unsubMovements = inventoryMovementsRef().orderBy("date", "desc").onSnapshot(snapshot => {
-        state.inventoryMovements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderInventoryMovements();
-      }, error => console.error(error));
-
-      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements);
+      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring);
     }
 
     async function login() {
@@ -4148,8 +3477,6 @@
       state.jobs = [];
       state.expenses = [];
       state.recurringExpenses = [];
-      state.inventoryItems = [];
-      state.inventoryMovements = [];
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }
@@ -4181,8 +3508,6 @@
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("savePaymentBtn").addEventListener("click", savePayment);
     $("saveRecurringBtn").addEventListener("click", saveRecurring);
-    $("saveInventoryBtn").addEventListener("click", saveInventoryItem);
-    $("saveMovementBtn").addEventListener("click", saveMovement);
     $("saveInternalNoteBtn").addEventListener("click", saveInternalNote);
 
     $("btnNewMain").addEventListener("click", () => {
@@ -4196,21 +3521,12 @@
       } else if (state.currentView === "gastos") {
         resetExpenseForm();
         openModal("expenseModal");
-      } else if (state.currentView === "inventario") {
-        resetInventoryForm();
-        openModal("inventoryModal");
       }
     });
 
     $("btnNewRecurring").addEventListener("click", () => {
       resetRecurringForm();
       openModal("recurringModal");
-    });
-
-    $("btnNewMovement").addEventListener("click", () => {
-      if (!state.inventoryItems.length) return showToast("Primero crea un ítem de inventario.");
-      resetMovementForm();
-      openModal("movementModal");
     });
 
     $("addMaterialBtn").addEventListener("click", () => {
@@ -4224,7 +3540,6 @@
     });
 
     $("jobSale").addEventListener("input", renderJobPreview);
-    $("jobStatus").addEventListener("change", renderJobPreview);
     $("jobPriceMode").addEventListener("change", renderJobPreview);
     $("jobLaborCost").addEventListener("input", renderJobPreview);
     $("jobExtraCost").addEventListener("input", renderJobPreview);
@@ -4259,11 +3574,6 @@
       $(id).addEventListener("change", renderExpenses);
     });
 
-    ["inventorySearch","inventoryCategoryFilter","inventoryStockFilter"].forEach(id => {
-      $(id).addEventListener("input", renderInventory);
-      $(id).addEventListener("change", renderInventory);
-    });
-
     $("btnClearJobFilters").addEventListener("click", () => {
       ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
       renderJobs();
@@ -4272,11 +3582,6 @@
     $("btnClearExpenseFilters").addEventListener("click", () => {
       ["expenseSearch","expenseFrom","expenseTo"].forEach(id => $(id).value = "");
       renderExpenses();
-    });
-
-    $("btnClearInventoryFilters").addEventListener("click", () => {
-      ["inventorySearch","inventoryCategoryFilter","inventoryStockFilter"].forEach(id => $(id).value = "");
-      renderInventory();
     });
 
     $("btnPrevMonth").addEventListener("click", () => {
@@ -4322,19 +3627,11 @@
 
       if (target.dataset.editRecurring) editRecurring(target.dataset.editRecurring);
       if (target.dataset.deleteRecurring) removeItem("recurring", target.dataset.deleteRecurring, "gasto recurrente");
-
-      if (target.dataset.editInventory) editInventoryItem(target.dataset.editInventory);
-      if (target.dataset.deleteInventory) removeItem("inventory", target.dataset.deleteInventory, "ítem de inventario");
-      if (target.dataset.moveItem) {
-        resetMovementForm(target.dataset.moveItem);
-        openModal("movementModal");
-      }
     });
 
     resetJobForm();
     resetExpenseForm();
     resetRecurringForm();
-    resetInventoryForm();
     setJobsViewMode("table");
     renderDeliveryCalendar();
   </script>
