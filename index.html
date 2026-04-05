@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NJ Design & Print CRM - Fase 6</title>
+  <title>NJ Design & Print CRM - Fase 7</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -387,6 +387,42 @@
       line-height:1.45;
     }
 
+    .estimate-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .estimate-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .module-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-top:6px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      padding:5px 9px;
+      background:rgba(184,255,0,.08);
+      color:var(--brand);
+      border:1px solid rgba(184,255,0,.18);
+      white-space:nowrap;
+    }
+
+    .estimator-hint{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+      line-height:1.45;
+    }
+
     .list-payments,
     .list-logs{
       display:grid;
@@ -609,7 +645,7 @@
     }
 
     @media (max-width:1100px){
-      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid,.price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
       .calendar-grid{grid-template-columns:repeat(7,minmax(110px,1fr));overflow:auto}
     }
@@ -630,7 +666,7 @@
       .nav button{text-align:center;padding:10px 8px;font-size:12px}
       .sidebar-foot{display:none}
       .content{padding:18px 18px 92px}
-      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid,.price-grid{grid-template-columns:1fr}
+      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid{grid-template-columns:1fr}
       .filters .input,.filters .select{max-width:none}
       .calendar-grid{display:block}
       .calendar-day-head{display:none}
@@ -642,7 +678,7 @@
   <section id="authScreen" class="auth-wrap">
     <div class="auth-card">
       <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub">CRM privado fase 6 con rentabilidad, precio final al cliente y costos completos.</div>
+      <div class="auth-sub">CRM privado fase 7 con estimador rápido por tipo de trabajo y rentabilidad completa.</div>
 
       <div class="stack">
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
@@ -666,7 +702,7 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
-        <div class="brand-sub">Fase 6: rentabilidad, precio final al cliente y costos completos.</div>
+        <div class="brand-sub">Fase 7: estimador rápido por tipo de trabajo, rentabilidad completa y precios sugeridos.</div>
 
         <div class="nav">
           <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -873,6 +909,20 @@
                   <option value="Baja">Baja</option>
                   <option value="Media">Media</option>
                   <option value="Alta">Alta</option>
+                </select>
+                <select id="jobTypeFilter" class="select">
+                  <option value="">Todos los tipos</option>
+                  <option value="Decals">Decals</option>
+                  <option value="Printing">Printing</option>
+                  <option value="Window Perf">Window Perf</option>
+                  <option value="Commercial Tint">Commercial Tint</option>
+                  <option value="Banner">Banner</option>
+                  <option value="Wrap de Autos">Wrap de Autos</option>
+                  <option value="ADA Signs">ADA Signs</option>
+                  <option value="Channel Letters">Channel Letters</option>
+                  <option value="Pylon Faces">Pylon Faces</option>
+                  <option value="Light Box Graphics">Light Box Graphics</option>
+                  <option value="Personalizado">Personalizado</option>
                 </select>
                 <button id="btnClearJobFilters" class="btn btn-secondary">Limpiar filtros</button>
               </div>
@@ -1114,6 +1164,50 @@
         </div>
 
         <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Módulo rápido de estimado - Fase 7</strong>
+            <div class="actions-row">
+              <button id="loadEstimatorDefaultsBtn" class="btn btn-secondary btn-small" type="button">Cargar valores sugeridos</button>
+              <button id="applyEstimatorBtn" class="btn btn-info btn-small" type="button">Aplicar al trabajo</button>
+            </div>
+          </div>
+
+          <div class="estimate-grid">
+            <select id="jobEstimatorType" class="select">
+              <option value="custom">Personalizado</option>
+              <option value="decals">Decals</option>
+              <option value="printing">Printing</option>
+              <option value="window_perf">Window Perf</option>
+              <option value="commercial_tint">Commercial Tint</option>
+              <option value="banner">Banner</option>
+              <option value="wrap">Wrap de Autos</option>
+              <option value="ada">ADA Signs</option>
+              <option value="channel_letters">Channel Letters</option>
+              <option value="pylon_faces">Pylon Faces</option>
+              <option value="light_box">Light Box Graphics</option>
+            </select>
+            <input id="jobEstimatorWidth" type="number" min="0" step="0.01" class="input" placeholder="Ancho (in)" />
+            <input id="jobEstimatorHeight" type="number" min="0" step="0.01" class="input" placeholder="Alto (in)" />
+            <input id="jobEstimatorQty" type="number" min="0" step="0.01" class="input" placeholder="Cantidad" value="1" />
+
+            <input id="jobEstimatorWaste" type="number" min="0" step="0.01" class="input" placeholder="Desperdicio %" />
+            <input id="jobEstimatorMaterialRate" type="number" min="0" step="0.01" class="input" placeholder="Costo material / unidad" />
+            <input id="jobEstimatorSaleRate" type="number" min="0" step="0.01" class="input" placeholder="Precio venta / unidad" />
+            <input id="jobEstimatorLaborBase" type="number" min="0" step="0.01" class="input" placeholder="Mano de obra base" />
+
+            <input id="jobEstimatorBaseUnits" type="text" class="input readonly" placeholder="Unidad base" readonly />
+            <input id="jobEstimatorProdUnits" type="text" class="input readonly" placeholder="Unidad compra" readonly />
+            <input id="jobEstimatorCost" type="text" class="input readonly" placeholder="Costo estimado" readonly />
+            <input id="jobEstimatorSale" type="text" class="input readonly" placeholder="Venta estimada" readonly />
+          </div>
+
+          <div class="estimator-hint">
+            Este módulo te ayuda a cargar rápido trabajos repetidos. Para tipos por <strong>pie cuadrado</strong> usa ancho, alto y cantidad.
+            Para tipos por <strong>unidad</strong> como ADA o Channel Letters, el sistema usa principalmente la cantidad y las tarifas sugeridas.
+          </div>
+        </div>
+
+        <div class="box">
           <strong>Checklist de producción</strong>
           <div class="checklist-grid">
             <label class="check-item"><input type="checkbox" id="ckDesignApproved"> Diseño aprobado</label>
@@ -1326,6 +1420,20 @@
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
     const KANBAN_STATUSES = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
+
+    const ESTIMATOR_TEMPLATES = {
+      custom: { label: "Personalizado", mode: "custom", wastePercent: 0, materialRate: 0, saleRate: 0, laborBase: 0 },
+      decals: { label: "Decals", mode: "sqft", wastePercent: 8, materialRate: 2.50, saleRate: 8.00, laborBase: 15 },
+      printing: { label: "Printing", mode: "sqft", wastePercent: 10, materialRate: 2.50, saleRate: 6.50, laborBase: 20 },
+      window_perf: { label: "Window Perf", mode: "sqft", wastePercent: 10, materialRate: 3.80, saleRate: 9.50, laborBase: 25 },
+      commercial_tint: { label: "Commercial Tint", mode: "sqft", wastePercent: 8, materialRate: 3.50, saleRate: 9.00, laborBase: 35 },
+      banner: { label: "Banner", mode: "sqft", wastePercent: 10, materialRate: 3.80, saleRate: 10.00, laborBase: 20 },
+      wrap: { label: "Wrap de Autos", mode: "sqft", wastePercent: 12, materialRate: 7.00, saleRate: 18.00, laborBase: 80 },
+      ada: { label: "ADA Signs", mode: "unit", wastePercent: 0, materialRate: 12.00, saleRate: 35.00, laborBase: 12 },
+      channel_letters: { label: "Channel Letters", mode: "unit", wastePercent: 0, materialRate: 45.00, saleRate: 120.00, laborBase: 25 },
+      pylon_faces: { label: "Pylon Faces", mode: "sqft", wastePercent: 10, materialRate: 9.00, saleRate: 22.00, laborBase: 60 },
+      light_box: { label: "Light Box Graphics", mode: "sqft", wastePercent: 10, materialRate: 4.50, saleRate: 12.00, laborBase: 25 }
+    };
 
     const CHECK_KEYS = [
       { id: "ckDesignApproved", key: "designApproved" },
@@ -1765,6 +1873,174 @@
       renderJobPreview();
     }
 
+    function getEstimatorTemplate(key = "custom") {
+      return ESTIMATOR_TEMPLATES[key] || ESTIMATOR_TEMPLATES.custom;
+    }
+
+    function getJobTypeLabel(job = {}) {
+      return cleanText(job.jobType) || getEstimatorTemplate(job?.estimate?.templateKey || "custom").label || "Personalizado";
+    }
+
+    function getSavedEstimator(job = {}) {
+      return {
+        templateKey: job?.estimate?.templateKey || "custom",
+        width: Number(job?.estimate?.width || 0),
+        height: Number(job?.estimate?.height || 0),
+        qty: Number(job?.estimate?.qty || 1),
+        wastePercent: Number(job?.estimate?.wastePercent || 0),
+        materialRate: Number(job?.estimate?.materialRate || 0),
+        saleRate: Number(job?.estimate?.saleRate || 0),
+        laborBase: Number(job?.estimate?.laborBase || 0)
+      };
+    }
+
+    function getCurrentEstimatorForm() {
+      return {
+        templateKey: $("jobEstimatorType").value || "custom",
+        width: Number($("jobEstimatorWidth").value || 0),
+        height: Number($("jobEstimatorHeight").value || 0),
+        qty: Number($("jobEstimatorQty").value || 0),
+        wastePercent: Number($("jobEstimatorWaste").value || 0),
+        materialRate: Number($("jobEstimatorMaterialRate").value || 0),
+        saleRate: Number($("jobEstimatorSaleRate").value || 0),
+        laborBase: Number($("jobEstimatorLaborBase").value || 0)
+      };
+    }
+
+    function setEstimatorForm(estimator = {}) {
+      $("jobEstimatorType").value = estimator.templateKey || "custom";
+      $("jobEstimatorWidth").value = estimator.width ? Number(estimator.width) : "";
+      $("jobEstimatorHeight").value = estimator.height ? Number(estimator.height) : "";
+      $("jobEstimatorQty").value = estimator.qty ? Number(estimator.qty) : 1;
+      $("jobEstimatorWaste").value = estimator.wastePercent ? Number(estimator.wastePercent) : "";
+      $("jobEstimatorMaterialRate").value = estimator.materialRate ? Number(estimator.materialRate) : "";
+      $("jobEstimatorSaleRate").value = estimator.saleRate ? Number(estimator.saleRate) : "";
+      $("jobEstimatorLaborBase").value = estimator.laborBase ? Number(estimator.laborBase) : "";
+    }
+
+    function loadEstimatorDefaults(preserveMeasures = true) {
+      const current = getCurrentEstimatorForm();
+      const template = getEstimatorTemplate(current.templateKey);
+      const qty = preserveMeasures && current.qty ? current.qty : 1;
+
+      $("jobEstimatorWaste").value = Number(template.wastePercent || 0) ? Number(template.wastePercent || 0) : "";
+      $("jobEstimatorMaterialRate").value = Number(template.materialRate || 0) ? Number(template.materialRate || 0) : "";
+      $("jobEstimatorSaleRate").value = Number(template.saleRate || 0) ? Number(template.saleRate || 0) : "";
+      $("jobEstimatorLaborBase").value = Number(template.laborBase || 0) ? Number(template.laborBase || 0) : "";
+      $("jobEstimatorQty").value = qty;
+      renderEstimatorPreview();
+    }
+
+    function computeEstimator(estimator = {}) {
+      const template = getEstimatorTemplate(estimator.templateKey);
+      const mode = template.mode || "custom";
+      const width = Number(estimator.width || 0);
+      const height = Number(estimator.height || 0);
+      const qty = Math.max(Number(estimator.qty || 0), 0);
+      const wastePercent = Math.max(Number(estimator.wastePercent || 0), 0);
+      const materialRate = Math.max(Number(estimator.materialRate || 0), 0);
+      const saleRate = Math.max(Number(estimator.saleRate || 0), 0);
+      const laborBase = Math.max(Number(estimator.laborBase || 0), 0);
+
+      let baseUnits = 0;
+      if (mode === "sqft") {
+        baseUnits = ((width * height) / 144) * qty;
+      } else if (mode === "unit") {
+        baseUnits = qty;
+      } else {
+        if (width > 0 && height > 0 && qty > 0) baseUnits = ((width * height) / 144) * qty;
+        else baseUnits = qty;
+      }
+
+      const productionUnits = baseUnits * (1 + wastePercent / 100);
+      const materialEstimate = productionUnits * materialRate;
+      const saleEstimate = (baseUnits * saleRate) + laborBase;
+
+      return {
+        templateKey: estimator.templateKey || "custom",
+        label: template.label || "Personalizado",
+        mode,
+        width,
+        height,
+        qty,
+        wastePercent,
+        materialRate,
+        saleRate,
+        laborBase,
+        baseUnits,
+        productionUnits,
+        materialEstimate,
+        saleEstimate
+      };
+    }
+
+    function renderEstimatorPreview() {
+      const calc = computeEstimator(getCurrentEstimatorForm());
+      const unitLabel = calc.mode === "unit" ? "und" : "ft²";
+
+      $("jobEstimatorBaseUnits").value = `${calc.baseUnits.toFixed(2)} ${unitLabel}`;
+      $("jobEstimatorProdUnits").value = `${calc.productionUnits.toFixed(2)} ${unitLabel}`;
+      $("jobEstimatorCost").value = money(calc.materialEstimate + calc.laborBase);
+      $("jobEstimatorSale").value = money(calc.saleEstimate);
+    }
+
+    function applyEstimatorToJob() {
+      const currentMaterials = getCurrentFormMaterials();
+      const currentQuote = getCurrentQuoteItems();
+      const hasManualData = currentMaterials.length || currentQuote.length || Number($("jobSale").value || 0) > 0;
+
+      if (hasManualData) {
+        const ok = confirm("Esto reemplazará los materiales y la cotización actual del trabajo. ¿Quieres continuar?");
+        if (!ok) return;
+      }
+
+      const calc = computeEstimator(getCurrentEstimatorForm());
+      if (calc.qty <= 0) return showToast("Pon una cantidad válida en el estimador.");
+      if (calc.mode === "sqft" && (calc.width <= 0 || calc.height <= 0)) return showToast("Pon ancho y alto para este tipo de trabajo.");
+      if (calc.materialRate <= 0 && calc.saleRate <= 0 && calc.laborBase <= 0) return showToast("Carga valores sugeridos o escribe las tarifas del estimador.");
+
+      $("materialsContainer").innerHTML = "";
+      $("quoteItemsContainer").innerHTML = "";
+
+      const materialQty = calc.mode === "unit" ? calc.qty : Number(calc.productionUnits.toFixed(2));
+      const quoteQty = calc.mode === "unit" ? calc.qty : Number(calc.baseUnits.toFixed(2));
+
+      $("materialsContainer").appendChild(createMaterialRow({
+        name: `${calc.label} - material`,
+        qty: materialQty,
+        price: Number(calc.materialRate.toFixed(2))
+      }));
+
+      if (calc.saleRate > 0) {
+        const desc = calc.mode === "unit"
+          ? calc.label
+          : `${calc.label} (${calc.baseUnits.toFixed(2)} ft²)`;
+        $("quoteItemsContainer").appendChild(createQuoteItemRow({
+          description: desc,
+          qty: quoteQty,
+          price: Number(calc.saleRate.toFixed(2))
+        }));
+      } else {
+        $("quoteItemsContainer").appendChild(createQuoteItemRow());
+      }
+
+      if (calc.laborBase > 0) {
+        $("jobLaborCost").value = calc.laborBase.toFixed(2);
+      }
+
+      if (!$("jobTitle").value && calc.label !== "Personalizado") {
+        $("jobTitle").value = calc.label;
+      }
+
+      if (!$("jobDescription").value && calc.mode === "sqft") {
+        $("jobDescription").value = `${calc.label} de ${calc.width}" x ${calc.height}" x ${calc.qty} unidad(es).`;
+      }
+
+      $("jobPriceMode").value = "quote";
+      renderJobPreview();
+      showToast("Estimado aplicado al trabajo.");
+    }
+
     function getFormChecklist() {
       const result = {};
       CHECK_KEYS.forEach(item => {
@@ -1838,6 +2114,7 @@
     }
 
     function renderQuotePreview() {
+      renderEstimatorPreview();
       const quote = getCurrentQuoteForm();
       const calc = computeQuote(quote);
 
@@ -1904,6 +2181,18 @@
       $("jobLaborCost").value = "";
       $("jobExtraCost").value = "";
       $("jobDesiredMargin").value = "";
+      $("jobEstimatorType").value = "custom";
+      $("jobEstimatorWidth").value = "";
+      $("jobEstimatorHeight").value = "";
+      $("jobEstimatorQty").value = 1;
+      $("jobEstimatorWaste").value = "";
+      $("jobEstimatorMaterialRate").value = "";
+      $("jobEstimatorSaleRate").value = "";
+      $("jobEstimatorLaborBase").value = "";
+      $("jobEstimatorBaseUnits").value = "0.00 ft²";
+      $("jobEstimatorProdUnits").value = "0.00 ft²";
+      $("jobEstimatorCost").value = money(0);
+      $("jobEstimatorSale").value = money(0);
       $("jobSale").value = "0.00";
       $("jobMaterialsTotal").value = money(0);
       $("jobTotalCost").value = money(0);
@@ -2043,6 +2332,8 @@
         materials: getCurrentFormMaterials(),
         quote,
         pricing,
+        jobType: getEstimatorTemplate($("jobEstimatorType").value || "custom").label,
+        estimate: getCurrentEstimatorForm(),
         checklist: getFormChecklist(),
         internalNotesLog: notesBase,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2394,6 +2685,7 @@
       $("jobLaborCost").value = pricing.laborCost || "";
       $("jobExtraCost").value = pricing.extraCost || "";
       $("jobDesiredMargin").value = pricing.desiredMargin || "";
+      setEstimatorForm(getSavedEstimator(item));
       $("jobDescription").value = item.description || "";
       $("jobNotes").value = item.notes || "";
       $("jobNewInternalNote").value = "";
@@ -2446,6 +2738,7 @@
       const q = cleanText($("jobSearch").value).toLowerCase();
       const statusFilter = cleanText($("jobStatusFilter").value);
       const priorityFilter = cleanText($("jobPriorityFilter").value);
+      const typeFilter = cleanText($("jobTypeFilter").value);
       const createdFrom = cleanText($("jobCreatedFrom").value);
       const createdTo = cleanText($("jobCreatedTo").value);
       const dueFrom = cleanText($("jobDueFrom").value);
@@ -2458,10 +2751,11 @@
         const okText = bag.includes(q);
         const okStatus = !statusFilter || job.status === statusFilter;
         const okPriority = !priorityFilter || (job.priority || "Media") === priorityFilter;
+        const okType = !typeFilter || getJobTypeLabel(job) === typeFilter;
         const okCreated = (!createdFrom && !createdTo) || isBetween(job.date, createdFrom, createdTo);
         const okDue = (!dueFrom && !dueTo) || (job.dueDate && isBetween(job.dueDate, dueFrom, dueTo));
 
-        return okText && okStatus && okPriority && okCreated && okDue;
+        return okText && okStatus && okPriority && okType && okCreated && okDue;
       });
     }
 
@@ -2540,6 +2834,7 @@
             <td>${safe(clientLabel(client))}</td>
             <td>
               <div><strong>${safe(job.title || "-")}</strong></div>
+              <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
               <small>${safe(job.description || job.notes || "-")}</small>
             </td>
             <td>${safe(formatDate(job.date))}</td>
@@ -2600,6 +2895,7 @@
                 <div class="kanban-card">
                   <h4>${safe(job.title || "-")}</h4>
                   <small>${safe(clientLabel(client))}</small>
+                  <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
                   <div class="kanban-meta">
                     ${priorityPill(job.priority || "Media")}
                     ${overdue ? '<span class="pill st-cancelado">Vencido</span>' : ""}
@@ -2631,7 +2927,7 @@
         return `
           <tr>
             <td>${safe(clientLabel(client))}</td>
-            <td>${safe(job.title || "-")}</td>
+            <td><strong>${safe(job.title || "-")}</strong><div class="module-badge">${safe(getJobTypeLabel(job))}</div></td>
             <td class="${overdue ? "overdue" : ""}">${safe(job.dueDate || "-")}</td>
             <td>${priorityPill(job.priority || "Media")}</td>
             <td>${money(calc.balance)}</td>
@@ -2989,6 +3285,7 @@
           ["Contacto", (client?.phone || "-") + (client?.email ? ` / ${client.email}` : "")],
           ["Dirección", [client?.address, client?.city].filter(Boolean).join(", ") || "-"],
           ["Trabajo", job.title || "-"],
+          ["Tipo de trabajo", getJobTypeLabel(job)],
           ["Descripción", job.description || job.notes || "-"],
           ["Fecha", job.date || "-"],
           ["Entrega", job.dueDate || "-"],
@@ -3014,6 +3311,24 @@
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
+
+      const estimator = computeEstimator(getSavedEstimator(job));
+      const estimatorRows = estimator.baseUnits > 0 || estimator.materialRate > 0 || estimator.saleRate > 0
+        ? [[
+            "Estimador fase 7",
+            `${estimator.label} · Base ${estimator.baseUnits.toFixed(2)} ${estimator.mode === "unit" ? "und" : "ft²"} · Compra ${estimator.productionUnits.toFixed(2)} ${estimator.mode === "unit" ? "und" : "ft²"}`
+          ]]
+        : [];
+
+      if (estimatorRows.length) {
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 10,
+          head: [["Módulo rápido", "Detalle"]],
+          body: estimatorRows,
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 9 }
+        });
+      }
 
       pdf.autoTable({
         startY: pdf.lastAutoTable.finalY + 10,
@@ -3230,6 +3545,10 @@
     $("jobExtraCost").addEventListener("input", renderJobPreview);
     $("jobDesiredMargin").addEventListener("input", renderJobPreview);
     $("applySuggestedSaleBtn").addEventListener("click", applySuggestedSale);
+    $("jobEstimatorType").addEventListener("change", () => loadEstimatorDefaults(true));
+    ["jobEstimatorWidth","jobEstimatorHeight","jobEstimatorQty","jobEstimatorWaste","jobEstimatorMaterialRate","jobEstimatorSaleRate","jobEstimatorLaborBase"].forEach(id => $(id).addEventListener("input", renderJobPreview));
+    $("loadEstimatorDefaultsBtn").addEventListener("click", () => loadEstimatorDefaults(true));
+    $("applyEstimatorBtn").addEventListener("click", applyEstimatorToJob);
     $("quoteDiscountType").addEventListener("change", renderJobPreview);
     $("quoteDiscountValue").addEventListener("input", renderJobPreview);
     $("quoteTaxPercent").addEventListener("input", renderJobPreview);
@@ -3245,7 +3564,7 @@
 
     $("clientSearch").addEventListener("input", renderClients);
 
-    ["jobSearch","jobStatusFilter","jobPriorityFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
+    ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
       $(id).addEventListener("input", renderJobs);
       $(id).addEventListener("change", renderJobs);
     });
@@ -3256,7 +3575,7 @@
     });
 
     $("btnClearJobFilters").addEventListener("click", () => {
-      ["jobSearch","jobStatusFilter","jobPriorityFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
+      ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
       renderJobs();
     });
 
