@@ -664,6 +664,83 @@
       transform:translateY(0);
     }
 
+    .gallery-hero{
+      position:relative;
+      margin-top:12px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      background:#0e1015;
+    }
+
+    .gallery-hero img{
+      width:100%;
+      height:280px;
+      object-fit:cover;
+      display:block;
+      cursor:pointer;
+    }
+
+    .gallery-strip{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .gallery-thumb{
+      background:#101216;
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .gallery-thumb:hover{border-color:rgba(184,255,0,.24);transform:translateY(-1px)}
+    .gallery-thumb img{width:100%;height:120px;object-fit:cover;display:block}
+    .gallery-thumb-info{padding:8px 10px;font-size:11px;color:var(--muted);word-break:break-word}
+    .gallery-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .gallery-count-badge{
+      position:absolute;
+      right:10px;
+      top:10px;
+      background:rgba(0,0,0,.65);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .lightbox-modal{
+      width:min(1080px,100%);
+      max-height:94vh;
+      overflow:auto;
+      background:#0f1116;
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .lightbox-wrap{padding:18px}
+    .lightbox-stage{
+      background:#090b10;
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+      min-height:320px;
+    }
+
+    .lightbox-stage img{max-width:100%;max-height:68vh;display:block}
+    .lightbox-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .lightbox-title{font-weight:800}
+    .lightbox-sub{color:var(--muted);font-size:12px;margin-top:6px}
+    .lightbox-actions{display:flex;gap:10px;flex-wrap:wrap}
+
     @media (max-width:1100px){
       .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
@@ -746,7 +823,7 @@
           </div>
 
           <div class="top-actions">
-            <button id="btnExportPdf" class="btn btn-info">Reporte PDF</button>
+            <button id="btnExportPdf" class="btn btn-info">PDF dashboard</button>
             <button id="btnExportJson" class="btn btn-secondary">Respaldo JSON</button>
             <button id="btnImportJson" class="btn btn-secondary">Importar JSON</button>
             <button id="btnNewMain" class="btn btn-primary hidden">+ Nuevo</button>
@@ -1576,7 +1653,33 @@
   </div>
 
 
-  <div id="toast" class="toast"></div>
+  
+  <div class="modal-backdrop" id="designGalleryModal">
+    <div class="lightbox-modal">
+      <div class="modal-head">
+        <h3>Galería del trabajo</h3>
+        <button class="btn btn-secondary btn-small" data-close="designGalleryModal">Cerrar</button>
+      </div>
+      <div class="lightbox-wrap">
+        <div class="lightbox-stage">
+          <img id="galleryModalImage" src="" alt="Diseño del trabajo">
+        </div>
+        <div class="lightbox-meta">
+          <div>
+            <div id="galleryModalTitle" class="lightbox-title">Imagen</div>
+            <div id="galleryModalSub" class="lightbox-sub">-</div>
+          </div>
+          <div class="lightbox-actions">
+            <button id="galleryPrevBtn" type="button" class="btn btn-secondary btn-small">← Anterior</button>
+            <button id="galleryNextBtn" type="button" class="btn btn-secondary btn-small">Siguiente →</button>
+            <a id="galleryOpenOriginal" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-info btn-small">Abrir original</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div id="toast" class="toast"></div>
 
   <script>
     const firebaseConfig = {
@@ -1621,6 +1724,8 @@
       editingInventoryId: null,
       workingPaymentJobId: null,
       workingMovementItemId: null,
+      galleryIndex: 0,
+      galleryJobId: null,
       unsubscribers: [],
       calendarDate: new Date(),
       jobsViewMode: "table"
@@ -1692,6 +1797,52 @@
       };
     }
 
+    function formatDateTime(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString();
+    }
+
+    function getFilteredClients() {
+      const q = cleanText($("clientSearch")?.value).toLowerCase();
+      return state.clients.filter(client => {
+        const bag = `${client.name || ""} ${client.company || ""} ${client.phone || ""} ${client.email || ""}`.toLowerCase();
+        return bag.includes(q);
+      });
+    }
+
+    function getFilteredExpenses() {
+      const q = cleanText($("expenseSearch")?.value).toLowerCase();
+      const from = cleanText($("expenseFrom")?.value);
+      const to = cleanText($("expenseTo")?.value);
+
+      return state.expenses.filter(expense => {
+        const bag = `${expense.concept || ""} ${expense.category || ""} ${expense.notes || ""}`.toLowerCase();
+        const okText = bag.includes(q);
+        const okDate = (!from && !to) || isBetween(expense.date, from, to);
+        return okText && okDate;
+      });
+    }
+
+    function getClientJobs(clientId) {
+      return state.jobs
+        .filter(job => job.clientId === clientId)
+        .slice()
+        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    }
+
+    function updateModulePdfButton() {
+      const labels = {
+        dashboard: 'PDF dashboard',
+        clientes: 'PDF clientes',
+        trabajos: 'PDF trabajos',
+        gastos: 'PDF gastos',
+        inventario: 'PDF inventario'
+      };
+      if ($('btnExportPdf')) $('btnExportPdf').textContent = labels[state.currentView] || 'PDF módulo';
+    }
+
     function setView(view) {
       state.currentView = view;
       document.querySelectorAll(".nav button").forEach(btn => btn.classList.toggle("active", btn.dataset.view === view));
@@ -1707,6 +1858,7 @@
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
       if (view === "inventario") btnNew.textContent = "+ Nuevo ítem";
+      updateModulePdfButton();
     }
 
     function setJobsViewMode(mode) {
@@ -2446,25 +2598,72 @@
         return;
       }
 
+      const cover = images[0];
       box.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px;">
+        <div class="gallery-hero">
+          <img src="${cover.url}" alt="${safe(cover.fileName || "Diseño principal")}" onclick="openDesignGallery(0)">
+          <div class="gallery-count-badge">${images.length} foto${images.length === 1 ? '' : 's'}</div>
+        </div>
+        <div class="gallery-toolbar">
+          <button type="button" class="btn btn-secondary btn-small" onclick="openDesignGallery(0)">Abrir galería</button>
+        </div>
+        <div class="gallery-strip">
           ${images.map((img, index) => `
-            <div class="log-item" style="padding:10px;">
-              <a href="${img.url}" target="_blank" rel="noopener noreferrer">
-                <img src="${img.url}" alt="${safe(img.fileName || "Diseño")}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.08);">
-              </a>
-              <div style="margin-top:8px;font-size:12px;color:var(--muted);word-break:break-word;">
-                ${safe(img.fileName || "Imagen")}
-              </div>
-              <div class="section-note" style="margin-top:6px;">${safe(img.uploadedAt || "")}</div>
-              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-                <a href="${img.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small">Ver</a>
-                <button type="button" class="btn btn-danger btn-small" onclick="deleteDesignImage(${index})">Eliminar</button>
+            <div class="gallery-thumb" onclick="openDesignGallery(${index})">
+              <img src="${img.url}" alt="${safe(img.fileName || "Diseño")}">
+              <div class="gallery-thumb-info">
+                <div><strong>${safe(img.fileName || `Imagen ${index + 1}`)}</strong></div>
+                <div>${safe(formatDateTime(img.uploadedAt))}</div>
+                <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-secondary btn-small" onclick="event.stopPropagation();openDesignGallery(${index})">Ver</button>
+                  <button type="button" class="btn btn-danger btn-small" onclick="event.stopPropagation();deleteDesignImage(${index})">Eliminar</button>
+                </div>
               </div>
             </div>
           `).join("")}
         </div>
       `;
+    }
+
+    function openDesignGallery(index = 0) {
+      if (!state.editingJobId) return showToast("No hay trabajo abierto.");
+      const job = getJobById(state.editingJobId);
+      const images = getJobDesignImages(job);
+      if (!images.length) return;
+      state.galleryJobId = state.editingJobId;
+      state.galleryIndex = Math.max(0, Math.min(index, images.length - 1));
+      renderGalleryModal();
+      openModal("designGalleryModal");
+    }
+
+    function renderGalleryModal() {
+      const job = getJobById(state.galleryJobId || state.editingJobId);
+      const images = getJobDesignImages(job);
+      if (!images.length) return;
+      const current = images[state.galleryIndex] || images[0];
+      $("galleryModalImage").src = current.url;
+      $("galleryModalImage").alt = current.fileName || "Diseño";
+      $("galleryModalTitle").textContent = current.fileName || `Imagen ${state.galleryIndex + 1}`;
+      $("galleryModalSub").textContent = `${state.galleryIndex + 1} de ${images.length} · ${formatDateTime(current.uploadedAt)}`;
+      $("galleryOpenOriginal").href = current.url;
+      $("galleryPrevBtn").disabled = images.length <= 1;
+      $("galleryNextBtn").disabled = images.length <= 1;
+    }
+
+    function galleryPrev() {
+      const job = getJobById(state.galleryJobId || state.editingJobId);
+      const images = getJobDesignImages(job);
+      if (!images.length) return;
+      state.galleryIndex = (state.galleryIndex - 1 + images.length) % images.length;
+      renderGalleryModal();
+    }
+
+    function galleryNext() {
+      const job = getJobById(state.galleryJobId || state.editingJobId);
+      const images = getJobDesignImages(job);
+      if (!images.length) return;
+      state.galleryIndex = (state.galleryIndex + 1) % images.length;
+      renderGalleryModal();
     }
 
     async function deleteDesignImage(index) {
@@ -2485,6 +2684,7 @@
           designImages: images,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        if (!images.length) closeModal("designGalleryModal");
         showToast("Foto eliminada.");
       } catch (error) {
         console.error(error);
@@ -2635,6 +2835,8 @@
 
     function resetJobForm() {
       state.editingJobId = null;
+      state.galleryJobId = null;
+      state.galleryIndex = 0;
       $("jobModalTitle").textContent = "Nuevo trabajo";
       fillClientSelect();
       $("jobTitle").value = "";
@@ -3319,6 +3521,8 @@
       if (!item) return;
 
       state.editingJobId = id;
+      state.galleryJobId = id;
+      state.galleryIndex = 0;
       $("jobModalTitle").textContent = "Editar trabajo";
       fillClientSelect(item.clientId || "");
       $("jobTitle").value = item.title || "";
@@ -3545,11 +3749,7 @@
     }
 
     function renderClients() {
-      const q = cleanText($("clientSearch").value).toLowerCase();
-      const rows = state.clients.filter(client => {
-        const bag = `${client.name || ""} ${client.company || ""} ${client.phone || ""} ${client.email || ""}`.toLowerCase();
-        return bag.includes(q);
-      });
+      const rows = getFilteredClients();
 
       $("clientsBody").innerHTML = rows.map(client => `
         <tr>
@@ -3562,6 +3762,7 @@
           <td>
             <div class="actions-row">
               <button class="btn btn-info btn-small" data-wa-client="${client.id}" data-wa-mode="general">WhatsApp</button>
+              <button class="btn btn-secondary btn-small" data-client-pdf="${client.id}">PDF cliente</button>
               <button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>
               <button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>
             </div>
@@ -3749,16 +3950,7 @@
     }
 
     function renderExpenses() {
-      const q = cleanText($("expenseSearch").value).toLowerCase();
-      const from = cleanText($("expenseFrom").value);
-      const to = cleanText($("expenseTo").value);
-
-      const rows = state.expenses.filter(expense => {
-        const bag = `${expense.concept || ""} ${expense.category || ""} ${expense.notes || ""}`.toLowerCase();
-        const okText = bag.includes(q);
-        const okDate = (!from && !to) || isBetween(expense.date, from, to);
-        return okText && okDate;
-      });
+      const rows = getFilteredExpenses();
 
       $("expensesBody").innerHTML = rows.map(expense => `
         <tr>
@@ -3940,27 +4132,36 @@
       showToast("Respaldo JSON exportado.");
     }
 
-    function exportGeneralPdf() {
+    function createModulePdf(title, subtitle = "") {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
 
       pdf.setFillColor(15, 18, 24);
       pdf.rect(0, 0, 210, 34, "F");
-
       pdf.setTextColor(184, 255, 0);
       pdf.setFontSize(20);
       pdf.text(COMPANY.name, 14, 18);
-
       pdf.setTextColor(240, 240, 240);
       pdf.setFontSize(10);
       pdf.text(`Tel: ${COMPANY.phone}`, 14, 25);
       pdf.text(`Email: ${COMPANY.email}`, 68, 25);
       pdf.text(`Fecha: ${new Date().toLocaleString()}`, 145, 25);
-
       pdf.setTextColor(20, 20, 20);
+      pdf.setFontSize(15);
+      pdf.text(title, 14, 44);
+      if (subtitle) {
+        pdf.setFontSize(10);
+        pdf.setTextColor(90, 90, 90);
+        pdf.text(subtitle, 14, 50);
+        pdf.setTextColor(20, 20, 20);
+      }
+      return pdf;
+    }
 
+    function exportDashboardPdf() {
+      const pdf = createModulePdf('Dashboard general', 'Resumen del negocio y entregas próximas');
       pdf.autoTable({
-        startY: 42,
+        startY: 56,
         head: [["Indicador", "Valor"]],
         body: [
           ["Ventas del mes", $("mSales").textContent],
@@ -3970,39 +4171,310 @@
           ["Por cobrar general", $("allReceivable").textContent],
           ["Entregas hoy", $("dueTodayCount").textContent],
           ["Vencen en 7 días", $("due7Count").textContent],
-          ["Trabajos vencidos", $("allOverdueJobs").textContent]
+          ["Trabajos vencidos", $("allOverdueJobs").textContent],
+          ["Trabajos activos", $("allActiveJobs").textContent],
+          ["Clientes", $("allClients").textContent]
         ],
         headStyles: { fillColor: [20,22,27] }
       });
 
-      const jobRows = state.jobs
-        .slice()
-        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
-        .slice(0, 18)
-        .map(job => {
-          const client = getClientById(job.clientId);
-          const calc = computeJob(job);
-          return [
-            clientLabel(client),
-            job.title || "-",
-            job.dueDate || "-",
-            job.priority || "Media",
-            money(calc.sale),
-            money(calc.balance),
-            job.status || "-"
-          ];
-        });
+      const dueRows = getDueSoonJobs(7).map(job => {
+        const client = getClientById(job.clientId);
+        const calc = computeJob(job);
+        return [clientLabel(client), job.title || '-', job.dueDate || '-', job.status || '-', money(calc.balance)];
+      });
 
       pdf.autoTable({
         startY: pdf.lastAutoTable.finalY + 10,
-        head: [["Cliente", "Trabajo", "Entrega", "Prioridad", "Venta", "Saldo", "Estado"]],
-        body: jobRows.length ? jobRows : [["-", "-", "-", "-", "-", "-", "-"]],
+        head: [["Cliente", "Trabajo", "Entrega", "Estado", "Saldo"]],
+        body: dueRows.length ? dueRows : [["-","-","-","-","-"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
 
-      pdf.save(`Reporte_General_NJ_F8_${today()}.pdf`);
-      showToast("PDF general exportado.");
+      const frequentRows = Object.values(state.jobs.reduce((acc, job) => {
+        if (!job.clientId) return acc;
+        const calc = computeJob(job);
+        if (!acc[job.clientId]) acc[job.clientId] = { clientId: job.clientId, jobs: 0, sales: 0, receivable: 0 };
+        acc[job.clientId].jobs += 1;
+        acc[job.clientId].sales += calc.sale;
+        acc[job.clientId].receivable += calc.balance;
+        return acc;
+      }, {})).sort((a,b) => b.jobs - a.jobs || b.sales - a.sales).slice(0,8).map(item => [
+        clientLabel(getClientById(item.clientId)), item.jobs, money(item.sales), money(item.receivable)
+      ]);
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 10,
+        head: [["Cliente", "Trabajos", "Ventas", "Por cobrar"]],
+        body: frequentRows.length ? frequentRows : [["-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 9 }
+      });
+
+      pdf.save(`Dashboard_NJ_${today()}.pdf`);
+      showToast('PDF del dashboard exportado.');
+    }
+
+    function exportClientsPdf() {
+      const rows = getFilteredClients();
+      const pdf = createModulePdf('Módulo de clientes', 'Listado filtrado de clientes');
+      pdf.autoTable({
+        startY: 56,
+        head: [["Nombre", "Empresa", "Teléfono", "Email", "Dirección", "Notas"]],
+        body: rows.length ? rows.map(client => [
+          client.name || '-',
+          client.company || '-',
+          client.phone || '-',
+          client.email || '-',
+          [client.address, client.city].filter(Boolean).join(', ') || '-',
+          client.notes || '-'
+        ]) : [["-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 8 }
+      });
+      pdf.save(`Clientes_NJ_${today()}.pdf`);
+      showToast('PDF de clientes exportado.');
+    }
+
+    function exportJobsPdf() {
+      const rows = getFilteredJobs();
+      const pdf = createModulePdf('Módulo de trabajos', 'Vista actual de trabajos y rentabilidad');
+      pdf.autoTable({
+        startY: 56,
+        head: [["Cliente", "Trabajo", "Tipo", "Fecha", "Entrega", "Estado", "Venta", "Costo", "Ganancia", "Saldo"]],
+        body: rows.length ? rows.map(job => {
+          const client = getClientById(job.clientId);
+          const calc = computeJob(job);
+          return [
+            clientLabel(client),
+            job.title || '-',
+            getJobTypeLabel(job),
+            job.date || '-',
+            job.dueDate || '-',
+            job.status || '-',
+            money(calc.sale),
+            money(calc.cost),
+            money(calc.profit),
+            money(calc.balance)
+          ];
+        }) : [["-","-","-","-","-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 8 }
+      });
+      pdf.save(`Trabajos_NJ_${today()}.pdf`);
+      showToast('PDF de trabajos exportado.');
+    }
+
+    function exportExpensesPdf() {
+      const rows = getFilteredExpenses();
+      const pdf = createModulePdf('Módulo de gastos', 'Gastos filtrados y recurrentes');
+      pdf.autoTable({
+        startY: 56,
+        head: [["Concepto", "Categoría", "Monto", "Fecha", "Notas"]],
+        body: rows.length ? rows.map(expense => [
+          expense.concept || '-',
+          expense.category || '-',
+          money(expense.amount),
+          expense.date || '-',
+          expense.notes || '-'
+        ]) : [["-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 9 }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 10,
+        head: [["Recurrente", "Categoría", "Monto", "Día", "Activo", "Último mes"]],
+        body: state.recurringExpenses.length ? state.recurringExpenses.map(item => [
+          item.concept || '-',
+          item.category || '-',
+          money(item.amount),
+          item.dayOfMonth || '-',
+          item.active ? 'Sí' : 'No',
+          item.lastGeneratedMonth || '-'
+        ]) : [["-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 9 }
+      });
+
+      pdf.save(`Gastos_NJ_${today()}.pdf`);
+      showToast('PDF de gastos exportado.');
+    }
+
+    function exportInventoryPdf() {
+      const rows = getFilteredInventory();
+      const pdf = createModulePdf('Módulo de inventario', 'Stock actual y movimientos recientes');
+      pdf.autoTable({
+        startY: 56,
+        head: [["SKU", "Material", "Categoría", "Unidad", "Stock", "Mínimo", "Costo", "Valor", "Ubicación"]],
+        body: rows.length ? rows.map(item => [
+          item.sku || '-',
+          item.name || '-',
+          item.category || '-',
+          item.unit || '-',
+          Number(item.stock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+          Number(item.minStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+          money(item.unitCost),
+          money(inventoryValue(item)),
+          item.location || '-'
+        ]) : [["-","-","-","-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 8 }
+      });
+
+      const moves = state.inventoryMovements.slice().sort((a,b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 40);
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 10,
+        head: [["Fecha", "Material", "Tipo", "Cantidad", "Antes", "Después", "Referencia"]],
+        body: moves.length ? moves.map(move => {
+          const material = getInventoryItemById(move.itemId);
+          return [
+            move.date || '-',
+            material?.name || move.itemName || '-',
+            move.type || '-',
+            Number(move.qty || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+            Number(move.beforeStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+            Number(move.afterStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+            move.reference || '-'
+          ];
+        }) : [["-","-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 8 }
+      });
+
+      pdf.save(`Inventario_NJ_${today()}.pdf`);
+      showToast('PDF de inventario exportado.');
+    }
+
+    function exportClientFullPdf(clientId) {
+      const client = getClientById(clientId);
+      if (!client) return showToast('No se encontró el cliente.');
+      const jobs = getClientJobs(clientId);
+      const totals = jobs.reduce((acc, job) => {
+        const calc = computeJob(job);
+        acc.sale += calc.sale;
+        acc.cost += calc.cost;
+        acc.paid += calc.paid;
+        acc.balance += calc.balance;
+        acc.profit += calc.profit;
+        acc.photos += getJobDesignImages(job).length;
+        return acc;
+      }, { sale: 0, cost: 0, paid: 0, balance: 0, profit: 0, photos: 0 });
+
+      const pdf = createModulePdf('Resumen general del cliente', clientLabel(client));
+      pdf.autoTable({
+        startY: 56,
+        head: [["Campo", "Detalle"]],
+        body: [
+          ['Nombre', client.name || '-'],
+          ['Empresa', client.company || '-'],
+          ['Teléfono', client.phone || '-'],
+          ['Email', client.email || '-'],
+          ['Dirección', [client.address, client.city].filter(Boolean).join(', ') || '-'],
+          ['Notas', client.notes || '-'],
+          ['Trabajos registrados', String(jobs.length)],
+          ['Ventas acumuladas', money(totals.sale)],
+          ['Costo acumulado', money(totals.cost)],
+          ['Ganancia acumulada', money(totals.profit)],
+          ['Cobrado', money(totals.paid)],
+          ['Saldo pendiente', money(totals.balance)],
+          ['Fotos guardadas', String(totals.photos)]
+        ],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 9 }
+      });
+
+      const jobRows = jobs.map(job => {
+        const calc = computeJob(job);
+        return [
+          job.title || '-',
+          getJobTypeLabel(job),
+          job.date || '-',
+          job.dueDate || '-',
+          job.status || '-',
+          money(calc.sale),
+          money(calc.paid),
+          money(calc.balance),
+          String(getJobDesignImages(job).length)
+        ];
+      });
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 10,
+        head: [["Trabajo", "Tipo", "Fecha", "Entrega", "Estado", "Venta", "Pagado", "Saldo", "Fotos"]],
+        body: jobRows.length ? jobRows : [["-","-","-","-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 8 }
+      });
+
+      jobs.forEach(job => {
+        const calc = computeJob(job);
+        const payments = getPaymentsList(job);
+        const materials = Array.isArray(job.materials) ? job.materials : [];
+        const photos = getJobDesignImages(job);
+
+        pdf.addPage();
+        pdf.setFontSize(15);
+        pdf.text(job.title || 'Trabajo', 14, 18);
+        pdf.setFontSize(10);
+        pdf.text(`Tipo: ${getJobTypeLabel(job)} · Estado: ${job.status || '-'} · Entrega: ${job.dueDate || '-'}`, 14, 25);
+
+        pdf.autoTable({
+          startY: 32,
+          head: [["Campo", "Detalle"]],
+          body: [
+            ['Descripción', job.description || '-'],
+            ['Notas', job.notes || '-'],
+            ['Checklist', checklistProgress(job)],
+            ['Venta', money(calc.sale)],
+            ['Costo', money(calc.cost)],
+            ['Ganancia', money(calc.profit)],
+            ['Pagado', money(calc.paid)],
+            ['Saldo', money(calc.balance)],
+            ['Fotos', photos.map(item => item.fileName || item.url).join(' | ') || '-']
+          ],
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 8 }
+        });
+
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 8,
+          head: [["Material", "Cantidad", "Costo unitario", "Total"]],
+          body: materials.length ? materials.map(item => [
+            item.name || item.inventoryName || '-',
+            Number(item.qty || 0),
+            money(item.price || 0),
+            money(Number(item.qty || 0) * Number(item.price || 0))
+          ]) : [["-","-","-","-"]],
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 8 }
+        });
+
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 8,
+          head: [["Fecha", "Método", "Monto", "Nota"]],
+          body: payments.length ? payments.map(pay => [
+            pay.date || '-',
+            pay.method || '-',
+            money(pay.amount || 0),
+            pay.note || '-'
+          ]) : [["-","-","-","-"]],
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 8 }
+        });
+      });
+
+      pdf.save(`Cliente_${(clientLabel(client) || 'cliente').replace(/\s+/g, '_')}_${today()}.pdf`);
+      showToast('PDF completo del cliente exportado.');
+    }
+
+    function exportCurrentModulePdf() {
+      if (state.currentView === 'dashboard') return exportDashboardPdf();
+      if (state.currentView === 'clientes') return exportClientsPdf();
+      if (state.currentView === 'trabajos') return exportJobsPdf();
+      if (state.currentView === 'gastos') return exportExpensesPdf();
+      if (state.currentView === 'inventario') return exportInventoryPdf();
+      return exportDashboardPdf();
     }
 
     function exportQuotePdf(jobId) {
@@ -4245,6 +4717,8 @@
       state.recurringExpenses = [];
       state.inventoryItems = [];
       state.inventoryMovements = [];
+      state.galleryIndex = 0;
+      state.galleryJobId = null;
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }
@@ -4263,7 +4737,7 @@
     $("btnLogout").addEventListener("click", logout);
 
     $("btnExportJson").addEventListener("click", exportJson);
-    $("btnExportPdf").addEventListener("click", exportGeneralPdf);
+    $("btnExportPdf").addEventListener("click", exportCurrentModulePdf);
 
     $("btnImportJson").addEventListener("click", () => $("importJsonInput").click());
     $("importJsonInput").addEventListener("change", async (e) => {
@@ -4275,6 +4749,8 @@
     $("saveJobBtn").addEventListener("click", saveJob);
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
+    $("galleryPrevBtn").addEventListener("click", galleryPrev);
+    $("galleryNextBtn").addEventListener("click", galleryNext);
     $("savePaymentBtn").addEventListener("click", savePayment);
     $("saveRecurringBtn").addEventListener("click", saveRecurring);
     $("saveInventoryBtn").addEventListener("click", saveInventoryItem);
@@ -4385,6 +4861,11 @@
     });
 
     $("authPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+    document.addEventListener("keydown", (e) => {
+      if (!$("designGalleryModal").classList.contains("show")) return;
+      if (e.key === "ArrowLeft") galleryPrev();
+      if (e.key === "ArrowRight") galleryNext();
+    });
 
     document.addEventListener("click", (event) => {
       const target = event.target;
@@ -4403,6 +4884,7 @@
       }
 
       if (target.dataset.editClient) editClient(target.dataset.editClient);
+      if (target.dataset.clientPdf) exportClientFullPdf(target.dataset.clientPdf);
       if (target.dataset.deleteClient) removeItem("clients", target.dataset.deleteClient, "cliente");
 
       if (target.dataset.editJob) editJob(target.dataset.editJob);
