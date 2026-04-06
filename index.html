@@ -4477,7 +4477,85 @@
       return exportDashboardPdf();
     }
 
-    function exportQuotePdf(jobId) {
+    async function urlToDataUrl(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('No se pudo descargar la imagen.');
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function getImageDimensions(dataUrl) {
+      return await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width || 1, height: img.height || 1 });
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+
+    async function addPrimaryJobPhotoToPdf(pdf, job, startY) {
+      const images = getJobDesignImages(job);
+      if (!images.length) return startY;
+
+      const firstImage = images[0];
+
+      try {
+        const dataUrl = await urlToDataUrl(firstImage.url);
+        const dims = await getImageDimensions(dataUrl);
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginX = 14;
+        const maxWidth = pageWidth - (marginX * 2);
+        const maxHeight = 95;
+        let renderWidth = maxWidth;
+        let renderHeight = renderWidth * (dims.height / dims.width);
+
+        if (renderHeight > maxHeight) {
+          renderHeight = maxHeight;
+          renderWidth = renderHeight * (dims.width / dims.height);
+        }
+
+        let y = startY;
+        const neededHeight = 16 + renderHeight + 10;
+        if (y + neededHeight > pageHeight - 18) {
+          pdf.addPage();
+          y = 20;
+        }
+
+        pdf.setFontSize(11);
+        pdf.setTextColor(20, 20, 20);
+        pdf.text('Diseño / foto principal', marginX, y);
+        y += 6;
+        pdf.setDrawColor(220, 220, 220);
+        pdf.roundedRect(marginX, y, renderWidth, renderHeight, 3, 3);
+        pdf.addImage(dataUrl, 'JPEG', marginX, y, renderWidth, renderHeight);
+        y += renderHeight + 6;
+
+        pdf.setFontSize(9);
+        pdf.setTextColor(90, 90, 90);
+        pdf.text(`Archivo: ${firstImage.fileName || 'Imagen'}${images.length > 1 ? ` · Total fotos: ${images.length}` : ''}`, marginX, y);
+        return y + 4;
+      } catch (error) {
+        console.error(error);
+        let y = startY;
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        if (y + 18 > pageHeight - 18) {
+          pdf.addPage();
+          y = 20;
+        }
+        pdf.setFontSize(10);
+        pdf.setTextColor(120, 120, 120);
+        pdf.text('No se pudo insertar la foto en el PDF, pero el archivo se generó igual.', 14, y);
+        return y + 8;
+      }
+    }
+
+    async function exportQuotePdf(jobId) {
       const job = getJobById(jobId);
       if (!job) return showToast("No se encontró el trabajo.");
 
@@ -4580,15 +4658,24 @@
         styles: { fontSize: 10 }
       });
 
-      const finalY = pdf.lastAutoTable.finalY + 12;
+      let finalY = pdf.lastAutoTable.finalY + 12;
+      finalY = await addPrimaryJobPhotoToPdf(pdf, job, finalY);
+
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      if (finalY + 24 > pageHeight - 18) {
+        pdf.addPage();
+        finalY = 20;
+      }
+
       pdf.setFontSize(10);
+      pdf.setTextColor(20, 20, 20);
       pdf.text("Términos básicos:", 14, finalY);
       pdf.text("1. Esta cotización puede cambiar si cambian medidas, materiales o alcance.", 14, finalY + 6);
       pdf.text("2. Producción e instalación avanzan según aprobación y pagos acordados.", 14, finalY + 12);
       pdf.text("3. Gracias por confiar en NJ Design & Print.", 14, finalY + 18);
 
       pdf.save(`Cotizacion_F6_${(job.title || "trabajo").replace(/\s+/g, "_")}_${today()}.pdf`);
-      showToast("Cotización PDF generada.");
+      showToast(getJobDesignImages(job).length ? "Cotización PDF generada con foto." : "Cotización PDF generada.");
     }
 
     function bindRealtime() {
