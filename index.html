@@ -741,30 +741,6 @@
     .lightbox-sub{color:var(--muted);font-size:12px;margin-top:6px}
     .lightbox-actions{display:flex;gap:10px;flex-wrap:wrap}
 
-
-    .desktop-table{display:block}
-    .mobile-card-list{display:none}
-    .mobile-card{
-      background:#101216;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      display:grid;
-      gap:10px;
-      box-shadow:var(--shadow);
-    }
-    .mobile-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-    .mobile-card-title{font-size:15px;font-weight:800;line-height:1.35}
-    .mobile-card-sub{color:var(--muted);font-size:12px;line-height:1.45}
-    .mobile-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .mobile-meta{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:10px}
-    .mobile-meta span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-    .mobile-meta strong{display:block;margin-top:6px;font-size:14px;line-height:1.35;word-break:break-word}
-    .mobile-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .mobile-actions .btn{width:100%;min-width:0}
-    .mobile-card .actions-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .mobile-section-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-
     @media (max-width:1100px){
       .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
@@ -777,46 +753,21 @@
         position:fixed;
         left:0;right:0;bottom:0;top:auto;
         height:auto;
-        padding:8px;
+        padding:10px;
         z-index:100;
         border-right:none;
         border-top:1px solid var(--line);
       }
       .brand,.brand-sub{display:none}
-      .nav{grid-template-columns:repeat(5,1fr);gap:6px}
-      .nav button{text-align:center;padding:9px 4px;font-size:11px;line-height:1.2}
+      .nav{grid-template-columns:repeat(4,1fr)}
+      .nav button{text-align:center;padding:10px 8px;font-size:12px}
       .sidebar-foot{display:none}
-      .content{padding:14px 14px 96px}
-      .topbar{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,var(--bg) 82%, rgba(10,11,14,0));padding-bottom:12px;margin-bottom:16px}
-      .top-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-      .top-actions .btn{width:100%;padding:12px 10px}
-      .title h1{font-size:24px}
-      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid,.mobile-meta-grid{grid-template-columns:1fr}
+      .content{padding:18px 18px 92px}
+      .stats,.mini-stats,.summary-box,.grid-2,.auth-actions,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid{grid-template-columns:1fr}
       .filters .input,.filters .select{max-width:none}
       .calendar-grid{display:block}
       .calendar-day-head{display:none}
       .calendar-cell{margin-bottom:10px}
-      .desktop-table{display:none}
-      .mobile-card-list{display:grid;gap:12px;margin-top:12px}
-      .panel-head{padding:14px}
-      .panel-head h2{font-size:17px}
-      .btn,.input,.select,.textarea{min-height:46px}
-      .actions-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-      .actions-row .btn{width:100%;min-width:0}
-      .kanban-board{grid-template-columns:1fr;min-width:0}
-      .kanban-wrap{padding:14px}
-      .modal-backdrop{padding:0}
-      .modal,.lightbox-modal{width:100%;max-height:100vh;height:100vh;border-radius:0;border-left:none;border-right:none}
-      .modal-head,.modal-foot{position:sticky;background:var(--panel);z-index:3}
-      .modal-head{top:0}
-      .modal-foot{bottom:0}
-      .modal-body,.lightbox-wrap{padding:14px}
-      .box{padding:12px}
-      .gallery-thumb img{height:94px}
-      .lightbox-stage{min-height:220px}
-      .lightbox-stage img{max-height:52vh}
-      .lightbox-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
-      .lightbox-actions .btn{width:100%}
     }
   </style>
 </head>
@@ -919,7 +870,7 @@
                 <div class="section-note">Mira rápido qué entregas tienes encima.</div>
               </div>
             </div>
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -936,7 +887,6 @@
                 <tbody id="dueSoonBody"></tbody>
               </table>
             </div>
-            <div id="dueSoonCards" class="mobile-card-list"></div>
             <div id="dueSoonEmpty" class="empty hidden">No tienes entregas próximas en este momento.</div>
           </div>
 
@@ -947,7 +897,7 @@
                 <div class="section-note">Clientes con más trabajos y movimiento.</div>
               </div>
             </div>
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -962,7 +912,6 @@
                 <tbody id="frequentClientsBody"></tbody>
               </table>
             </div>
-            <div id="frequentClientsCards" class="mobile-card-list"></div>
             <div id="frequentClientsEmpty" class="empty hidden">Todavía no hay suficiente historial de trabajos.</div>
           </div>
 
@@ -1005,7 +954,7 @@
               </div>
             </div>
 
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -1021,7 +970,6 @@
                 <tbody id="clientsBody"></tbody>
               </table>
             </div>
-            <div id="clientsCards" class="mobile-card-list"></div>
 
             <div id="clientsEmpty" class="empty hidden">No hay clientes guardados.</div>
           </div>
@@ -1086,7 +1034,7 @@
             </div>
 
             <div id="jobsTableView">
-              <div class="table-wrap desktop-table">
+              <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
@@ -1108,7 +1056,6 @@
                   <tbody id="jobsBody"></tbody>
                 </table>
               </div>
-              <div id="jobsCards" class="mobile-card-list"></div>
               <div id="jobsEmpty" class="empty hidden">No hay trabajos guardados.</div>
             </div>
 
@@ -1138,7 +1085,7 @@
               </div>
             </div>
 
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -1153,7 +1100,6 @@
                 <tbody id="expensesBody"></tbody>
               </table>
             </div>
-            <div id="expensesCards" class="mobile-card-list"></div>
 
             <div id="expensesEmpty" class="empty hidden">No hay gastos guardados.</div>
           </div>
@@ -1169,7 +1115,7 @@
               </div>
             </div>
 
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -1186,7 +1132,6 @@
                 <tbody id="recurringBody"></tbody>
               </table>
             </div>
-            <div id="recurringCards" class="mobile-card-list"></div>
 
             <div id="recurringEmpty" class="empty hidden">No hay gastos recurrentes creados.</div>
           </div>
@@ -1239,7 +1184,7 @@
               </div>
             </div>
 
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -1271,7 +1216,7 @@
               </div>
             </div>
 
-            <div class="table-wrap desktop-table">
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -3706,31 +3651,6 @@
         </tr>
       `).join("");
 
-      setHtml("inventoryCards", rows.map(item => `
-        <div class="mobile-card">
-          <div class="mobile-card-top">
-            <div>
-              <div class="mobile-card-title">${safe(item.name || "-")}</div>
-              <div class="mobile-card-sub">${safe(item.sku || "Sin SKU")} · ${safe(item.supplier || "-")}</div>
-            </div>
-            ${stockPill(item)}
-          </div>
-          <div class="mobile-meta-grid">
-            <div class="mobile-meta"><span>Categoría</span><strong>${safe(item.category || "-")}</strong></div>
-            <div class="mobile-meta"><span>Unidad</span><strong>${safe(item.unit || "-")}</strong></div>
-            <div class="mobile-meta"><span>Stock / mínimo</span><strong>${Number(item.stock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} / ${Number(item.minStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></div>
-            <div class="mobile-meta"><span>Costo unitario</span><strong>${money(item.unitCost || 0)}</strong></div>
-            <div class="mobile-meta"><span>Valor</span><strong>${money(inventoryValue(item))}</strong></div>
-            <div class="mobile-meta"><span>Ubicación</span><strong>${safe(item.location || "-")}</strong></div>
-          </div>
-          <div class="mobile-actions">
-            <button class="btn btn-info btn-small" data-move-item="${item.id}">Movimiento</button>
-            <button class="btn btn-secondary btn-small" data-edit-inventory="${item.id}">Editar</button>
-            <button class="btn btn-danger btn-small" data-delete-inventory="${item.id}">Eliminar</button>
-          </div>
-        </div>
-      `).join(""));
-
       $("inventoryEmpty").classList.toggle("hidden", rows.length > 0);
 
       const totalItems = state.inventoryItems.length;
@@ -3768,27 +3688,6 @@
           </tr>
         `;
       }).join("");
-
-      setHtml("inventoryMovementsCards", rows.map(item => {
-        const material = getInventoryItemById(item.itemId);
-        return `
-          <div class="mobile-card">
-            <div class="mobile-card-top">
-              <div>
-                <div class="mobile-card-title">${safe(material?.name || item.itemName || "-")}</div>
-                <div class="mobile-card-sub">${safe(material?.sku || item.itemSku || "-")} · ${safe(item.date || "-")}</div>
-              </div>
-              ${movementPill(item.type || "ajuste")}
-            </div>
-            <div class="mobile-meta-grid">
-              <div class="mobile-meta"><span>Cantidad</span><strong>${Number(item.qty || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></div>
-              <div class="mobile-meta"><span>Antes / después</span><strong>${Number(item.beforeStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} / ${Number(item.afterStock || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></div>
-              <div class="mobile-meta"><span>Referencia</span><strong>${safe(item.reference || "-")}</strong></div>
-              <div class="mobile-meta"><span>Nota</span><strong>${safe(item.note || "-")}</strong></div>
-            </div>
-          </div>
-        `;
-      }).join(""));
 
       $("inventoryMovementsEmpty").classList.toggle("hidden", rows.length > 0);
     }
@@ -3871,29 +3770,6 @@
         </tr>
       `).join("");
 
-      setHtml("clientsCards", rows.map(client => `
-        <div class="mobile-card">
-          <div class="mobile-card-top">
-            <div>
-              <div class="mobile-card-title">${safe(clientLabel(client))}</div>
-              <div class="mobile-card-sub">${safe(client.name || client.company || "Cliente")}</div>
-            </div>
-          </div>
-          <div class="mobile-meta-grid">
-            <div class="mobile-meta"><span>Teléfono</span><strong>${safe(client.phone || "-")}</strong></div>
-            <div class="mobile-meta"><span>Email</span><strong>${safe(client.email || "-")}</strong></div>
-            <div class="mobile-meta"><span>Dirección</span><strong>${safe([client.address, client.city].filter(Boolean).join(", ") || "-")}</strong></div>
-            <div class="mobile-meta"><span>Notas</span><strong>${safe(client.notes || "-")}</strong></div>
-          </div>
-          <div class="mobile-actions">
-            <button class="btn btn-info btn-small" data-wa-client="${client.id}" data-wa-mode="general">WhatsApp</button>
-            <button class="btn btn-secondary btn-small" data-client-pdf="${client.id}">PDF cliente</button>
-            <button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>
-            <button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>
-          </div>
-        </div>
-      `).join(""));
-
       $("clientsEmpty").classList.toggle("hidden", rows.length > 0);
       $("allClients").textContent = String(state.clients.length);
       fillClientSelect($("jobClientId").value);
@@ -3941,40 +3817,6 @@
           </tr>
         `;
       }).join("");
-
-      setHtml("jobsCards", rows.map(job => {
-        const client = getClientById(job.clientId);
-        const calc = computeJob(job);
-        const overdue = isOverdue(job);
-        return `
-          <div class="mobile-card">
-            <div class="mobile-card-top">
-              <div>
-                <div class="mobile-card-title">${safe(job.title || "-")}</div>
-                <div class="mobile-card-sub">${safe(clientLabel(client))}</div>
-              </div>
-              ${statusPill(job.status || "Cotización")}
-            </div>
-            <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
-            <div class="mobile-meta-grid">
-              <div class="mobile-meta"><span>Entrega</span><strong class="${overdue ? "overdue" : ""}">${safe(formatDate(job.dueDate))}${overdue ? " · Vencido" : ""}</strong></div>
-              <div class="mobile-meta"><span>Prioridad</span><strong>${safe(job.priority || "Media")}</strong></div>
-              <div class="mobile-meta"><span>Venta / saldo</span><strong>${money(calc.sale)} / ${money(calc.balance)}</strong></div>
-              <div class="mobile-meta"><span>Ganancia</span><strong>${money(calc.profit)}</strong></div>
-              <div class="mobile-meta"><span>Pagado</span><strong>${money(calc.paid)}</strong></div>
-              <div class="mobile-meta"><span>Checklist</span><strong>${safe(checklistProgress(job))}</strong></div>
-            </div>
-            <div class="mobile-actions">
-              <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>
-              <button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>
-              <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
-              <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">PDF</button>
-              <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-              <button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>
-            </div>
-          </div>
-        `;
-      }).join(""));
 
       $("jobsEmpty").classList.toggle("hidden", rows.length > 0);
       renderKanban();
@@ -4055,33 +3897,6 @@
           </tr>
         `;
       }).join("");
-      setHtml("dueSoonCards", rows.map(job => {
-        const client = getClientById(job.clientId);
-        const calc = computeJob(job);
-        const overdue = isOverdue(job);
-        return `
-          <div class="mobile-card">
-            <div class="mobile-card-top">
-              <div>
-                <div class="mobile-card-title">${safe(job.title || "-")}</div>
-                <div class="mobile-card-sub">${safe(clientLabel(client))}</div>
-              </div>
-              ${priorityPill(job.priority || "Media")}
-            </div>
-            <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
-            <div class="mobile-meta-grid">
-              <div class="mobile-meta"><span>Entrega</span><strong class="${overdue ? "overdue" : ""}">${safe(job.dueDate || "-")}</strong></div>
-              <div class="mobile-meta"><span>Saldo</span><strong>${money(calc.balance)}</strong></div>
-              <div class="mobile-meta"><span>Checklist</span><strong>${safe(checklistProgress(job))}</strong></div>
-              <div class="mobile-meta"><span>Estado</span><strong>${safe(job.status || "Cotización")}</strong></div>
-            </div>
-            <div class="mobile-actions">
-              <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Avisar entrega</button>
-              <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
-            </div>
-          </div>
-        `;
-      }).join(""));
       $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
@@ -4131,25 +3946,6 @@
         `;
       }).join("");
 
-      setHtml("frequentClientsCards", rows.map(item => {
-        const client = getClientById(item.clientId);
-        return `
-          <div class="mobile-card">
-            <div class="mobile-card-title">${safe(clientLabel(client))}</div>
-            <div class="mobile-meta-grid">
-              <div class="mobile-meta"><span>Trabajos</span><strong>${item.jobs}</strong></div>
-              <div class="mobile-meta"><span>Ventas</span><strong>${money(item.sales)}</strong></div>
-              <div class="mobile-meta"><span>Por cobrar</span><strong>${money(item.receivable)}</strong></div>
-              <div class="mobile-meta"><span>Última entrega</span><strong>${safe(item.latestDue || "-")}</strong></div>
-            </div>
-            <div class="mobile-actions">
-              <button class="btn btn-info btn-small" data-wa-client="${item.clientId}" data-wa-mode="general">WhatsApp</button>
-              <button class="btn btn-secondary btn-small" data-filter-client-jobs="${item.clientId}">Ver trabajos</button>
-            </div>
-          </div>
-        `;
-      }).join(""));
-
       $("frequentClientsEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
@@ -4171,22 +3967,6 @@
           </td>
         </tr>
       `).join("");
-
-      setHtml("expensesCards", rows.map(expense => `
-        <div class="mobile-card">
-          <div class="mobile-card-title">${safe(expense.concept || "-")}</div>
-          <div class="mobile-meta-grid">
-            <div class="mobile-meta"><span>Categoría</span><strong>${safe(expense.category || "-")}</strong></div>
-            <div class="mobile-meta"><span>Monto</span><strong>${money(expense.amount)}</strong></div>
-            <div class="mobile-meta"><span>Fecha</span><strong>${safe(formatDate(expense.date))}</strong></div>
-            <div class="mobile-meta"><span>Notas</span><strong>${safe(expense.notes || "-")}</strong></div>
-          </div>
-          <div class="mobile-actions">
-            <button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>
-            <button class="btn btn-danger btn-small" data-delete-expense="${expense.id}">Eliminar</button>
-          </div>
-        </div>
-      `).join(""));
 
       $("expensesEmpty").classList.toggle("hidden", rows.length > 0);
       renderStats();
@@ -4210,24 +3990,6 @@
           </td>
         </tr>
       `).join("");
-
-      setHtml("recurringCards", state.recurringExpenses.map(item => `
-        <div class="mobile-card">
-          <div class="mobile-card-title">${safe(item.concept || "-")}</div>
-          <div class="mobile-meta-grid">
-            <div class="mobile-meta"><span>Categoría</span><strong>${safe(item.category || "-")}</strong></div>
-            <div class="mobile-meta"><span>Monto</span><strong>${money(item.amount)}</strong></div>
-            <div class="mobile-meta"><span>Día del mes</span><strong>${safe(item.dayOfMonth || "-")}</strong></div>
-            <div class="mobile-meta"><span>Activo</span><strong>${item.active ? 'Sí' : 'No'}</strong></div>
-            <div class="mobile-meta"><span>Último mes generado</span><strong>${safe(item.lastGeneratedMonth || "-")}</strong></div>
-            <div class="mobile-meta"><span>Notas</span><strong>${safe(item.notes || "-")}</strong></div>
-          </div>
-          <div class="mobile-actions">
-            <button class="btn btn-secondary btn-small" data-edit-recurring="${item.id}">Editar</button>
-            <button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Eliminar</button>
-          </div>
-        </div>
-      `).join(""));
 
       $("recurringEmpty").classList.toggle("hidden", state.recurringExpenses.length > 0);
     }
