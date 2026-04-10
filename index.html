@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>NJ Design & Print CRM - Fase 8 Segura</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -769,6 +769,140 @@
       .calendar-day-head{display:none}
       .calendar-cell{margin-bottom:10px}
     }
+  
+
+    /* ===== Mejoras responsivas seguras, enfocadas en móvil ===== */
+    html{-webkit-text-size-adjust:100%}
+    body{overflow-x:hidden}
+    .table-wrap{
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior-x:contain;
+      scrollbar-width:thin;
+    }
+    .input,.select,.textarea,.btn{min-height:46px}
+    .btn-small{min-height:36px}
+    .modal{overscroll-behavior:contain}
+    .modal-body,.calendar-wrap,.kanban-wrap{scrollbar-width:thin}
+
+    @media (max-width:1200px){
+      .content{padding:22px}
+      .topbar{align-items:stretch}
+      .top-actions{width:100%;justify-content:flex-start}
+      .top-actions .btn{flex:1 1 220px}
+      .panel-head{align-items:flex-start}
+    }
+
+    @media (max-width:900px){
+      .title h1{font-size:24px}
+      .title p{font-size:14px}
+      .stats,.mini-stats,.alert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .summary-box div{padding:12px}
+      .summary-box strong{font-size:17px}
+      .filters{width:100%}
+      .filters .input,.filters .select,.filters .btn{flex:1 1 100%;max-width:none}
+      .table-wrap{border-top:1px solid var(--line)}
+    }
+
+    @media (max-width:780px){
+      .sidebar{
+        padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+        background:rgba(20,22,27,.98);
+        backdrop-filter:blur(10px);
+      }
+      .nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+      .nav button{
+        min-height:58px;
+        padding:8px 6px;
+        font-size:11px;
+        line-height:1.15;
+        border-radius:12px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        word-break:break-word;
+      }
+      .content{
+        padding:16px 14px calc(104px + env(safe-area-inset-bottom));
+      }
+      .topbar{margin-bottom:18px}
+      .top-actions{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        width:100%;
+      }
+      .top-actions .btn{width:100%}
+      .panel{border-radius:16px}
+      .panel-head{padding:14px}
+      .panel-head h2{font-size:17px}
+      .table-wrap{
+        margin:0 -14px;
+        padding:0 14px 10px;
+      }
+      table{min-width:980px}
+      th,td{padding:12px 12px}
+      .summary-box{gap:8px;padding:10px}
+      .summary-box strong{font-size:16px}
+      .box{padding:12px}
+      .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .gallery-thumb img{height:105px}
+      .lightbox-wrap{padding:14px}
+      .lightbox-stage{min-height:220px}
+      .lightbox-stage img{max-height:52vh}
+      .modal-backdrop{
+        align-items:flex-end;
+        padding:0;
+      }
+      .modal,.lightbox-modal{
+        width:100vw;
+        max-width:none;
+        height:100dvh;
+        max-height:100dvh;
+        border-radius:20px 20px 0 0;
+        border-left:none;
+        border-right:none;
+        border-bottom:none;
+      }
+      .modal-head,.modal-foot{
+        position:sticky;
+        z-index:5;
+        background:var(--panel);
+      }
+      .modal-head{top:0;padding:14px}
+      .modal-body{padding:14px}
+      .modal-foot{
+        bottom:0;
+        padding:14px;
+        padding-bottom:calc(14px + env(safe-area-inset-bottom));
+      }
+      .modal-foot .btn{flex:1 1 140px}
+      .auth-wrap{padding:14px}
+      .auth-card{padding:22px;border-radius:20px}
+    }
+
+    @media (max-width:560px){
+      .title h1{font-size:22px}
+      .title p,.section-note,.help{font-size:13px}
+      .stats,.mini-stats,.alert-grid,.summary-box,.grid-2,.grid-3,.grid-4,.price-grid,.estimate-grid,.auth-actions,.checklist-grid{grid-template-columns:1fr}
+      .top-actions{grid-template-columns:1fr}
+      .actions-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .actions-row .btn{width:100%;padding:10px 12px}
+      .row-material,.row-quote-item{grid-template-columns:1fr}
+      .gallery-grid{grid-template-columns:1fr 1fr}
+      .gallery-toolbar,.lightbox-actions{display:grid;grid-template-columns:1fr 1fr}
+      .kanban-board{min-width:1320px}
+      .calendar-cell{min-height:100px;padding:8px}
+      .calendar-job{padding:6px;font-size:10px}
+    }
+
+    @media (max-width:390px){
+      .content{padding-left:12px;padding-right:12px}
+      .nav button{font-size:10px;min-height:56px}
+      .actions-row,.gallery-toolbar,.lightbox-actions{grid-template-columns:1fr}
+      .gallery-grid{grid-template-columns:1fr}
+      .btn,.input,.select,.textarea{font-size:16px}
+    }
+
   </style>
 </head>
 <body>
