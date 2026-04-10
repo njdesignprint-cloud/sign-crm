@@ -1093,6 +1093,7 @@
                     <th>Categoría</th>
                     <th>Monto</th>
                     <th>Fecha</th>
+                    <th>Fotos</th>
                     <th>Notas</th>
                     <th>Acciones</th>
                   </tr>
@@ -1529,11 +1530,11 @@
 
         <div class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-            <strong>Pruebas / fotos del gasto</strong>
+            <strong>Fotos / comprobantes del gasto</strong>
             <button id="uploadExpensePhotoBtn" class="btn btn-info btn-small" type="button">Subir foto</button>
           </div>
           <div class="section-note mt-12">
-            Sube fotos del recibo, factura o de lo que compraste para dejar evidencia del gasto.
+            Puedes subir recibos, facturas o fotos de la compra. Si el gasto todavía no está guardado, las fotos quedan listas y se guardan junto con el gasto cuando pulses Guardar gasto.
           </div>
           <div id="expensePhotosGallery" class="list-logs"></div>
         </div>
@@ -1711,8 +1712,7 @@
     const CLOUDINARY_CONFIG = {
       cloudName: "dcsavsm4e",
       uploadPreset: "njdesignprintcrm",
-      folder: "njdesignprint/disenos",
-      expenseFolder: "njdesignprint/gastos"
+      folder: "njdesignprint/disenos"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -1738,6 +1738,8 @@
       workingMovementItemId: null,
       galleryIndex: 0,
       galleryJobId: null,
+      pendingJobImages: [],
+      pendingExpensePhotos: [],
       unsubscribers: [],
       calendarDate: new Date(),
       jobsViewMode: "table"
@@ -1848,7 +1850,7 @@
       const labels = {
         dashboard: 'PDF dashboard',
         clientes: 'PDF clientes',
-        trabajos: 'PDF trabajos',
+        trabajos: 'PDF materiales',
         gastos: 'PDF gastos',
         inventario: 'PDF inventario'
       };
@@ -2070,6 +2072,61 @@
 
     function getJobDesignImages(job = {}) {
       return Array.isArray(job.designImages) ? [...job.designImages] : [];
+    }
+
+    function getExpensePhotos(expense = {}) {
+      return Array.isArray(expense.photos) ? [...expense.photos] : [];
+    }
+
+    function buildUploadedImageAsset(info = {}) {
+      return {
+        url: info.secure_url,
+        publicId: info.public_id,
+        fileName: info.original_filename || info.display_name || "imagen",
+        uploadedAt: new Date().toISOString()
+      };
+    }
+
+    function openCloudinaryImageWidget(options = {}) {
+      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) {
+        showToast("Cloudinary no cargó correctamente.");
+        return;
+      }
+
+      const widget = cloudinary.createUploadWidget(
+        {
+          cloudName: CLOUDINARY_CONFIG.cloudName,
+          uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+          multiple: options.multiple !== false,
+          maxFiles: options.maxFiles || 10,
+          resourceType: "image",
+          folder: CLOUDINARY_CONFIG.folder,
+          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+          sources: ["local", "camera"],
+          showAdvancedOptions: false,
+          cropping: false
+        },
+        async (error, result) => {
+          if (error) {
+            console.error(error);
+            showToast(options.errorMessage || "Error subiendo la imagen.");
+            return;
+          }
+
+          if (result && result.event === "success") {
+            try {
+              if (typeof options.onSuccess === "function") {
+                await options.onSuccess(buildUploadedImageAsset(result.info), result.info);
+              }
+            } catch (err) {
+              console.error(err);
+              showToast(options.persistErrorMessage || "La imagen subió, pero no se pudo guardar.");
+            }
+          }
+        }
+      );
+
+      widget.open();
     }
 
     function getQuote(job = {}) {
@@ -2597,16 +2654,11 @@
       const box = $("designImagesGallery");
       if (!box) return;
 
-      if (!state.editingJobId) {
-        box.innerHTML = `<div class="section-note">Guarda primero el trabajo para poder subir fotos.</div>`;
-        return;
-      }
-
-      const job = getJobById(state.editingJobId);
-      const images = getJobDesignImages(job);
+      const job = state.editingJobId ? getJobById(state.editingJobId) : null;
+      const images = state.editingJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
 
       if (!images.length) {
-        box.innerHTML = `<div class="section-note">Todavía no hay fotos subidas para este trabajo.</div>`;
+        box.innerHTML = `<div class="section-note">${state.editingJobId ? "Todavía no hay fotos subidas para este trabajo." : "Todavía no has subido fotos para este trabajo nuevo."}</div>`;
         return;
       }
 
@@ -2638,19 +2690,18 @@
     }
 
     function openDesignGallery(index = 0) {
-      if (!state.editingJobId) return showToast("No hay trabajo abierto.");
-      const job = getJobById(state.editingJobId);
-      const images = getJobDesignImages(job);
+      const job = state.editingJobId ? getJobById(state.editingJobId) : null;
+      const images = state.editingJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
       if (!images.length) return;
-      state.galleryJobId = state.editingJobId;
+      state.galleryJobId = state.editingJobId || null;
       state.galleryIndex = Math.max(0, Math.min(index, images.length - 1));
       renderGalleryModal();
       openModal("designGalleryModal");
     }
 
     function renderGalleryModal() {
-      const job = getJobById(state.galleryJobId || state.editingJobId);
-      const images = getJobDesignImages(job);
+      const job = state.galleryJobId ? getJobById(state.galleryJobId) : null;
+      const images = state.galleryJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
       if (!images.length) return;
       const current = images[state.galleryIndex] || images[0];
       $("galleryModalImage").src = current.url;
@@ -2663,23 +2714,31 @@
     }
 
     function galleryPrev() {
-      const job = getJobById(state.galleryJobId || state.editingJobId);
-      const images = getJobDesignImages(job);
+      const job = state.galleryJobId ? getJobById(state.galleryJobId) : null;
+      const images = state.galleryJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
       if (!images.length) return;
       state.galleryIndex = (state.galleryIndex - 1 + images.length) % images.length;
       renderGalleryModal();
     }
 
     function galleryNext() {
-      const job = getJobById(state.galleryJobId || state.editingJobId);
-      const images = getJobDesignImages(job);
+      const job = state.galleryJobId ? getJobById(state.galleryJobId) : null;
+      const images = state.galleryJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
       if (!images.length) return;
       state.galleryIndex = (state.galleryIndex + 1) % images.length;
       renderGalleryModal();
     }
 
     async function deleteDesignImage(index) {
-      if (!state.editingJobId) return showToast("No hay trabajo abierto.");
+      if (!state.editingJobId) {
+        if (index < 0 || index >= state.pendingJobImages.length) return;
+        if (!confirm("¿Eliminar esta foto del trabajo?")) return;
+        state.pendingJobImages.splice(index, 1);
+        if (!state.pendingJobImages.length) closeModal("designGalleryModal");
+        renderJobDesignImages();
+        showToast("Foto quitada del trabajo nuevo.");
+        return;
+      }
 
       const job = getJobById(state.editingJobId);
       if (!job) return showToast("No se encontró el trabajo.");
@@ -2705,96 +2764,59 @@
     }
 
     function openDesignUploadWidget() {
-      if (!state.editingJobId) {
-        showToast("Primero guarda el trabajo para poder subir fotos.");
-        return;
-      }
-
-      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) {
-        showToast("Cloudinary no cargó correctamente.");
-        return;
-      }
-
-      const widget = cloudinary.createUploadWidget(
-        {
-          cloudName: CLOUDINARY_CONFIG.cloudName,
-          uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
-          multiple: true,
-          maxFiles: 10,
-          resourceType: "image",
-          folder: CLOUDINARY_CONFIG.folder,
-          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
-          sources: ["local", "camera"],
-          showAdvancedOptions: false,
-          cropping: false
-        },
-        async (error, result) => {
-          if (error) {
-            console.error(error);
-            showToast("Error subiendo la imagen.");
+      openCloudinaryImageWidget({
+        multiple: true,
+        maxFiles: 10,
+        errorMessage: "Error subiendo la imagen del trabajo.",
+        persistErrorMessage: "La imagen subió, pero no se pudo guardar en el trabajo.",
+        onSuccess: async (asset) => {
+          if (!state.editingJobId) {
+            state.pendingJobImages.push(asset);
+            renderJobDesignImages();
+            showToast("Foto agregada al trabajo nuevo. Guarda el trabajo para dejarla registrada.");
             return;
           }
 
-          if (result && result.event === "success") {
-            try {
-              const job = getJobById(state.editingJobId);
-              if (!job) return;
+          const job = getJobById(state.editingJobId);
+          if (!job) return;
 
-              const images = getJobDesignImages(job);
-              images.push({
-                url: result.info.secure_url,
-                publicId: result.info.public_id,
-                fileName: result.info.original_filename || "imagen",
-                uploadedAt: new Date().toISOString()
-              });
+          const images = getJobDesignImages(job);
+          images.push(asset);
 
-              await jobsRef().doc(state.editingJobId).update({
-                designImages: images,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
+          await jobsRef().doc(state.editingJobId).update({
+            designImages: images,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
 
-              showToast("Foto subida correctamente.");
-            } catch (err) {
-              console.error(err);
-              showToast("La imagen subió, pero no se pudo guardar en el trabajo.");
-            }
-          }
+          showToast("Foto subida correctamente.");
         }
-      );
-
-      widget.open();
+      });
     }
 
     function renderExpensePhotos() {
       const box = $("expensePhotosGallery");
       if (!box) return;
 
-      if (!state.editingExpenseId) {
-        box.innerHTML = `<div class="section-note">Guarda primero el gasto para poder subir fotos.</div>`;
-        return;
-      }
+      const expense = state.editingExpenseId ? state.expenses.find(item => item.id === state.editingExpenseId) : null;
+      const images = state.editingExpenseId ? getExpensePhotos(expense) : [...state.pendingExpensePhotos];
 
-      const expense = state.expenses.find(item => item.id === state.editingExpenseId);
-      const photos = getExpensePhotos(expense);
-
-      if (!photos.length) {
-        box.innerHTML = `<div class="section-note">Todavía no hay fotos subidas para este gasto.</div>`;
+      if (!images.length) {
+        box.innerHTML = `<div class="section-note">${state.editingExpenseId ? "Todavía no hay fotos subidas para este gasto." : "Puedes subir fotos ahora mismo y se guardarán junto con el gasto cuando pulses Guardar gasto."}</div>`;
         return;
       }
 
       box.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px;">
-          ${photos.map((photo, index) => `
-            <div class="log-item" style="padding:10px;">
-              <a href="${photo.url}" target="_blank" rel="noopener noreferrer">
-                <img src="${photo.url}" alt="${safe(photo.fileName || "Prueba de gasto")}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.08);">
-              </a>
-              <div style="margin-top:8px;font-size:12px;color:var(--muted);word-break:break-word;">
-                ${safe(photo.fileName || "Imagen")}
-              </div>
-              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-                <a href="${photo.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small">Ver</a>
-                <button type="button" class="btn btn-danger btn-small" onclick="deleteExpensePhoto(${index})">Eliminar</button>
+        <div class="gallery-strip">
+          ${images.map((img, index) => `
+            <div class="gallery-thumb">
+              <img src="${img.url}" alt="${safe(img.fileName || "Comprobante")}" onclick="window.open('${img.url}','_blank')">
+              <div class="gallery-thumb-info">
+                <div><strong>${safe(img.fileName || `Foto ${index + 1}`)}</strong></div>
+                <div>${safe(formatDateTime(img.uploadedAt))}</div>
+                <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <a href="${img.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small">Ver</a>
+                  <button type="button" class="btn btn-danger btn-small" onclick="deleteExpensePhoto(${index})">Eliminar</button>
+                </div>
               </div>
             </div>
           `).join("")}
@@ -2803,20 +2825,27 @@
     }
 
     async function deleteExpensePhoto(index) {
-      if (!state.editingExpenseId) return showToast("No hay gasto abierto.");
+      if (!state.editingExpenseId) {
+        if (index < 0 || index >= state.pendingExpensePhotos.length) return;
+        if (!confirm("¿Eliminar esta foto del gasto?")) return;
+        state.pendingExpensePhotos.splice(index, 1);
+        renderExpensePhotos();
+        showToast("Foto quitada del gasto nuevo.");
+        return;
+      }
+
       const expense = state.expenses.find(item => item.id === state.editingExpenseId);
       if (!expense) return showToast("No se encontró el gasto.");
 
-      const photos = getExpensePhotos(expense);
-      if (index < 0 || index >= photos.length) return;
-
+      const images = getExpensePhotos(expense);
+      if (index < 0 || index >= images.length) return;
       if (!confirm("¿Eliminar esta foto del gasto?")) return;
 
-      photos.splice(index, 1);
+      images.splice(index, 1);
 
       try {
         await expensesRef().doc(state.editingExpenseId).update({
-          photoProofs: photos,
+          photos: images,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         showToast("Foto eliminada del gasto.");
@@ -2826,65 +2855,34 @@
       }
     }
 
-    function openExpensePhotoUploadWidget() {
-      if (!state.editingExpenseId) {
-        showToast("Primero guarda el gasto para poder subir fotos.");
-        return;
-      }
-
-      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) {
-        showToast("Cloudinary no cargó correctamente.");
-        return;
-      }
-
-      const widget = cloudinary.createUploadWidget(
-        {
-          cloudName: CLOUDINARY_CONFIG.cloudName,
-          uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
-          multiple: true,
-          maxFiles: 10,
-          resourceType: "image",
-          folder: CLOUDINARY_CONFIG.expenseFolder,
-          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
-          sources: ["local", "camera"],
-          showAdvancedOptions: false,
-          cropping: false
-        },
-        async (error, result) => {
-          if (error) {
-            console.error(error);
-            showToast("Error subiendo la foto del gasto.");
+    function openExpenseUploadWidget() {
+      openCloudinaryImageWidget({
+        multiple: true,
+        maxFiles: 10,
+        errorMessage: "Error subiendo la imagen del gasto.",
+        persistErrorMessage: "La imagen subió, pero no se pudo guardar en el gasto.",
+        onSuccess: async (asset) => {
+          if (!state.editingExpenseId) {
+            state.pendingExpensePhotos.push(asset);
+            renderExpensePhotos();
+            showToast("Foto agregada al gasto nuevo. Guarda el gasto para dejarla registrada.");
             return;
           }
 
-          if (result && result.event === "success") {
-            try {
-              const expense = state.expenses.find(item => item.id === state.editingExpenseId);
-              if (!expense) return;
+          const expense = state.expenses.find(item => item.id === state.editingExpenseId);
+          if (!expense) return;
 
-              const photos = getExpensePhotos(expense);
-              photos.push({
-                url: result.info.secure_url,
-                publicId: result.info.public_id,
-                fileName: result.info.original_filename || "imagen",
-                uploadedAt: new Date().toISOString()
-              });
+          const images = getExpensePhotos(expense);
+          images.push(asset);
 
-              await expensesRef().doc(state.editingExpenseId).update({
-                photoProofs: photos,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
+          await expensesRef().doc(state.editingExpenseId).update({
+            photos: images,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
 
-              showToast("Foto del gasto subida correctamente.");
-            } catch (err) {
-              console.error(err);
-              showToast("La foto subió, pero no se pudo guardar en el gasto.");
-            }
-          }
+          showToast("Foto subida al gasto.");
         }
-      );
-
-      widget.open();
+      });
     }
 
     function getCurrentJobPaymentsPreviewData() {
@@ -3012,8 +3010,10 @@
       $("quoteDiscountValue").value = "";
       $("quoteTaxPercent").value = "0";
 
+      state.pendingJobImages = [];
       setChecklistForm({});
       renderJobPreview();
+      renderJobDesignImages();
     }
 
     function resetExpenseForm() {
@@ -3024,6 +3024,7 @@
       $("expenseAmount").value = "";
       $("expenseDate").value = today();
       $("expenseNotes").value = "";
+      state.pendingExpensePhotos = [];
       renderExpensePhotos();
     }
 
@@ -3196,11 +3197,12 @@
           showToast("Trabajo actualizado.");
         } else {
           payload.payments = [];
-          payload.designImages = [];
+          payload.designImages = [...state.pendingJobImages];
           payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           await jobsRef().add(payload);
-          showToast("Trabajo guardado. Ahora ya puedes agregar pagos y notas.");
+          state.pendingJobImages = [];
+          showToast("Trabajo guardado correctamente.");
         }
         closeModal("jobModal");
       } catch (error) {
@@ -3224,12 +3226,15 @@
 
       try {
         if (state.editingExpenseId) {
+          const existing = state.expenses.find(item => item.id === state.editingExpenseId) || {};
+          payload.photos = getExpensePhotos(existing);
           await expensesRef().doc(state.editingExpenseId).update(payload);
           showToast("Gasto actualizado.");
         } else {
+          payload.photos = [...state.pendingExpensePhotos];
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          payload.photoProofs = [];
           await expensesRef().add(payload);
+          state.pendingExpensePhotos = [];
           showToast("Gasto guardado.");
         }
         closeModal("expenseModal");
@@ -3532,10 +3537,10 @@
             amount: Number(item.amount || 0),
             date: item.date || today(),
             notes: item.notes || "",
+            photos: Array.isArray(item.photos) ? item.photos : [],
             recurringId: item.recurringId || null,
             generatedMonth: item.generatedMonth || null,
             autoGenerated: !!item.autoGenerated,
-            photoProofs: Array.isArray(item.photoProofs) ? item.photoProofs : [],
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };
@@ -3691,6 +3696,7 @@
       $("quoteTaxPercent").value = quote.taxPercent ?? 0;
 
       setChecklistForm(getChecklist(item));
+      state.pendingJobImages = [];
       renderJobPreview();
       renderJobDesignImages();
       openModal("jobModal");
@@ -3706,6 +3712,7 @@
       $("expenseAmount").value = item.amount ?? "";
       $("expenseDate").value = item.date || today();
       $("expenseNotes").value = item.notes || "";
+      state.pendingExpensePhotos = [];
       renderExpensePhotos();
       openModal("expenseModal");
     }
@@ -4096,10 +4103,8 @@
           <td>${safe(expense.category || "-")}</td>
           <td>${money(expense.amount)}</td>
           <td>${safe(formatDate(expense.date))}</td>
-          <td>
-            <small>${safe(expense.notes || "-")}</small>
-            ${getExpensePhotos(expense).length ? `<div style="margin-top:8px;"><span class="pill st-aprobado">📷 ${getExpensePhotos(expense).length} foto(s)</span></div>` : ""}
-          </td>
+          <td>${(Array.isArray(expense.photos) ? expense.photos.length : 0)}</td>
+          <td><small>${safe(expense.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
               <button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>
@@ -4380,31 +4385,73 @@
 
     function exportJobsPdf() {
       const rows = getFilteredJobs();
-      const pdf = createModulePdf('Módulo de trabajos', 'Vista actual de trabajos y rentabilidad');
-      pdf.autoTable({
-        startY: 56,
-        head: [["Cliente", "Trabajo", "Tipo", "Fecha", "Entrega", "Estado", "Venta", "Costo", "Ganancia", "Saldo"]],
-        body: rows.length ? rows.map(job => {
-          const client = getClientById(job.clientId);
-          const calc = computeJob(job);
-          return [
+      const pdf = createModulePdf('Lista de materiales por comprar', 'Generado desde la vista actual del módulo de trabajos');
+
+      const summaryMap = new Map();
+      const detailRows = [];
+
+      rows.forEach(job => {
+        const client = getClientById(job.clientId);
+        (Array.isArray(job.materials) ? job.materials : []).forEach(item => {
+          const materialName = cleanText(item.name) || "Material sin nombre";
+          const qty = Number(item.qty || 0);
+          const unitPrice = Number(item.price || 0);
+          const total = qty * unitPrice;
+
+          if (!summaryMap.has(materialName)) {
+            summaryMap.set(materialName, {
+              name: materialName,
+              qty: 0,
+              total: 0,
+              jobs: new Set()
+            });
+          }
+
+          const entry = summaryMap.get(materialName);
+          entry.qty += qty;
+          entry.total += total;
+          entry.jobs.add(job.id);
+
+          detailRows.push([
             clientLabel(client),
             job.title || '-',
-            getJobTypeLabel(job),
-            job.date || '-',
+            materialName,
+            qty ? Number(qty).toFixed(2) : '0.00',
+            money(unitPrice),
+            money(total),
             job.dueDate || '-',
-            job.status || '-',
-            money(calc.sale),
-            money(calc.cost),
-            money(calc.profit),
-            money(calc.balance)
-          ];
-        }) : [["-","-","-","-","-","-","-","-","-","-"]],
+            job.status || '-'
+          ]);
+        });
+      });
+
+      const summaryRows = [...summaryMap.values()]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(item => [
+          item.name,
+          Number(item.qty).toFixed(2),
+          money(item.total),
+          String(item.jobs.size)
+        ]);
+
+      pdf.autoTable({
+        startY: 56,
+        head: [["Material", "Cantidad total", "Costo estimado", "Trabajos"]],
+        body: summaryRows.length ? summaryRows : [["-","0.00","$0.00","0"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 9 }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 10,
+        head: [["Cliente", "Trabajo", "Material", "Cantidad", "Costo unitario", "Costo total", "Entrega", "Estado"]],
+        body: detailRows.length ? detailRows : [["-","-","-","0.00","$0.00","$0.00","-","-"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 8 }
       });
-      pdf.save(`Trabajos_NJ_${today()}.pdf`);
-      showToast('PDF de trabajos exportado.');
+
+      pdf.save(`Lista_Materiales_Trabajos_${today()}.pdf`);
+      showToast('PDF de materiales exportado.');
     }
 
     function exportExpensesPdf() {
@@ -4412,14 +4459,15 @@
       const pdf = createModulePdf('Módulo de gastos', 'Gastos filtrados y recurrentes');
       pdf.autoTable({
         startY: 56,
-        head: [["Concepto", "Categoría", "Monto", "Fecha", "Notas"]],
+        head: [["Concepto", "Categoría", "Monto", "Fecha", "Fotos", "Notas"]],
         body: rows.length ? rows.map(expense => [
           expense.concept || '-',
           expense.category || '-',
           money(expense.amount),
           expense.date || '-',
+          Array.isArray(expense.photos) ? String(expense.photos.length) : '0',
           expense.notes || '-'
-        ]) : [["-","-","-","-","-"]],
+        ]) : [["-","-","-","-","-","-"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
@@ -4977,7 +5025,7 @@
     $("saveJobBtn").addEventListener("click", saveJob);
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
-    $("uploadExpensePhotoBtn").addEventListener("click", openExpensePhotoUploadWidget);
+    $("uploadExpensePhotoBtn").addEventListener("click", openExpenseUploadWidget);
     $("galleryPrevBtn").addEventListener("click", galleryPrev);
     $("galleryNextBtn").addEventListener("click", galleryNext);
     $("savePaymentBtn").addEventListener("click", savePayment);
