@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NJ Design & Print CRM - Fase 8 Segura</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -769,140 +769,6 @@
       .calendar-day-head{display:none}
       .calendar-cell{margin-bottom:10px}
     }
-  
-
-    /* ===== Mejoras responsivas seguras, enfocadas en móvil ===== */
-    html{-webkit-text-size-adjust:100%}
-    body{overflow-x:hidden}
-    .table-wrap{
-      -webkit-overflow-scrolling:touch;
-      overscroll-behavior-x:contain;
-      scrollbar-width:thin;
-    }
-    .input,.select,.textarea,.btn{min-height:46px}
-    .btn-small{min-height:36px}
-    .modal{overscroll-behavior:contain}
-    .modal-body,.calendar-wrap,.kanban-wrap{scrollbar-width:thin}
-
-    @media (max-width:1200px){
-      .content{padding:22px}
-      .topbar{align-items:stretch}
-      .top-actions{width:100%;justify-content:flex-start}
-      .top-actions .btn{flex:1 1 220px}
-      .panel-head{align-items:flex-start}
-    }
-
-    @media (max-width:900px){
-      .title h1{font-size:24px}
-      .title p{font-size:14px}
-      .stats,.mini-stats,.alert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .summary-box div{padding:12px}
-      .summary-box strong{font-size:17px}
-      .filters{width:100%}
-      .filters .input,.filters .select,.filters .btn{flex:1 1 100%;max-width:none}
-      .table-wrap{border-top:1px solid var(--line)}
-    }
-
-    @media (max-width:780px){
-      .sidebar{
-        padding:10px 10px calc(10px + env(safe-area-inset-bottom));
-        background:rgba(20,22,27,.98);
-        backdrop-filter:blur(10px);
-      }
-      .nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-      .nav button{
-        min-height:58px;
-        padding:8px 6px;
-        font-size:11px;
-        line-height:1.15;
-        border-radius:12px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
-        word-break:break-word;
-      }
-      .content{
-        padding:16px 14px calc(104px + env(safe-area-inset-bottom));
-      }
-      .topbar{margin-bottom:18px}
-      .top-actions{
-        display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
-        width:100%;
-      }
-      .top-actions .btn{width:100%}
-      .panel{border-radius:16px}
-      .panel-head{padding:14px}
-      .panel-head h2{font-size:17px}
-      .table-wrap{
-        margin:0 -14px;
-        padding:0 14px 10px;
-      }
-      table{min-width:980px}
-      th,td{padding:12px 12px}
-      .summary-box{gap:8px;padding:10px}
-      .summary-box strong{font-size:16px}
-      .box{padding:12px}
-      .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .gallery-thumb img{height:105px}
-      .lightbox-wrap{padding:14px}
-      .lightbox-stage{min-height:220px}
-      .lightbox-stage img{max-height:52vh}
-      .modal-backdrop{
-        align-items:flex-end;
-        padding:0;
-      }
-      .modal,.lightbox-modal{
-        width:100vw;
-        max-width:none;
-        height:100dvh;
-        max-height:100dvh;
-        border-radius:20px 20px 0 0;
-        border-left:none;
-        border-right:none;
-        border-bottom:none;
-      }
-      .modal-head,.modal-foot{
-        position:sticky;
-        z-index:5;
-        background:var(--panel);
-      }
-      .modal-head{top:0;padding:14px}
-      .modal-body{padding:14px}
-      .modal-foot{
-        bottom:0;
-        padding:14px;
-        padding-bottom:calc(14px + env(safe-area-inset-bottom));
-      }
-      .modal-foot .btn{flex:1 1 140px}
-      .auth-wrap{padding:14px}
-      .auth-card{padding:22px;border-radius:20px}
-    }
-
-    @media (max-width:560px){
-      .title h1{font-size:22px}
-      .title p,.section-note,.help{font-size:13px}
-      .stats,.mini-stats,.alert-grid,.summary-box,.grid-2,.grid-3,.grid-4,.price-grid,.estimate-grid,.auth-actions,.checklist-grid{grid-template-columns:1fr}
-      .top-actions{grid-template-columns:1fr}
-      .actions-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-      .actions-row .btn{width:100%;padding:10px 12px}
-      .row-material,.row-quote-item{grid-template-columns:1fr}
-      .gallery-grid{grid-template-columns:1fr 1fr}
-      .gallery-toolbar,.lightbox-actions{display:grid;grid-template-columns:1fr 1fr}
-      .kanban-board{min-width:1320px}
-      .calendar-cell{min-height:100px;padding:8px}
-      .calendar-job{padding:6px;font-size:10px}
-    }
-
-    @media (max-width:390px){
-      .content{padding-left:12px;padding-right:12px}
-      .nav button{font-size:10px;min-height:56px}
-      .actions-row,.gallery-toolbar,.lightbox-actions{grid-template-columns:1fr}
-      .gallery-grid{grid-template-columns:1fr}
-      .btn,.input,.select,.textarea{font-size:16px}
-    }
-
   </style>
 </head>
 <body>
@@ -1660,6 +1526,17 @@
           <input id="expenseDate" type="date" class="input" />
         </div>
         <textarea id="expenseNotes" class="textarea mt-12" placeholder="Notas del gasto"></textarea>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Pruebas / fotos del gasto</strong>
+            <button id="uploadExpensePhotoBtn" class="btn btn-info btn-small" type="button">Subir foto</button>
+          </div>
+          <div class="section-note mt-12">
+            Sube fotos del recibo, factura o de lo que compraste para dejar evidencia del gasto.
+          </div>
+          <div id="expensePhotosGallery" class="list-logs"></div>
+        </div>
       </div>
       <div class="modal-foot">
         <button class="btn btn-secondary" data-close="expenseModal">Cancelar</button>
@@ -1834,7 +1711,8 @@
     const CLOUDINARY_CONFIG = {
       cloudName: "dcsavsm4e",
       uploadPreset: "njdesignprintcrm",
-      folder: "njdesignprint/disenos"
+      folder: "njdesignprint/disenos",
+      expenseFolder: "njdesignprint/gastos"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -2887,6 +2765,128 @@
       widget.open();
     }
 
+    function renderExpensePhotos() {
+      const box = $("expensePhotosGallery");
+      if (!box) return;
+
+      if (!state.editingExpenseId) {
+        box.innerHTML = `<div class="section-note">Guarda primero el gasto para poder subir fotos.</div>`;
+        return;
+      }
+
+      const expense = state.expenses.find(item => item.id === state.editingExpenseId);
+      const photos = getExpensePhotos(expense);
+
+      if (!photos.length) {
+        box.innerHTML = `<div class="section-note">Todavía no hay fotos subidas para este gasto.</div>`;
+        return;
+      }
+
+      box.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px;">
+          ${photos.map((photo, index) => `
+            <div class="log-item" style="padding:10px;">
+              <a href="${photo.url}" target="_blank" rel="noopener noreferrer">
+                <img src="${photo.url}" alt="${safe(photo.fileName || "Prueba de gasto")}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.08);">
+              </a>
+              <div style="margin-top:8px;font-size:12px;color:var(--muted);word-break:break-word;">
+                ${safe(photo.fileName || "Imagen")}
+              </div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                <a href="${photo.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small">Ver</a>
+                <button type="button" class="btn btn-danger btn-small" onclick="deleteExpensePhoto(${index})">Eliminar</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function deleteExpensePhoto(index) {
+      if (!state.editingExpenseId) return showToast("No hay gasto abierto.");
+      const expense = state.expenses.find(item => item.id === state.editingExpenseId);
+      if (!expense) return showToast("No se encontró el gasto.");
+
+      const photos = getExpensePhotos(expense);
+      if (index < 0 || index >= photos.length) return;
+
+      if (!confirm("¿Eliminar esta foto del gasto?")) return;
+
+      photos.splice(index, 1);
+
+      try {
+        await expensesRef().doc(state.editingExpenseId).update({
+          photoProofs: photos,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Foto eliminada del gasto.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo eliminar la foto del gasto.");
+      }
+    }
+
+    function openExpensePhotoUploadWidget() {
+      if (!state.editingExpenseId) {
+        showToast("Primero guarda el gasto para poder subir fotos.");
+        return;
+      }
+
+      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) {
+        showToast("Cloudinary no cargó correctamente.");
+        return;
+      }
+
+      const widget = cloudinary.createUploadWidget(
+        {
+          cloudName: CLOUDINARY_CONFIG.cloudName,
+          uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+          multiple: true,
+          maxFiles: 10,
+          resourceType: "image",
+          folder: CLOUDINARY_CONFIG.expenseFolder,
+          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+          sources: ["local", "camera"],
+          showAdvancedOptions: false,
+          cropping: false
+        },
+        async (error, result) => {
+          if (error) {
+            console.error(error);
+            showToast("Error subiendo la foto del gasto.");
+            return;
+          }
+
+          if (result && result.event === "success") {
+            try {
+              const expense = state.expenses.find(item => item.id === state.editingExpenseId);
+              if (!expense) return;
+
+              const photos = getExpensePhotos(expense);
+              photos.push({
+                url: result.info.secure_url,
+                publicId: result.info.public_id,
+                fileName: result.info.original_filename || "imagen",
+                uploadedAt: new Date().toISOString()
+              });
+
+              await expensesRef().doc(state.editingExpenseId).update({
+                photoProofs: photos,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+              showToast("Foto del gasto subida correctamente.");
+            } catch (err) {
+              console.error(err);
+              showToast("La foto subió, pero no se pudo guardar en el gasto.");
+            }
+          }
+        }
+      );
+
+      widget.open();
+    }
+
     function getCurrentJobPaymentsPreviewData() {
       if (!state.editingJobId) return [];
       const job = getJobById(state.editingJobId);
@@ -3024,6 +3024,7 @@
       $("expenseAmount").value = "";
       $("expenseDate").value = today();
       $("expenseNotes").value = "";
+      renderExpensePhotos();
     }
 
     function resetRecurringForm() {
@@ -3227,6 +3228,7 @@
           showToast("Gasto actualizado.");
         } else {
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          payload.photoProofs = [];
           await expensesRef().add(payload);
           showToast("Gasto guardado.");
         }
@@ -3533,6 +3535,7 @@
             recurringId: item.recurringId || null,
             generatedMonth: item.generatedMonth || null,
             autoGenerated: !!item.autoGenerated,
+            photoProofs: Array.isArray(item.photoProofs) ? item.photoProofs : [],
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };
@@ -3703,6 +3706,7 @@
       $("expenseAmount").value = item.amount ?? "";
       $("expenseDate").value = item.date || today();
       $("expenseNotes").value = item.notes || "";
+      renderExpensePhotos();
       openModal("expenseModal");
     }
 
@@ -4092,7 +4096,10 @@
           <td>${safe(expense.category || "-")}</td>
           <td>${money(expense.amount)}</td>
           <td>${safe(formatDate(expense.date))}</td>
-          <td><small>${safe(expense.notes || "-")}</small></td>
+          <td>
+            <small>${safe(expense.notes || "-")}</small>
+            ${getExpensePhotos(expense).length ? `<div style="margin-top:8px;"><span class="pill st-aprobado">📷 ${getExpensePhotos(expense).length} foto(s)</span></div>` : ""}
+          </td>
           <td>
             <div class="actions-row">
               <button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>
@@ -4970,6 +4977,7 @@
     $("saveJobBtn").addEventListener("click", saveJob);
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
+    $("uploadExpensePhotoBtn").addEventListener("click", openExpensePhotoUploadWidget);
     $("galleryPrevBtn").addEventListener("click", galleryPrev);
     $("galleryNextBtn").addEventListener("click", galleryNext);
     $("savePaymentBtn").addEventListener("click", savePayment);
