@@ -4383,75 +4383,94 @@
       showToast('PDF de clientes exportado.');
     }
 
-    function exportJobsPdf() {
+    async function exportJobsPdf() {
       const rows = getFilteredJobs();
-      const pdf = createModulePdf('Lista de materiales por comprar', 'Generado desde la vista actual del módulo de trabajos');
+      const pdf = createModulePdf('Trabajos - cliente, materiales y fotos', 'Generado desde la vista actual del módulo de trabajos');
 
-      const summaryMap = new Map();
-      const detailRows = [];
-
-      rows.forEach(job => {
+      const summaryRows = rows.map(job => {
         const client = getClientById(job.clientId);
-        (Array.isArray(job.materials) ? job.materials : []).forEach(item => {
-          const materialName = cleanText(item.name) || "Material sin nombre";
-          const qty = Number(item.qty || 0);
-          const unitPrice = Number(item.price || 0);
-          const total = qty * unitPrice;
-
-          if (!summaryMap.has(materialName)) {
-            summaryMap.set(materialName, {
-              name: materialName,
-              qty: 0,
-              total: 0,
-              jobs: new Set()
-            });
-          }
-
-          const entry = summaryMap.get(materialName);
-          entry.qty += qty;
-          entry.total += total;
-          entry.jobs.add(job.id);
-
-          detailRows.push([
-            clientLabel(client),
-            job.title || '-',
-            materialName,
-            qty ? Number(qty).toFixed(2) : '0.00',
-            money(unitPrice),
-            money(total),
-            job.dueDate || '-',
-            job.status || '-'
-          ]);
-        });
+        const materials = Array.isArray(job.materials) ? job.materials : [];
+        const materialsTotal = materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+        return [
+          clientLabel(client),
+          job.title || '-',
+          job.dueDate || '-',
+          String(materials.length),
+          money(materialsTotal),
+          String(getJobDesignImages(job).length)
+        ];
       });
-
-      const summaryRows = [...summaryMap.values()]
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map(item => [
-          item.name,
-          Number(item.qty).toFixed(2),
-          money(item.total),
-          String(item.jobs.size)
-        ]);
 
       pdf.autoTable({
         startY: 56,
-        head: [["Material", "Cantidad total", "Costo estimado", "Trabajos"]],
-        body: summaryRows.length ? summaryRows : [["-","0.00","$0.00","0"]],
+        head: [["Cliente", "Trabajo", "Entrega", "Materiales", "Total materiales", "Fotos"]],
+        body: summaryRows.length ? summaryRows : [["-","-","-","0","$0.00","0"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
 
-      pdf.autoTable({
-        startY: pdf.lastAutoTable.finalY + 10,
-        head: [["Cliente", "Trabajo", "Material", "Cantidad", "Costo unitario", "Costo total", "Entrega", "Estado"]],
-        body: detailRows.length ? detailRows : [["-","-","-","0.00","$0.00","$0.00","-","-"]],
-        headStyles: { fillColor: [20,22,27] },
-        styles: { fontSize: 8 }
-      });
+      for (const job of rows) {
+        const client = getClientById(job.clientId);
+        const materials = Array.isArray(job.materials) ? job.materials : [];
+        const materialsTotal = materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
 
-      pdf.save(`Lista_Materiales_Trabajos_${today()}.pdf`);
-      showToast('PDF de materiales exportado.');
+        pdf.addPage();
+        pdf.setFontSize(15);
+        pdf.setTextColor(20, 20, 20);
+        pdf.text(job.title || 'Trabajo', 14, 18);
+        pdf.setFontSize(10);
+        pdf.text(`Entrega: ${job.dueDate || '-'} · Estado: ${job.status || '-'} · Prioridad: ${job.priority || 'Media'}`, 14, 25);
+
+        pdf.autoTable({
+          startY: 32,
+          head: [["Campo", "Detalle"]],
+          body: [
+            ["Cliente", clientLabel(client)],
+            ["Empresa", client?.company || '-'],
+            ["Teléfono", client?.phone || '-'],
+            ["Email", client?.email || '-'],
+            ["Dirección", [client?.address, client?.city].filter(Boolean).join(', ') || '-'],
+            ["Trabajo", job.title || '-'],
+            ["Fecha", job.date || '-'],
+            ["Entrega", job.dueDate || '-']
+          ],
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 9 }
+        });
+
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 8,
+          head: [["Material", "Cantidad", "Precio unitario", "Total"]],
+          body: materials.length ? materials.map(item => {
+            const qty = Number(item.qty || 0);
+            const unitPrice = Number(item.price || 0);
+            return [
+              item.name || item.inventoryName || '-',
+              qty ? Number(qty).toFixed(2) : '0.00',
+              money(unitPrice),
+              money(qty * unitPrice)
+            ];
+          }) : [["-","0.00","$0.00","$0.00"]],
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 9 }
+        });
+
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 8,
+          head: [["Resumen", "Monto"]],
+          body: [
+            ["Total materiales", money(materialsTotal)],
+            ["Fotos adjuntas", String(getJobDesignImages(job).length)]
+          ],
+          headStyles: { fillColor: [20,22,27] },
+          styles: { fontSize: 9 }
+        });
+
+        await addAllJobPhotosToPdf(pdf, job, pdf.lastAutoTable.finalY + 10);
+      }
+
+      pdf.save(`Trabajos_Cliente_Materiales_Fotos_${today()}.pdf`);
+      showToast(rows.some(job => getJobDesignImages(job).length) ? 'PDF de trabajos exportado con fotos.' : 'PDF de trabajos exportado.');
     }
 
     function exportExpensesPdf() {
@@ -4742,6 +4761,67 @@
         pdf.text('No se pudo insertar la foto en el PDF, pero el archivo se generó igual.', 14, y);
         return y + 8;
       }
+    }
+
+
+    async function addAllJobPhotosToPdf(pdf, job, startY) {
+      const images = getJobDesignImages(job);
+      if (!images.length) return startY;
+
+      let y = startY;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const marginX = 14;
+      const maxWidth = pageWidth - (marginX * 2);
+      const maxHeight = 95;
+
+      for (let index = 0; index < images.length; index += 1) {
+        const image = images[index];
+
+        try {
+          const dataUrl = await urlToDataUrl(image.url);
+          const dims = await getImageDimensions(dataUrl);
+          let renderWidth = maxWidth;
+          let renderHeight = renderWidth * (dims.height / dims.width);
+
+          if (renderHeight > maxHeight) {
+            renderHeight = maxHeight;
+            renderWidth = renderHeight * (dims.width / dims.height);
+          }
+
+          const neededHeight = 18 + renderHeight + 12;
+          if (y + neededHeight > pageHeight - 18) {
+            pdf.addPage();
+            y = 20;
+          }
+
+          pdf.setFontSize(11);
+          pdf.setTextColor(20, 20, 20);
+          pdf.text(`Foto ${index + 1}${images.length > 1 ? ` de ${images.length}` : ''}`, marginX, y);
+          y += 6;
+          pdf.setDrawColor(220, 220, 220);
+          pdf.roundedRect(marginX, y, renderWidth, renderHeight, 3, 3);
+          pdf.addImage(dataUrl, 'JPEG', marginX, y, renderWidth, renderHeight);
+          y += renderHeight + 6;
+
+          pdf.setFontSize(9);
+          pdf.setTextColor(90, 90, 90);
+          pdf.text(`Archivo: ${image.fileName || image.url || 'Imagen'}`, marginX, y);
+          y += 8;
+        } catch (error) {
+          console.error(error);
+          if (y + 18 > pageHeight - 18) {
+            pdf.addPage();
+            y = 20;
+          }
+          pdf.setFontSize(10);
+          pdf.setTextColor(120, 120, 120);
+          pdf.text(`No se pudo insertar la foto ${index + 1}, pero el PDF se generó igual.`, marginX, y);
+          y += 8;
+        }
+      }
+
+      return y;
     }
 
     async function exportQuotePdf(jobId) {
