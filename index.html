@@ -4385,54 +4385,57 @@
 
     async function exportJobsPdf() {
       const rows = getFilteredJobs();
-      const pdf = createModulePdf('Trabajos - cliente, materiales y fotos', 'Generado desde la vista actual del módulo de trabajos');
+      const pdf = createModulePdf('Trabajos · materiales / costo interno', 'Cliente, materiales internos y fotos del trabajo');
 
       const summaryRows = rows.map(job => {
         const client = getClientById(job.clientId);
+        const calc = computeJob(job);
         const materials = Array.isArray(job.materials) ? job.materials : [];
-        const materialsTotal = materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+        const photoCount = getJobDesignImages(job).length;
         return [
           clientLabel(client),
           job.title || '-',
-          job.dueDate || '-',
           String(materials.length),
-          money(materialsTotal),
-          String(getJobDesignImages(job).length)
+          money(calc.materialsCost),
+          money(calc.cost),
+          String(photoCount)
         ];
       });
 
       pdf.autoTable({
         startY: 56,
-        head: [["Cliente", "Trabajo", "Entrega", "Materiales", "Total materiales", "Fotos"]],
-        body: summaryRows.length ? summaryRows : [["-","-","-","0","$0.00","0"]],
+        head: [["Cliente", "Trabajo", "Materiales", "Costo materiales", "Costo interno", "Fotos"]],
+        body: summaryRows.length ? summaryRows : [["-","-","0","$0.00","$0.00","0"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 9 }
       });
 
       for (const job of rows) {
         const client = getClientById(job.clientId);
+        const calc = computeJob(job);
         const materials = Array.isArray(job.materials) ? job.materials : [];
-        const materialsTotal = materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+        const photos = getJobDesignImages(job);
 
         pdf.addPage();
         pdf.setFontSize(15);
         pdf.setTextColor(20, 20, 20);
         pdf.text(job.title || 'Trabajo', 14, 18);
         pdf.setFontSize(10);
-        pdf.text(`Entrega: ${job.dueDate || '-'} · Estado: ${job.status || '-'} · Prioridad: ${job.priority || 'Media'}`, 14, 25);
+        pdf.text(`Estado: ${job.status || '-'} · Entrega: ${job.dueDate || '-'} · Fotos: ${photos.length}`, 14, 25);
 
         pdf.autoTable({
           startY: 32,
           head: [["Campo", "Detalle"]],
           body: [
-            ["Cliente", clientLabel(client)],
-            ["Empresa", client?.company || '-'],
-            ["Teléfono", client?.phone || '-'],
-            ["Email", client?.email || '-'],
-            ["Dirección", [client?.address, client?.city].filter(Boolean).join(', ') || '-'],
-            ["Trabajo", job.title || '-'],
-            ["Fecha", job.date || '-'],
-            ["Entrega", job.dueDate || '-']
+            ['Cliente', clientLabel(client)],
+            ['Nombre contacto', client?.name || '-'],
+            ['Empresa', client?.company || '-'],
+            ['Teléfono', client?.phone || '-'],
+            ['Email', client?.email || '-'],
+            ['Dirección', [client?.address, client?.city].filter(Boolean).join(', ') || '-'],
+            ['Trabajo', job.title || '-'],
+            ['Descripción', job.description || '-'],
+            ['Notas', job.notes || '-']
           ],
           headStyles: { fillColor: [20,22,27] },
           styles: { fontSize: 9 }
@@ -4440,37 +4443,50 @@
 
         pdf.autoTable({
           startY: pdf.lastAutoTable.finalY + 8,
-          head: [["Material", "Cantidad", "Precio unitario", "Total"]],
+          head: [["Material", "Cantidad", "Costo unitario", "Costo total"]],
           body: materials.length ? materials.map(item => {
             const qty = Number(item.qty || 0);
             const unitPrice = Number(item.price || 0);
+            const rowTotal = Number(item.total || (qty * unitPrice));
             return [
-              item.name || item.inventoryName || '-',
-              qty ? Number(qty).toFixed(2) : '0.00',
+              item.name || item.inventoryName || 'Material sin nombre',
+              qty ? qty.toFixed(2) : '0.00',
               money(unitPrice),
-              money(qty * unitPrice)
+              money(rowTotal)
             ];
           }) : [["-","0.00","$0.00","$0.00"]],
           headStyles: { fillColor: [20,22,27] },
-          styles: { fontSize: 9 }
+          styles: { fontSize: 8 }
         });
 
         pdf.autoTable({
           startY: pdf.lastAutoTable.finalY + 8,
-          head: [["Resumen", "Monto"]],
+          head: [["Resumen interno", "Monto"]],
           body: [
-            ["Total materiales", money(materialsTotal)],
-            ["Fotos adjuntas", String(getJobDesignImages(job).length)]
+            ['Costo materiales', money(calc.materialsCost)],
+            ['Mano de obra', money(calc.laborCost)],
+            ['Gastos extra', money(calc.extraCost)],
+            ['Costo interno total', money(calc.cost)]
           ],
           headStyles: { fillColor: [20,22,27] },
           styles: { fontSize: 9 }
         });
 
-        await addAllJobPhotosToPdf(pdf, job, pdf.lastAutoTable.finalY + 10);
+        let y = pdf.lastAutoTable.finalY + 10;
+        y = await addAllJobPhotosToPdf(pdf, job, y);
+
+        if (y + 12 > pdf.internal.pageSize.getHeight() - 18) {
+          pdf.addPage();
+          y = 20;
+        }
+
+        pdf.setFontSize(9);
+        pdf.setTextColor(90, 90, 90);
+        pdf.text('Documento preparado para revisar cliente, comprar materiales y tener referencia visual del trabajo.', 14, y);
       }
 
-      pdf.save(`Trabajos_Cliente_Materiales_Fotos_${today()}.pdf`);
-      showToast(rows.some(job => getJobDesignImages(job).length) ? 'PDF de trabajos exportado con fotos.' : 'PDF de trabajos exportado.');
+      pdf.save(`Trabajos_Materiales_Cliente_Fotos_${today()}.pdf`);
+      showToast('PDF de trabajos exportado con cliente, materiales internos y fotos.');
     }
 
     function exportExpensesPdf() {
@@ -4706,6 +4722,91 @@
       });
     }
 
+    async function addAllJobPhotosToPdf(pdf, job, startY) {
+      const images = getJobDesignImages(job);
+      if (!images.length) {
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        let y = startY;
+        if (y + 14 > pageHeight - 18) {
+          pdf.addPage();
+          y = 20;
+        }
+        pdf.setFontSize(10);
+        pdf.setTextColor(120, 120, 120);
+        pdf.text('Este trabajo no tiene fotos guardadas.', 14, y);
+        return y + 8;
+      }
+
+      const marginX = 14;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const gap = 6;
+      const boxWidth = (pageWidth - (marginX * 2) - gap) / 2;
+      const maxHeight = 68;
+      let y = startY;
+
+      if (y + 16 > pageHeight - 18) {
+        pdf.addPage();
+        y = 20;
+      }
+
+      pdf.setFontSize(11);
+      pdf.setTextColor(20, 20, 20);
+      pdf.text('Fotos del trabajo', marginX, y);
+      y += 6;
+
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        const isLeft = i % 2 === 0;
+        let x = isLeft ? marginX : marginX + boxWidth + gap;
+
+        if (isLeft && i > 0) {
+          y += maxHeight + 14;
+        }
+
+        if (y + maxHeight + 12 > pageHeight - 18) {
+          pdf.addPage();
+          y = 20;
+          pdf.setFontSize(11);
+          pdf.setTextColor(20, 20, 20);
+          pdf.text('Fotos del trabajo (continuación)', marginX, y);
+          y += 6;
+          x = marginX;
+        }
+
+        try {
+          const dataUrl = await urlToDataUrl(image.url);
+          const dims = await getImageDimensions(dataUrl);
+          let renderWidth = boxWidth;
+          let renderHeight = renderWidth * (dims.height / dims.width);
+          if (renderHeight > maxHeight) {
+            renderHeight = maxHeight;
+            renderWidth = renderHeight * (dims.width / dims.height);
+          }
+          const drawX = x + ((boxWidth - renderWidth) / 2);
+          const drawY = y;
+
+          pdf.setDrawColor(220, 220, 220);
+          pdf.roundedRect(x, y, boxWidth, maxHeight, 3, 3);
+          pdf.addImage(dataUrl, 'JPEG', drawX, drawY, renderWidth, renderHeight);
+          pdf.setFontSize(8);
+          pdf.setTextColor(90, 90, 90);
+          pdf.text(String(image.fileName || `Foto ${i + 1}`).slice(0, 42), x, y + maxHeight + 5);
+        } catch (error) {
+          console.error(error);
+          pdf.setDrawColor(220, 220, 220);
+          pdf.roundedRect(x, y, boxWidth, maxHeight, 3, 3);
+          pdf.setFontSize(9);
+          pdf.setTextColor(120, 120, 120);
+          pdf.text('No se pudo cargar esta foto.', x + 6, y + 12);
+          pdf.text(String(image.fileName || `Foto ${i + 1}`).slice(0, 36), x + 6, y + 20);
+        }
+      }
+
+      const rowsUsed = Math.ceil(images.length / 2);
+      return y + (rowsUsed > 0 ? (rowsUsed - 1) * (maxHeight + 14) : 0) + maxHeight + 12;
+    }
+
     async function addPrimaryJobPhotoToPdf(pdf, job, startY) {
       const images = getJobDesignImages(job);
       if (!images.length) return startY;
@@ -4761,67 +4862,6 @@
         pdf.text('No se pudo insertar la foto en el PDF, pero el archivo se generó igual.', 14, y);
         return y + 8;
       }
-    }
-
-
-    async function addAllJobPhotosToPdf(pdf, job, startY) {
-      const images = getJobDesignImages(job);
-      if (!images.length) return startY;
-
-      let y = startY;
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const marginX = 14;
-      const maxWidth = pageWidth - (marginX * 2);
-      const maxHeight = 95;
-
-      for (let index = 0; index < images.length; index += 1) {
-        const image = images[index];
-
-        try {
-          const dataUrl = await urlToDataUrl(image.url);
-          const dims = await getImageDimensions(dataUrl);
-          let renderWidth = maxWidth;
-          let renderHeight = renderWidth * (dims.height / dims.width);
-
-          if (renderHeight > maxHeight) {
-            renderHeight = maxHeight;
-            renderWidth = renderHeight * (dims.width / dims.height);
-          }
-
-          const neededHeight = 18 + renderHeight + 12;
-          if (y + neededHeight > pageHeight - 18) {
-            pdf.addPage();
-            y = 20;
-          }
-
-          pdf.setFontSize(11);
-          pdf.setTextColor(20, 20, 20);
-          pdf.text(`Foto ${index + 1}${images.length > 1 ? ` de ${images.length}` : ''}`, marginX, y);
-          y += 6;
-          pdf.setDrawColor(220, 220, 220);
-          pdf.roundedRect(marginX, y, renderWidth, renderHeight, 3, 3);
-          pdf.addImage(dataUrl, 'JPEG', marginX, y, renderWidth, renderHeight);
-          y += renderHeight + 6;
-
-          pdf.setFontSize(9);
-          pdf.setTextColor(90, 90, 90);
-          pdf.text(`Archivo: ${image.fileName || image.url || 'Imagen'}`, marginX, y);
-          y += 8;
-        } catch (error) {
-          console.error(error);
-          if (y + 18 > pageHeight - 18) {
-            pdf.addPage();
-            y = 20;
-          }
-          pdf.setFontSize(10);
-          pdf.setTextColor(120, 120, 120);
-          pdf.text(`No se pudo insertar la foto ${index + 1}, pero el PDF se generó igual.`, marginX, y);
-          y += 8;
-        }
-      }
-
-      return y;
     }
 
     async function exportQuotePdf(jobId) {
