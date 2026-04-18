@@ -1989,6 +1989,36 @@
     </div>
   </div>
 
+
+  <div class="modal-backdrop" id="teamMemberModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="teamMemberModalTitle">Nuevo usuario</h3>
+        <button class="btn btn-secondary btn-small" data-close="teamMemberModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="teamMemberName" class="input" placeholder="Nombre" />
+          <input id="teamMemberEmail" type="email" class="input" placeholder="Correo electrónico" />
+          <select id="teamMemberRole" class="select">
+                        <option value="admin">Admin</option>
+            <option value="employee" selected>Empleado</option>
+            <option value="readonly">Solo lectura</option>
+          </select>
+          <select id="teamMemberActive" class="select">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <textarea id="teamMemberNotes" class="textarea mt-12" placeholder="Notas del usuario"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="teamMemberModal">Cancelar</button>
+        <button id="saveTeamMemberBtn" class="btn btn-primary">Guardar usuario</button>
+      </div>
+    </div>
+  </div>
+
 <div id="toast" class="toast"></div>
 
   <script>
