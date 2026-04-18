@@ -1429,6 +1429,7 @@
                     <th>Rol</th>
                     <th>Estado</th>
                     <th>Último acceso</th>
+                    <th>Módulos</th>
                     <th>Notas</th>
                     <th>Acciones</th>
                   </tr>
@@ -2011,6 +2012,59 @@
           </select>
         </div>
         <textarea id="teamMemberNotes" class="textarea mt-12" placeholder="Notas del usuario"></textarea>
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Permisos por módulo</strong>
+            <div class="section-note">Puedes dejar los sugeridos por rol y luego ajustar solo lo necesario.</div>
+          </div>
+          <div class="grid-4 mt-12">
+            <select id="teamPermClientes" class="select">
+              <option value="none">Clientes · Sin acceso</option>
+              <option value="view">Clientes · Solo ver</option>
+              <option value="edit">Clientes · Editar</option>
+              <option value="delete">Clientes · Editar y borrar</option>
+            </select>
+            <select id="teamPermTrabajos" class="select">
+              <option value="none">Trabajos · Sin acceso</option>
+              <option value="view">Trabajos · Solo ver</option>
+              <option value="edit">Trabajos · Editar</option>
+              <option value="delete">Trabajos · Editar y borrar</option>
+            </select>
+            <select id="teamPermGastos" class="select">
+              <option value="none">Gastos · Sin acceso</option>
+              <option value="view">Gastos · Solo ver</option>
+              <option value="edit">Gastos · Editar</option>
+              <option value="delete">Gastos · Editar y borrar</option>
+            </select>
+            <select id="teamPermInventario" class="select">
+              <option value="none">Inventario · Sin acceso</option>
+              <option value="view">Inventario · Solo ver</option>
+              <option value="edit">Inventario · Editar</option>
+              <option value="delete">Inventario · Editar y borrar</option>
+            </select>
+            <select id="teamPermProveedores" class="select">
+              <option value="none">Proveedores · Sin acceso</option>
+              <option value="view">Proveedores · Solo ver</option>
+              <option value="edit">Proveedores · Editar</option>
+              <option value="delete">Proveedores · Editar y borrar</option>
+            </select>
+            <select id="teamPermCompras" class="select">
+              <option value="none">Compras · Sin acceso</option>
+              <option value="view">Compras · Solo ver</option>
+              <option value="edit">Compras · Editar</option>
+              <option value="delete">Compras · Editar y borrar</option>
+            </select>
+            <select id="teamPermUsuarios" class="select">
+              <option value="none">Usuarios · Sin acceso</option>
+              <option value="view">Usuarios · Solo ver</option>
+              <option value="manage">Usuarios · Administrar</option>
+            </select>
+            <label class="check-item">
+              <input type="checkbox" id="teamAllowImportBackup">
+              Permitir importar respaldo JSON
+            </label>
+          </div>
+        </div>
       </div>
       <div class="modal-foot">
         <button class="btn btn-secondary" data-close="teamMemberModal">Cancelar</button>
@@ -2053,6 +2107,7 @@
       userEmail: "",
       currentUserRole: "owner",
       currentWorkspaceOwnerEmail: "",
+      currentModulePermissions: {},
       currentView: "dashboard",
       clients: [],
       jobs: [],
@@ -2219,6 +2274,10 @@
     }
 
     function setView(view) {
+      if (view !== "dashboard" && !canViewModule(view)) {
+        showToast("No tienes acceso a ese módulo.");
+        view = "dashboard";
+      }
       state.currentView = view;
       document.querySelectorAll(".nav button").forEach(btn => btn.classList.toggle("active", btn.dataset.view === view));
       document.querySelectorAll(".view").forEach(section => section.classList.add("hidden"));
@@ -2236,7 +2295,7 @@
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
       if (view === "compras") btnNew.textContent = "+ Nueva orden";
       if (view === "usuarios") btnNew.textContent = "+ Nuevo usuario";
-      if (view === "usuarios" && !canManageUsers()) btnNew.classList.add("hidden");
+      if (!canEditModule(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
     }
@@ -2269,12 +2328,137 @@
     function purchaseOrdersRef() { return userRef().collection("purchaseOrders"); }
     function teamMembersRef() { return userRef().collection("teamMembers"); }
 
+    const DATA_PERMISSION_MODULES = ["clientes", "trabajos", "gastos", "inventario", "proveedores", "compras"];
+    const ALL_PERMISSION_MODULES = [...DATA_PERMISSION_MODULES, "usuarios"];
+
+    function moduleLabel(module = "") {
+      return {
+        clientes: "Clientes",
+        trabajos: "Trabajos",
+        gastos: "Gastos",
+        inventario: "Inventario",
+        proveedores: "Proveedores",
+        compras: "Compras",
+        usuarios: "Usuarios"
+      }[module] || module;
+    }
+
+    function defaultModulePermissionsForRole(role = "employee") {
+      if (role === "owner") {
+        return {
+          clientes: "delete",
+          trabajos: "delete",
+          gastos: "delete",
+          inventario: "delete",
+          proveedores: "delete",
+          compras: "delete",
+          usuarios: "manage",
+          importBackup: true
+        };
+      }
+      if (role === "admin") {
+        return {
+          clientes: "delete",
+          trabajos: "delete",
+          gastos: "delete",
+          inventario: "delete",
+          proveedores: "delete",
+          compras: "delete",
+          usuarios: "manage",
+          importBackup: true
+        };
+      }
+      if (role === "readonly") {
+        return {
+          clientes: "view",
+          trabajos: "view",
+          gastos: "view",
+          inventario: "view",
+          proveedores: "view",
+          compras: "view",
+          usuarios: "none",
+          importBackup: false
+        };
+      }
+      return {
+        clientes: "edit",
+        trabajos: "edit",
+        gastos: "edit",
+        inventario: "edit",
+        proveedores: "view",
+        compras: "edit",
+        usuarios: "none",
+        importBackup: false
+      };
+    }
+
+    function normalizeDataModulePermission(value, fallback = "edit") {
+      return ["none", "view", "edit", "delete"].includes(value) ? value : fallback;
+    }
+
+    function normalizeUsersModulePermission(value, fallback = "none") {
+      return ["none", "view", "manage"].includes(value) ? value : fallback;
+    }
+
+    function normalizeModulePermissions(source = {}) {
+      const role = cleanText(source.role) || "employee";
+      const defaults = defaultModulePermissionsForRole(role);
+      return {
+        clientes: normalizeDataModulePermission(source.moduleClientes ?? source.permissions?.clientes, defaults.clientes),
+        trabajos: normalizeDataModulePermission(source.moduleTrabajos ?? source.permissions?.trabajos, defaults.trabajos),
+        gastos: normalizeDataModulePermission(source.moduleGastos ?? source.permissions?.gastos, defaults.gastos),
+        inventario: normalizeDataModulePermission(source.moduleInventario ?? source.permissions?.inventario, defaults.inventario),
+        proveedores: normalizeDataModulePermission(source.moduleProveedores ?? source.permissions?.proveedores, defaults.proveedores),
+        compras: normalizeDataModulePermission(source.moduleCompras ?? source.permissions?.compras, defaults.compras),
+        usuarios: normalizeUsersModulePermission(source.moduleUsuarios ?? source.permissions?.usuarios, defaults.usuarios),
+        importBackup: typeof source.allowImportBackup === "boolean" ? source.allowImportBackup : defaults.importBackup
+      };
+    }
+
+    function permissionLabel(level = "", module = "") {
+      if (module === "usuarios") {
+        return { none: "Sin acceso", view: "Solo ver", manage: "Administrar" }[level] || "Sin acceso";
+      }
+      return { none: "Sin acceso", view: "Solo ver", edit: "Editar", delete: "Editar y borrar" }[level] || "Sin acceso";
+    }
+
+    function getCurrentModulePermission(module = "") {
+      const roleDefaults = defaultModulePermissionsForRole(state.currentUserRole || "employee");
+      const current = normalizeModulePermissions({ role: state.currentUserRole, ...state.currentModulePermissions });
+      return current[module] ?? roleDefaults[module] ?? "none";
+    }
+
+    function getModulePermissionSummary(source = {}) {
+      const perms = normalizeModulePermissions(source);
+      return ALL_PERMISSION_MODULES.map(module => `${moduleLabel(module)}: ${permissionLabel(perms[module], module)}`).join(" · ");
+    }
+
     function isOwner() { return state.currentUserRole === "owner"; }
-    function isAdmin() { return ["owner", "admin"].includes(state.currentUserRole); }
-    function canWriteData() { return ["owner", "admin", "employee"].includes(state.currentUserRole); }
-    function canDeleteData() { return ["owner", "admin"].includes(state.currentUserRole); }
-    function canManageUsers() { return ["owner", "admin"].includes(state.currentUserRole); }
-    function canImportBackup() { return ["owner", "admin"].includes(state.currentUserRole); }
+    function isAdmin() { return isOwner() || getCurrentModulePermission("usuarios") === "manage"; }
+    function canViewModule(module = state.currentView) {
+      if (module === "dashboard") return true;
+      const level = getCurrentModulePermission(module);
+      return module === "usuarios"
+        ? ["view", "manage"].includes(level)
+        : ["view", "edit", "delete"].includes(level);
+    }
+    function canEditModule(module = state.currentView) {
+      if (module === "dashboard") return false;
+      const level = getCurrentModulePermission(module);
+      return module === "usuarios"
+        ? level === "manage"
+        : ["edit", "delete"].includes(level);
+    }
+    function canDeleteModule(module = state.currentView) {
+      if (module === "dashboard") return false;
+      const level = getCurrentModulePermission(module);
+      return module === "usuarios" ? level === "manage" : level === "delete";
+    }
+    function canWriteData(module = state.currentView) { return canEditModule(module); }
+    function canDeleteData(module = state.currentView) { return canDeleteModule(module); }
+    function canManageUsers() { return isOwner() || getCurrentModulePermission("usuarios") === "manage"; }
+    function canImportBackup() { return isOwner() || !!normalizeModulePermissions({ role: state.currentUserRole, ...state.currentModulePermissions }).importBackup; }
+
 
     function roleLabel(role = "") {
       return {
@@ -2302,14 +2486,14 @@
       return active ? '<span class="pill state-active">Activo</span>' : '<span class="pill state-disabled">Desactivado</span>';
     }
 
-    function guardWrite(action = "hacer cambios") {
-      if (canWriteData()) return true;
+    function guardWrite(action = "hacer cambios", module = state.currentView) {
+      if (canWriteData(module)) return true;
       showToast(`Tu usuario es solo lectura. No puede ${action}.`);
       return false;
     }
 
-    function guardDelete(action = "eliminar") {
-      if (canDeleteData()) return true;
+    function guardDelete(action = "eliminar", module = state.currentView) {
+      if (canDeleteData(module)) return true;
       showToast(`Tu rol no tiene permiso para ${action}.`);
       return false;
     }
@@ -2326,33 +2510,57 @@
       const ownerEl = $("activeWorkspaceOwner");
       if (ownerEl) ownerEl.textContent = `Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`;
 
-      const usersNav = $("navUsuariosBtn");
-      if (usersNav) usersNav.classList.toggle("hidden", !canManageUsers());
+      document.querySelectorAll('.nav button[data-view]').forEach(btn => {
+        const view = btn.dataset.view;
+        btn.classList.toggle('hidden', view !== 'dashboard' && !canViewModule(view));
+      });
 
-      if (state.currentView === "usuarios" && !canManageUsers()) {
+      if (state.currentView !== "dashboard" && !canViewModule(state.currentView)) {
         state.currentView = "dashboard";
         document.querySelectorAll(".view").forEach(section => section.classList.add("hidden"));
         $("view-dashboard").classList.remove("hidden");
+        $("pageTitle").textContent = viewMeta.dashboard[0];
+        $("pageSubtitle").textContent = viewMeta.dashboard[1];
       }
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = state.currentView === "dashboard" ||
-          (state.currentView === "usuarios" && !canManageUsers()) ||
-          (!canWriteData() && ["clientes","trabajos","gastos","inventario","proveedores","compras"].includes(state.currentView));
+        const shouldHide = state.currentView === "dashboard" || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 
-      [
-        "saveClientBtn","saveJobBtn","saveExpenseBtn","saveRecurringBtn","saveInventoryBtn","saveMovementBtn",
-        "saveProviderBtn","savePurchaseOrderBtn","savePaymentBtn","saveInternalNoteBtn","addMaterialBtn","addQuoteItemBtn",
-        "applySuggestedSaleBtn","applyEstimatorBtn","loadEstimatorDefaultsBtn","uploadDesignBtn","uploadExpensePhotoBtn",
-        "openPaymentFromJobBtn","openExpenseFromJobBtn","loadPoFromJobBtn","addPoLineBtn","btnNewRecurring",
-        "btnNewMovement","btnNewProvider","btnNewPurchaseOrder","applyInventoryNowBtn"
-      ].forEach(id => {
+      const buttonModuleMap = {
+        saveClientBtn: 'clientes',
+        saveJobBtn: 'trabajos',
+        saveExpenseBtn: 'gastos',
+        saveRecurringBtn: 'gastos',
+        saveInventoryBtn: 'inventario',
+        saveMovementBtn: 'inventario',
+        saveProviderBtn: 'proveedores',
+        savePurchaseOrderBtn: 'compras',
+        savePaymentBtn: 'trabajos',
+        saveInternalNoteBtn: 'trabajos',
+        addMaterialBtn: 'trabajos',
+        addQuoteItemBtn: 'trabajos',
+        applySuggestedSaleBtn: 'trabajos',
+        applyEstimatorBtn: 'trabajos',
+        loadEstimatorDefaultsBtn: 'trabajos',
+        uploadDesignBtn: 'trabajos',
+        uploadExpensePhotoBtn: 'gastos',
+        openPaymentFromJobBtn: 'trabajos',
+        openExpenseFromJobBtn: 'gastos',
+        loadPoFromJobBtn: 'compras',
+        addPoLineBtn: 'compras',
+        btnNewRecurring: 'gastos',
+        btnNewMovement: 'inventario',
+        btnNewProvider: 'proveedores',
+        btnNewPurchaseOrder: 'compras',
+        applyInventoryNowBtn: 'inventario'
+      };
+      Object.entries(buttonModuleMap).forEach(([id, module]) => {
         const el = $(id);
         if (!el) return;
-        el.disabled = !canWriteData();
+        el.disabled = !canEditModule(module);
       });
 
       const saveTeamBtn = $("saveTeamMemberBtn");
@@ -2371,6 +2579,7 @@
       state.accountOwnerId = user.uid;
       state.currentUserRole = "owner";
       state.currentWorkspaceOwnerEmail = state.userEmail || "";
+      state.currentModulePermissions = defaultModulePermissionsForRole("owner");
 
       const ownPayload = {
         email: normalizedEmail(state.userEmail),
@@ -2384,6 +2593,10 @@
         console.error(error);
       }
 
+      if (!state.currentModulePermissions || !Object.keys(state.currentModulePermissions).length) {
+        state.currentModulePermissions = defaultModulePermissionsForRole(state.currentUserRole || "employee");
+      }
+
       try {
         const accessSnap = await teamAccessRefByEmail(state.userEmail).get();
         if (accessSnap.exists) {
@@ -2392,10 +2605,15 @@
             state.accountOwnerId = cleanText(access.ownerId);
             state.currentUserRole = state.accountOwnerId === state.uid ? "owner" : (cleanText(access.role) || "employee");
             state.currentWorkspaceOwnerEmail = cleanText(access.ownerEmail) || cleanText(access.workspaceOwnerEmail) || state.currentWorkspaceOwnerEmail;
+            state.currentModulePermissions = normalizeModulePermissions(access);
           }
         }
       } catch (error) {
         console.error(error);
+      }
+
+      if (!state.currentModulePermissions || !Object.keys(state.currentModulePermissions).length) {
+        state.currentModulePermissions = defaultModulePermissionsForRole(state.currentUserRole || "employee");
       }
 
       try {
@@ -3413,7 +3631,7 @@
     }
 
     function openDesignUploadWidget() {
-      if (!guardWrite("subir fotos")) return;
+      if (!guardWrite("subir fotos", state.currentView === "gastos" ? "gastos" : "trabajos")) return;
       openCloudinaryImageWidget({
         multiple: true,
         maxFiles: 10,
@@ -3506,7 +3724,7 @@
     }
 
     function openExpenseUploadWidget() {
-      if (!guardWrite("subir fotos")) return;
+      if (!guardWrite("subir fotos", state.currentView === "gastos" ? "gastos" : "trabajos")) return;
       openCloudinaryImageWidget({
         multiple: true,
         maxFiles: 10,
@@ -3543,7 +3761,7 @@
     }
 
     async function applyInventoryDiscountForJob(jobId, source = "manual") {
-      if (!guardWrite("aplicar inventario")) return { appliedCount: 0 };
+      if (!guardWrite("aplicar inventario", "inventario")) return { appliedCount: 0 };
       const jobDocRef = jobsRef().doc(jobId);
       const movementRefs = [];
       const movementDate = today();
@@ -3908,7 +4126,7 @@
     }
 
     async function saveInternalNote() {
-      if (!guardWrite("guardar notas internas")) return;
+      if (!guardWrite("guardar notas internas", "trabajos")) return;
       if (!state.editingJobId) return showToast("Primero guarda el trabajo.");
       const text = cleanText($("jobNewInternalNote").value);
       if (!text) return showToast("Escribe una nota interna.");
@@ -3943,7 +4161,7 @@
     }
 
     async function saveClient() {
-      if (!guardWrite("guardar clientes")) return;
+      if (!guardWrite("guardar clientes", "clientes")) return;
       const payload = {
         name: cleanText($("clientName").value),
         company: cleanText($("clientCompany").value),
@@ -3974,7 +4192,7 @@
     }
 
     async function saveJob() {
-      if (!guardWrite("guardar trabajos")) return;
+      if (!guardWrite("guardar trabajos", "trabajos")) return;
       const quote = getCurrentQuoteForm();
       const quoteCalc = computeQuote(quote);
       const pricing = getCurrentPricingForm();
@@ -4034,7 +4252,7 @@
     }
 
     async function saveExpense() {
-      if (!guardWrite("guardar gastos")) return;
+      if (!guardWrite("guardar gastos", "gastos")) return;
       const payload = {
         concept: cleanText($("expenseConcept").value),
         category: cleanText($("expenseCategory").value),
@@ -4069,7 +4287,7 @@
     }
 
     async function saveRecurring() {
-      if (!guardWrite("guardar gastos recurrentes")) return;
+      if (!guardWrite("guardar gastos recurrentes", "gastos")) return;
       const payload = {
         concept: cleanText($("recurringConcept").value),
         category: cleanText($("recurringCategory").value),
@@ -4103,7 +4321,7 @@
 
 
     async function saveInventoryItem() {
-      if (!guardWrite("guardar inventario")) return;
+      if (!guardWrite("guardar inventario", "inventario")) return;
       const payload = {
         name: cleanText($("inventoryName").value),
         sku: cleanText($("inventorySku").value),
@@ -4141,7 +4359,7 @@
     }
 
     async function saveMovement() {
-      if (!guardWrite("guardar movimientos de inventario")) return;
+      if (!guardWrite("guardar movimientos de inventario", "inventario")) return;
       const itemId = cleanText($("movementItemId").value);
       const type = cleanText($("movementType").value) || "entrada";
       const rawQty = Number($("movementQty").value || 0);
@@ -4201,7 +4419,7 @@
     }
 
     async function savePayment() {
-      if (!guardWrite("guardar pagos")) return;
+      if (!guardWrite("guardar pagos", "trabajos")) return;
       const jobId = cleanText($("paymentJobId").value);
       const amount = Number($("paymentAmount").value || 0);
       const date = cleanText($("paymentDate").value) || today();
@@ -4443,7 +4661,7 @@
     }
 
     async function removeItem(type, id, label) {
-      if (!guardDelete(`eliminar ${label}`)) return;
+      if (!guardDelete(`eliminar ${label}`, moduleName)) return;
       if (!confirm(`¿Seguro que quieres eliminar este ${label}?`)) return;
 
       try {
@@ -4462,7 +4680,7 @@
     }
 
     async function updateJobStatus(id, status) {
-      if (!guardWrite("cambiar estados")) return;
+      if (!guardWrite("cambiar estados", "trabajos")) return;
       try {
         const job = getJobById(id);
         const logs = [...getJobActivityLog(job), newLogEntry("estado", `Estado cambiado a ${status}.`)];
@@ -4489,7 +4707,7 @@
     }
 
     function editClient(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("clientes")) return showToast("No tienes permiso para editar clientes.");
       const item = getClientById(id);
       if (!item) return;
       state.editingClientId = id;
@@ -4505,7 +4723,7 @@
     }
 
     function editJob(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("trabajos")) return showToast("No tienes permiso para editar trabajos.");
       const item = getJobById(id);
       if (!item) return;
 
@@ -4550,7 +4768,7 @@
     }
 
     function editExpense(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("gastos")) return showToast("No tienes permiso para editar gastos.");
       const item = state.expenses.find(e => e.id === id);
       if (!item) return;
       state.editingExpenseId = id;
@@ -4568,7 +4786,7 @@
     }
 
     function editRecurring(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("gastos")) return showToast("No tienes permiso para editar gastos recurrentes.");
       const item = state.recurringExpenses.find(r => r.id === id);
       if (!item) return;
       state.editingRecurringId = id;
@@ -4584,7 +4802,7 @@
 
 
     function editInventoryItem(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("inventario")) return showToast("No tienes permiso para editar inventario.");
       const item = getInventoryItemById(id);
       if (!item) return;
       state.editingInventoryId = id;
@@ -4640,9 +4858,9 @@
           <td>${safe(item.lastMovementAt || "-")}</td>
           <td>
             <div class="actions-row">
-              ${canWriteData() ? `<button class="btn btn-info btn-small" data-move-item="${item.id}">Movimiento</button>` : ""}
-              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-inventory="${item.id}">Editar</button>` : ""}
-              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-inventory="${item.id}">Eliminar</button>` : ""}
+              ${canWriteData("inventario") ? `<button class="btn btn-info btn-small" data-move-item="${item.id}">Movimiento</button>` : ""}
+              ${canWriteData("inventario") ? `<button class="btn btn-secondary btn-small" data-edit-inventory="${item.id}">Editar</button>` : ""}
+              ${canDeleteData("inventario") ? `<button class="btn btn-danger btn-small" data-delete-inventory="${item.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -4760,8 +4978,8 @@
             <div class="actions-row">
               <button class="btn btn-info btn-small" data-wa-client="${client.id}" data-wa-mode="general">WhatsApp</button>
               <button class="btn btn-secondary btn-small" data-client-pdf="${client.id}">PDF cliente</button>
-              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>` : ""}
-              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>` : ""}
+              ${canWriteData("clientes") ? `<button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>` : ""}
+              ${canDeleteData("clientes") ? `<button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -4806,12 +5024,12 @@
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
-                ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
-                ${canWriteData() ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
-                ${canWriteData() ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
                 <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
                 <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
-                ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
+                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -4862,7 +5080,7 @@
                   <small>Checklist: ${safe(checklistProgress(job))}</small>
                   <div class="kanban-actions">
                     <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>
-                    ${canWriteData() ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
+                    ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
                     <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
                   </div>
                 </div>
@@ -4967,8 +5185,8 @@
           <td><small>${safe(expense.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
-              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>` : ""}
-              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-expense="${expense.id}">Eliminar</button>` : ""}
+              ${canWriteData("gastos") ? `<button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>` : ""}
+              ${canDeleteData("gastos") ? `<button class="btn btn-danger btn-small" data-delete-expense="${expense.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -4990,8 +5208,8 @@
           <td><small>${safe(item.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
-              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-recurring="${item.id}">Editar</button>` : ""}
-              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Eliminar</button>` : ""}
+              ${canWriteData("gastos") ? `<button class="btn btn-secondary btn-small" data-edit-recurring="${item.id}">Editar</button>` : ""}
+              ${canDeleteData("gastos") ? `<button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -5959,8 +6177,8 @@
             <td>${safe(provider.notes || "-")}</td>
             <td>
               <div class="actions-row">
-                ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-provider="${provider.id}">Editar</button>` : ""}
-                ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-provider="${provider.id}">Eliminar</button>` : ""}
+                ${canWriteData("proveedores") ? `<button class="btn btn-secondary btn-small" data-edit-provider="${provider.id}">Editar</button>` : ""}
+                ${canDeleteData("proveedores") ? `<button class="btn btn-danger btn-small" data-delete-provider="${provider.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -5981,7 +6199,7 @@
     }
 
     function editProvider(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("proveedores")) return showToast("No tienes permiso para editar proveedores.");
       const provider = getProviderById(id);
       if (!provider) return;
       state.editingProviderId = id;
@@ -5997,7 +6215,7 @@
     }
 
     async function saveProvider() {
-      if (!guardWrite("guardar proveedores")) return;
+      if (!guardWrite("guardar proveedores", "proveedores")) return;
       const payload = {
         name: cleanText($("providerName").value),
         contact: cleanText($("providerContact").value),
@@ -6182,7 +6400,7 @@
     }
 
     function editPurchaseOrder(id) {
-      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
+      if (!canWriteData("compras")) return showToast("No tienes permiso para editar compras.");
       const po = getPurchaseOrderById(id);
       if (!po) return;
       state.editingPurchaseOrderId = id;
@@ -6205,7 +6423,7 @@
     }
 
     async function savePurchaseOrder() {
-      if (!guardWrite("guardar órdenes de compra")) return;
+      if (!guardWrite("guardar órdenes de compra", "compras")) return;
       const providerId = cleanText($("purchaseOrderProviderId").value);
       const provider = getProviderById(providerId);
       const jobId = cleanText($("purchaseOrderJobId").value);
@@ -6317,10 +6535,10 @@
             <td>${purchaseOrderStatusPill(po.status || "Borrador")}</td>
             <td>
               <div class="actions-row">
-                ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-po="${po.id}">Editar</button>` : ""}
+                ${canWriteData("compras") ? `<button class="btn btn-secondary btn-small" data-edit-po="${po.id}">Editar</button>` : ""}
                 <button class="btn btn-secondary btn-small" data-po-pdf="${po.id}">PDF</button>
-                ${canWriteData() ? receiveBtn : ""}
-                ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-po="${po.id}">Eliminar</button>` : ""}
+                ${canWriteData("compras") ? receiveBtn : ""}
+                ${canDeleteData("compras") ? `<button class="btn btn-danger btn-small" data-delete-po="${po.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -6338,7 +6556,8 @@
         role: "owner",
         active: true,
         notes: "Cuenta principal del negocio.",
-        lastLoginAt: null
+        lastLoginAt: null,
+        ...defaultModulePermissionsForRole("owner")
       };
       const members = state.teamMembers
         .filter(member => normalizedEmail(member.email) !== ownerEmail)
@@ -6350,7 +6569,7 @@
     function getFilteredTeamMembers() {
       const q = normalizeMatchText($("userSearch")?.value);
       return getVisibleTeamMembers().filter(member => {
-        const bag = normalizeMatchText(`${member.name || ""} ${member.email || ""} ${member.role || ""} ${member.notes || ""}`);
+        const bag = normalizeMatchText(`${member.name || ""} ${member.email || ""} ${member.role || ""} ${member.notes || ""} ${getModulePermissionSummary(member)}`);
         return !q || bag.includes(q);
       });
     }
@@ -6377,6 +6596,7 @@
             <td>${rolePill(member.role || "employee")}</td>
             <td>${activeStatePill(member.active !== false)}</td>
             <td>${safe(formatDateTime(member.lastLoginAt))}</td>
+            <td><small>${safe(getModulePermissionSummary(member))}</small></td>
             <td><small>${safe(member.notes || (isOwnerRow ? "Cuenta principal del negocio." : "-"))}</small></td>
             <td>
               <div class="actions-row">
@@ -6390,6 +6610,36 @@
       }).join("");
     }
 
+    function setTeamMemberPermissionForm(source = {}) {
+      const perms = normalizeModulePermissions(source);
+      $("teamPermClientes").value = perms.clientes;
+      $("teamPermTrabajos").value = perms.trabajos;
+      $("teamPermGastos").value = perms.gastos;
+      $("teamPermInventario").value = perms.inventario;
+      $("teamPermProveedores").value = perms.proveedores;
+      $("teamPermCompras").value = perms.compras;
+      $("teamPermUsuarios").value = perms.usuarios;
+      $("teamAllowImportBackup").checked = !!perms.importBackup;
+    }
+
+    function readTeamMemberPermissionForm() {
+      return {
+        clientes: $("teamPermClientes").value,
+        trabajos: $("teamPermTrabajos").value,
+        gastos: $("teamPermGastos").value,
+        inventario: $("teamPermInventario").value,
+        proveedores: $("teamPermProveedores").value,
+        compras: $("teamPermCompras").value,
+        usuarios: $("teamPermUsuarios").value,
+        importBackup: !!$("teamAllowImportBackup").checked
+      };
+    }
+
+    function applyRoleDefaultsToTeamMemberForm() {
+      const role = cleanText($("teamMemberRole").value) || "employee";
+      setTeamMemberPermissionForm({ role });
+    }
+
     function resetTeamMemberForm() {
       state.editingTeamMemberId = null;
       $("teamMemberModalTitle").textContent = "Nuevo usuario";
@@ -6399,6 +6649,7 @@
       $("teamMemberRole").value = "employee";
       $("teamMemberActive").value = "true";
       $("teamMemberNotes").value = "";
+      setTeamMemberPermissionForm({ role: "employee" });
     }
 
     function editTeamMember(id) {
@@ -6413,6 +6664,7 @@
       $("teamMemberRole").value = member.role || "employee";
       $("teamMemberActive").value = member.active === false ? "false" : "true";
       $("teamMemberNotes").value = member.notes || "";
+      setTeamMemberPermissionForm(member);
       openModal("teamMemberModal");
     }
 
@@ -6423,6 +6675,7 @@
       const role = cleanText($("teamMemberRole").value) || "employee";
       const active = $("teamMemberActive").value !== "false";
       const notes = cleanText($("teamMemberNotes").value);
+      const modulePerms = readTeamMemberPermissionForm();
 
       if (!email || !email.includes("@")) return showToast("Escribe un correo válido.");
       if (email === normalizedEmail(state.currentWorkspaceOwnerEmail || state.userEmail)) {
@@ -6437,6 +6690,14 @@
         role,
         active,
         notes,
+        moduleClientes: modulePerms.clientes,
+        moduleTrabajos: modulePerms.trabajos,
+        moduleGastos: modulePerms.gastos,
+        moduleInventario: modulePerms.inventario,
+        moduleProveedores: modulePerms.proveedores,
+        moduleCompras: modulePerms.compras,
+        moduleUsuarios: modulePerms.usuarios,
+        allowImportBackup: modulePerms.importBackup,
         ownerId: state.accountOwnerId,
         ownerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -6515,6 +6776,7 @@
         roleLabel(member.role || "employee"),
         member.active === false ? "Desactivado" : "Activo",
         formatDateTime(member.lastLoginAt),
+        getModulePermissionSummary(member),
         member.notes || "-"
       ]);
       pdf.setFontSize(16);
@@ -6523,8 +6785,8 @@
       pdf.text(`Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`, 14, 24);
       pdf.autoTable({
         startY: 30,
-        head: [["Nombre", "Correo", "Rol", "Estado", "Último acceso", "Notas"]],
-        body: rows.length ? rows : [["-","-","-","-","-","-"]],
+        head: [["Nombre", "Correo", "Rol", "Estado", "Último acceso", "Módulos", "Notas"]],
+        body: rows.length ? rows : [["-","-","-","-","-","-","-"]],
         headStyles: { fillColor: [20,22,27] },
         styles: { fontSize: 8 }
       });
@@ -6556,7 +6818,7 @@
     }
 
     async function receivePurchaseOrderIntoInventory(poId) {
-      if (!guardWrite("recibir órdenes de compra")) return;
+      if (!guardWrite("recibir órdenes de compra", "compras")) return;
       const po = getPurchaseOrderById(poId);
       if (!po) return showToast("No se encontró la orden de compra.");
       if (po.receivedMovementsApplied) return showToast("Esa orden ya se recibió en inventario.");
@@ -6987,26 +7249,26 @@
     });
 
     $("btnNewRecurring").addEventListener("click", () => {
-      if (!guardWrite("crear gastos recurrentes")) return;
+      if (!guardWrite("crear gastos recurrentes", "gastos")) return;
       resetRecurringForm();
       openModal("recurringModal");
     });
 
     $("btnNewMovement").addEventListener("click", () => {
-      if (!guardWrite("crear movimientos")) return;
+      if (!guardWrite("crear movimientos", "inventario")) return;
       if (!state.inventoryItems.length) return showToast("Primero crea un ítem de inventario.");
       resetMovementForm();
       openModal("movementModal");
     });
 
     $("btnNewProvider")?.addEventListener("click", () => {
-      if (!guardWrite("crear proveedores")) return;
+      if (!guardWrite("crear proveedores", "proveedores")) return;
       resetProviderForm();
       openModal("providerModal");
     });
 
     $("btnNewPurchaseOrder")?.addEventListener("click", () => {
-      if (!guardWrite("crear órdenes")) return;
+      if (!guardWrite("crear órdenes", "compras")) return;
       resetPurchaseOrderForm();
       openModal("purchaseOrderModal");
     });
@@ -7018,6 +7280,7 @@
     });
 
     $("saveTeamMemberBtn")?.addEventListener("click", saveTeamMember);
+    $("teamMemberRole")?.addEventListener("change", applyRoleDefaultsToTeamMemberForm);
 
     $("addMaterialBtn").addEventListener("click", () => {
       $("materialsContainer").appendChild(createMaterialRow());
