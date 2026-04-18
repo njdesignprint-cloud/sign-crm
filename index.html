@@ -758,6 +758,35 @@
     .lightbox-sub{color:var(--muted);font-size:12px;margin-top:6px}
     .lightbox-actions{display:flex;gap:10px;flex-wrap:wrap}
 
+    .role-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      padding:6px 10px;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .role-owner{background:rgba(184,255,0,.12);color:var(--brand);border-color:rgba(184,255,0,.25)}
+    .role-admin{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
+    .role-employee{background:rgba(168,85,247,.12);color:#ddd6fe;border-color:rgba(168,85,247,.25)}
+    .role-readonly{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
+    .state-active{background:rgba(34,197,94,.12);color:#bbf7d0;border-color:rgba(34,197,94,.25)}
+    .state-disabled{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
+    .permission-note{
+      margin-top:10px;
+      background:#101116;
+      border:1px dashed rgba(56,189,248,.25);
+      border-radius:14px;
+      padding:12px;
+      color:var(--muted);
+      line-height:1.5;
+      font-size:13px;
+    }
+
+
     @media (max-width:1100px){
       .stats,.mini-stats,.summary-box,.checklist-grid,.grid-4,.alert-grid,.price-grid,.estimate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
@@ -826,10 +855,15 @@
           <button data-view="inventario">📦 Inventario</button>
           <button data-view="proveedores">🏭 Proveedores</button>
           <button data-view="compras">🧾 Compras</button>
+          <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
         </div>
 
         <div class="sidebar-foot">
-          <div class="user-chip">Usuario activo:<br><strong id="activeUserEmail">-</strong></div>
+          <div class="user-chip">
+            Usuario activo:<br><strong id="activeUserEmail">-</strong><br>
+            <span id="activeWorkspaceRole">Rol: -</span><br>
+            <span id="activeWorkspaceOwner">Espacio: -</span>
+          </div>
           <button id="btnLogout" class="btn btn-secondary">Cerrar sesión</button>
         </div>
       </aside>
@@ -1357,6 +1391,52 @@
               </table>
             </div>
             <div id="purchaseOrdersEmpty" class="empty hidden">No hay órdenes de compra guardadas.</div>
+          </div>
+        </section>
+
+        <section id="view-usuarios" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Usuarios totales</div><div id="usersTotalCount" class="value">0</div></div>
+            <div class="stat"><div class="label">Admins</div><div id="usersAdminCount" class="value info-text">0</div></div>
+            <div class="stat"><div class="label">Empleados</div><div id="usersEmployeeCount" class="value purple-text">0</div></div>
+            <div class="stat"><div class="label">Solo lectura</div><div id="usersReadonlyCount" class="value warn-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Usuarios y permisos</h2>
+                <div class="section-note">Agrega personas por correo y define qué pueden hacer dentro del mismo espacio de trabajo.</div>
+              </div>
+              <div class="filters">
+                <input id="userSearch" class="input" placeholder="Buscar por nombre, correo o rol" />
+                <button id="btnNewTeamMember" class="btn btn-primary btn-small">+ Nuevo usuario</button>
+              </div>
+            </div>
+
+            <div style="padding:0 18px 18px;">
+              <div class="permission-note">
+                El usuario nuevo debe crear su cuenta con ese mismo correo. Si aquí está activo, al entrar verá este mismo negocio según el rol que le pongas.
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Último acceso</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="teamMembersBody"></tbody>
+              </table>
+            </div>
+            <div id="teamMembersEmpty" class="empty hidden">No hay usuarios del equipo todavía.</div>
           </div>
         </section>
 
@@ -1939,7 +2019,10 @@
 
     const state = {
       uid: null,
+      accountOwnerId: null,
       userEmail: "",
+      currentUserRole: "owner",
+      currentWorkspaceOwnerEmail: "",
       currentView: "dashboard",
       clients: [],
       jobs: [],
@@ -1949,6 +2032,7 @@
       inventoryMovements: [],
       providers: [],
       purchaseOrders: [],
+      teamMembers: [],
       editingClientId: null,
       editingJobId: null,
       editingExpenseId: null,
@@ -1956,6 +2040,7 @@
       editingInventoryId: null,
       editingProviderId: null,
       editingPurchaseOrderId: null,
+      editingTeamMemberId: null,
       workingPaymentJobId: null,
       workingMovementItemId: null,
       galleryIndex: 0,
@@ -1985,7 +2070,8 @@
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
       inventario: ["Inventario", "Control profesional de materiales, stock y movimientos."],
       proveedores: ["Proveedores", "Base de proveedores y contactos de compra."],
-      compras: ["Compras", "Órdenes de compra y recepción de materiales."]
+      compras: ["Compras", "Órdenes de compra y recepción de materiales."],
+      usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."]
     };
 
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
@@ -2078,7 +2164,8 @@
         gastos: 'PDF gastos',
         inventario: 'PDF inventario',
         proveedores: 'PDF proveedores',
-        compras: 'PDF compras'
+        compras: 'PDF compras',
+        usuarios: 'PDF usuarios'
       };
       if ($('btnExportPdf')) $('btnExportPdf').textContent = labels[state.currentView] || 'PDF módulo';
     }
@@ -2100,7 +2187,10 @@
       if (view === "inventario") btnNew.textContent = "+ Nuevo ítem";
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
       if (view === "compras") btnNew.textContent = "+ Nueva orden";
+      if (view === "usuarios") btnNew.textContent = "+ Nuevo usuario";
+      if (view === "usuarios" && !canManageUsers()) btnNew.classList.add("hidden");
       updateModulePdfButton();
+      applyPermissionUi();
     }
 
     function setJobsViewMode(mode) {
@@ -2116,7 +2206,11 @@
     function openModal(id) { $(id).classList.add("show"); }
     function closeModal(id) { $(id).classList.remove("show"); }
 
-    function userRef() { return db.collection("users").doc(state.uid); }
+    function normalizedEmail(value) { return cleanText(value).toLowerCase(); }
+    function emailDocId(email) { return encodeURIComponent(normalizedEmail(email)); }
+    function userRef() { return db.collection("users").doc(state.accountOwnerId || state.uid); }
+    function ownUserRootRef() { return db.collection("users").doc(state.uid); }
+    function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
     function clientsRef() { return userRef().collection("clients"); }
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
@@ -2125,6 +2219,154 @@
     function inventoryMovementsRef() { return userRef().collection("inventoryMovements"); }
     function providersRef() { return userRef().collection("providers"); }
     function purchaseOrdersRef() { return userRef().collection("purchaseOrders"); }
+    function teamMembersRef() { return userRef().collection("teamMembers"); }
+
+    function isOwner() { return state.currentUserRole === "owner"; }
+    function isAdmin() { return ["owner", "admin"].includes(state.currentUserRole); }
+    function canWriteData() { return ["owner", "admin", "employee"].includes(state.currentUserRole); }
+    function canDeleteData() { return ["owner", "admin"].includes(state.currentUserRole); }
+    function canManageUsers() { return ["owner", "admin"].includes(state.currentUserRole); }
+    function canImportBackup() { return ["owner", "admin"].includes(state.currentUserRole); }
+
+    function roleLabel(role = "") {
+      return {
+        owner: "Propietario",
+        admin: "Admin",
+        employee: "Empleado",
+        readonly: "Solo lectura"
+      }[role] || "Empleado";
+    }
+
+    function roleClass(role = "") {
+      return {
+        owner: "role-owner",
+        admin: "role-admin",
+        employee: "role-employee",
+        readonly: "role-readonly"
+      }[role] || "role-employee";
+    }
+
+    function rolePill(role = "") {
+      return `<span class="role-chip ${roleClass(role)}">${safe(roleLabel(role))}</span>`;
+    }
+
+    function activeStatePill(active = true) {
+      return active ? '<span class="pill state-active">Activo</span>' : '<span class="pill state-disabled">Desactivado</span>';
+    }
+
+    function guardWrite(action = "hacer cambios") {
+      if (canWriteData()) return true;
+      showToast(`Tu usuario es solo lectura. No puede ${action}.`);
+      return false;
+    }
+
+    function guardDelete(action = "eliminar") {
+      if (canDeleteData()) return true;
+      showToast(`Tu rol no tiene permiso para ${action}.`);
+      return false;
+    }
+
+    function guardManageUsers() {
+      if (canManageUsers()) return true;
+      showToast("Tu rol no puede administrar usuarios.");
+      return false;
+    }
+
+    function applyPermissionUi() {
+      const roleEl = $("activeWorkspaceRole");
+      if (roleEl) roleEl.textContent = `Rol: ${roleLabel(state.currentUserRole)}`;
+      const ownerEl = $("activeWorkspaceOwner");
+      if (ownerEl) ownerEl.textContent = `Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`;
+
+      const usersNav = $("navUsuariosBtn");
+      if (usersNav) usersNav.classList.toggle("hidden", !canManageUsers());
+
+      if (state.currentView === "usuarios" && !canManageUsers()) {
+        state.currentView = "dashboard";
+        document.querySelectorAll(".view").forEach(section => section.classList.add("hidden"));
+        $("view-dashboard").classList.remove("hidden");
+      }
+
+      const newBtn = $("btnNewMain");
+      if (newBtn) {
+        const shouldHide = state.currentView === "dashboard" ||
+          (state.currentView === "usuarios" && !canManageUsers()) ||
+          (!canWriteData() && ["clientes","trabajos","gastos","inventario","proveedores","compras"].includes(state.currentView));
+        newBtn.classList.toggle("hidden", shouldHide);
+      }
+
+      [
+        "saveClientBtn","saveJobBtn","saveExpenseBtn","saveRecurringBtn","saveInventoryBtn","saveMovementBtn",
+        "saveProviderBtn","savePurchaseOrderBtn","savePaymentBtn","saveInternalNoteBtn","addMaterialBtn","addQuoteItemBtn",
+        "applySuggestedSaleBtn","applyEstimatorBtn","loadEstimatorDefaultsBtn","uploadDesignBtn","uploadExpensePhotoBtn",
+        "openPaymentFromJobBtn","openExpenseFromJobBtn","loadPoFromJobBtn","addPoLineBtn","btnNewRecurring",
+        "btnNewMovement","btnNewProvider","btnNewPurchaseOrder","applyInventoryNowBtn"
+      ].forEach(id => {
+        const el = $(id);
+        if (!el) return;
+        el.disabled = !canWriteData();
+      });
+
+      const saveTeamBtn = $("saveTeamMemberBtn");
+      if (saveTeamBtn) saveTeamBtn.disabled = !canManageUsers();
+
+      const importBtn = $("btnImportJson");
+      if (importBtn) importBtn.disabled = !canImportBackup();
+
+      const newTeamBtn = $("btnNewTeamMember");
+      if (newTeamBtn) newTeamBtn.classList.toggle("hidden", !canManageUsers());
+    }
+
+    async function resolveWorkspaceAccess(user) {
+      state.uid = user.uid;
+      state.userEmail = user.email || "";
+      state.accountOwnerId = user.uid;
+      state.currentUserRole = "owner";
+      state.currentWorkspaceOwnerEmail = state.userEmail || "";
+
+      const ownPayload = {
+        email: normalizedEmail(state.userEmail),
+        ownerId: user.uid,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        await ownUserRootRef().set(ownPayload, { merge: true });
+      } catch (error) {
+        console.error(error);
+      }
+
+      try {
+        const accessSnap = await teamAccessRefByEmail(state.userEmail).get();
+        if (accessSnap.exists) {
+          const access = accessSnap.data() || {};
+          if (access.active !== false && cleanText(access.ownerId)) {
+            state.accountOwnerId = cleanText(access.ownerId);
+            state.currentUserRole = state.accountOwnerId === state.uid ? "owner" : (cleanText(access.role) || "employee");
+            state.currentWorkspaceOwnerEmail = cleanText(access.ownerEmail) || cleanText(access.workspaceOwnerEmail) || state.currentWorkspaceOwnerEmail;
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      try {
+        if (state.accountOwnerId !== state.uid) {
+          const teamDocId = emailDocId(state.userEmail);
+          const loginPayload = {
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLoginEmail: normalizedEmail(state.userEmail),
+            active: true,
+            ownerId: state.accountOwnerId,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await teamMembersRef().doc(teamDocId).set(loginPayload, { merge: true });
+          await teamAccessRefByEmail(state.userEmail).set(loginPayload, { merge: true });
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
     function clearUnsubscribers() {
       state.unsubscribers.forEach(fn => { try { fn(); } catch (_) {} });
@@ -2140,6 +2382,7 @@
     function getJobById(id) { return state.jobs.find(j => j.id === id) || null; }
     function getProviderById(id) { return state.providers.find(p => p.id === id) || null; }
     function getPurchaseOrderById(id) { return state.purchaseOrders.find(po => po.id === id) || null; }
+    function getTeamMemberById(id) { return state.teamMembers.find(member => member.id === id) || null; }
 
     function getJobDisplayLabel(job = {}) {
       const client = getClientById(job.clientId);
@@ -3122,6 +3365,7 @@
     }
 
     function openDesignUploadWidget() {
+      if (!guardWrite("subir fotos")) return;
       openCloudinaryImageWidget({
         multiple: true,
         maxFiles: 10,
@@ -3214,6 +3458,7 @@
     }
 
     function openExpenseUploadWidget() {
+      if (!guardWrite("subir fotos")) return;
       openCloudinaryImageWidget({
         multiple: true,
         maxFiles: 10,
@@ -3250,6 +3495,7 @@
     }
 
     async function applyInventoryDiscountForJob(jobId, source = "manual") {
+      if (!guardWrite("aplicar inventario")) return { appliedCount: 0 };
       const jobDocRef = jobsRef().doc(jobId);
       const movementRefs = [];
       const movementDate = today();
@@ -3614,6 +3860,7 @@
     }
 
     async function saveInternalNote() {
+      if (!guardWrite("guardar notas internas")) return;
       if (!state.editingJobId) return showToast("Primero guarda el trabajo.");
       const text = cleanText($("jobNewInternalNote").value);
       if (!text) return showToast("Escribe una nota interna.");
@@ -3648,6 +3895,7 @@
     }
 
     async function saveClient() {
+      if (!guardWrite("guardar clientes")) return;
       const payload = {
         name: cleanText($("clientName").value),
         company: cleanText($("clientCompany").value),
@@ -3678,6 +3926,7 @@
     }
 
     async function saveJob() {
+      if (!guardWrite("guardar trabajos")) return;
       const quote = getCurrentQuoteForm();
       const quoteCalc = computeQuote(quote);
       const pricing = getCurrentPricingForm();
@@ -3737,6 +3986,7 @@
     }
 
     async function saveExpense() {
+      if (!guardWrite("guardar gastos")) return;
       const payload = {
         concept: cleanText($("expenseConcept").value),
         category: cleanText($("expenseCategory").value),
@@ -3771,6 +4021,7 @@
     }
 
     async function saveRecurring() {
+      if (!guardWrite("guardar gastos recurrentes")) return;
       const payload = {
         concept: cleanText($("recurringConcept").value),
         category: cleanText($("recurringCategory").value),
@@ -3804,6 +4055,7 @@
 
 
     async function saveInventoryItem() {
+      if (!guardWrite("guardar inventario")) return;
       const payload = {
         name: cleanText($("inventoryName").value),
         sku: cleanText($("inventorySku").value),
@@ -3841,6 +4093,7 @@
     }
 
     async function saveMovement() {
+      if (!guardWrite("guardar movimientos de inventario")) return;
       const itemId = cleanText($("movementItemId").value);
       const type = cleanText($("movementType").value) || "entrada";
       const rawQty = Number($("movementQty").value || 0);
@@ -3900,6 +4153,7 @@
     }
 
     async function savePayment() {
+      if (!guardWrite("guardar pagos")) return;
       const jobId = cleanText($("paymentJobId").value);
       const amount = Number($("paymentAmount").value || 0);
       const date = cleanText($("paymentDate").value) || today();
@@ -3988,6 +4242,7 @@
     }
 
     async function importBackupJson(file) {
+      if (!canImportBackup()) return showToast("Tu rol no puede importar respaldos.");
       if (!file) return;
       try {
         const text = await file.text();
@@ -4140,6 +4395,7 @@
     }
 
     async function removeItem(type, id, label) {
+      if (!guardDelete(`eliminar ${label}`)) return;
       if (!confirm(`¿Seguro que quieres eliminar este ${label}?`)) return;
 
       try {
@@ -4158,6 +4414,7 @@
     }
 
     async function updateJobStatus(id, status) {
+      if (!guardWrite("cambiar estados")) return;
       try {
         const job = getJobById(id);
         const logs = [...getJobActivityLog(job), newLogEntry("estado", `Estado cambiado a ${status}.`)];
@@ -4184,6 +4441,7 @@
     }
 
     function editClient(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const item = getClientById(id);
       if (!item) return;
       state.editingClientId = id;
@@ -4199,6 +4457,7 @@
     }
 
     function editJob(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const item = getJobById(id);
       if (!item) return;
 
@@ -4243,6 +4502,7 @@
     }
 
     function editExpense(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const item = state.expenses.find(e => e.id === id);
       if (!item) return;
       state.editingExpenseId = id;
@@ -4260,6 +4520,7 @@
     }
 
     function editRecurring(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const item = state.recurringExpenses.find(r => r.id === id);
       if (!item) return;
       state.editingRecurringId = id;
@@ -4275,6 +4536,7 @@
 
 
     function editInventoryItem(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const item = getInventoryItemById(id);
       if (!item) return;
       state.editingInventoryId = id;
@@ -4330,9 +4592,9 @@
           <td>${safe(item.lastMovementAt || "-")}</td>
           <td>
             <div class="actions-row">
-              <button class="btn btn-info btn-small" data-move-item="${item.id}">Movimiento</button>
-              <button class="btn btn-secondary btn-small" data-edit-inventory="${item.id}">Editar</button>
-              <button class="btn btn-danger btn-small" data-delete-inventory="${item.id}">Eliminar</button>
+              ${canWriteData() ? `<button class="btn btn-info btn-small" data-move-item="${item.id}">Movimiento</button>` : ""}
+              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-inventory="${item.id}">Editar</button>` : ""}
+              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-inventory="${item.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -4450,8 +4712,8 @@
             <div class="actions-row">
               <button class="btn btn-info btn-small" data-wa-client="${client.id}" data-wa-mode="general">WhatsApp</button>
               <button class="btn btn-secondary btn-small" data-client-pdf="${client.id}">PDF cliente</button>
-              <button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>
-              <button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>
+              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-client="${client.id}">Editar</button>` : ""}
+              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-client="${client.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -4496,12 +4758,12 @@
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
-                <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>
-                <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
-                <button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>
+                ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
+                ${canWriteData() ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
+                ${canWriteData() ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
                 <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
                 <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
-                <button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>
+                ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -4552,7 +4814,7 @@
                   <small>Checklist: ${safe(checklistProgress(job))}</small>
                   <div class="kanban-actions">
                     <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>
-                    <button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>
+                    ${canWriteData() ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
                     <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
                   </div>
                 </div>
@@ -4657,8 +4919,8 @@
           <td><small>${safe(expense.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
-              <button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>
-              <button class="btn btn-danger btn-small" data-delete-expense="${expense.id}">Eliminar</button>
+              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>` : ""}
+              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-expense="${expense.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -4680,8 +4942,8 @@
           <td><small>${safe(item.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
-              <button class="btn btn-secondary btn-small" data-edit-recurring="${item.id}">Editar</button>
-              <button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Eliminar</button>
+              ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-recurring="${item.id}">Editar</button>` : ""}
+              ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Eliminar</button>` : ""}
             </div>
           </td>
         </tr>
@@ -5215,6 +5477,7 @@
       if (state.currentView === 'inventario') return exportInventoryPdf();
       if (state.currentView === 'proveedores') return exportProvidersPdf();
       if (state.currentView === 'compras') return exportPurchaseOrdersPdf();
+      if (state.currentView === 'usuarios') return exportUsersPdf();
       return exportDashboardPdf();
     }
 
@@ -5648,8 +5911,8 @@
             <td>${safe(provider.notes || "-")}</td>
             <td>
               <div class="actions-row">
-                <button class="btn btn-secondary btn-small" data-edit-provider="${provider.id}">Editar</button>
-                <button class="btn btn-danger btn-small" data-delete-provider="${provider.id}">Eliminar</button>
+                ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-provider="${provider.id}">Editar</button>` : ""}
+                ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-provider="${provider.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -5670,6 +5933,7 @@
     }
 
     function editProvider(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const provider = getProviderById(id);
       if (!provider) return;
       state.editingProviderId = id;
@@ -5685,6 +5949,7 @@
     }
 
     async function saveProvider() {
+      if (!guardWrite("guardar proveedores")) return;
       const payload = {
         name: cleanText($("providerName").value),
         contact: cleanText($("providerContact").value),
@@ -5869,6 +6134,7 @@
     }
 
     function editPurchaseOrder(id) {
+      if (!canWriteData()) return showToast("Tu usuario es solo lectura.");
       const po = getPurchaseOrderById(id);
       if (!po) return;
       state.editingPurchaseOrderId = id;
@@ -5891,6 +6157,7 @@
     }
 
     async function savePurchaseOrder() {
+      if (!guardWrite("guardar órdenes de compra")) return;
       const providerId = cleanText($("purchaseOrderProviderId").value);
       const provider = getProviderById(providerId);
       const jobId = cleanText($("purchaseOrderJobId").value);
@@ -6002,16 +6269,221 @@
             <td>${purchaseOrderStatusPill(po.status || "Borrador")}</td>
             <td>
               <div class="actions-row">
-                <button class="btn btn-secondary btn-small" data-edit-po="${po.id}">Editar</button>
+                ${canWriteData() ? `<button class="btn btn-secondary btn-small" data-edit-po="${po.id}">Editar</button>` : ""}
                 <button class="btn btn-secondary btn-small" data-po-pdf="${po.id}">PDF</button>
-                ${receiveBtn}
-                <button class="btn btn-danger btn-small" data-delete-po="${po.id}">Eliminar</button>
+                ${canWriteData() ? receiveBtn : ""}
+                ${canDeleteData() ? `<button class="btn btn-danger btn-small" data-delete-po="${po.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
         `;
       }).join("");
     }
+
+
+    function getVisibleTeamMembers() {
+      const ownerEmail = normalizedEmail(state.currentWorkspaceOwnerEmail || state.userEmail);
+      const ownerRow = {
+        id: "__owner__",
+        name: "Propietario",
+        email: ownerEmail,
+        role: "owner",
+        active: true,
+        notes: "Cuenta principal del negocio.",
+        lastLoginAt: null
+      };
+      const members = state.teamMembers
+        .filter(member => normalizedEmail(member.email) !== ownerEmail)
+        .slice()
+        .sort((a, b) => normalizedEmail(a.email).localeCompare(normalizedEmail(b.email)));
+      return [ownerRow, ...members];
+    }
+
+    function getFilteredTeamMembers() {
+      const q = normalizeMatchText($("userSearch")?.value);
+      return getVisibleTeamMembers().filter(member => {
+        const bag = normalizeMatchText(`${member.name || ""} ${member.email || ""} ${member.role || ""} ${member.notes || ""}`);
+        return !q || bag.includes(q);
+      });
+    }
+
+    function renderUsers() {
+      const tbody = $("teamMembersBody");
+      if (!tbody) return;
+
+      const rows = getFilteredTeamMembers();
+      const allRows = getVisibleTeamMembers();
+      $("usersTotalCount").textContent = String(allRows.length);
+      $("usersAdminCount").textContent = String(allRows.filter(member => ["owner","admin"].includes(member.role)).length);
+      $("usersEmployeeCount").textContent = String(allRows.filter(member => member.role === "employee").length);
+      $("usersReadonlyCount").textContent = String(allRows.filter(member => member.role === "readonly").length);
+      $("teamMembersEmpty").classList.toggle("hidden", rows.length > 0);
+
+      tbody.innerHTML = rows.map(member => {
+        const isOwnerRow = member.id === "__owner__";
+        const isSelf = normalizedEmail(member.email) === normalizedEmail(state.userEmail);
+        return `
+          <tr>
+            <td><strong>${safe(member.name || "Sin nombre")}</strong>${isSelf ? '<br><small>Tú</small>' : ""}</td>
+            <td>${safe(member.email || "-")}</td>
+            <td>${rolePill(member.role || "employee")}</td>
+            <td>${activeStatePill(member.active !== false)}</td>
+            <td>${safe(formatDateTime(member.lastLoginAt))}</td>
+            <td><small>${safe(member.notes || (isOwnerRow ? "Cuenta principal del negocio." : "-"))}</small></td>
+            <td>
+              <div class="actions-row">
+                ${!isOwnerRow && canManageUsers() ? `<button class="btn btn-secondary btn-small" data-edit-team-member="${member.id}">Editar</button>` : ""}
+                ${!isOwnerRow && canManageUsers() ? `<button class="btn btn-info btn-small" data-toggle-team-member="${member.id}">${member.active === false ? "Activar" : "Desactivar"}</button>` : ""}
+                ${!isOwnerRow && canManageUsers() ? `<button class="btn btn-danger btn-small" data-delete-team-member="${member.id}">Quitar</button>` : ""}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function resetTeamMemberForm() {
+      state.editingTeamMemberId = null;
+      $("teamMemberModalTitle").textContent = "Nuevo usuario";
+      $("teamMemberName").value = "";
+      $("teamMemberEmail").value = "";
+      $("teamMemberEmail").readOnly = false;
+      $("teamMemberRole").value = "employee";
+      $("teamMemberActive").value = "true";
+      $("teamMemberNotes").value = "";
+    }
+
+    function editTeamMember(id) {
+      if (!guardManageUsers()) return;
+      const member = getTeamMemberById(id);
+      if (!member) return;
+      state.editingTeamMemberId = id;
+      $("teamMemberModalTitle").textContent = "Editar usuario";
+      $("teamMemberName").value = member.name || "";
+      $("teamMemberEmail").value = member.email || "";
+      $("teamMemberEmail").readOnly = true;
+      $("teamMemberRole").value = member.role || "employee";
+      $("teamMemberActive").value = member.active === false ? "false" : "true";
+      $("teamMemberNotes").value = member.notes || "";
+      openModal("teamMemberModal");
+    }
+
+    async function saveTeamMember() {
+      if (!guardManageUsers()) return;
+      const email = normalizedEmail($("teamMemberEmail").value);
+      const name = cleanText($("teamMemberName").value) || email;
+      const role = cleanText($("teamMemberRole").value) || "employee";
+      const active = $("teamMemberActive").value !== "false";
+      const notes = cleanText($("teamMemberNotes").value);
+
+      if (!email || !email.includes("@")) return showToast("Escribe un correo válido.");
+      if (email === normalizedEmail(state.currentWorkspaceOwnerEmail || state.userEmail)) {
+        return showToast("Ese correo ya es el propietario del espacio.");
+      }
+
+      const docId = state.editingTeamMemberId || emailDocId(email);
+      const existing = state.editingTeamMemberId ? getTeamMemberById(state.editingTeamMemberId) : null;
+      const payload = {
+        name,
+        email,
+        role,
+        active,
+        notes,
+        ownerId: state.accountOwnerId,
+        ownerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        const batch = db.batch();
+        batch.set(teamMembersRef().doc(docId), {
+          ...payload,
+          createdAt: existing?.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
+          lastLoginAt: existing?.lastLoginAt || null
+        }, { merge: true });
+
+        batch.set(teamAccessRefByEmail(email), {
+          ...payload,
+          workspaceOwnerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
+          teamDocId: docId
+        }, { merge: true });
+
+        await batch.commit();
+        closeModal("teamMemberModal");
+        resetTeamMemberForm();
+        showToast("Usuario guardado.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo guardar el usuario.");
+      }
+    }
+
+    async function toggleTeamMemberActive(id) {
+      if (!guardManageUsers()) return;
+      const member = getTeamMemberById(id);
+      if (!member) return;
+      if (normalizedEmail(member.email) === normalizedEmail(state.userEmail)) return showToast("No puedes cambiar tu propio acceso desde aquí.");
+      const nextActive = member.active === false;
+      try {
+        await teamMembersRef().doc(id).update({
+          active: nextActive,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await teamAccessRefByEmail(member.email).set({
+          active: nextActive,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        showToast(nextActive ? "Usuario activado." : "Usuario desactivado.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo cambiar el estado del usuario.");
+      }
+    }
+
+    async function removeTeamMember(id) {
+      if (!guardManageUsers()) return;
+      const member = getTeamMemberById(id);
+      if (!member) return;
+      if (normalizedEmail(member.email) === normalizedEmail(state.userEmail)) return showToast("No puedes quitar tu propio acceso desde aquí.");
+      if (!confirm(`¿Quitar el acceso de ${member.email || "este usuario"}?`)) return;
+      try {
+        const batch = db.batch();
+        batch.delete(teamMembersRef().doc(id));
+        batch.delete(teamAccessRefByEmail(member.email));
+        await batch.commit();
+        showToast("Acceso eliminado.");
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo quitar el acceso.");
+      }
+    }
+
+    function exportUsersPdf() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      const rows = getVisibleTeamMembers().map(member => [
+        member.name || "-",
+        member.email || "-",
+        roleLabel(member.role || "employee"),
+        member.active === false ? "Desactivado" : "Activo",
+        formatDateTime(member.lastLoginAt),
+        member.notes || "-"
+      ]);
+      pdf.setFontSize(16);
+      pdf.text("Usuarios y permisos", 14, 16);
+      pdf.setFontSize(10);
+      pdf.text(`Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`, 14, 24);
+      pdf.autoTable({
+        startY: 30,
+        head: [["Nombre", "Correo", "Rol", "Estado", "Último acceso", "Notas"]],
+        body: rows.length ? rows : [["-","-","-","-","-","-"]],
+        headStyles: { fillColor: [20,22,27] },
+        styles: { fontSize: 8 }
+      });
+      pdf.save(`Usuarios_Permisos_${today()}.pdf`);
+      showToast("PDF de usuarios exportado.");
+    }
+
 
     function openPurchaseOrderFromCurrentJob() {
       if (!state.editingJobId) return showToast("Primero guarda el trabajo.");
@@ -6036,6 +6508,7 @@
     }
 
     async function receivePurchaseOrderIntoInventory(poId) {
+      if (!guardWrite("recibir órdenes de compra")) return;
       const po = getPurchaseOrderById(poId);
       if (!po) return showToast("No se encontró la orden de compra.");
       if (po.receivedMovementsApplied) return showToast("Esa orden ya se recibió en inventario.");
@@ -6259,7 +6732,18 @@
         renderProviders();
       }, error => console.error(error));
 
-      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders);
+      let unsubTeamMembers = () => {};
+      if (canManageUsers()) {
+        unsubTeamMembers = teamMembersRef().orderBy("email", "asc").onSnapshot(snapshot => {
+          state.teamMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderUsers();
+        }, error => console.error(error));
+      } else {
+        state.teamMembers = [];
+        renderUsers();
+      }
+
+      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubTeamMembers);
     }
 
     async function login() {
@@ -6326,20 +6810,23 @@
       }
     }
 
-    function handleSignedIn(user) {
-      state.uid = user.uid;
-      state.userEmail = user.email || "";
+    async function handleSignedIn(user) {
+      await resolveWorkspaceAccess(user);
       $("activeUserEmail").textContent = state.userEmail;
       $("authScreen").classList.add("hidden");
       $("appScreen").classList.remove("hidden");
       bindRealtime();
-      setView("dashboard");
+      setView(canManageUsers() && state.currentView === "usuarios" ? "usuarios" : "dashboard");
+      applyPermissionUi();
     }
 
     function handleSignedOut() {
       clearUnsubscribers();
       state.uid = null;
+      state.accountOwnerId = null;
       state.userEmail = "";
+      state.currentUserRole = "owner";
+      state.currentWorkspaceOwnerEmail = "";
       state.clients = [];
       state.jobs = [];
       state.expenses = [];
@@ -6348,14 +6835,15 @@
       state.inventoryMovements = [];
       state.providers = [];
       state.purchaseOrders = [];
+      state.teamMembers = [];
       state.galleryIndex = 0;
       state.galleryJobId = null;
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }
 
-    auth.onAuthStateChanged(user => {
-      if (user) handleSignedIn(user);
+    auth.onAuthStateChanged(async user => {
+      if (user) await handleSignedIn(user);
       else handleSignedOut();
     });
 
@@ -6443,29 +6931,45 @@
       } else if (state.currentView === "compras") {
         resetPurchaseOrderForm();
         openModal("purchaseOrderModal");
+      } else if (state.currentView === "usuarios") {
+        if (!guardManageUsers()) return;
+        resetTeamMemberForm();
+        openModal("teamMemberModal");
       }
     });
 
     $("btnNewRecurring").addEventListener("click", () => {
+      if (!guardWrite("crear gastos recurrentes")) return;
       resetRecurringForm();
       openModal("recurringModal");
     });
 
     $("btnNewMovement").addEventListener("click", () => {
+      if (!guardWrite("crear movimientos")) return;
       if (!state.inventoryItems.length) return showToast("Primero crea un ítem de inventario.");
       resetMovementForm();
       openModal("movementModal");
     });
 
     $("btnNewProvider")?.addEventListener("click", () => {
+      if (!guardWrite("crear proveedores")) return;
       resetProviderForm();
       openModal("providerModal");
     });
 
     $("btnNewPurchaseOrder")?.addEventListener("click", () => {
+      if (!guardWrite("crear órdenes")) return;
       resetPurchaseOrderForm();
       openModal("purchaseOrderModal");
     });
+
+    $("btnNewTeamMember")?.addEventListener("click", () => {
+      if (!guardManageUsers()) return;
+      resetTeamMemberForm();
+      openModal("teamMemberModal");
+    });
+
+    $("saveTeamMemberBtn")?.addEventListener("click", saveTeamMember);
 
     $("addMaterialBtn").addEventListener("click", () => {
       $("materialsContainer").appendChild(createMaterialRow());
@@ -6520,6 +7024,11 @@
     ["providerSearch"].forEach(id => {
       $(id)?.addEventListener("input", renderProviders);
       $(id)?.addEventListener("change", renderProviders);
+    });
+
+    ["userSearch"].forEach(id => {
+      $(id)?.addEventListener("input", renderUsers);
+      $(id)?.addEventListener("change", renderUsers);
     });
 
     ["purchaseOrderSearch","purchaseOrderStatusFilter","purchaseOrderSupplierFilter"].forEach(id => {
@@ -6612,6 +7121,10 @@
       if (target.dataset.deletePo) removeItem("purchaseOrders", target.dataset.deletePo, "orden de compra");
       if (target.dataset.poPdf) exportSinglePurchaseOrderPdf(target.dataset.poPdf);
       if (target.dataset.receivePo) receivePurchaseOrderIntoInventory(target.dataset.receivePo);
+
+      if (target.dataset.editTeamMember) editTeamMember(target.dataset.editTeamMember);
+      if (target.dataset.toggleTeamMember) toggleTeamMemberActive(target.dataset.toggleTeamMember);
+      if (target.dataset.deleteTeamMember) removeTeamMember(target.dataset.deleteTeamMember);
     });
 
     resetJobForm();
@@ -6620,8 +7133,10 @@
     resetInventoryForm();
     resetProviderForm();
     resetPurchaseOrderForm();
+    resetTeamMemberForm();
     setJobsViewMode("table");
     renderDeliveryCalendar();
+    renderUsers();
   </script>
 </body>
 </html>
