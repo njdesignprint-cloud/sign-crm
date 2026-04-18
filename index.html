@@ -855,6 +855,7 @@
           <button data-view="inventario">📦 Inventario</button>
           <button data-view="proveedores">🏭 Proveedores</button>
           <button data-view="compras">🧾 Compras</button>
+          <button data-view="instalaciones">🗓️ Instalación</button>
           <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
         </div>
 
@@ -1394,6 +1395,87 @@
           </div>
         </section>
 
+        <section id="view-instalaciones" class="view hidden">
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="label">Instalaciones hoy</div><div id="installTodayCount" class="value info-text">0</div></div>
+            <div class="mini-stat"><div class="label">Próximos 7 días</div><div id="installNext7Count" class="value warn-text">0</div></div>
+            <div class="mini-stat"><div class="label">Pendientes confirmar</div><div id="installPendingCount" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">Completadas mes</div><div id="installDoneMonthCount" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Agenda de instalaciones</h2>
+                <div class="section-note">Filtra por fecha, responsable o estado y abre el trabajo para editar la instalación.</div>
+              </div>
+              <div class="filters">
+                <input id="installationSearch" class="input" placeholder="Buscar por cliente, trabajo, dirección o responsable" />
+                <input id="installationFrom" type="date" class="input" />
+                <input id="installationTo" type="date" class="input" />
+                <select id="installationAssignedFilter" class="select">
+                  <option value="">Todos los responsables</option>
+                </select>
+                <select id="installationStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Confirmada">Confirmada</option>
+                  <option value="En ruta">En ruta</option>
+                  <option value="Reprogramada">Reprogramada</option>
+                  <option value="Completada">Completada</option>
+                  <option value="Cancelada">Cancelada</option>
+                </select>
+                <button id="btnClearInstallationFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Responsable</th>
+                    <th>Dirección</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="installationBody"></tbody>
+              </table>
+            </div>
+            <div id="installationEmpty" class="empty hidden">No hay instalaciones programadas con esos filtros.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Calendario mensual de instalación</h2>
+                <div class="section-note">Vista rápida para saber quién instala, dónde y cuándo.</div>
+              </div>
+              <div class="actions-row">
+                <button id="btnPrevInstallMonth" class="btn btn-secondary btn-small">← Mes anterior</button>
+                <div id="installationCalendarLabel" class="calendar-label">Mes</div>
+                <button id="btnNextInstallMonth" class="btn btn-secondary btn-small">Mes siguiente →</button>
+              </div>
+            </div>
+            <div class="calendar-wrap">
+              <div class="calendar-grid">
+                <div class="calendar-day-head">Lun</div>
+                <div class="calendar-day-head">Mar</div>
+                <div class="calendar-day-head">Mié</div>
+                <div class="calendar-day-head">Jue</div>
+                <div class="calendar-day-head">Vie</div>
+                <div class="calendar-day-head">Sáb</div>
+                <div class="calendar-day-head">Dom</div>
+              </div>
+              <div class="calendar-grid" id="installationCalendarGrid"></div>
+            </div>
+          </div>
+        </section>
+
         <section id="view-usuarios" class="view hidden">
           <div class="stats">
             <div class="stat"><div class="label">Usuarios totales</div><div id="usersTotalCount" class="value">0</div></div>
@@ -1500,6 +1582,36 @@
           </select>
 
           <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio final al cliente" />
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Instalación</strong>
+            <span class="module-badge">Agenda del equipo</span>
+          </div>
+          <div class="section-note mt-10">Programa fecha, hora, responsable y dirección. Esto alimenta el calendario de instalación sin tocar el dashboard.</div>
+          <div class="grid-3 mt-12">
+            <input id="jobInstallDate" type="date" class="input" />
+            <input id="jobInstallStartTime" type="time" class="input" />
+            <input id="jobInstallEndTime" type="time" class="input" />
+            <input id="jobInstallAssignedTo" list="installAssigneeList" class="input" placeholder="Responsable / instalador" />
+            <input id="jobInstallCrew" class="input" placeholder="Equipo / cuadrilla" />
+            <select id="jobInstallStatus" class="select">
+              <option value="">Sin programar</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Confirmada">Confirmada</option>
+              <option value="En ruta">En ruta</option>
+              <option value="Reprogramada">Reprogramada</option>
+              <option value="Completada">Completada</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div class="grid-2 mt-12">
+            <input id="jobInstallAddress" class="input" placeholder="Dirección de instalación" />
+            <input id="jobInstallWindow" class="input" placeholder="Ventana / referencia corta" />
+          </div>
+          <textarea id="jobInstallNotes" class="textarea mt-12" placeholder="Notas de instalación, acceso, sitio, contacto, etc."></textarea>
+          <datalist id="installAssigneeList"></datalist>
         </div>
 
         <textarea id="jobDescription" class="textarea mt-12" placeholder="Descripción del trabajo / cotización"></textarea>
@@ -2134,6 +2246,7 @@
       pendingExpensePhotos: [],
       unsubscribers: [],
       calendarDate: new Date(),
+      installationCalendarDate: new Date(),
       jobsViewMode: "table"
     };
 
@@ -2156,6 +2269,7 @@
       inventario: ["Inventario", "Control profesional de materiales, stock y movimientos."],
       proveedores: ["Proveedores", "Base de proveedores y contactos de compra."],
       compras: ["Compras", "Órdenes de compra y recepción de materiales."],
+      instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."]
     };
 
@@ -2231,6 +2345,113 @@
       });
     }
 
+    function formatTimeLabel(value = "") {
+      const clean = cleanText(value);
+      if (!clean) return "-";
+      const [hours = "00", minutes = "00"] = clean.split(":");
+      const h = Number(hours);
+      if (Number.isNaN(h)) return clean;
+      const suffix = h >= 12 ? "PM" : "AM";
+      const twelve = ((h + 11) % 12) + 1;
+      return `${String(twelve).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${suffix}`;
+    }
+
+    function formatTimeRange(start = "", end = "") {
+      const left = cleanText(start);
+      const right = cleanText(end);
+      if (!left && !right) return "-";
+      if (left && right) return `${formatTimeLabel(left)} - ${formatTimeLabel(right)}`;
+      return formatTimeLabel(left || right);
+    }
+
+    function installationStatusClass(status = "") {
+      return {
+        "Pendiente": "pr-media",
+        "Confirmada": "st-aprobado",
+        "En ruta": "st-produccion",
+        "Reprogramada": "st-diseno",
+        "Completada": "st-entregado",
+        "Cancelada": "st-cancelado"
+      }[cleanText(status)] || "pr-media";
+    }
+
+    function getTeamMemberDisplayName(member = {}) {
+      return cleanText(member.name) || cleanText(member.email) || "";
+    }
+
+    function getJobInstallation(job = {}) {
+      const raw = job.installation || {};
+      const client = getClientById(job.clientId);
+      const fallbackAddress = [cleanText(client?.address), cleanText(client?.city)].filter(Boolean).join(", ");
+      return {
+        date: cleanText(raw.date),
+        startTime: cleanText(raw.startTime),
+        endTime: cleanText(raw.endTime),
+        assignedTo: cleanText(raw.assignedTo),
+        crew: cleanText(raw.crew),
+        status: cleanText(raw.status),
+        address: cleanText(raw.address) || fallbackAddress,
+        window: cleanText(raw.window),
+        notes: cleanText(raw.notes)
+      };
+    }
+
+    function fillInstallationAssigneeList() {
+      const list = $("installAssigneeList");
+      if (!list) return;
+      const names = Array.from(new Set([
+        ...state.teamMembers.map(getTeamMemberDisplayName),
+        ...state.jobs.map(job => getJobInstallation(job).assignedTo),
+        state.userEmail
+      ].map(cleanText).filter(Boolean))).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+      list.innerHTML = names.map(name => `<option value="${safe(name)}"></option>`).join("");
+    }
+
+    function fillInstallationAssignedFilter(selected = "") {
+      const select = $("installationAssignedFilter");
+      if (!select) return;
+      const current = selected || cleanText(select.value);
+      const names = Array.from(new Set([
+        ...state.teamMembers.map(getTeamMemberDisplayName),
+        ...state.jobs.map(job => getJobInstallation(job).assignedTo)
+      ].map(cleanText).filter(Boolean))).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+      select.innerHTML = `<option value="">Todos los responsables</option>` + names.map(name => `<option value="${safe(name)}">${safe(name)}</option>`).join("");
+      select.value = names.includes(current) ? current : "";
+    }
+
+    function getFilteredInstallationJobs() {
+      const search = cleanText($("installationSearch")?.value).toLowerCase();
+      const from = cleanText($("installationFrom")?.value);
+      const to = cleanText($("installationTo")?.value);
+      const assigned = cleanText($("installationAssignedFilter")?.value).toLowerCase();
+      const status = cleanText($("installationStatusFilter")?.value).toLowerCase();
+
+      return state.jobs
+        .map(job => ({ job, installation: getJobInstallation(job), client: getClientById(job.clientId) }))
+        .filter(item => item.installation.date)
+        .filter(item => {
+          if (from && item.installation.date < from) return false;
+          if (to && item.installation.date > to) return false;
+          if (assigned && item.installation.assignedTo.toLowerCase() !== assigned) return false;
+          if (status && item.installation.status.toLowerCase() !== status) return false;
+          if (!search) return true;
+          const haystack = [
+            clientLabel(item.client),
+            item.job.title,
+            item.installation.address,
+            item.installation.assignedTo,
+            item.installation.crew,
+            item.installation.notes
+          ].join(" ").toLowerCase();
+          return haystack.includes(search);
+        })
+        .sort((a, b) => {
+          const left = `${a.installation.date} ${a.installation.startTime || "00:00"}`;
+          const right = `${b.installation.date} ${b.installation.startTime || "00:00"}`;
+          return left.localeCompare(right);
+        });
+    }
+
     function getFilteredClients() {
       const q = cleanText($("clientSearch")?.value).toLowerCase();
       return state.clients.filter(client => {
@@ -2268,6 +2489,7 @@
         inventario: 'PDF inventario',
         proveedores: 'PDF proveedores',
         compras: 'PDF compras',
+        instalaciones: 'PDF instalaciones',
         usuarios: 'PDF usuarios'
       };
       if ($('btnExportPdf')) $('btnExportPdf').textContent = labels[state.currentView] || 'PDF módulo';
@@ -2422,10 +2644,15 @@
       return { none: "Sin acceso", view: "Solo ver", edit: "Editar", delete: "Editar y borrar" }[level] || "Sin acceso";
     }
 
+    function resolvePermissionModule(module = "") {
+      return module === "instalaciones" ? "trabajos" : module;
+    }
+
     function getCurrentModulePermission(module = "") {
+      const normalizedModule = resolvePermissionModule(module);
       const roleDefaults = defaultModulePermissionsForRole(state.currentUserRole || "employee");
       const current = normalizeModulePermissions({ role: state.currentUserRole, ...state.currentModulePermissions });
-      return current[module] ?? roleDefaults[module] ?? "none";
+      return current[normalizedModule] ?? roleDefaults[normalizedModule] ?? "none";
     }
 
     function getModulePermissionSummary(source = {}) {
@@ -4010,6 +4237,16 @@
       $("jobStatus").value = "Cotización";
       $("jobDate").value = today();
       $("jobDueDate").value = "";
+      $("jobInstallDate").value = "";
+      $("jobInstallStartTime").value = "";
+      $("jobInstallEndTime").value = "";
+      $("jobInstallAssignedTo").value = "";
+      $("jobInstallCrew").value = "";
+      $("jobInstallStatus").value = "";
+      $("jobInstallAddress").value = "";
+      $("jobInstallWindow").value = "";
+      $("jobInstallNotes").value = "";
+      fillInstallationAssigneeList();
       $("jobPriority").value = "Media";
       $("jobPriceMode").value = "manual";
       $("jobLaborCost").value = "";
@@ -4209,6 +4446,7 @@
         date: cleanText($("jobDate").value) || today(),
         dueDate: cleanText($("jobDueDate").value),
         priority: cleanText($("jobPriority").value) || "Media",
+        installation: getCurrentInstallationForm(cleanText($("jobClientId").value)),
         sale: Number(fallbackSale || 0),
         description: cleanText($("jobDescription").value),
         notes: cleanText($("jobNotes").value),
@@ -4734,8 +4972,19 @@
       fillClientSelect(item.clientId || "");
       $("jobTitle").value = item.title || "";
       $("jobStatus").value = item.status || "Cotización";
+      const installation = getJobInstallation(item);
       $("jobDate").value = item.date || today();
       $("jobDueDate").value = item.dueDate || "";
+      $("jobInstallDate").value = installation.date || "";
+      $("jobInstallStartTime").value = installation.startTime || "";
+      $("jobInstallEndTime").value = installation.endTime || "";
+      fillInstallationAssigneeList();
+      $("jobInstallAssignedTo").value = installation.assignedTo || "";
+      $("jobInstallCrew").value = installation.crew || "";
+      $("jobInstallStatus").value = installation.status || "";
+      $("jobInstallAddress").value = installation.address || "";
+      $("jobInstallWindow").value = installation.window || "";
+      $("jobInstallNotes").value = installation.notes || "";
       $("jobPriority").value = item.priority || "Media";
       $("jobSale").value = Number(item.sale || 0).toFixed(2);
       const pricing = getJobPricing(item);
@@ -5333,6 +5582,163 @@
       }
     }
 
+    function renderInstallationModule() {
+      fillInstallationAssigneeList();
+      fillInstallationAssignedFilter();
+
+      const rows = getFilteredInstallationJobs();
+      const todayValue = today();
+      const currentMonth = state.installationCalendarDate.getMonth();
+      const currentYear = state.installationCalendarDate.getFullYear();
+      const next7 = new Date();
+      next7.setDate(next7.getDate() + 7);
+      const next7Key = next7.toISOString().slice(0, 10);
+
+      const allInstalls = state.jobs
+        .map(job => ({ job, installation: getJobInstallation(job), client: getClientById(job.clientId) }))
+        .filter(item => item.installation.date);
+
+      const todayCount = allInstalls.filter(item => item.installation.date === todayValue).length;
+      const next7Count = allInstalls.filter(item => item.installation.date >= todayValue && item.installation.date <= next7Key).length;
+      const pendingCount = allInstalls.filter(item => ["", "Pendiente", "Confirmada", "Reprogramada"].includes(item.installation.status || "")).length;
+      const doneMonthCount = allInstalls.filter(item => {
+        const d = new Date(`${item.installation.date}T00:00:00`);
+        return item.installation.status === "Completada" && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      }).length;
+
+      if ($("installTodayCount")) $("installTodayCount").textContent = String(todayCount);
+      if ($("installNext7Count")) $("installNext7Count").textContent = String(next7Count);
+      if ($("installPendingCount")) $("installPendingCount").textContent = String(pendingCount);
+      if ($("installDoneMonthCount")) $("installDoneMonthCount").textContent = String(doneMonthCount);
+
+      if ($("installationBody")) {
+        $("installationBody").innerHTML = rows.map(({ job, installation, client }) => `
+          <tr>
+            <td>${safe(formatDate(installation.date))}</td>
+            <td>${safe(formatTimeRange(installation.startTime, installation.endTime))}</td>
+            <td>${safe(clientLabel(client))}</td>
+            <td>${safe(job.title || "-")}</td>
+            <td>${safe(installation.assignedTo || installation.crew || "-")}</td>
+            <td><small>${safe(installation.address || "-")}</small></td>
+            <td><span class="pill ${installationStatusClass(installation.status)}">${safe(installation.status || "Pendiente")}</span></td>
+            <td>
+              <div class="actions-row">
+                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : `<button class="btn btn-secondary btn-small" data-open-job="${job.id}">Ver</button>`}
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-job="${job.id}" data-wa-mode="entrega">WhatsApp</button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+      }
+      if ($("installationEmpty")) $("installationEmpty").classList.toggle("hidden", rows.length > 0);
+
+      renderInstallationMonthCalendar(allInstalls);
+    }
+
+    function renderInstallationMonthCalendar(installs = null) {
+      const grid = $("installationCalendarGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      const year = state.installationCalendarDate.getFullYear();
+      const month = state.installationCalendarDate.getMonth();
+      const label = state.installationCalendarDate.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+      $("installationCalendarLabel").textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      let firstWeekDay = firstDay.getDay();
+      if (firstWeekDay === 0) firstWeekDay = 7;
+
+      const start = new Date(firstDay);
+      start.setDate(firstDay.getDate() - (firstWeekDay - 1));
+
+      const end = new Date(lastDay);
+      let lastWeekDay = end.getDay();
+      if (lastWeekDay === 0) lastWeekDay = 7;
+      end.setDate(lastDay.getDate() + (7 - lastWeekDay));
+
+      const source = installs || state.jobs
+        .map(job => ({ job, installation: getJobInstallation(job), client: getClientById(job.clientId) }))
+        .filter(item => item.installation.date);
+
+      const installMap = {};
+      source.forEach(item => {
+        if (!installMap[item.installation.date]) installMap[item.installation.date] = [];
+        installMap[item.installation.date].push(item);
+      });
+
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        const cellDate = cursor.toISOString().slice(0, 10);
+        const cell = document.createElement("div");
+        cell.className = "calendar-cell";
+        if (cursor.getMonth() !== month) cell.classList.add("muted");
+        if (cellDate === today()) cell.classList.add("today");
+
+        const jobs = (installMap[cellDate] || []).sort((a, b) => `${a.installation.startTime || "00:00"}`.localeCompare(`${b.installation.startTime || "00:00"}`));
+        let jobsHtml = jobs.slice(0, 3).map(item => `
+          <div class="calendar-job" data-open-job="${item.job.id}">
+            <strong>${safe(item.job.title || "-")}</strong><br>
+            <span>${safe(formatTimeRange(item.installation.startTime, item.installation.endTime))}</span><br>
+            <small>${safe(item.installation.assignedTo || clientLabel(item.client))}</small>
+          </div>
+        `).join("");
+
+        if (jobs.length > 3) jobsHtml += `<div class="section-note">+${jobs.length - 3} más</div>`;
+
+        cell.innerHTML = `
+          <div class="calendar-date">${cursor.getDate()}</div>
+          ${jobsHtml || '<div class="section-note">Sin instalaciones</div>'}
+        `;
+        grid.appendChild(cell);
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    function getCurrentInstallationForm(clientId = "") {
+      const client = getClientById(clientId || cleanText($("jobClientId")?.value));
+      const fallbackAddress = [cleanText(client?.address), cleanText(client?.city)].filter(Boolean).join(", ");
+      return {
+        date: cleanText($("jobInstallDate").value),
+        startTime: cleanText($("jobInstallStartTime").value),
+        endTime: cleanText($("jobInstallEndTime").value),
+        assignedTo: cleanText($("jobInstallAssignedTo").value),
+        crew: cleanText($("jobInstallCrew").value),
+        status: cleanText($("jobInstallStatus").value),
+        address: cleanText($("jobInstallAddress").value) || fallbackAddress,
+        window: cleanText($("jobInstallWindow").value),
+        notes: cleanText($("jobInstallNotes").value)
+      };
+    }
+
+    function exportInstallationCalendarPdf() {
+      const rows = getFilteredInstallationJobs();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      pdf.setFontSize(16);
+      pdf.text("Calendario de instalación", 14, 16);
+      pdf.setFontSize(10);
+      pdf.text(`${COMPANY.name} · ${today()}`, 14, 22);
+      pdf.autoTable({
+        startY: 28,
+        head: [["Fecha", "Hora", "Cliente", "Trabajo", "Responsable", "Dirección", "Estado"]],
+        body: rows.map(({ job, installation, client }) => [
+          formatDate(installation.date),
+          formatTimeRange(installation.startTime, installation.endTime),
+          clientLabel(client),
+          job.title || "-",
+          installation.assignedTo || installation.crew || "-",
+          installation.address || "-",
+          installation.status || "Pendiente"
+        ]),
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [30, 34, 42] }
+      });
+      pdf.save(`Calendario_Instalacion_${today()}.pdf`);
+      showToast("PDF de instalaciones exportado.");
+    }
+
     function exportJson() {
       const payload = {
         exportedAt: new Date().toISOString(),
@@ -5743,6 +6149,7 @@
       if (state.currentView === 'inventario') return exportInventoryPdf();
       if (state.currentView === 'proveedores') return exportProvidersPdf();
       if (state.currentView === 'compras') return exportPurchaseOrdersPdf();
+      if (state.currentView === 'instalaciones') return exportInstallationCalendarPdf();
       if (state.currentView === 'usuarios') return exportUsersPdf();
       return exportDashboardPdf();
     }
@@ -6989,11 +7396,13 @@
         state.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderClients();
         renderJobs();
+        renderInstallationModule();
       }, error => console.error(error));
 
       const unsubJobs = jobsRef().orderBy("date", "desc").onSnapshot(snapshot => {
         state.jobs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderJobs();
+        renderInstallationModule();
         if (state.editingJobId) {
           const currentJob = getJobById(state.editingJobId);
           if (currentJob) renderJobPreview();
@@ -7003,6 +7412,7 @@
       const unsubExpenses = expensesRef().orderBy("date", "desc").onSnapshot(snapshot => {
         state.expenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderExpenses();
+        renderInstallationModule();
         if (state.editingJobId) renderJobPreview();
       }, error => console.error(error));
 
@@ -7019,6 +7429,7 @@
       const unsubInventory = inventoryRef().orderBy("name", "asc").onSnapshot(snapshot => {
         state.inventoryItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderInventory();
+        renderInstallationModule();
         refreshOpenMaterialInventorySelects();
         if (state.editingJobId) renderJobPreview();
       }, error => console.error(error));
@@ -7047,10 +7458,12 @@
         unsubTeamMembers = teamMembersRef().orderBy("email", "asc").onSnapshot(snapshot => {
           state.teamMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           renderUsers();
+          renderInstallationModule();
         }, error => console.error(error));
       } else {
         state.teamMembers = [];
         renderUsers();
+        renderInstallationModule();
       }
 
       state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubTeamMembers);
@@ -7225,7 +7638,7 @@
       if (state.currentView === "clientes") {
         resetClientForm();
         openModal("clientModal");
-      } else if (state.currentView === "trabajos") {
+      } else if (state.currentView === "trabajos" || state.currentView === "instalaciones") {
         if (!state.clients.length) return showToast("Primero crea un cliente.");
         resetJobForm();
         openModal("jobModal");
@@ -7331,6 +7744,10 @@
       $(id).addEventListener("input", renderInventory);
       $(id).addEventListener("change", renderInventory);
     });
+    ["installationSearch","installationFrom","installationTo","installationAssignedFilter","installationStatusFilter"].forEach(id => {
+      $(id).addEventListener("input", renderInstallationModule);
+      $(id).addEventListener("change", renderInstallationModule);
+    });
 
     ["providerSearch"].forEach(id => {
       $(id)?.addEventListener("input", renderProviders);
@@ -7375,6 +7792,18 @@
     $("btnNextMonth").addEventListener("click", () => {
       state.calendarDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth() + 1, 1);
       renderDeliveryCalendar();
+    });
+    $("btnPrevInstallMonth").addEventListener("click", () => {
+      state.installationCalendarDate = new Date(state.installationCalendarDate.getFullYear(), state.installationCalendarDate.getMonth() - 1, 1);
+      renderInstallationModule();
+    });
+    $("btnNextInstallMonth").addEventListener("click", () => {
+      state.installationCalendarDate = new Date(state.installationCalendarDate.getFullYear(), state.installationCalendarDate.getMonth() + 1, 1);
+      renderInstallationModule();
+    });
+    $("btnClearInstallationFilters").addEventListener("click", () => {
+      ["installationSearch","installationFrom","installationTo","installationAssignedFilter","installationStatusFilter"].forEach(id => $(id).value = "");
+      renderInstallationModule();
     });
 
     $("authPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
@@ -7447,6 +7876,7 @@
     resetTeamMemberForm();
     setJobsViewMode("table");
     renderDeliveryCalendar();
+    renderInstallationModule();
     renderUsers();
   </script>
 </body>
