@@ -947,31 +947,6 @@
           <div class="panel">
             <div class="panel-head">
               <div>
-                <h2>Clientes frecuentes</h2>
-                <div class="section-note">Clientes con más trabajos y movimiento.</div>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Trabajos</th>
-                    <th>Ventas</th>
-                    <th>Por cobrar</th>
-                    <th>Última entrega</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="frequentClientsBody"></tbody>
-              </table>
-            </div>
-            <div id="frequentClientsEmpty" class="empty hidden">Todavía no hay suficiente historial de trabajos.</div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head">
-              <div>
                 <h2>Calendario de entregas</h2>
                 <div class="section-note">Haz clic en un trabajo para abrirlo.</div>
               </div>
@@ -5370,6 +5345,10 @@
     }
 
     function renderFrequentClients() {
+      const frequentClientsBody = $("frequentClientsBody");
+      const frequentClientsEmpty = $("frequentClientsEmpty");
+      if (!frequentClientsBody || !frequentClientsEmpty) return;
+
       const groups = {};
 
       state.jobs.forEach(job => {
@@ -5396,7 +5375,7 @@
         .sort((a,b) => b.jobs - a.jobs || b.sales - a.sales)
         .slice(0, 8);
 
-      $("frequentClientsBody").innerHTML = rows.map(item => {
+      frequentClientsBody.innerHTML = rows.map(item => {
         const client = getClientById(item.clientId);
         return `
           <tr>
@@ -5415,7 +5394,7 @@
         `;
       }).join("");
 
-      $("frequentClientsEmpty").classList.toggle("hidden", rows.length > 0);
+      frequentClientsEmpty.classList.toggle("hidden", rows.length > 0);
     }
 
     function renderExpenses() {
