@@ -800,3 +800,244 @@
       .calendar-day-head{display:none}
       .calendar-cell{margin-bottom:10px}
     }
+
+/* ===== CRM modular upgrade: sidebar agrupado + producción ===== */
+
+.sidebar{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+
+.nav{
+  display:grid;
+  gap:8px;
+  align-content:start;
+  overflow:auto;
+  padding-right:4px;
+  max-height:calc(100vh - 240px);
+}
+
+.nav-group-label{
+  margin:14px 2px 4px;
+  padding:0 8px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  opacity:.9;
+}
+
+.nav-group-label:first-child{
+  margin-top:0;
+}
+
+.nav button{
+  position:relative;
+}
+
+.nav button.active::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  bottom:10px;
+  width:3px;
+  border-radius:999px;
+  background:var(--brand);
+}
+
+.sidebar-foot{
+  margin-top:auto;
+}
+
+#view-produccion .panel{
+  overflow:visible;
+}
+
+#productionBoardWrap{
+  padding-top:18px;
+}
+
+#productionBoard.kanban-board{
+  grid-template-columns:repeat(6,minmax(300px,1fr));
+  min-width:1840px;
+}
+
+#view-produccion .kanban-col{
+  min-height:520px;
+  background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.01));
+}
+
+#view-produccion .kanban-col-head{
+  margin-bottom:14px;
+}
+
+#view-produccion .kanban-col-head strong{
+  font-size:15px;
+}
+
+#view-produccion .kanban-list{
+  min-height:420px;
+  align-content:start;
+}
+
+#view-produccion .kanban-card,
+.production-card{
+  background:linear-gradient(180deg, rgba(27,30,37,.96), rgba(20,22,27,.98));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:12px;
+  display:grid;
+  gap:10px;
+  box-shadow:var(--shadow);
+}
+
+#view-produccion .kanban-card:hover,
+.production-card:hover{
+  border-color:rgba(184,255,0,.22);
+  transform:translateY(-1px);
+}
+
+.production-card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+
+.production-card-title{
+  margin:0;
+  font-size:14px;
+  line-height:1.4;
+}
+
+.production-card-sub{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+}
+
+.production-card-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.production-card-cell{
+  background:#101216;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:8px 10px;
+}
+
+.production-card-cell span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.production-card-cell strong{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+}
+
+.production-card-notes{
+  background:rgba(255,255,255,.03);
+  border-left:3px solid rgba(184,255,0,.28);
+  border-radius:10px;
+  padding:10px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.production-card-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.production-mini-btn{
+  border:none;
+  border-radius:10px;
+  padding:9px 10px;
+  cursor:pointer;
+  font-weight:800;
+  background:#252932;
+  color:var(--text);
+  border:1px solid var(--line);
+  transition:.18s ease;
+}
+
+.production-mini-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(184,255,0,.18);
+}
+
+.production-empty{
+  color:var(--muted);
+  text-align:center;
+  padding:24px 12px;
+  border:1px dashed rgba(255,255,255,.08);
+  border-radius:14px;
+  background:rgba(255,255,255,.02);
+}
+
+#productionEmpty{
+  padding-top:0;
+}
+
+#productionHistoryLog .log-item{
+  border-left:3px solid rgba(56,189,248,.28);
+}
+
+@media (max-width:1100px){
+  .nav{
+    max-height:none;
+  }
+
+  #view-produccion .stats{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .production-card-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:780px){
+  .nav-group-label{
+    display:none;
+  }
+
+  .nav{
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+    max-height:42vh;
+    overflow:auto;
+  }
+
+  .nav button{
+    text-align:center;
+    padding:10px 8px;
+    font-size:12px;
+  }
+
+  #view-produccion .stats{
+    grid-template-columns:1fr;
+  }
+
+  #view-produccion .kanban-col{
+    min-height:auto;
+  }
+
+  .production-card-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+}

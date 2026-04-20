@@ -13,6 +13,7 @@
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
 </head>
 <body>
   <section id="authScreen" class="auth-wrap">
@@ -45,15 +46,25 @@
         <div class="brand-sub">Fase 8 segura: inventario profesional integrado visualmente con trabajos, sin descuento automático todavía.</div>
 
         <div class="nav">
+          <div class="nav-group-label">Operación</div>
           <button class="active" data-view="dashboard">📊 Dashboard</button>
-          <button data-view="clientes">👥 Clientes</button>
           <button data-view="trabajos">🛠️ Trabajos</button>
-          <button data-view="gastos">💸 Gastos</button>
+          <button data-view="produccion">🏭 Producción</button>
+          <button data-view="instalaciones">🗓️ Instalación</button>
+
+          <div class="nav-group-label">Comercial</div>
+          <button data-view="clientes">👥 Clientes</button>
+
+          <div class="nav-group-label">Materiales y compras</div>
           <button data-view="inventario">📦 Inventario</button>
           <button data-view="proveedores">🏭 Proveedores</button>
           <button data-view="compras">🧾 Compras</button>
-          <button data-view="instalaciones">🗓️ Instalación</button>
+
+          <div class="nav-group-label">Finanzas</div>
+          <button data-view="gastos">💸 Gastos</button>
           <button data-view="reportes">📈 Reportes</button>
+
+          <div class="nav-group-label">Administración</div>
           <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
         </div>
 
@@ -291,6 +302,119 @@
                 <div class="kanban-board" id="kanbanBoard"></div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section id="view-produccion" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Trabajos activos</div><div id="productionActiveCount" class="value purple-text">0</div></div>
+            <div class="stat"><div class="label">Vencidos</div><div id="productionOverdueCount" class="value danger-text">0</div></div>
+            <div class="stat"><div class="label">Listos para instalar</div><div id="productionReadyInstallCount" class="value info-text">0</div></div>
+            <div class="stat"><div class="label">Completados</div><div id="productionCompletedCount" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Tablero visual de producción</h2>
+                <div class="section-note">Vista operativa por etapa para mover trabajos desde diseño hasta completado.</div>
+              </div>
+              <div class="filters">
+                <button id="btnClearProductionFilters" class="btn btn-secondary btn-small">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="productionSearch" class="input" placeholder="Buscar por cliente o trabajo" />
+                <select id="productionStageFilter" class="select">
+                  <option value="">Todas las etapas</option>
+                  <option value="diseno">Diseño</option>
+                  <option value="aprobacion">Aprobación</option>
+                  <option value="produccion">Producción</option>
+                  <option value="listo_instalar">Listo para instalar</option>
+                  <option value="instalacion_programada">Instalación programada</option>
+                  <option value="completado">Completado</option>
+                </select>
+                <select id="productionPriorityFilter" class="select">
+                  <option value="">Todas las prioridades</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Media">Media</option>
+                  <option value="Alta">Alta</option>
+                </select>
+                <select id="productionResponsibleFilter" class="select">
+                  <option value="">Todos los responsables</option>
+                </select>
+              </div>
+
+              <div class="grid-4 mt-12">
+                <input id="productionDueFrom" type="date" class="input" />
+                <input id="productionDueTo" type="date" class="input" />
+                <select id="productionBlockedFilter" class="select">
+                  <option value="">Todos los trabajos</option>
+                  <option value="yes">Solo bloqueados</option>
+                  <option value="no">Solo no bloqueados</option>
+                </select>
+                <label class="check-item" style="max-width:280px;">
+                  <input type="checkbox" id="productionOverdueOnly">
+                  Solo vencidos
+                </label>
+              </div>
+            </div>
+
+            <div id="productionBoardWrap" class="kanban-wrap">
+              <div id="productionBoard" class="kanban-board">
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Diseño</strong>
+                    <span id="productionCountDiseno" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageDiseno" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Aprobación</strong>
+                    <span id="productionCountAprobacion" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageAprobacion" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Producción</strong>
+                    <span id="productionCountProduccion" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageProduccion" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Listo para instalar</strong>
+                    <span id="productionCountListoInstalar" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageListoInstalar" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Instalación programada</strong>
+                    <span id="productionCountInstalacionProgramada" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageInstalacionProgramada" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Completado</strong>
+                    <span id="productionCountCompletado" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageCompletado" class="kanban-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="productionEmpty" class="empty hidden">No hay trabajos para mostrar en producción.</div>
           </div>
         </section>
 
@@ -1537,6 +1661,61 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="productionModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="productionModalTitle">Actualizar producción</h3>
+        <button class="btn btn-secondary btn-small" data-close="productionModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <input id="productionJobId" type="hidden" />
+
+        <div class="grid-3">
+          <input id="productionJobName" class="input readonly" placeholder="Trabajo" readonly />
+          <input id="productionClientName" class="input readonly" placeholder="Cliente" readonly />
+          <input id="productionDueDate" class="input readonly" placeholder="Entrega" readonly />
+
+          <select id="productionStage" class="select">
+            <option value="diseno">Diseño</option>
+            <option value="aprobacion">Aprobación</option>
+            <option value="produccion">Producción</option>
+            <option value="listo_instalar">Listo para instalar</option>
+            <option value="instalacion_programada">Instalación programada</option>
+            <option value="completado">Completado</option>
+          </select>
+
+          <select id="productionPriority" class="select">
+            <option value="Baja">Baja</option>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+          </select>
+
+          <input id="productionResponsible" list="productionResponsibleList" class="input" placeholder="Responsable" />
+        </div>
+
+        <div class="mt-12">
+          <label class="check-item" style="max-width:260px;">
+            <input type="checkbox" id="productionBlocked">
+            Trabajo bloqueado
+          </label>
+        </div>
+
+        <textarea id="productionNotes" class="textarea mt-12" placeholder="Notas internas de producción"></textarea>
+
+        <div class="box">
+          <strong>Historial de producción</strong>
+          <div id="productionHistoryLog" class="list-logs"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="productionModal">Cancelar</button>
+        <button id="saveProductionBtn" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="productionResponsibleList"></datalist>
+
 <div id="toast" class="toast"></div>
 
   <script src="assets/js/01-core.js"></script>
@@ -1551,5 +1730,7 @@
   <script src="assets/js/10-backup-misc.js"></script>
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
+  <script src="assets/js/13-production.js"></script>
+  <!-- Próximo paso: aquí añadiremos el JS del módulo Producción cuando te pase ese archivo. -->
 </body>
 </html>

@@ -3,7 +3,12 @@
       else handleSignedOut();
     });
 
-    document.querySelectorAll(".nav button").forEach(btn => btn.addEventListener("click", () => setView(btn.dataset.view)));
+    document.querySelectorAll(".nav button").forEach(btn => btn.addEventListener("click", () => {
+      setView(btn.dataset.view);
+      if (btn.dataset.view === "produccion" && typeof renderProductionBoard === "function") {
+        renderProductionBoard();
+      }
+    }));
     document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.dataset.close)));
 
     $("btnLogin").addEventListener("click", login);
@@ -33,6 +38,9 @@
     $("saveMovementBtn").addEventListener("click", saveMovement);
     $("saveProviderBtn").addEventListener("click", saveProvider);
     $("savePurchaseOrderBtn").addEventListener("click", savePurchaseOrder);
+    $("saveProductionBtn")?.addEventListener("click", () => {
+      if (typeof saveProductionChanges === "function") saveProductionChanges();
+    });
     $("addPoLineBtn").addEventListener("click", () => {
       $("purchaseOrderItemsContainer").appendChild(createPurchaseOrderLineRow());
       recalcPurchaseOrderTotals();
@@ -168,6 +176,15 @@
       $(id).addEventListener("change", renderJobs);
     });
 
+    ["productionSearch","productionStageFilter","productionPriorityFilter","productionResponsibleFilter","productionDueFrom","productionDueTo","productionBlockedFilter","productionOverdueOnly"].forEach(id => {
+      $(id)?.addEventListener("input", () => {
+        if (typeof renderProductionBoard === "function") renderProductionBoard();
+      });
+      $(id)?.addEventListener("change", () => {
+        if (typeof renderProductionBoard === "function") renderProductionBoard();
+      });
+    });
+
     ["expenseSearch","expenseFrom","expenseTo"].forEach(id => {
       $(id).addEventListener("input", renderExpenses);
       $(id).addEventListener("change", renderExpenses);
@@ -204,6 +221,14 @@
     $("btnClearJobFilters").addEventListener("click", () => {
       ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
       renderJobs();
+    });
+
+    $("btnClearProductionFilters")?.addEventListener("click", () => {
+      ["productionSearch","productionStageFilter","productionPriorityFilter","productionResponsibleFilter","productionDueFrom","productionDueTo","productionBlockedFilter"].forEach(id => {
+        if ($(id)) $(id).value = "";
+      });
+      if ($("productionOverdueOnly")) $("productionOverdueOnly").checked = false;
+      if (typeof renderProductionBoard === "function") renderProductionBoard();
     });
 
     $("btnClearExpenseFilters").addEventListener("click", () => {
@@ -275,6 +300,9 @@
       if (target.dataset.deleteClient) removeItem("clients", target.dataset.deleteClient, "cliente");
 
       if (target.dataset.editJob) editJob(target.dataset.editJob);
+      if (target.dataset.editProduction && typeof openProductionModal === "function") openProductionModal(target.dataset.editProduction);
+      if (target.dataset.productionOpenJob) { setView("trabajos"); editJob(target.dataset.productionOpenJob); }
+      if (target.dataset.productionAdvance && typeof quickAdvanceProductionStage === "function") quickAdvanceProductionStage(target.dataset.productionAdvance);
       if (target.dataset.openJob) { setView("trabajos"); editJob(target.dataset.openJob); }
       if (target.dataset.deleteJob) removeItem("jobs", target.dataset.deleteJob, "trabajo");
       if (target.dataset.statusJob && target.dataset.next) updateJobStatus(target.dataset.statusJob, target.dataset.next);
@@ -318,5 +346,6 @@
     setJobsViewMode("table");
     renderDeliveryCalendar();
     renderInstallationModule();
+    if (typeof renderProductionBoard === "function") renderProductionBoard();
     renderReportsModule();
     renderUsers();

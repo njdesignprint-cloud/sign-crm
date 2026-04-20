@@ -75,6 +75,7 @@
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
+      produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
       inventario: ["Inventario", "Control profesional de materiales, stock y movimientos."],
       proveedores: ["Proveedores", "Base de proveedores y contactos de compra."],
@@ -282,6 +283,7 @@
         dashboard: 'PDF dashboard',
         clientes: 'PDF clientes',
         trabajos: 'PDF materiales',
+        produccion: 'PDF producción',
         gastos: 'PDF gastos',
         inventario: 'PDF inventario',
         proveedores: 'PDF proveedores',
@@ -306,7 +308,7 @@
 
       const btnNew = $("btnNewMain");
       btnNew.classList.remove("hidden");
-      if (view === "dashboard") btnNew.classList.add("hidden");
+      if (view === "dashboard" || view === "produccion") btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
@@ -314,7 +316,7 @@
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
       if (view === "compras") btnNew.textContent = "+ Nueva orden";
       if (view === "usuarios") btnNew.textContent = "+ Nuevo usuario";
-      if (!canEditModule(view)) btnNew.classList.add("hidden");
+      if (!canEditModule(view) || view === "produccion") btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
     }
@@ -432,7 +434,7 @@
       return { none: "Sin acceso", view: "Solo ver", edit: "Editar", delete: "Editar y borrar" }[level] || "Sin acceso";
     }
     function resolvePermissionModule(module = "") {
-      return module === "instalaciones" ? "trabajos" : module;
+      return ["produccion", "instalaciones"].includes(module) ? "trabajos" : module;
     }
     function getCurrentModulePermission(module = "") {
       const normalizedModule = resolvePermissionModule(module);
@@ -528,7 +530,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = state.currentView === "dashboard" || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 
