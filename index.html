@@ -1136,6 +1136,54 @@
 
         <div class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Estimado / aprobación cliente</strong>
+            <div class="actions-row">
+              <button id="generateClientEstimateLinkBtn" class="btn btn-secondary btn-small" type="button">Generar enlace</button>
+              <button id="copyClientEstimateLinkBtn" class="btn btn-info btn-small" type="button">Copiar enlace</button>
+              <button id="previewClientEstimateBtn" class="btn btn-secondary btn-small" type="button">Vista cliente</button>
+            </div>
+          </div>
+
+          <div class="section-note mt-10">
+            Base interna lista para enviar el estimado al cliente y registrar aprobación del precio y del diseño. En el siguiente paso activamos el enlace público y la respuesta desde el celular del cliente.
+          </div>
+
+          <input id="jobApprovalToken" type="hidden" />
+
+          <div class="grid-3 mt-12">
+            <select id="jobEstimateStatus" class="select">
+              <option value="borrador">Estimado · Borrador</option>
+              <option value="enviado">Estimado · Enviado</option>
+              <option value="aprobado">Estimado · Aprobado</option>
+              <option value="cambios">Estimado · Solicita cambios</option>
+              <option value="rechazado">Estimado · Rechazado</option>
+            </select>
+            <select id="jobDesignApprovalStatus" class="select">
+              <option value="pendiente">Diseño · Pendiente</option>
+              <option value="enviado">Diseño · Enviado</option>
+              <option value="aprobado">Diseño · Aprobado</option>
+              <option value="cambios">Diseño · Solicita cambios</option>
+            </select>
+            <input id="jobClientDeposit" type="number" min="0" step="0.01" class="input" placeholder="Depósito requerido" />
+
+            <input id="jobEstimateSentAt" type="text" class="input readonly" placeholder="Fecha envío estimado" readonly />
+            <input id="jobClientApprovedAt" type="text" class="input readonly" placeholder="Fecha respuesta cliente" readonly />
+            <input id="jobClientApprovedBy" type="text" class="input readonly" placeholder="Respondido por" readonly />
+          </div>
+
+          <div class="grid-2 mt-12">
+            <textarea id="jobClientVisibleNotes" class="textarea" placeholder="Notas visibles para el cliente: alcance, tiempos, depósito, instalación, garantía, etc."></textarea>
+            <textarea id="jobClientResponseNotes" class="textarea" placeholder="Comentario o respuesta del cliente"></textarea>
+          </div>
+
+          <div class="grid-2 mt-12">
+            <input id="jobClientApprovalLink" type="text" class="input readonly" placeholder="Enlace de aprobación para cliente" readonly />
+            <input id="jobClientApprovalLinkExpiresAt" type="text" class="input readonly" placeholder="Expira / vigencia del enlace" readonly />
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <strong>Precio final y rentabilidad</strong>
             <button id="applySuggestedSaleBtn" class="btn btn-secondary btn-small" type="button">Usar precio sugerido</button>
           </div>

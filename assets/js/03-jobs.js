@@ -44,6 +44,155 @@
     function getJobDesignImages(job = {}) {
       return Array.isArray(job.designImages) ? [...job.designImages] : [];
     }
+
+    function getJobClientApproval(job = {}) {
+      const approval = job?.clientApproval || {};
+      return {
+        token: cleanText(approval.token || job.approvalToken || ""),
+        estimateStatus: cleanText(approval.estimateStatus || job.estimateStatus || "borrador") || "borrador",
+        designStatus: cleanText(approval.designStatus || job.designStatus || "pendiente") || "pendiente",
+        deposit: Number(approval.deposit ?? job.clientDeposit ?? 0) || 0,
+        sentAt: cleanText(approval.sentAt || job.estimateSentAt || ""),
+        approvedAt: cleanText(approval.approvedAt || job.clientApprovedAt || ""),
+        approvedBy: cleanText(approval.approvedBy || job.clientApprovedBy || ""),
+        visibleNotes: approval.visibleNotes ?? job.clientVisibleNotes ?? "",
+        responseNotes: approval.responseNotes ?? job.clientResponseNotes ?? "",
+        link: cleanText(approval.link || job.clientApprovalLink || ""),
+        linkExpiresAt: cleanText(approval.linkExpiresAt || job.clientApprovalLinkExpiresAt || "")
+      };
+    }
+    function buildClientApprovalLink(token = "") {
+      if (!token || typeof window === "undefined") return "";
+      const origin = window.location?.origin || "";
+      const path = window.location?.pathname || "";
+      return `${origin}${path}?approval=${encodeURIComponent(token)}`;
+    }
+    function generateClientApprovalToken() {
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID().replace(/-/g, "");
+      }
+      return `apr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    function formatClientApprovalDateText(value = "") {
+      if (!value) return "";
+      try {
+        return formatDateTime(value);
+      } catch (error) {
+        return String(value);
+      }
+    }
+    function setClientApprovalDateField(id, rawValue = "") {
+      const field = $(id);
+      if (!field) return;
+      field.dataset.raw = rawValue || "";
+      field.value = rawValue ? formatClientApprovalDateText(rawValue) : "";
+    }
+    function setClientApprovalForm(data = {}) {
+      const approval = getJobClientApproval({ clientApproval: data });
+      if ($("jobApprovalToken")) $("jobApprovalToken").value = approval.token || "";
+      if ($("jobEstimateStatus")) $("jobEstimateStatus").value = approval.estimateStatus || "borrador";
+      if ($("jobDesignApprovalStatus")) $("jobDesignApprovalStatus").value = approval.designStatus || "pendiente";
+      if ($("jobClientDeposit")) $("jobClientDeposit").value = approval.deposit ? Number(approval.deposit) : "";
+      if ($("jobClientApprovedBy")) $("jobClientApprovedBy").value = approval.approvedBy || "";
+      if ($("jobClientVisibleNotes")) $("jobClientVisibleNotes").value = approval.visibleNotes || "";
+      if ($("jobClientResponseNotes")) $("jobClientResponseNotes").value = approval.responseNotes || "";
+      if ($("jobClientApprovalLink")) $("jobClientApprovalLink").value = approval.link || (approval.token ? buildClientApprovalLink(approval.token) : "");
+      setClientApprovalDateField("jobEstimateSentAt", approval.sentAt || "");
+      setClientApprovalDateField("jobClientApprovedAt", approval.approvedAt || "");
+      setClientApprovalDateField("jobClientApprovalLinkExpiresAt", approval.linkExpiresAt || "");
+    }
+    function getCurrentClientApprovalForm() {
+      const token = cleanText($("jobApprovalToken")?.value || "");
+      const estimateStatus = cleanText($("jobEstimateStatus")?.value || "borrador") || "borrador";
+      const designStatus = cleanText($("jobDesignApprovalStatus")?.value || "pendiente") || "pendiente";
+      const link = cleanText($("jobClientApprovalLink")?.value || (token ? buildClientApprovalLink(token) : ""));
+      return {
+        token,
+        estimateStatus,
+        designStatus,
+        deposit: Number($("jobClientDeposit")?.value || 0) || 0,
+        sentAt: $("jobEstimateSentAt")?.dataset?.raw || cleanText($("jobEstimateSentAt")?.value || ""),
+        approvedAt: $("jobClientApprovedAt")?.dataset?.raw || cleanText($("jobClientApprovedAt")?.value || ""),
+        approvedBy: cleanText($("jobClientApprovedBy")?.value || ""),
+        visibleNotes: $("jobClientVisibleNotes")?.value || "",
+        responseNotes: $("jobClientResponseNotes")?.value || "",
+        link,
+        linkExpiresAt: $("jobClientApprovalLinkExpiresAt")?.dataset?.raw || cleanText($("jobClientApprovalLinkExpiresAt")?.value || "")
+      };
+    }
+    function ensureClientApprovalLink() {
+      const tokenField = $("jobApprovalToken");
+      if (!tokenField) return "";
+      let token = cleanText(tokenField.value || "");
+      if (!token) {
+        token = generateClientApprovalToken();
+        tokenField.value = token;
+      }
+      const link = buildClientApprovalLink(token);
+      if ($("jobClientApprovalLink")) $("jobClientApprovalLink").value = link;
+      if (!($("jobEstimateSentAt")?.dataset?.raw || cleanText($("jobEstimateSentAt")?.value || ""))) {
+        setClientApprovalDateField("jobEstimateSentAt", new Date().toISOString());
+      }
+      if ($("jobEstimateStatus") && $("jobEstimateStatus").value === "borrador") {
+        $("jobEstimateStatus").value = "enviado";
+      }
+      if (!($("jobClientApprovalLinkExpiresAt")?.dataset?.raw || cleanText($("jobClientApprovalLinkExpiresAt")?.value || ""))) {
+        const expires = new Date(Date.now() + (14 * 24 * 60 * 60 * 1000)).toISOString();
+        setClientApprovalDateField("jobClientApprovalLinkExpiresAt", expires);
+      }
+      return link;
+    }
+    function copyClientApprovalLink() {
+      const link = ensureClientApprovalLink();
+      if (!link) return showToast("No se pudo generar el enlace.");
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(link)
+          .then(() => showToast("Enlace copiado."))
+          .catch(() => showToast("No se pudo copiar, pero el enlace ya quedó generado."));
+      } else {
+        showToast("Enlace generado. Cópialo manualmente.");
+      }
+    }
+    function previewClientApproval() {
+      const link = ensureClientApprovalLink();
+      const clientId = cleanText($("jobClientId")?.value || "");
+      const client = getClientById(clientId);
+      const quote = getCurrentQuoteForm();
+      const calc = computeQuote(quote);
+      const total = Number($("jobSale")?.value || 0) || calc.total || 0;
+      const popup = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+      if (!popup) return showToast("El navegador bloqueó la vista previa.");
+      const title = cleanText($("jobTitle")?.value || "Trabajo");
+      const notes = $("jobClientVisibleNotes")?.value || "";
+      const deposit = Number($("jobClientDeposit")?.value || 0) || 0;
+      popup.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Vista cliente</title><style>body{font-family:Arial,sans-serif;background:#f5f6f8;color:#111;padding:24px} .card{max-width:780px;margin:0 auto;background:#fff;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.08)} h1{margin:0 0 8px} .muted{color:#666;font-size:14px} .total{font-size:34px;font-weight:700;margin:18px 0} .box{background:#f8f9fb;border:1px solid #e6e9ef;border-radius:14px;padding:16px;margin-top:16px;white-space:pre-wrap} .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px} button{padding:12px 16px;border-radius:12px;border:none;font-weight:700} .ok{background:#dff5df}.warn{background:#ffe8cc}.link{font-size:12px;color:#777;word-break:break-all;margin-top:18px}</style></head><body><div class="card"><div class="muted">NJ Design & Print · Vista cliente preliminar</div><h1>${safe(title)}</h1><div class="muted">Cliente: ${safe(clientLabel(client))}</div><div class="total">${money(total)}</div><div class="muted">Depósito requerido: ${money(deposit)}</div><div class="box">${safe(notes || "Sin notas visibles para el cliente todavía.")}</div><div class="btns"><button class="ok">Aprobar estimado</button><button class="ok">Aprobar diseño</button><button class="warn">Solicitar cambios</button></div><div class="link">Enlace interno generado: ${safe(link)}</div></div></body></html>`);
+      popup.document.close();
+    }
+    function bindClientApprovalActions() {
+      $("generateClientEstimateLinkBtn")?.addEventListener("click", () => {
+        ensureClientApprovalLink();
+        showToast("Enlace interno generado. En el siguiente paso activamos la vista pública real.");
+      });
+      $("copyClientEstimateLinkBtn")?.addEventListener("click", copyClientApprovalLink);
+      $("previewClientEstimateBtn")?.addEventListener("click", previewClientApproval);
+    }
+    function getClientApprovalSummaryText(job = {}) {
+      const approval = getJobClientApproval(job);
+      const estimateMap = {
+        borrador: "Estimado: borrador",
+        enviado: "Estimado: enviado",
+        aprobado: "Estimado: aprobado",
+        cambios: "Estimado: cambios",
+        rechazado: "Estimado: rechazado"
+      };
+      const designMap = {
+        pendiente: "Diseño: pendiente",
+        enviado: "Diseño: enviado",
+        aprobado: "Diseño: aprobado",
+        cambios: "Diseño: cambios"
+      };
+      return `${estimateMap[approval.estimateStatus] || "Estimado: borrador"} · ${designMap[approval.designStatus] || "Diseño: pendiente"}`;
+    }
     function getJobLinkedExpenses(jobId = "") {
       if (!jobId) return [];
       return state.expenses
@@ -1108,6 +1257,19 @@
       $("jobDescription").value = "";
       $("jobNotes").value = "";
       $("jobNewInternalNote").value = "";
+      setClientApprovalForm({
+        token: "",
+        estimateStatus: "borrador",
+        designStatus: "pendiente",
+        deposit: 0,
+        sentAt: "",
+        approvedAt: "",
+        approvedBy: "",
+        visibleNotes: "",
+        responseNotes: "",
+        link: "",
+        linkExpiresAt: ""
+      });
 
       $("materialsContainer").innerHTML = "";
       $("materialsContainer").appendChild(createMaterialRow());
@@ -1182,6 +1344,7 @@
         materials: getCurrentFormMaterials(),
         quote,
         pricing,
+        clientApproval: getCurrentClientApprovalForm(),
         jobType: getEstimatorTemplate($("jobEstimatorType").value || "custom").label,
         estimate: getCurrentEstimatorForm(),
         checklist: getFormChecklist(),
@@ -1279,6 +1442,7 @@
       $("jobDescription").value = item.description || "";
       $("jobNotes").value = item.notes || "";
       $("jobNewInternalNote").value = "";
+      setClientApprovalForm(item.clientApproval || {});
 
       $("materialsContainer").innerHTML = "";
       const materials = item.materials && item.materials.length ? item.materials : [{ name:"", qty:"", price:"" }];
@@ -1364,6 +1528,7 @@
             <td>
               <div><strong>${safe(job.title || "-")}</strong></div>
               <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
+              <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
               <div style="margin-top:6px;">${inventoryStatePill(job)}</div>
               <small>${safe(job.description || job.notes || "-")}</small>
             </td>
@@ -1427,6 +1592,7 @@
                   <h4>${safe(job.title || "-")}</h4>
                   <small>${safe(clientLabel(client))}</small>
                   <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
+                  <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
                   <div style="margin-top:4px;">${inventoryStatePill(job)}</div>
                   <div class="kanban-meta">
                     ${priorityPill(job.priority || "Media")}
@@ -1615,3 +1781,5 @@
         cursor.setDate(cursor.getDate() + 1);
       }
     }
+
+    document.addEventListener("DOMContentLoaded", bindClientApprovalActions);
