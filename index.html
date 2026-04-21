@@ -94,6 +94,7 @@
           </div>
         </div>
 
+        
         <section id="view-dashboard" class="view">
           <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
           <div class="stats">
@@ -109,21 +110,25 @@
               <div class="label">Entregas hoy</div>
               <div id="dueTodayCount" class="value info-text">0</div>
             </div>
-            <div class="alert-card alert-cobro">
-              <div class="label">Cobros pendientes</div>
-              <div id="pendingPaymentsCount" class="value warn-text">0</div>
-            </div>
             <div class="alert-card alert-vencido">
               <div class="label">Trabajos vencidos</div>
               <div id="allOverdueJobs" class="value danger-text">0</div>
+            </div>
+            <div class="alert-card alert-cobro">
+              <div class="label">Instalaciones esta semana</div>
+              <div id="installWeekCount" class="value warn-text">0</div>
+            </div>
+            <div class="alert-card alert-entrega">
+              <div class="label">Pendientes confirmar</div>
+              <div id="installPendingConfirmCount" class="value info-text">0</div>
             </div>
           </div>
 
           <div class="mini-stats">
             <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
-            <div class="mini-stat"><div class="label">Vencen 7 días</div><div id="due7Count" class="value danger-text">0</div></div>
-            <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value purple-text">0</div></div>
-            <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
+            <div class="mini-stat"><div class="label">Trabajos con saldo</div><div id="jobsWithBalanceCount" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">En proceso</div><div id="allActiveJobs" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">En producción</div><div id="jobsInProductionCount" class="value">0</div></div>
           </div>
 
           <div class="panel">
@@ -179,6 +184,7 @@
             </div>
           </div>
         </section>
+
 
         <section id="view-clientes" class="view hidden">
           <div class="panel">
@@ -1730,8 +1736,6 @@
   <script src="assets/js/10-backup-misc.js"></script>
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
-  <script src="assets/js/13-production.js"></script>
-  <!-- <script src="assets/js/14-dashboard-upgrade.js"></script> -->
   <!-- Próximo paso: aquí añadiremos el JS del módulo Producción cuando te pase ese archivo. -->
 </body>
 </html>

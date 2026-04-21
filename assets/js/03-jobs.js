@@ -1475,7 +1475,7 @@
       }).join("");
       $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
     }
-    function renderStats() {
+        function renderStats() {
       const month = currentMonthKey();
 
       const monthSales = state.jobs
@@ -1501,10 +1501,31 @@
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
 
       const dueToday = getDueTodayJobs().length;
-      const due7 = getDueSoonJobs(7).length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
       const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
-      const pendingPayments = getPendingPaymentJobs().length;
+      const jobsWithBalance = getPendingPaymentJobs().length;
+      const jobsInProduction = state.jobs.filter(job => cleanText(job.status) === "Producción").length;
+
+      const startOfToday = today();
+      const todayDate = new Date(startOfToday + "T00:00:00");
+      const weekEnd = new Date(todayDate);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      const weekEndStr = weekEnd.toISOString().slice(0, 10);
+
+      const installationJobs = state.jobs.filter(job => {
+        const install = getJobInstallation(job);
+        return install && install.date;
+      });
+
+      const installWeekCount = installationJobs.filter(job => {
+        const install = getJobInstallation(job);
+        return install.date >= startOfToday && install.date <= weekEndStr && install.status !== "Cancelada";
+      }).length;
+
+      const installPendingConfirmCount = installationJobs.filter(job => {
+        const install = getJobInstallation(job);
+        return ["Pendiente", "Reprogramada", ""].includes(cleanText(install.status));
+      }).length;
 
       $("mSales").textContent = money(monthSales);
       $("mCollected").textContent = money(monthCollected);
@@ -1512,11 +1533,17 @@
       $("mProfit").textContent = money(monthProfitBase - monthExpenses);
       $("allReceivable").textContent = money(overallReceivable);
       $("dueTodayCount").textContent = String(dueToday);
-      $("due7Count").textContent = String(due7);
       $("allOverdueJobs").textContent = String(overdueJobs);
       $("allActiveJobs").textContent = String(activeJobs);
-      $("pendingPaymentsCount").textContent = String(pendingPayments);
-      $("allClients").textContent = String(state.clients.length);
+
+      if ($("jobsWithBalanceCount")) $("jobsWithBalanceCount").textContent = String(jobsWithBalance);
+      if ($("jobsInProductionCount")) $("jobsInProductionCount").textContent = String(jobsInProduction);
+      if ($("installWeekCount")) $("installWeekCount").textContent = String(installWeekCount);
+      if ($("installPendingConfirmCount")) $("installPendingConfirmCount").textContent = String(installPendingConfirmCount);
+
+      if ($("pendingPaymentsCount")) $("pendingPaymentsCount").textContent = String(jobsWithBalance);
+      if ($("due7Count")) $("due7Count").textContent = String(getDueSoonJobs(7).length);
+      if ($("allClients")) $("allClients").textContent = String(state.clients.length);
     }
     function renderDeliveryCalendar() {
       const grid = $("calendarGrid");
