@@ -856,22 +856,92 @@
   overflow:visible;
 }
 
+#view-produccion .stats{
+  margin-bottom:18px;
+}
+
+#view-produccion .panel-head{
+  align-items:flex-start;
+}
+
+#view-produccion .panel-head .filters{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#view-produccion .grid-4{
+  gap:12px;
+}
+
+#view-produccion .grid-4 .input,
+#view-produccion .grid-4 .select{
+  min-height:44px;
+}
+
+#view-produccion .grid-4 .check-item{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:0 14px;
+  background:#0d1015;
+}
+
 #productionBoardWrap{
   padding-top:18px;
+  padding-bottom:6px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x proximity;
+}
+
+#productionBoardWrap::-webkit-scrollbar{
+  height:12px;
+}
+
+#productionBoardWrap::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.12);
+  border-radius:999px;
+}
+
+#productionBoardWrap::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.03);
+  border-radius:999px;
 }
 
 #productionBoard.kanban-board{
-  grid-template-columns:repeat(6,minmax(300px,1fr));
-  min-width:1840px;
+  grid-template-columns:repeat(6,minmax(255px,1fr));
+  min-width:1620px;
+  gap:12px;
+  align-items:start;
 }
 
 #view-produccion .kanban-col{
-  min-height:520px;
+  min-height:540px;
   background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.01));
+  scroll-snap-align:start;
+  border-radius:18px;
+  padding:12px;
+  position:relative;
 }
 
+#view-produccion .kanban-col:nth-child(1){ border-top:2px solid rgba(184,255,0,.32); }
+#view-produccion .kanban-col:nth-child(2){ border-top:2px solid rgba(59,130,246,.34); }
+#view-produccion .kanban-col:nth-child(3){ border-top:2px solid rgba(249,115,22,.34); }
+#view-produccion .kanban-col:nth-child(4){ border-top:2px solid rgba(14,165,233,.34); }
+#view-produccion .kanban-col:nth-child(5){ border-top:2px solid rgba(168,85,247,.34); }
+#view-produccion .kanban-col:nth-child(6){ border-top:2px solid rgba(34,197,94,.34); }
+
 #view-produccion .kanban-col-head{
-  margin-bottom:14px;
+  margin-bottom:12px;
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:linear-gradient(180deg, rgba(17,19,24,.96), rgba(17,19,24,.82));
+  backdrop-filter:blur(8px);
+  padding-bottom:8px;
 }
 
 #view-produccion .kanban-col-head strong{
@@ -879,8 +949,20 @@
 }
 
 #view-produccion .kanban-list{
-  min-height:420px;
+  min-height:430px;
+  max-height:calc(100vh - 355px);
+  overflow-y:auto;
+  padding-right:4px;
   align-content:start;
+}
+
+#view-produccion .kanban-list::-webkit-scrollbar{
+  width:10px;
+}
+
+#view-produccion .kanban-list::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.09);
+  border-radius:999px;
 }
 
 #view-produccion .kanban-card,
@@ -890,7 +972,7 @@
   border-radius:16px;
   padding:12px;
   display:grid;
-  gap:10px;
+  gap:9px;
   box-shadow:var(--shadow);
 }
 
@@ -898,6 +980,10 @@
 .production-card:hover{
   border-color:rgba(184,255,0,.22);
   transform:translateY(-1px);
+}
+
+.production-card-blocked{
+  box-shadow:0 0 0 1px rgba(239,68,68,.18), var(--shadow);
 }
 
 .production-card-top{
@@ -956,6 +1042,17 @@
   line-height:1.45;
 }
 
+.production-card .module-badge,
+#view-produccion .kanban-card .module-badge{
+  width:max-content;
+}
+
+.production-card .section-note,
+#view-produccion .kanban-card .section-note,
+#view-produccion .kanban-card small{
+  line-height:1.35;
+}
+
 .production-card-actions{
   display:flex;
   gap:8px;
@@ -996,6 +1093,13 @@
   border-left:3px solid rgba(56,189,248,.28);
 }
 
+@media (max-width:1400px){
+  #productionBoard.kanban-board{
+    grid-template-columns:repeat(6,minmax(245px,1fr));
+    min-width:1540px;
+  }
+}
+
 @media (max-width:1100px){
   .nav{
     max-height:none;
@@ -1005,8 +1109,16 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 
+  #view-produccion .grid-4{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
   .production-card-grid{
     grid-template-columns:1fr;
+  }
+
+  #view-produccion .kanban-list{
+    max-height:unset;
   }
 }
 
@@ -1028,8 +1140,14 @@
     font-size:12px;
   }
 
-  #view-produccion .stats{
+  #view-produccion .stats,
+  #view-produccion .grid-4{
     grid-template-columns:1fr;
+  }
+
+  #productionBoard.kanban-board{
+    grid-template-columns:repeat(6,minmax(265px,1fr));
+    min-width:1620px;
   }
 
   #view-produccion .kanban-col{
