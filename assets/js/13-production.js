@@ -1,4 +1,3 @@
-
 (function () {
   const PRODUCTION_STAGES = [
     { key: "diseno", label: "Diseño", listId: "productionStageDiseno", countId: "productionCountDiseno" },
@@ -59,11 +58,15 @@
   }
 
   function currentJobs() {
-    return Array.isArray(window.state?.jobs) ? window.state.jobs : [];
+    if (typeof state !== "undefined" && Array.isArray(state.jobs)) return state.jobs;
+    if (Array.isArray(window.state?.jobs)) return window.state.jobs;
+    return [];
   }
 
   function currentClients() {
-    return Array.isArray(window.state?.clients) ? window.state.clients : [];
+    if (typeof state !== "undefined" && Array.isArray(state.clients)) return state.clients;
+    if (Array.isArray(window.state?.clients)) return window.state.clients;
+    return [];
   }
 
   function getClientLabelById(clientId) {
@@ -134,12 +137,15 @@
       if (clean(installation.assignedTo)) names.add(clean(installation.assignedTo));
     });
 
-    (window.state?.teamMembers || []).forEach(member => {
+    ((typeof state !== "undefined" && Array.isArray(state.teamMembers)) ? state.teamMembers : (window.state?.teamMembers || [])).forEach(member => {
       const value = clean(member?.name) || clean(member?.email);
       if (value) names.add(value);
     });
 
-    if (clean(window.state?.userEmail)) names.add(clean(window.state.userEmail));
+    const activeUserEmail =
+      (typeof state !== "undefined" && state.userEmail) ? state.userEmail : (window.state?.userEmail || "");
+
+    if (clean(activeUserEmail)) names.add(clean(activeUserEmail));
 
     return [...names].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
   }
@@ -208,10 +214,6 @@
     if (getEl("productionOverdueCount")) getEl("productionOverdueCount").textContent = String(overdue);
     if (getEl("productionReadyInstallCount")) getEl("productionReadyInstallCount").textContent = String(ready);
     if (getEl("productionCompletedCount")) getEl("productionCompletedCount").textContent = String(completed);
-  }
-
-  function stageDropAttr(stageKey) {
-    return `data-production-stage="${stageKey}"`;
   }
 
   function renderProductionCard(job) {
@@ -368,6 +370,7 @@
     const blocked = typeof patch.blocked === "boolean" ? patch.blocked : current.blocked;
     const notes = clean(patch.notes ?? current.notes);
     const history = [...current.history];
+    const currentUser = (typeof state !== "undefined" ? state.userEmail : window.state?.userEmail) || "usuario";
 
     const changed =
       stage !== current.stage ||
@@ -379,7 +382,7 @@
     if (changed) {
       history.push({
         at: new Date().toISOString(),
-        by: window.state?.userEmail || "usuario",
+        by: currentUser,
         text: `Etapa: ${stageLabel(current.stage)} → ${stageLabel(stage)} · Prioridad: ${priority} · Responsable: ${responsible || "-"}${blocked ? " · Bloqueado" : ""}`
       });
     }
@@ -407,7 +410,7 @@
           id: `log-${Date.now()}`,
           type: "producción",
           text: `Producción actualizada a ${stageLabel(stage)}.`,
-          by: window.state?.userEmail || "usuario",
+          by: currentUser,
           at: new Date().toISOString()
         });
       }
