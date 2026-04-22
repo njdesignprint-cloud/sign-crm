@@ -62,9 +62,56 @@
       };
     }
  function buildClientApprovalLink(token = "") {
-  if (!token || typeof window === "undefined") return "";
   const origin = window.location?.origin || "";
-  return `${origin}/sign-crm/client-approval-public.html?approval=${encodeURIComponent(token)}`;
+  const baseUrl = `${origin}/sign-crm/client-approval-public.html`;
+
+  const clientId = cleanText($("jobClientId")?.value || "");
+  const client = getClientById(clientId);
+  const clientName = clientLabel(client) || "Cliente";
+
+  const quote = getCurrentQuoteForm();
+  const calc = computeQuote(quote);
+  const total = Number($("jobSale")?.value || 0) || calc.total || 0;
+  const deposit = Number($("jobClientDeposit")?.value || 0) || 0;
+
+  const title = cleanText($("jobTitle")?.value || "Trabajo");
+  const dueDate = cleanText($("jobDueDate")?.value || "");
+  const notes = $("jobClientVisibleNotes")?.value || "";
+
+  const estimateStatus =
+    $("jobEstimateStatus")?.options[$("jobEstimateStatus").selectedIndex]?.text || "Estimado · Borrador";
+
+  const designStatus =
+    $("jobDesignApprovalStatus")?.options[$("jobDesignApprovalStatus").selectedIndex]?.text || "Diseño · Pendiente";
+
+  const items = getCurrentQuoteItems().map(item => ({
+    description: item.description || "",
+    qty: Number(item.qty || 0),
+    price: Number(item.price || 0)
+  }));
+
+  const currentJob = state.editingJobId ? getJobById(state.editingJobId) : null;
+  const imagesSource = state.editingJobId ? getJobDesignImages(currentJob) : (state.pendingJobImages || []);
+  const images = imagesSource.slice(0, 6).map(img => ({
+    url: img.url,
+    fileName: img.fileName || "Diseño"
+  }));
+
+  const query = new URLSearchParams();
+  query.set("approval", token || "");
+  query.set("title", title);
+  query.set("client", clientName);
+  query.set("total", String(total));
+  query.set("deposit", String(deposit));
+  query.set("due", dueDate);
+  query.set("estimateStatus", estimateStatus);
+  query.set("designStatus", designStatus);
+  query.set("notes", notes);
+  query.set("items", JSON.stringify(items));
+  query.set("images", JSON.stringify(images));
+  query.set("wa", "13462135545");
+
+  return `${baseUrl}?${query.toString()}`;
     }
     function generateClientApprovalToken() {
       if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
