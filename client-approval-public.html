@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aprobación de estimado | NJ Design & Print</title>
+  <link rel="stylesheet" href="client-approval-public.css" />
+</head>
+<body>
+  <main class="approval-shell">
+    <section class="approval-card">
+      <header class="approval-header">
+        <div class="brand">NJ <span>Design & Print</span></div>
+        <p class="muted">Estimado y aprobación de diseño</p>
+      </header>
+
+      <div id="approvalLoading" class="state-box">Cargando información…</div>
+      <div id="approvalError" class="state-box error hidden"></div>
+
+      <div id="approvalContent" class="hidden">
+        <div class="hero-row">
+          <div>
+            <h1 id="approvalJobTitle">Trabajo</h1>
+            <p id="approvalClientName" class="muted">Cliente</p>
+          </div>
+          <div class="total-box">
+            <span>Total</span>
+            <strong id="approvalTotal">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span>Estado estimado</span>
+            <strong id="approvalEstimateStatus">-</strong>
+          </div>
+          <div class="info-item">
+            <span>Estado diseño</span>
+            <strong id="approvalDesignStatus">-</strong>
+          </div>
+          <div class="info-item">
+            <span>Depósito</span>
+            <strong id="approvalDeposit">$0.00</strong>
+          </div>
+          <div class="info-item">
+            <span>Entrega</span>
+            <strong id="approvalDueDate">-</strong>
+          </div>
+        </div>
+
+        <section class="box hidden" id="approvalItemsBox">
+          <div class="box-title">Detalle del estimado</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Descripción</th>
+                  <th>Cantidad</th>
+                  <th>Precio</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="approvalItemsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="box hidden" id="approvalNotesBox">
+          <div class="box-title">Notas visibles</div>
+          <div id="approvalVisibleNotes" class="notes"></div>
+        </section>
+
+        <section class="box hidden" id="approvalImagesBox">
+          <div class="box-title">Diseño / referencia</div>
+          <div id="approvalImagesGrid" class="image-grid"></div>
+        </section>
+
+        <section class="box">
+          <div class="box-title">Tu respuesta</div>
+          <div class="action-grid">
+            <button class="action-btn" data-action="approve_estimate">Aprobar estimado</button>
+            <button class="action-btn" data-action="approve_design">Aprobar diseño</button>
+            <button class="action-btn warn" data-action="request_changes">Solicitar cambios</button>
+            <button class="action-btn danger" data-action="reject_estimate">Rechazar estimado</button>
+          </div>
+
+          <div id="selectedActionBox" class="selected-action hidden"></div>
+
+          <div class="form-grid">
+            <input id="approvalSignerName" class="input" placeholder="Tu nombre" />
+            <input id="approvalSignerEmail" class="input" placeholder="Tu correo (opcional)" />
+          </div>
+          <textarea id="approvalComment" class="textarea" placeholder="Comentario o cambios solicitados"></textarea>
+
+          <div class="footer-actions">
+            <button id="approvalSubmitBtn" class="submit-btn" disabled>Enviar respuesta</button>
+          </div>
+          <div id="approvalResult" class="state-box success hidden"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="15-client-approval-public.js"></script>
+</body>
+</html>
