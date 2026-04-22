@@ -61,11 +61,10 @@
         linkExpiresAt: cleanText(approval.linkExpiresAt || job.clientApprovalLinkExpiresAt || "")
       };
     }
-    function buildClientApprovalLink(token = "") {
+ function buildClientApprovalLink(token = "") {
   if (!token || typeof window === "undefined") return "";
   const origin = window.location?.origin || "";
-  const repoBase = "/sign-crm";
-  return `${origin}${repoBase}/client-approval-public.html?approval=${encodeURIComponent(token)}`;
+  return `${origin}/sign-crm/client-approval-public.html?approval=${encodeURIComponent(token)}`;
     }
     function generateClientApprovalToken() {
       if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -153,20 +152,10 @@
         showToast("Enlace generado. Cópialo manualmente.");
       }
     }
-    function previewClientApproval() {
-      const link = ensureClientApprovalLink();
-      const clientId = cleanText($("jobClientId")?.value || "");
-      const client = getClientById(clientId);
-      const quote = getCurrentQuoteForm();
-      const calc = computeQuote(quote);
-      const total = Number($("jobSale")?.value || 0) || calc.total || 0;
-      const popup = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
-      if (!popup) return showToast("El navegador bloqueó la vista previa.");
-      const title = cleanText($("jobTitle")?.value || "Trabajo");
-      const notes = $("jobClientVisibleNotes")?.value || "";
-      const deposit = Number($("jobClientDeposit")?.value || 0) || 0;
-      popup.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Vista cliente</title><style>body{font-family:Arial,sans-serif;background:#f5f6f8;color:#111;padding:24px} .card{max-width:780px;margin:0 auto;background:#fff;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.08)} h1{margin:0 0 8px} .muted{color:#666;font-size:14px} .total{font-size:34px;font-weight:700;margin:18px 0} .box{background:#f8f9fb;border:1px solid #e6e9ef;border-radius:14px;padding:16px;margin-top:16px;white-space:pre-wrap} .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px} button{padding:12px 16px;border-radius:12px;border:none;font-weight:700} .ok{background:#dff5df}.warn{background:#ffe8cc}.link{font-size:12px;color:#777;word-break:break-all;margin-top:18px}</style></head><body><div class="card"><div class="muted">NJ Design & Print · Vista cliente preliminar</div><h1>${safe(title)}</h1><div class="muted">Cliente: ${safe(clientLabel(client))}</div><div class="total">${money(total)}</div><div class="muted">Depósito requerido: ${money(deposit)}</div><div class="box">${safe(notes || "Sin notas visibles para el cliente todavía.")}</div><div class="btns"><button class="ok">Aprobar estimado</button><button class="ok">Aprobar diseño</button><button class="warn">Solicitar cambios</button></div><div class="link">Enlace interno generado: ${safe(link)}</div></div></body></html>`);
-      popup.document.close();
+   function previewClientApproval() {
+  const link = ensureClientApprovalLink();
+  if (!link) return showToast("No se pudo generar el enlace de vista cliente.");
+  window.open(link, "_blank");
     }
     function bindClientApprovalActions() {
       $("generateClientEstimateLinkBtn")?.addEventListener("click", () => {
