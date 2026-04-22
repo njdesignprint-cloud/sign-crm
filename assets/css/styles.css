@@ -1159,3 +1159,157 @@
     grid-template-columns:1fr 1fr;
   }
 }
+
+
+/* ===== Segunda pasada visual: producción compacta y más premium ===== */
+#productionBoardWrap{
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+#productionBoard.kanban-board{
+  grid-template-columns: repeat(6, minmax(236px, 1fr));
+  min-width: 1500px;
+  gap: 10px;
+}
+
+#view-produccion .kanban-col{
+  min-height: 500px;
+  padding: 10px;
+  border-radius: 16px;
+}
+
+#view-produccion .kanban-col-head{
+  margin-bottom: 10px;
+  padding-bottom: 7px;
+}
+
+#view-produccion .kanban-col-head strong{
+  font-size: 14px;
+  letter-spacing: -.01em;
+}
+
+#view-produccion .kanban-count{
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 8px;
+  background: rgba(184,255,0,.08);
+  border: 1px solid rgba(184,255,0,.14);
+  color: var(--brand);
+  font-weight: 800;
+}
+
+#view-produccion .kanban-list{
+  min-height: 390px;
+  max-height: calc(100vh - 325px);
+  gap: 8px;
+}
+
+#view-produccion .kanban-card,
+.production-card{
+  border-radius: 14px;
+  padding: 10px;
+  gap: 7px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+}
+
+.production-card-title{
+  font-size: 13.5px;
+  line-height: 1.32;
+}
+
+.production-card-sub{
+  font-size: 11.5px;
+}
+
+.production-card-grid{
+  gap: 6px;
+}
+
+.production-card-cell{
+  padding: 7px 9px;
+  border-radius: 10px;
+}
+
+.production-card-cell span{
+  font-size: 9.5px;
+}
+
+.production-card-cell strong{
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+
+.production-card-notes{
+  padding: 8px 9px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  line-height: 1.38;
+}
+
+#view-produccion .kanban-card .module-badge,
+.production-card .module-badge{
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.production-card .section-note,
+#view-produccion .kanban-card .section-note,
+#view-produccion .kanban-card small{
+  font-size: 11.5px;
+  line-height: 1.32;
+}
+
+.production-card-actions{
+  gap: 6px;
+}
+
+.production-mini-btn{
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-size: 12px;
+  min-height: 36px;
+}
+
+.production-card-actions .production-mini-btn:first-child{
+  background: #20242c;
+}
+
+.production-card-actions .production-mini-btn:last-child{
+  background: linear-gradient(180deg, rgba(20,137,226,.14), rgba(20,137,226,.08));
+  border-color: rgba(20,137,226,.18);
+}
+
+.production-empty{
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px 12px;
+  font-size: 12px;
+  border-radius: 12px;
+}
+
+@media (max-width: 1400px){
+  #productionBoard.kanban-board{
+    grid-template-columns: repeat(6, minmax(228px, 1fr));
+    min-width: 1450px;
+  }
+}
+
+@media (max-width: 780px){
+  #productionBoard.kanban-board{
+    grid-template-columns: repeat(6, minmax(250px, 1fr));
+    min-width: 1520px;
+  }
+
+  .production-card-actions{
+    grid-template-columns: 1fr;
+  }
+}
