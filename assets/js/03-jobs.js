@@ -62,10 +62,10 @@
       };
     }
     function buildClientApprovalLink(token = "") {
-      if (!token || typeof window === "undefined") return "";
-      const origin = window.location?.origin || "";
-      const path = window.location?.pathname || "";
-      return `${origin}${path}?approval=${encodeURIComponent(token)}`;
+  if (!token || typeof window === "undefined") return "";
+  const origin = window.location?.origin || "";
+  const repoBase = "/sign-crm";
+  return `${origin}${repoBase}/client-approval-public.html?approval=${encodeURIComponent(token)}`;
     }
     function generateClientApprovalToken() {
       if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
