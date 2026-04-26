@@ -26,7 +26,7 @@
     });
 
     $("saveClientBtn").addEventListener("click", saveClient);
-    $("saveJobBtn").addEventListener("click", saveJob);
+    $("saveJobBtn").addEventListener("click", () => saveJob());
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
     $("uploadExpensePhotoBtn").addEventListener("click", openExpenseUploadWidget);
