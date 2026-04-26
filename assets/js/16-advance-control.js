@@ -338,6 +338,7 @@
         advance: getCurrentAdvanceForm(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      console.log("ADVANCE before save:", JSON.stringify(payload.advance));
 
       if (!payload.clientId) return showToast("Selecciona un cliente.");
       if (!payload.title) return showToast("Escribe el nombre del trabajo.");
