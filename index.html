@@ -1,1590 +1,1797 @@
-    function getMaterialsCost(materials = []) {
-      return materials.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
-    }
-    function getPaymentsList(job = {}) {
-      const payments = Array.isArray(job.payments) ? [...job.payments] : [];
-      if (!payments.length && Number(job.paid || 0) > 0) {
-        payments.push({
-          id: "legacy-" + (job.id || "job"),
-          date: job.date || "",
-          amount: Number(job.paid || 0),
-          method: "Legacy",
-          note: "Pago migrado desde una versión anterior."
-        });
-      }
-      return payments;
-    }
-    function getPaymentsTotal(job = {}) {
-      return getPaymentsList(job).reduce((sum, item) => sum + Number(item.amount || 0), 0);
-    }
-    function getChecklist(job = {}) {
-      return {
-        designApproved: !!job?.checklist?.designApproved,
-        materialOrdered: !!job?.checklist?.materialOrdered,
-        printingDone: !!job?.checklist?.printingDone,
-        cuttingDone: !!job?.checklist?.cuttingDone,
-        laminationDone: !!job?.checklist?.laminationDone,
-        installationScheduled: !!job?.checklist?.installationScheduled,
-        installed: !!job?.checklist?.installed,
-        delivered: !!job?.checklist?.delivered
-      };
-    }
-    function checklistProgress(job = {}) {
-      const ck = getChecklist(job);
-      const values = Object.values(ck);
-      const done = values.filter(Boolean).length;
-      return `${done}/${values.length}`;
-    }
-    function getJobInternalNotes(job = {}) {
-      return Array.isArray(job.internalNotesLog) ? [...job.internalNotesLog] : [];
-    }
-    function getJobActivityLog(job = {}) {
-      return Array.isArray(job.activityLog) ? [...job.activityLog] : [];
-    }
-    function getJobDesignImages(job = {}) {
-      return Array.isArray(job.designImages) ? [...job.designImages] : [];
-    }
-    function getJobLinkedExpenses(jobId = "") {
-      if (!jobId) return [];
-      return state.expenses
-        .filter(expense => cleanText(expense.jobId) === cleanText(jobId))
-        .slice()
-        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
-    }
-    function getJobLinkedExpensesTotal(jobOrId = "") {
-      const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
-      return getJobLinkedExpenses(jobId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-    }
-    function shouldAutoApplyInventoryForStatus(status = "") {
-      return INVENTORY_AUTO_APPLY_STATUSES.includes(status);
-    }
-    function normalizeInventoryUsage(materials = []) {
-      const map = new Map();
-      materials.forEach(item => {
-        const inventoryId = cleanText(item.inventoryId);
-        const qty = Number(item.qty || 0);
-        if (!inventoryId || qty <= 0) return;
-        const current = map.get(inventoryId) || {
-          inventoryId,
-          name: item.inventoryName || item.name || "Material",
-          sku: item.inventorySku || "",
-          unit: item.inventoryUnit || "",
-          supplier: item.supplier || "",
-          qty: 0
-        };
-        current.qty += qty;
-        map.set(inventoryId, current);
-      });
-      return [...map.values()];
-    }
-    function getPurchaseListFromMaterials(materials = []) {
-      return materials
-        .map(item => {
-          const qty = Number(item.qty || 0);
-          if (qty <= 0) return null;
-          const inventoryId = cleanText(item.inventoryId);
-          if (!inventoryId) {
-            return {
-              inventoryId: "",
-              name: item.name || "Material manual",
-              sku: item.inventorySku || "-",
-              unit: item.inventoryUnit || "u",
-              requiredQty: qty,
-              stockQty: 0,
-              toBuyQty: qty,
-              supplier: item.supplier || "Manual / sin vínculo",
-              reason: "Material manual o sin vínculo con inventario"
-            };
-          }
-          const stockItem = getInventoryItemById(inventoryId);
-          const stockQty = Number(stockItem?.stock || 0);
-          const toBuyQty = Math.max(qty - stockQty, 0);
-          if (toBuyQty <= 0) return null;
-          return {
-            inventoryId,
-            name: item.name || stockItem?.name || "Material",
-            sku: stockItem?.sku || item.inventorySku || "-",
-            unit: stockItem?.unit || item.inventoryUnit || "u",
-            requiredQty: qty,
-            stockQty,
-            toBuyQty,
-            supplier: stockItem?.supplier || item.supplier || "-",
-            reason: stockQty <= 0 ? "Sin stock" : "Stock insuficiente"
-          };
-        })
-        .filter(Boolean);
-    }
-    function getJobPurchaseList(job = {}) {
-      return getPurchaseListFromMaterials(Array.isArray(job.materials) ? job.materials : []);
-    }
-    function getInventoryStateText(job = {}) {
-      const usage = normalizeInventoryUsage(job.materials || []);
-      if (!usage.length) return "Sin vínculo";
-      if (job.inventoryApplied) return "Aplicado";
-      if (shouldAutoApplyInventoryForStatus(job.status || "")) return "Pendiente";
-      return "Aún no aplica";
-    }
-    function inventoryStatePill(job = {}) {
-      const stateLabel = getInventoryStateText(job);
-      const cls = stateLabel === "Aplicado" ? "st-pagado" : stateLabel === "Pendiente" ? "st-aprobado" : "st-cotizacion";
-      return `<span class="pill ${cls}">Inventario: ${safe(stateLabel)}</span>`;
-    }
-    function materialsSignature(materials = []) {
-      return JSON.stringify((materials || []).map(item => ({
-        inventoryId: cleanText(item.inventoryId),
-        name: cleanText(item.name),
-        qty: Number(item.qty || 0),
-        price: Number(item.price || 0)
-      })));
-    }
-    function buildUploadedImageAsset(info = {}) {
-      return {
-        url: info.secure_url,
-        publicId: info.public_id,
-        fileName: info.original_filename || info.display_name || "imagen",
-        uploadedAt: new Date().toISOString()
-      };
-    }
-    function openCloudinaryImageWidget(options = {}) {
-      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) {
-        showToast("Cloudinary no cargó correctamente.");
-        return;
-      }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NJ Design & Print CRM - Fase 8 Segura</title>
 
-      const widget = cloudinary.createUploadWidget(
-        {
-          cloudName: CLOUDINARY_CONFIG.cloudName,
-          uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
-          multiple: options.multiple !== false,
-          maxFiles: options.maxFiles || 10,
-          resourceType: "image",
-          folder: CLOUDINARY_CONFIG.folder,
-          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
-          sources: ["local", "camera"],
-          showAdvancedOptions: false,
-          cropping: false
-        },
-        async (error, result) => {
-          if (error) {
-            console.error(error);
-            showToast(options.errorMessage || "Error subiendo la imagen.");
-            return;
-          }
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-          if (result && result.event === "success") {
-            try {
-              if (typeof options.onSuccess === "function") {
-                await options.onSuccess(buildUploadedImageAsset(result.info), result.info);
-              }
-            } catch (err) {
-              console.error(err);
-              showToast(options.persistErrorMessage || "La imagen subió, pero no se pudo guardar.");
-            }
-          }
-        }
-      );
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
+</head>
+<body>
+  <section id="authScreen" class="auth-wrap">
+    <div class="auth-card">
+      <div class="logo">NJ <span>Design & Print</span></div>
+      <div class="auth-sub">CRM privado fase 7 con estimador rápido por tipo de trabajo y rentabilidad completa.</div>
 
-      widget.open();
-    }
-    function getQuote(job = {}) {
-      const q = job.quote || {};
-      return {
-        items: Array.isArray(q.items) ? q.items : [],
-        discountType: q.discountType || "none",
-        discountValue: Number(q.discountValue || 0),
-        taxPercent: Number(q.taxPercent || 0)
-      };
-    }
-    function computeQuote(quote = {}) {
-      const items = Array.isArray(quote.items) ? quote.items : [];
-      const subtotal = items.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0);
-      let discountAmount = 0;
+      <div class="stack">
+        <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
+        <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
+      </div>
 
-      if (quote.discountType === "percent") {
-        discountAmount = subtotal * (Number(quote.discountValue || 0) / 100);
-      } else if (quote.discountType === "fixed") {
-        discountAmount = Number(quote.discountValue || 0);
-      }
+      <div class="auth-actions mt-16">
+        <button id="btnLogin" class="btn btn-primary">Entrar</button>
+        <button id="btnRegister" class="btn btn-secondary">Crear cuenta</button>
+      </div>
 
-      discountAmount = Math.min(discountAmount, subtotal);
-      const taxable = Math.max(subtotal - discountAmount, 0);
-      const taxAmount = taxable * (Number(quote.taxPercent || 0) / 100);
-      const total = taxable + taxAmount;
+      <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
 
-      return {
-        subtotal,
-        discountAmount,
-        taxAmount,
-        total
-      };
-    }
-    function computeJob(job) {
-      const sale = Number(job.sale || 0);
-      const materialsCost = getMaterialsCost(job.materials || []);
-      const pricing = getJobPricing(job);
-      const pricingCalc = computePricing(materialsCost, pricing, sale);
-      const linkedExpenses = getJobLinkedExpensesTotal(job.id);
-      const cost = pricingCalc.totalCost + linkedExpenses;
-      const paid = getPaymentsTotal(job);
-      const profit = sale - cost;
-      const balance = Math.max(sale - paid, 0);
-      const margin = sale > 0 ? (profit / sale) * 100 : 0;
-      return {
-        sale,
-        materialsCost,
-        laborCost: pricingCalc.laborCost,
-        extraCost: pricingCalc.extraCost,
-        linkedExpenses,
-        desiredMargin: pricingCalc.desiredMargin,
-        suggestedSale: pricingCalc.suggestedSale,
-        baseCost: pricingCalc.totalCost,
-        cost,
-        paid,
-        profit,
-        balance,
-        margin
-      };
-    }
-    function cleanPhoneForWhatsapp(phone) {
-      let digits = String(phone || "").replace(/[^\d]/g, "");
-      if (digits.startsWith("00")) digits = digits.slice(2);
-      return digits;
-    }
-    function openWhatsappForClient(clientId, mode = "general", jobId = null) {
-      const client = getClientById(clientId);
-      if (!client?.phone) {
-        showToast("Ese cliente no tiene teléfono guardado.");
-        return;
-      }
+      <div class="help">
+        Esta versión usa Firebase Authentication y Firestore. No necesita Firebase Storage.
+      </div>
+    </div>
+  </section>
 
-      const digits = cleanPhoneForWhatsapp(client.phone);
-      if (!digits) {
-        showToast("El teléfono no es válido.");
-        return;
-      }
+  <section id="appScreen" class="hidden">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">NJ <span>Design & Print</span></div>
+        <div class="brand-sub">Fase 8 segura: inventario profesional integrado visualmente con trabajos, sin descuento automático todavía.</div>
 
-      const name = client.name || client.company || "cliente";
-      let message = `Hola ${name}, te escribo de ${COMPANY.name}.`;
+       <div class="nav">
+  <div class="layout-sidebar-group-title">OPERACIÓN</div>
 
-      if (mode === "cobro" && jobId) {
-        const job = getJobById(jobId);
-        if (job) {
-          const calc = computeJob(job);
-          message = `Hola ${name}, te escribo de ${COMPANY.name}. Te recordamos que el trabajo "${job.title}" tiene un saldo pendiente de ${calc.balance.toFixed(2)}.`;
-        }
-      }
+  <button class="active" data-view="dashboard">📊 Dashboard</button>
+  <button data-view="clientes">👥 Clientes</button>
+  <button data-view="trabajos">🛠️ Trabajos</button>
+  <button data-view="produccion">🏭 Producción</button>
+  <button data-view="instalaciones">🗓️ Instalación</button>
 
-      if (mode === "entrega" && jobId) {
-        const job = getJobById(jobId);
-        if (job) {
-          message = `Hola ${name}, te escribo de ${COMPANY.name}. Te recordamos la entrega del trabajo "${job.title}" para la fecha ${job.dueDate || "programada"}.`;
-        }
-      }
+  <div class="layout-sidebar-divider"></div>
+  <div class="layout-sidebar-group-title">MATERIALES Y COMPRAS</div>
 
-      const msg = encodeURIComponent(message);
-      window.open(`https://wa.me/${digits}?text=${msg}`, "_blank");
-    }
-    function fillClientSelect(selectedId = "") {
-      const select = $("jobClientId");
-      if (!state.clients.length) {
-        select.innerHTML = `<option value="">Primero crea un cliente</option>`;
-        return;
-      }
-      select.innerHTML = state.clients
-        .slice()
-        .sort((a, b) => clientLabel(a).localeCompare(clientLabel(b)))
-        .map(client => `<option value="${client.id}" ${client.id === selectedId ? "selected" : ""}>${safe(clientLabel(client))}</option>`)
-        .join("");
-    }
-    function fillPaymentJobSelect(selectedId = "") {
-      const select = $("paymentJobId");
-      if (!state.jobs.length) {
-        select.innerHTML = `<option value="">Primero crea un trabajo</option>`;
-        return;
-      }
-      select.innerHTML = state.jobs
-        .slice()
-        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-        .map(job => `<option value="${job.id}" ${job.id === selectedId ? "selected" : ""}>${safe(getJobDisplayLabel(job))}</option>`)
-        .join("");
-    }
-    function fillExpenseJobSelect(selectedId = "") {
-      const select = $("expenseJobId");
-      if (!select) return;
-      const base = `<option value="">No ligar a ningún trabajo</option>`;
-      if (!state.jobs.length) {
-        select.innerHTML = base;
-        return;
-      }
-      select.innerHTML = base + state.jobs
-        .slice()
-        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-        .map(job => `<option value="${job.id}" ${job.id === selectedId ? "selected" : ""}>${safe(getJobDisplayLabel(job))}</option>`)
-        .join("");
-    }
-    function inventoryMaterialOptions(selectedId = "") {
-      const base = `<option value="">Material manual / sin vínculo</option>`;
-      if (!state.inventoryItems.length) return base;
-      const options = state.inventoryItems
-        .slice()
-        .sort((a, b) => cleanText(a.name).localeCompare(cleanText(b.name)))
-        .map(item => `<option value="${item.id}" ${item.id === selectedId ? "selected" : ""}>${safe(item.name || "Material")} · ${safe(item.sku || "-")}</option>`)
-        .join("");
-      return base + options;
-    }
-    function updateMaterialRowInventoryInfo(row, preserveManualFields = false) {
-      if (!row) return;
-      const select = row.querySelector('[data-m="inventoryId"]');
-      const nameInput = row.querySelector('[data-m="name"]');
-      const priceInput = row.querySelector('[data-m="price"]');
-      const stockNote = row.querySelector('[data-m-stock]');
-      const item = getInventoryItemById(cleanText(select?.value));
+  <button data-view="inventario">📦 Inventario</button>
+  <button data-view="proveedores">🏭 Proveedores</button>
+  <button data-view="compras">🧾 Compras</button>
 
-      if (!item) {
-        if (stockNote) stockNote.textContent = 'Sin vínculo con inventario. Puedes escribir el material manualmente.';
-        return;
-      }
+  <div class="layout-sidebar-divider"></div>
+  <div class="layout-sidebar-group-title">FINANZAS</div>
 
-      if (!preserveManualFields || !cleanText(nameInput.value)) {
-        nameInput.value = item.name || '';
-      }
+  <button data-view="gastos">💸 Gastos</button>
+  <button data-view="reportes">📈 Reportes</button>
 
-      if (!preserveManualFields || !Number(priceInput.value || 0)) {
-        priceInput.value = Number(item.unitCost || 0).toFixed(2);
-      }
+  <div class="layout-sidebar-divider"></div>
+  <div class="layout-sidebar-group-title">ADMINISTRACIÓN</div>
 
-      if (stockNote) {
-        stockNote.textContent = `Stock disponible: ${Number(item.stock || 0).toFixed(2)} ${item.unit || 'u'} · Costo unitario actual: ${money(item.unitCost || 0)}`;
-      }
-    }
-    function refreshOpenMaterialInventorySelects() {
-      document.querySelectorAll('.row-material').forEach(row => {
-        const select = row.querySelector('[data-m="inventoryId"]');
-        if (!select) return;
-        const selectedId = cleanText(select.value);
-        select.innerHTML = inventoryMaterialOptions(selectedId);
-        updateMaterialRowInventoryInfo(row, true);
-      });
-    }
-    function createMaterialRow(item = { inventoryId: "", name: "", qty: "", price: "" }) {
-      const row = document.createElement("div");
-      row.className = "row-material";
-      row.innerHTML = `
-        <select class="select" data-m="inventoryId">${inventoryMaterialOptions(item.inventoryId || "")}</select>
-        <input class="input" data-m="name" placeholder="Material" value="${safe(item.name || "")}">
-        <input class="input" data-m="qty" type="number" min="0" step="0.01" placeholder="Cantidad" value="${safe(item.qty || "")}">
-        <input class="input" data-m="price" type="number" min="0" step="0.01" placeholder="Costo unitario" value="${safe(item.price || "")}">
-        <button type="button" class="btn btn-danger btn-small remove-material">✕</button>
-        <div class="material-stock-note section-note" data-m-stock></div>
-      `;
+  <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
+</div>
 
-      row.querySelectorAll('input').forEach(input => input.addEventListener('input', renderJobPreview));
-      row.querySelector('[data-m="inventoryId"]').addEventListener('change', () => {
-        updateMaterialRowInventoryInfo(row, false);
-        renderJobPreview();
-      });
-
-      row.querySelector('.remove-material').addEventListener('click', () => {
-        row.remove();
-        if (!$("materialsContainer").children.length) $("materialsContainer").appendChild(createMaterialRow());
-        renderJobPreview();
-      });
-
-      updateMaterialRowInventoryInfo(row, true);
-      return row;
-    }
-    function createQuoteItemRow(item = { description: "", qty: "", price: "" }) {
-      const row = document.createElement("div");
-      row.className = "row-quote-item";
-      row.innerHTML = `
-        <input class="input" data-q="description" placeholder="Descripción" value="${safe(item.description || "")}">
-        <input class="input" data-q="qty" type="number" min="0" step="0.01" placeholder="Cantidad" value="${safe(item.qty || "")}">
-        <input class="input" data-q="price" type="number" min="0" step="0.01" placeholder="Precio unitario" value="${safe(item.price || "")}">
-        <button type="button" class="btn btn-danger btn-small remove-quote-item">✕</button>
-      `;
-      row.querySelectorAll("input").forEach(input => input.addEventListener("input", renderJobPreview));
-      row.querySelector(".remove-quote-item").addEventListener("click", () => {
-        row.remove();
-        if (!$("quoteItemsContainer").children.length) $("quoteItemsContainer").appendChild(createQuoteItemRow());
-        renderJobPreview();
-      });
-      return row;
-    }
-    function getCurrentFormMaterials() {
-      return [...document.querySelectorAll(".row-material")].map(row => {
-        const inventoryId = cleanText(row.querySelector('[data-m="inventoryId"]').value);
-        const linkedItem = getInventoryItemById(inventoryId);
-        const qty = Number(row.querySelector('[data-m="qty"]').value || 0);
-        const price = Number(row.querySelector('[data-m="price"]').value || 0);
-        return {
-          inventoryId: inventoryId || "",
-          inventoryName: linkedItem?.name || "",
-          inventorySku: linkedItem?.sku || "",
-          inventoryUnit: linkedItem?.unit || "",
-          supplier: linkedItem?.supplier || "",
-          currentStock: Number(linkedItem?.stock || 0),
-          name: cleanText(row.querySelector('[data-m="name"]').value),
-          qty,
-          price,
-          total: qty * price
-        };
-      }).filter(item => item.name || item.qty || item.price || item.inventoryId);
-    }
-    function getCurrentQuoteItems() {
-      return [...document.querySelectorAll(".row-quote-item")].map(row => ({
-        description: cleanText(row.querySelector('[data-q="description"]').value),
-        qty: Number(row.querySelector('[data-q="qty"]').value || 0),
-        price: Number(row.querySelector('[data-q="price"]').value || 0)
-      })).filter(item => item.description || item.qty || item.price);
-    }
-    function getCurrentQuoteForm() {
-      return {
-        items: getCurrentQuoteItems(),
-        discountType: $("quoteDiscountType").value || "none",
-        discountValue: Number($("quoteDiscountValue").value || 0),
-        taxPercent: Number($("quoteTaxPercent").value || 0)
-      };
-    }
-    function getJobPricing(job = {}) {
-      return {
-        priceMode: job?.pricing?.priceMode || "manual",
-        laborCost: Number(job?.pricing?.laborCost || 0),
-        extraCost: Number(job?.pricing?.extraCost || 0),
-        desiredMargin: Number(job?.pricing?.desiredMargin || 0)
-      };
-    }
-    function getCurrentPricingForm() {
-      return {
-        priceMode: $("jobPriceMode").value || "manual",
-        laborCost: Number($("jobLaborCost").value || 0),
-        extraCost: Number($("jobExtraCost").value || 0),
-        desiredMargin: Number($("jobDesiredMargin").value || 0)
-      };
-    }
-    function computePricing(materialsCost = 0, pricing = {}, sale = 0) {
-      const laborCost = Number(pricing.laborCost || 0);
-      const extraCost = Number(pricing.extraCost || 0);
-      const desiredMargin = Number(pricing.desiredMargin || 0);
-      const totalCost = Number(materialsCost || 0) + laborCost + extraCost;
-      const suggestedSale = totalCost + (totalCost * desiredMargin / 100);
-      const realProfit = Number(sale || 0) - totalCost;
-      const realMargin = Number(sale || 0) > 0 ? (realProfit / Number(sale || 0)) * 100 : 0;
-
-      return {
-        materialsCost,
-        laborCost,
-        extraCost,
-        desiredMargin,
-        totalCost,
-        suggestedSale,
-        realProfit,
-        realMargin
-      };
-    }
-    function applySuggestedSale() {
-      const materialsCost = getMaterialsCost(getCurrentFormMaterials());
-      const pricing = getCurrentPricingForm();
-      const calc = computePricing(materialsCost, pricing, 0);
-      $("jobSale").value = calc.suggestedSale.toFixed(2);
-      $("jobPriceMode").value = "manual";
-      renderJobPreview();
-    }
-    function getEstimatorTemplate(key = "custom") {
-      return ESTIMATOR_TEMPLATES[key] || ESTIMATOR_TEMPLATES.custom;
-    }
-    function getJobTypeLabel(job = {}) {
-      return cleanText(job.jobType) || getEstimatorTemplate(job?.estimate?.templateKey || "custom").label || "Personalizado";
-    }
-    function getSavedEstimator(job = {}) {
-      return {
-        templateKey: job?.estimate?.templateKey || "custom",
-        width: Number(job?.estimate?.width || 0),
-        height: Number(job?.estimate?.height || 0),
-        qty: Number(job?.estimate?.qty || 1),
-        wastePercent: Number(job?.estimate?.wastePercent || 0),
-        materialRate: Number(job?.estimate?.materialRate || 0),
-        saleRate: Number(job?.estimate?.saleRate || 0),
-        laborBase: Number(job?.estimate?.laborBase || 0)
-      };
-    }
-    function getCurrentEstimatorForm() {
-      return {
-        templateKey: $("jobEstimatorType").value || "custom",
-        width: Number($("jobEstimatorWidth").value || 0),
-        height: Number($("jobEstimatorHeight").value || 0),
-        qty: Number($("jobEstimatorQty").value || 0),
-        wastePercent: Number($("jobEstimatorWaste").value || 0),
-        materialRate: Number($("jobEstimatorMaterialRate").value || 0),
-        saleRate: Number($("jobEstimatorSaleRate").value || 0),
-        laborBase: Number($("jobEstimatorLaborBase").value || 0)
-      };
-    }
-    function setEstimatorForm(estimator = {}) {
-      $("jobEstimatorType").value = estimator.templateKey || "custom";
-      $("jobEstimatorWidth").value = estimator.width ? Number(estimator.width) : "";
-      $("jobEstimatorHeight").value = estimator.height ? Number(estimator.height) : "";
-      $("jobEstimatorQty").value = estimator.qty ? Number(estimator.qty) : 1;
-      $("jobEstimatorWaste").value = estimator.wastePercent ? Number(estimator.wastePercent) : "";
-      $("jobEstimatorMaterialRate").value = estimator.materialRate ? Number(estimator.materialRate) : "";
-      $("jobEstimatorSaleRate").value = estimator.saleRate ? Number(estimator.saleRate) : "";
-      $("jobEstimatorLaborBase").value = estimator.laborBase ? Number(estimator.laborBase) : "";
-    }
-    function loadEstimatorDefaults(preserveMeasures = true) {
-      const current = getCurrentEstimatorForm();
-      const template = getEstimatorTemplate(current.templateKey);
-      const qty = preserveMeasures && current.qty ? current.qty : 1;
-
-      $("jobEstimatorWaste").value = Number(template.wastePercent || 0) ? Number(template.wastePercent || 0) : "";
-      $("jobEstimatorMaterialRate").value = Number(template.materialRate || 0) ? Number(template.materialRate || 0) : "";
-      $("jobEstimatorSaleRate").value = Number(template.saleRate || 0) ? Number(template.saleRate || 0) : "";
-      $("jobEstimatorLaborBase").value = Number(template.laborBase || 0) ? Number(template.laborBase || 0) : "";
-      $("jobEstimatorQty").value = qty;
-      renderEstimatorPreview();
-    }
-    function computeEstimator(estimator = {}) {
-      const template = getEstimatorTemplate(estimator.templateKey);
-      const mode = template.mode || "custom";
-      const width = Number(estimator.width || 0);
-      const height = Number(estimator.height || 0);
-      const qty = Math.max(Number(estimator.qty || 0), 0);
-      const wastePercent = Math.max(Number(estimator.wastePercent || 0), 0);
-      const materialRate = Math.max(Number(estimator.materialRate || 0), 0);
-      const saleRate = Math.max(Number(estimator.saleRate || 0), 0);
-      const laborBase = Math.max(Number(estimator.laborBase || 0), 0);
-
-      let baseUnits = 0;
-      if (mode === "sqft") {
-        baseUnits = ((width * height) / 144) * qty;
-      } else if (mode === "unit") {
-        baseUnits = qty;
-      } else {
-        if (width > 0 && height > 0 && qty > 0) baseUnits = ((width * height) / 144) * qty;
-        else baseUnits = qty;
-      }
-
-      const productionUnits = baseUnits * (1 + wastePercent / 100);
-      const materialEstimate = productionUnits * materialRate;
-      const saleEstimate = (baseUnits * saleRate) + laborBase;
-
-      return {
-        templateKey: estimator.templateKey || "custom",
-        label: template.label || "Personalizado",
-        mode,
-        width,
-        height,
-        qty,
-        wastePercent,
-        materialRate,
-        saleRate,
-        laborBase,
-        baseUnits,
-        productionUnits,
-        materialEstimate,
-        saleEstimate
-      };
-    }
-    function renderEstimatorPreview() {
-      const calc = computeEstimator(getCurrentEstimatorForm());
-      const unitLabel = calc.mode === "unit" ? "und" : "ft²";
-
-      $("jobEstimatorBaseUnits").value = `${calc.baseUnits.toFixed(2)} ${unitLabel}`;
-      $("jobEstimatorProdUnits").value = `${calc.productionUnits.toFixed(2)} ${unitLabel}`;
-      $("jobEstimatorCost").value = money(calc.materialEstimate + calc.laborBase);
-      $("jobEstimatorSale").value = money(calc.saleEstimate);
-    }
-    function applyEstimatorToJob() {
-      const currentMaterials = getCurrentFormMaterials();
-      const currentQuote = getCurrentQuoteItems();
-      const hasManualData = currentMaterials.length || currentQuote.length || Number($("jobSale").value || 0) > 0;
-
-      if (hasManualData) {
-        const ok = confirm("Esto reemplazará los materiales y la cotización actual del trabajo. ¿Quieres continuar?");
-        if (!ok) return;
-      }
-
-      const calc = computeEstimator(getCurrentEstimatorForm());
-      if (calc.qty <= 0) return showToast("Pon una cantidad válida en el estimador.");
-      if (calc.mode === "sqft" && (calc.width <= 0 || calc.height <= 0)) return showToast("Pon ancho y alto para este tipo de trabajo.");
-      if (calc.materialRate <= 0 && calc.saleRate <= 0 && calc.laborBase <= 0) return showToast("Carga valores sugeridos o escribe las tarifas del estimador.");
-
-      $("materialsContainer").innerHTML = "";
-      $("quoteItemsContainer").innerHTML = "";
-
-      const materialQty = calc.mode === "unit" ? calc.qty : Number(calc.productionUnits.toFixed(2));
-      const quoteQty = calc.mode === "unit" ? calc.qty : Number(calc.baseUnits.toFixed(2));
-
-      $("materialsContainer").appendChild(createMaterialRow({
-        name: `${calc.label} - material`,
-        qty: materialQty,
-        price: Number(calc.materialRate.toFixed(2))
-      }));
-
-      if (calc.saleRate > 0) {
-        const desc = calc.mode === "unit"
-          ? calc.label
-          : `${calc.label} (${calc.baseUnits.toFixed(2)} ft²)`;
-        $("quoteItemsContainer").appendChild(createQuoteItemRow({
-          description: desc,
-          qty: quoteQty,
-          price: Number(calc.saleRate.toFixed(2))
-        }));
-      } else {
-        $("quoteItemsContainer").appendChild(createQuoteItemRow());
-      }
-
-      if (calc.laborBase > 0) {
-        $("jobLaborCost").value = calc.laborBase.toFixed(2);
-      }
-
-      if (!$("jobTitle").value && calc.label !== "Personalizado") {
-        $("jobTitle").value = calc.label;
-      }
-
-      if (!$("jobDescription").value && calc.mode === "sqft") {
-        $("jobDescription").value = `${calc.label} de ${calc.width}" x ${calc.height}" x ${calc.qty} unidad(es).`;
-      }
-
-      $("jobPriceMode").value = "quote";
-      renderJobPreview();
-      showToast("Estimado aplicado al trabajo.");
-    }
-    function getFormChecklist() {
-      const result = {};
-      CHECK_KEYS.forEach(item => {
-        result[item.key] = !!$(item.id).checked;
-      });
-      return result;
-    }
-    function setChecklistForm(checklist = {}) {
-      CHECK_KEYS.forEach(item => {
-        $(item.id).checked = !!checklist[item.key];
-      });
-    }
-    function renderInternalNotesAndActivity() {
-      const noteBox = $("jobNotesLogList");
-      const logBox = $("jobActivityLogList");
-
-      if (!state.editingJobId) {
-        noteBox.innerHTML = `<div class="section-note">Guarda primero el trabajo para usar la bitácora.</div>`;
-        logBox.innerHTML = `<div class="section-note">El historial aparecerá cuando el trabajo ya exista.</div>`;
-        return;
-      }
-
-      const job = getJobById(state.editingJobId);
-      const notes = getJobInternalNotes(job).sort((a,b) => String(b.at||"").localeCompare(String(a.at||"")));
-      const logs = getJobActivityLog(job).sort((a,b) => String(b.at||"").localeCompare(String(a.at||"")));
-
-      noteBox.innerHTML = notes.length
-        ? notes.map(item => `
-            <div class="log-item">
-              <strong>${safe(item.by || "usuario")}</strong>
-              <div class="section-note">${safe(item.at || "")}</div>
-              <div style="margin-top:8px;">${safe(item.text || "")}</div>
-            </div>
-          `).join("")
-        : `<div class="section-note">Todavía no hay notas internas.</div>`;
-
-      logBox.innerHTML = logs.length
-        ? logs.map(item => `
-            <div class="log-item">
-              <strong>${safe(item.text || "")}</strong>
-              <div class="section-note">${safe(item.type || "cambio")} · ${safe(item.by || "usuario")} · ${safe(item.at || "")}</div>
-            </div>
-          `).join("")
-        : `<div class="section-note">Todavía no hay historial de cambios.</div>`;
-    }
-    function renderJobDesignImages() {
-      const box = $("designImagesGallery");
-      if (!box) return;
-
-      const job = state.editingJobId ? getJobById(state.editingJobId) : null;
-      const images = state.editingJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
-
-      if (!images.length) {
-        box.innerHTML = `<div class="section-note">${state.editingJobId ? "Todavía no hay fotos subidas para este trabajo." : "Todavía no has subido fotos para este trabajo nuevo."}</div>`;
-        return;
-      }
-
-      const cover = images[0];
-      box.innerHTML = `
-        <div class="gallery-hero">
-          <img src="${cover.url}" alt="${safe(cover.fileName || "Diseño principal")}" onclick="openDesignGallery(0)">
-          <div class="gallery-count-badge">${images.length} foto${images.length === 1 ? '' : 's'}</div>
+        <div class="sidebar-foot">
+          <div class="user-chip">
+            Usuario activo:<br><strong id="activeUserEmail">-</strong><br>
+            <span id="activeWorkspaceRole">Rol: -</span><br>
+            <span id="activeWorkspaceOwner">Espacio: -</span>
+          </div>
+          <button id="btnLogout" class="btn btn-secondary">Cerrar sesión</button>
         </div>
-        <div class="gallery-toolbar">
-          <button type="button" class="btn btn-secondary btn-small" onclick="openDesignGallery(0)">Abrir galería</button>
+      </aside>
+
+      <main class="content">
+        <div class="topbar">
+          <div class="title">
+            <h1 id="pageTitle">Dashboard</h1>
+            <p id="pageSubtitle">Resumen general del negocio.</p>
+          </div>
+
+          <div class="top-actions">
+            <button id="btnExportPdf" class="btn btn-info">PDF dashboard</button>
+            <button id="btnExportJson" class="btn btn-secondary">Respaldo JSON</button>
+            <button id="btnImportJson" class="btn btn-secondary">Importar JSON</button>
+            <button id="btnNewMain" class="btn btn-primary hidden">+ Nuevo</button>
+            <input id="importJsonInput" type="file" accept="application/json" class="hidden" />
+          </div>
         </div>
-        <div class="gallery-strip">
-          ${images.map((img, index) => `
-            <div class="gallery-thumb" onclick="openDesignGallery(${index})">
-              <img src="${img.url}" alt="${safe(img.fileName || "Diseño")}">
-              <div class="gallery-thumb-info">
-                <div><strong>${safe(img.fileName || `Imagen ${index + 1}`)}</strong></div>
-                <div>${safe(formatDateTime(img.uploadedAt))}</div>
-                <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-                  <button type="button" class="btn btn-secondary btn-small" onclick="event.stopPropagation();openDesignGallery(${index})">Ver</button>
-                  <button type="button" class="btn btn-danger btn-small" onclick="event.stopPropagation();deleteDesignImage(${index})">Eliminar</button>
+
+        
+        <section id="view-dashboard" class="view">
+          <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
+          <div class="stats">
+            <div class="stat"><div class="label">Ventas del mes</div><div id="mSales" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Cobrado del mes</div><div id="mCollected" class="value info-text">$0.00</div></div>
+            <div class="stat"><div class="label">Gastos del mes</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div class="label">Ganancia neta mes</div><div id="mProfit" class="value ok-text">$0.00</div></div>
+          </div>
+
+          <div class="section-note" style="margin-bottom:10px;">Alertas rápidas</div>
+          <div class="alert-grid">
+            <div class="alert-card alert-entrega">
+              <div class="label">Entregas hoy</div>
+              <div id="dueTodayCount" class="value info-text">0</div>
+            </div>
+            <div class="alert-card alert-vencido">
+              <div class="label">Trabajos vencidos</div>
+              <div id="allOverdueJobs" class="value danger-text">0</div>
+            </div>
+            <div class="alert-card alert-cobro">
+              <div class="label">Instalaciones esta semana</div>
+              <div id="installWeekCount" class="value warn-text">0</div>
+            </div>
+            <div class="alert-card alert-entrega">
+              <div class="label">Pendientes confirmar</div>
+              <div id="installPendingConfirmCount" class="value info-text">0</div>
+            </div>
+          </div>
+
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
+            <div class="mini-stat"><div class="label">Trabajos con saldo</div><div id="jobsWithBalanceCount" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">En proceso</div><div id="allActiveJobs" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">En producción</div><div id="jobsInProductionCount" class="value">0</div></div>
+            <div class="mini-stat"><div class="label">Anticipo disponible</div><div id="dashboardAdvanceAvailable" class="value warn-text">$0.00</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Trabajos por vencer</h2>
+                <div class="section-note">Mira rápido qué entregas tienes encima.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Entrega</th>
+                    <th>Prioridad</th>
+                    <th>Saldo</th>
+                    <th>Checklist</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="dueSoonBody"></tbody>
+              </table>
+            </div>
+            <div id="dueSoonEmpty" class="empty hidden">No tienes entregas próximas en este momento.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Calendario de entregas</h2>
+                <div class="section-note">Haz clic en un trabajo para abrirlo.</div>
+              </div>
+              <div class="actions-row">
+                <button id="btnPrevMonth" class="btn btn-secondary btn-small">← Mes anterior</button>
+                <div id="calendarLabel" class="calendar-label">Mes</div>
+                <button id="btnNextMonth" class="btn btn-secondary btn-small">Mes siguiente →</button>
+              </div>
+            </div>
+            <div class="calendar-wrap">
+              <div class="calendar-grid">
+                <div class="calendar-day-head">Lun</div>
+                <div class="calendar-day-head">Mar</div>
+                <div class="calendar-day-head">Mié</div>
+                <div class="calendar-day-head">Jue</div>
+                <div class="calendar-day-head">Vie</div>
+                <div class="calendar-day-head">Sáb</div>
+                <div class="calendar-day-head">Dom</div>
+              </div>
+              <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+          </div>
+        </section>
+
+
+        <section id="view-clientes" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Clientes</h2>
+                <div class="section-note">Base de datos de clientes y empresas.</div>
+              </div>
+              <div class="filters">
+                <input id="clientSearch" class="input" placeholder="Buscar por nombre, empresa, teléfono o email" />
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Empresa</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Dirección</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="clientsBody"></tbody>
+              </table>
+            </div>
+
+            <div id="clientsEmpty" class="empty hidden">No hay clientes guardados.</div>
+          </div>
+        </section>
+
+        <section id="view-trabajos" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Trabajos</h2>
+                <div class="section-note">Vista tabla y Kanban para organizar producción.</div>
+              </div>
+              <div class="view-switch">
+                <button id="btnTableView" class="btn btn-info btn-small">Vista tabla</button>
+                <button id="btnKanbanView" class="btn btn-secondary btn-small">Vista Kanban</button>
+              </div>
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
+                <select id="jobStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="Cotización">Cotización</option>
+                  <option value="Aprobado">Aprobado</option>
+                  <option value="Diseño">Diseño</option>
+                  <option value="Producción">Producción</option>
+                  <option value="Instalación">Instalación</option>
+                  <option value="Entregado">Entregado</option>
+                  <option value="Pagado">Pagado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+                <select id="jobPriorityFilter" class="select">
+                  <option value="">Todas las prioridades</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Media">Media</option>
+                  <option value="Alta">Alta</option>
+                </select>
+                <select id="jobTypeFilter" class="select">
+                  <option value="">Todos los tipos</option>
+                  <option value="Decals">Decals</option>
+                  <option value="Printing">Printing</option>
+                  <option value="Window Perf">Window Perf</option>
+                  <option value="Commercial Tint">Commercial Tint</option>
+                  <option value="Banner">Banner</option>
+                  <option value="Wrap de Autos">Wrap de Autos</option>
+                  <option value="ADA Signs">ADA Signs</option>
+                  <option value="Channel Letters">Channel Letters</option>
+                  <option value="Pylon Faces">Pylon Faces</option>
+                  <option value="Light Box Graphics">Light Box Graphics</option>
+                  <option value="Personalizado">Personalizado</option>
+                </select>
+                <button id="btnClearJobFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+
+              <div class="grid-4 mt-12">
+                <input id="jobCreatedFrom" type="date" class="input" />
+                <input id="jobCreatedTo" type="date" class="input" />
+                <input id="jobDueFrom" type="date" class="input" />
+                <input id="jobDueTo" type="date" class="input" />
+              </div>
+            </div>
+
+            <div id="jobsTableView">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Trabajo</th>
+                      <th>Fecha</th>
+                      <th>Entrega</th>
+                      <th>Prioridad</th>
+                      <th>Venta</th>
+                      <th>Costo</th>
+                      <th>Ganancia</th>
+                      <th>Pagado</th>
+                      <th>Saldo</th>
+                      <th>Checklist</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jobsBody"></tbody>
+                </table>
+              </div>
+              <div id="jobsEmpty" class="empty hidden">No hay trabajos guardados.</div>
+            </div>
+
+            <div id="jobsKanbanView" class="hidden">
+              <div class="kanban-wrap">
+                <div class="kanban-board" id="kanbanBoard"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-produccion" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Trabajos activos</div><div id="productionActiveCount" class="value purple-text">0</div></div>
+            <div class="stat"><div class="label">Vencidos</div><div id="productionOverdueCount" class="value danger-text">0</div></div>
+            <div class="stat"><div class="label">Listos para instalar</div><div id="productionReadyInstallCount" class="value info-text">0</div></div>
+            <div class="stat"><div class="label">Completados</div><div id="productionCompletedCount" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Tablero visual de producción</h2>
+                <div class="section-note">Vista operativa por etapa para mover trabajos desde diseño hasta completado.</div>
+              </div>
+              <div class="filters">
+                <button id="btnClearProductionFilters" class="btn btn-secondary btn-small">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="productionSearch" class="input" placeholder="Buscar por cliente o trabajo" />
+                <select id="productionStageFilter" class="select">
+                  <option value="">Todas las etapas</option>
+                  <option value="diseno">Diseño</option>
+                  <option value="aprobacion">Aprobación</option>
+                  <option value="produccion">Producción</option>
+                  <option value="listo_instalar">Listo para instalar</option>
+                  <option value="instalacion_programada">Instalación programada</option>
+                  <option value="completado">Completado</option>
+                </select>
+                <select id="productionPriorityFilter" class="select">
+                  <option value="">Todas las prioridades</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Media">Media</option>
+                  <option value="Alta">Alta</option>
+                </select>
+                <select id="productionResponsibleFilter" class="select">
+                  <option value="">Todos los responsables</option>
+                </select>
+              </div>
+
+              <div class="grid-4 mt-12">
+                <input id="productionDueFrom" type="date" class="input" />
+                <input id="productionDueTo" type="date" class="input" />
+                <select id="productionBlockedFilter" class="select">
+                  <option value="">Todos los trabajos</option>
+                  <option value="yes">Solo bloqueados</option>
+                  <option value="no">Solo no bloqueados</option>
+                </select>
+                <label class="check-item" style="max-width:280px;">
+                  <input type="checkbox" id="productionOverdueOnly">
+                  Solo vencidos
+                </label>
+              </div>
+            </div>
+
+            <div id="productionBoardWrap" class="kanban-wrap">
+              <div id="productionBoard" class="kanban-board">
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Diseño</strong>
+                    <span id="productionCountDiseno" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageDiseno" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Aprobación</strong>
+                    <span id="productionCountAprobacion" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageAprobacion" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Producción</strong>
+                    <span id="productionCountProduccion" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageProduccion" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Listo para instalar</strong>
+                    <span id="productionCountListoInstalar" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageListoInstalar" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Instalación programada</strong>
+                    <span id="productionCountInstalacionProgramada" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageInstalacionProgramada" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Completado</strong>
+                    <span id="productionCountCompletado" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageCompletado" class="kanban-list"></div>
                 </div>
               </div>
             </div>
-          `).join("")}
-        </div>
-      `;
-    }
-    function openDesignGallery(index = 0) {
-      const job = state.editingJobId ? getJobById(state.editingJobId) : null;
-      const images = state.editingJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
-      if (!images.length) return;
-      state.galleryJobId = state.editingJobId || null;
-      state.galleryIndex = Math.max(0, Math.min(index, images.length - 1));
-      renderGalleryModal();
-      openModal("designGalleryModal");
-    }
-    function renderGalleryModal() {
-      const job = state.galleryJobId ? getJobById(state.galleryJobId) : null;
-      const images = state.galleryJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
-      if (!images.length) return;
-      const current = images[state.galleryIndex] || images[0];
-      $("galleryModalImage").src = current.url;
-      $("galleryModalImage").alt = current.fileName || "Diseño";
-      $("galleryModalTitle").textContent = current.fileName || `Imagen ${state.galleryIndex + 1}`;
-      $("galleryModalSub").textContent = `${state.galleryIndex + 1} de ${images.length} · ${formatDateTime(current.uploadedAt)}`;
-      $("galleryOpenOriginal").href = current.url;
-      $("galleryPrevBtn").disabled = images.length <= 1;
-      $("galleryNextBtn").disabled = images.length <= 1;
-    }
-    function galleryPrev() {
-      const job = state.galleryJobId ? getJobById(state.galleryJobId) : null;
-      const images = state.galleryJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
-      if (!images.length) return;
-      state.galleryIndex = (state.galleryIndex - 1 + images.length) % images.length;
-      renderGalleryModal();
-    }
-    function galleryNext() {
-      const job = state.galleryJobId ? getJobById(state.galleryJobId) : null;
-      const images = state.galleryJobId ? getJobDesignImages(job) : [...state.pendingJobImages];
-      if (!images.length) return;
-      state.galleryIndex = (state.galleryIndex + 1) % images.length;
-      renderGalleryModal();
-    }
-    async function deleteDesignImage(index) {
-      if (!state.editingJobId) {
-        if (index < 0 || index >= state.pendingJobImages.length) return;
-        if (!confirm("¿Eliminar esta foto del trabajo?")) return;
-        state.pendingJobImages.splice(index, 1);
-        if (!state.pendingJobImages.length) closeModal("designGalleryModal");
-        renderJobDesignImages();
-        showToast("Foto quitada del trabajo nuevo.");
-        return;
-      }
 
-      const job = getJobById(state.editingJobId);
-      if (!job) return showToast("No se encontró el trabajo.");
-
-      const images = getJobDesignImages(job);
-      if (index < 0 || index >= images.length) return;
-
-      if (!confirm("¿Eliminar esta foto del trabajo?")) return;
-
-      images.splice(index, 1);
-
-      try {
-        await jobsRef().doc(state.editingJobId).update({
-          designImages: images,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        if (!images.length) closeModal("designGalleryModal");
-        showToast("Foto eliminada.");
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo eliminar la foto.");
-      }
-    }
-    function openDesignUploadWidget() {
-      if (!guardWrite("subir fotos", state.currentView === "gastos" ? "gastos" : "trabajos")) return;
-      openCloudinaryImageWidget({
-        multiple: true,
-        maxFiles: 10,
-        errorMessage: "Error subiendo la imagen del trabajo.",
-        persistErrorMessage: "La imagen subió, pero no se pudo guardar en el trabajo.",
-        onSuccess: async (asset) => {
-          if (!state.editingJobId) {
-            state.pendingJobImages.push(asset);
-            renderJobDesignImages();
-            showToast("Foto agregada al trabajo nuevo. Guarda el trabajo para dejarla registrada.");
-            return;
-          }
-
-          const job = getJobById(state.editingJobId);
-          if (!job) return;
-
-          const images = getJobDesignImages(job);
-          images.push(asset);
-
-          await jobsRef().doc(state.editingJobId).update({
-            designImages: images,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-          showToast("Foto subida correctamente.");
-        }
-      });
-    }
-    function getCurrentJobPaymentsPreviewData() {
-      if (!state.editingJobId) return [];
-      const job = getJobById(state.editingJobId);
-      return job ? getPaymentsList(job) : [];
-    }
-    async function applyInventoryDiscountForJob(jobId, source = "manual") {
-      if (!guardWrite("aplicar inventario", "inventario")) return { appliedCount: 0 };
-      const jobDocRef = jobsRef().doc(jobId);
-      const movementRefs = [];
-      const movementDate = today();
-      const appliedAt = new Date().toISOString();
-      const actor = state.userEmail || "usuario";
-      let appliedCount = 0;
-
-      await db.runTransaction(async (transaction) => {
-        const jobSnap = await transaction.get(jobDocRef);
-        if (!jobSnap.exists) throw new Error("No se encontró el trabajo.");
-
-        const job = { id: jobSnap.id, ...jobSnap.data() };
-        if (job.inventoryApplied) return;
-
-        const usage = normalizeInventoryUsage(job.materials || []);
-        if (!usage.length) return;
-
-        const inventoryDocs = {};
-        for (const entry of usage) {
-          const ref = inventoryRef().doc(entry.inventoryId);
-          const snap = await transaction.get(ref);
-          if (!snap.exists) throw new Error(`No se encontró el material ${entry.name || entry.inventoryId} en inventario.`);
-          inventoryDocs[entry.inventoryId] = { ref, snap, data: snap.data() || {} };
-        }
-
-        for (const entry of usage) {
-          const info = inventoryDocs[entry.inventoryId];
-          const stock = Number(info.data.stock || 0);
-          if (stock < entry.qty) {
-            throw new Error(`Stock insuficiente para ${entry.name || "material"}. Disponible: ${stock.toFixed(2)} ${info.data.unit || "u"}. Necesitas: ${entry.qty.toFixed(2)}.`);
-          }
-        }
-
-        for (const entry of usage) {
-          const info = inventoryDocs[entry.inventoryId];
-          const stock = Number(info.data.stock || 0);
-          const newStock = stock - Number(entry.qty || 0);
-          transaction.update(info.ref, {
-            stock: newStock,
-            lastMovementAt: movementDate,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-          const moveRef = inventoryMovementsRef().doc();
-          movementRefs.push(moveRef.id);
-          transaction.set(moveRef, {
-            itemId: entry.inventoryId,
-            itemName: info.data.name || entry.name || "Material",
-            itemSku: info.data.sku || entry.sku || "",
-            type: "salida",
-            qty: -Math.abs(Number(entry.qty || 0)),
-            beforeStock: stock,
-            afterStock: newStock,
-            date: movementDate,
-            reference: `Trabajo: ${job.title || job.id}`,
-            note: `Descuento automático de inventario (${source}).`,
-            jobId: job.id,
-            unitCost: Number(info.data.unitCost || 0),
-            createdBy: actor,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          appliedCount += 1;
-        }
-
-        const logs = [...getJobActivityLog(job), {
-          id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          type: "inventario",
-          text: `Inventario descontado automáticamente (${source}).`,
-          by: actor,
-          at: appliedAt
-        }];
-
-        transaction.update(jobDocRef, {
-          inventoryApplied: true,
-          inventoryAppliedAt: appliedAt,
-          inventoryAppliedStatus: job.status || "",
-          inventoryAppliedSource: source,
-          inventoryAppliedMovementIds: movementRefs,
-          activityLog: logs,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-
-      return { appliedCount };
-    }
-    function renderJobInventoryAndPurchase() {
-      const statusBox = $("jobInventoryStatusBox");
-      const purchaseBox = $("jobPurchaseList");
-      const applyBtn = $("applyInventoryNowBtn");
-      if (!statusBox || !purchaseBox || !applyBtn) return;
-
-      const materials = getCurrentFormMaterials();
-      const usage = normalizeInventoryUsage(materials);
-      const purchaseList = getPurchaseListFromMaterials(materials);
-      const job = state.editingJobId ? getJobById(state.editingJobId) : null;
-
-      if (!state.editingJobId) {
-        statusBox.innerHTML = `<div class="log-item"><strong>Inventario pendiente</strong><div class="section-note">Guarda el trabajo primero. Cuando el estado pase a Producción, Instalación, Entregado o Pagado, la app podrá descontar automáticamente los materiales ligados al inventario.</div></div>`;
-      } else if (!usage.length) {
-        statusBox.innerHTML = `<div class="log-item"><strong>Sin materiales ligados al inventario</strong><div class="section-note">Este trabajo todavía no tiene materiales vinculados a un ítem del inventario. Puedes seguir usando materiales manuales, pero no se descontarán automáticamente.</div></div>`;
-      } else if (job?.inventoryApplied) {
-        statusBox.innerHTML = `<div class="log-item"><strong>Inventario ya aplicado</strong><div class="section-note">Se descontó el inventario el ${safe(formatDateTime(job.inventoryAppliedAt))} desde el estado ${safe(job.inventoryAppliedStatus || "-")}. Si cambias materiales después de esto, revisa el inventario manualmente.</div></div>`;
-      } else if (shouldAutoApplyInventoryForStatus($("jobStatus").value || job?.status || "")) {
-        statusBox.innerHTML = `<div class="log-item"><strong>Listo para descontar</strong><div class="section-note">Al guardar este trabajo con este estado, la app intentará descontar automáticamente el inventario ligado. También puedes hacerlo ahora con el botón de arriba.</div></div>`;
-      } else {
-        statusBox.innerHTML = `<div class="log-item"><strong>En espera</strong><div class="section-note">Todavía no se descontará el inventario porque el trabajo sigue antes de Producción. La compra automática sí ya te muestra faltantes.</div></div>`;
-      }
-
-      applyBtn.disabled = !state.editingJobId || !usage.length || !!job?.inventoryApplied;
-
-      if (!purchaseList.length) {
-        purchaseBox.innerHTML = `<div class="section-note">No hay faltantes por comprar con el stock actual.</div>`;
-      } else {
-        purchaseBox.innerHTML = purchaseList.map(item => `
-          <div class="log-item">
-            <strong>${safe(item.name || "Material")}</strong>
-            <div class="section-note">Necesita ${Number(item.requiredQty || 0).toFixed(2)} ${safe(item.unit || "u")} · Stock actual ${Number(item.stockQty || 0).toFixed(2)} ${safe(item.unit || "u")} · Comprar ${Number(item.toBuyQty || 0).toFixed(2)} ${safe(item.unit || "u")}</div>
-            <div class="section-note">Proveedor: ${safe(item.supplier || "-")} · ${safe(item.reason || "")}</div>
+            <div id="productionEmpty" class="empty hidden">No hay trabajos para mostrar en producción.</div>
           </div>
-        `).join("");
-      }
-    }
-    function renderJobLinkedExpenses() {
-      const box = $("jobExpensesPreview");
-      if (!box) return;
-      if (!state.editingJobId) {
-        box.innerHTML = `<div class="section-note">Guarda el trabajo primero y luego podrás ligar gastos específicos a este trabajo.</div>`;
-        return;
-      }
+        </section>
 
-      const linkedExpenses = getJobLinkedExpenses(state.editingJobId);
-      const total = getJobLinkedExpensesTotal(state.editingJobId);
-      if (!linkedExpenses.length) {
-        box.innerHTML = `<div class="section-note">Todavía no hay gastos ligados a este trabajo.</div>`;
-        return;
-      }
-
-      box.innerHTML = `
-        <div class="log-item">
-          <strong>Total ligado: ${money(total)}</strong>
-          <div class="section-note">Estos gastos también cuentan para ver la rentabilidad real del trabajo.</div>
-        </div>
-        ${linkedExpenses.map(item => `
-          <div class="log-item">
-            <strong>${safe(item.concept || "Gasto")}</strong> · ${money(item.amount || 0)}
-            <div class="section-note">${safe(item.category || "-")} · ${safe(item.date || "-")}</div>
-            <div class="section-note">${safe(item.notes || "-")}</div>
-          </div>
-        `).join("")}
-      `;
-    }
-    function renderJobPaymentsPreview() {
-      const list = getCurrentJobPaymentsPreviewData();
-      const box = $("jobPaymentsPreview");
-      if (!list.length) {
-        box.innerHTML = `<div class="section-note">Todavía no hay pagos registrados. Guarda el trabajo primero y luego agrega pagos parciales.</div>`;
-        return;
-      }
-      box.innerHTML = list
-        .slice()
-        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
-        .map(item => `
-          <div class="payment-item">
-            <strong>${money(item.amount)}</strong> · ${safe(item.method || "Pago")}
-            <div class="section-note">${safe(item.date || "Sin fecha")}${item.note ? " · " + safe(item.note) : ""}</div>
-          </div>
-        `).join("");
-    }
-    function renderQuotePreview() {
-      renderEstimatorPreview();
-      const quote = getCurrentQuoteForm();
-      const calc = computeQuote(quote);
-
-      $("quoteSubtotal").textContent = money(calc.subtotal);
-      $("quoteDiscount").textContent = money(calc.discountAmount);
-      $("quoteTax").textContent = money(calc.taxAmount);
-      $("quoteTotal").textContent = money(calc.total);
-
-      const hasQuoteData = quote.items.some(i => i.description || i.qty || i.price) || quote.discountValue || quote.taxPercent;
-      const priceMode = $("jobPriceMode").value || "manual";
-
-      if (priceMode === "quote" && hasQuoteData) {
-        $("jobSale").value = calc.total.toFixed(2);
-      } else if (!hasQuoteData && !$("jobSale").value) {
-        $("jobSale").value = "0.00";
-      }
-    }
-    function renderJobPreview() {
-      renderQuotePreview();
-
-      const sale = Number($("jobSale").value || 0);
-      const materialsCost = getMaterialsCost(getCurrentFormMaterials());
-      const pricing = getCurrentPricingForm();
-      const pricingCalc = computePricing(materialsCost, pricing, sale);
-      const linkedExpenses = state.editingJobId ? getJobLinkedExpensesTotal(state.editingJobId) : 0;
-      const totalCost = pricingCalc.totalCost + linkedExpenses;
-      const realProfit = sale - totalCost;
-      const realMargin = sale > 0 ? (realProfit / sale) * 100 : 0;
-      const payments = getCurrentJobPaymentsPreviewData();
-      const paid = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-      const balance = Math.max(sale - paid, 0);
-      const currentJob = state.editingJobId ? getJobById(state.editingJobId) : null;
-      const inventoryText = currentJob ? getInventoryStateText(currentJob) : (normalizeInventoryUsage(getCurrentFormMaterials()).length ? "Pendiente" : "Sin vínculo");
-
-      $("jobMaterialsTotal").value = money(pricingCalc.materialsCost);
-      $("jobTotalCost").value = money(totalCost);
-      $("jobSuggestedSale").value = money(pricingCalc.suggestedSale);
-      $("jobProfitMargin").value = realMargin.toFixed(2) + "%";
-
-      $("sumMaterials").textContent = money(pricingCalc.materialsCost);
-      $("sumLabor").textContent = money(pricingCalc.laborCost);
-      $("sumExtras").textContent = money(pricingCalc.extraCost);
-      $("sumCost").textContent = money(totalCost);
-      $("sumProfit").textContent = money(realProfit);
-      $("sumMargin").textContent = realMargin.toFixed(2) + "%";
-      $("sumPaid").textContent = money(paid);
-      $("sumBalance").textContent = money(balance);
-      if ($("sumLinkedExpenses")) $("sumLinkedExpenses").textContent = money(linkedExpenses);
-      if ($("sumInventoryStatus")) $("sumInventoryStatus").textContent = inventoryText;
-
-      renderJobPaymentsPreview();
-      renderJobInventoryAndPurchase();
-      renderJobLinkedExpenses();
-      renderInternalNotesAndActivity();
-      renderJobDesignImages();
-    }
-    function resetJobForm() {
-      state.editingJobId = null;
-      state.galleryJobId = null;
-      state.galleryIndex = 0;
-      $("jobModalTitle").textContent = "Nuevo trabajo";
-      fillClientSelect();
-      $("jobTitle").value = "";
-      $("jobStatus").value = "Cotización";
-      $("jobDate").value = today();
-      $("jobDueDate").value = "";
-      $("jobInstallDate").value = "";
-      $("jobInstallStartTime").value = "";
-      $("jobInstallEndTime").value = "";
-      $("jobInstallAssignedTo").value = "";
-      $("jobInstallCrew").value = "";
-      $("jobInstallStatus").value = "";
-      $("jobInstallAddress").value = "";
-      $("jobInstallWindow").value = "";
-      $("jobInstallNotes").value = "";
-      fillInstallationAssigneeList();
-      $("jobPriority").value = "Media";
-      $("jobPriceMode").value = "manual";
-      $("jobLaborCost").value = "";
-      $("jobExtraCost").value = "";
-      $("jobDesiredMargin").value = "";
-      $("jobEstimatorType").value = "custom";
-      $("jobEstimatorWidth").value = "";
-      $("jobEstimatorHeight").value = "";
-      $("jobEstimatorQty").value = 1;
-      $("jobEstimatorWaste").value = "";
-      $("jobEstimatorMaterialRate").value = "";
-      $("jobEstimatorSaleRate").value = "";
-      $("jobEstimatorLaborBase").value = "";
-      $("jobEstimatorBaseUnits").value = "0.00 ft²";
-      $("jobEstimatorProdUnits").value = "0.00 ft²";
-      $("jobEstimatorCost").value = money(0);
-      $("jobEstimatorSale").value = money(0);
-      $("jobSale").value = "0.00";
-      $("jobMaterialsTotal").value = money(0);
-      $("jobTotalCost").value = money(0);
-      $("jobSuggestedSale").value = money(0);
-      $("jobProfitMargin").value = "0.00%";
-      $("jobDescription").value = "";
-      $("jobNotes").value = "";
-      $("jobNewInternalNote").value = "";
-
-      $("materialsContainer").innerHTML = "";
-      $("materialsContainer").appendChild(createMaterialRow());
-
-      $("quoteItemsContainer").innerHTML = "";
-      $("quoteItemsContainer").appendChild(createQuoteItemRow());
-      $("quoteDiscountType").value = "none";
-      $("quoteDiscountValue").value = "";
-      $("quoteTaxPercent").value = "0";
-
-      state.pendingJobImages = [];
-      setChecklistForm({});
-      renderJobPreview();
-      renderJobDesignImages();
-    }
-    async function saveInternalNote() {
-      if (!guardWrite("guardar notas internas", "trabajos")) return;
-      if (!state.editingJobId) return showToast("Primero guarda el trabajo.");
-      const text = cleanText($("jobNewInternalNote").value);
-      if (!text) return showToast("Escribe una nota interna.");
-
-      const job = getJobById(state.editingJobId);
-      if (!job) return showToast("No se encontró el trabajo.");
-
-      const notes = getJobInternalNotes(job);
-      const logs = getJobActivityLog(job);
-
-      notes.push({
-        id: "note-" + Date.now(),
-        text,
-        by: state.userEmail || "usuario",
-        at: new Date().toISOString()
-      });
-
-      logs.push(newLogEntry("nota", "Se agregó una nota interna."));
-
-      try {
-        await jobsRef().doc(state.editingJobId).update({
-          internalNotesLog: notes,
-          activityLog: logs,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        $("jobNewInternalNote").value = "";
-        showToast("Nota guardada en la bitácora.");
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo guardar la nota.");
-      }
-    }
-    async function saveJob() {
-      if (!guardWrite("guardar trabajos", "trabajos")) return;
-      const quote = getCurrentQuoteForm();
-      const quoteCalc = computeQuote(quote);
-      const pricing = getCurrentPricingForm();
-      const logsBase = state.editingJobId ? getJobActivityLog(getJobById(state.editingJobId) || {}) : [];
-      const notesBase = state.editingJobId ? getJobInternalNotes(getJobById(state.editingJobId) || {}) : [];
-
-      const saleValue = Number($("jobSale").value || 0);
-      const fallbackSale = pricing.priceMode === "quote" ? quoteCalc.total : saleValue;
-
-      const payload = {
-        clientId: cleanText($("jobClientId").value),
-        title: cleanText($("jobTitle").value),
-        status: cleanText($("jobStatus").value) || "Cotización",
-        date: cleanText($("jobDate").value) || today(),
-        dueDate: cleanText($("jobDueDate").value),
-        priority: cleanText($("jobPriority").value) || "Media",
-        installation: getCurrentInstallationForm(cleanText($("jobClientId").value)),
-        sale: Number(fallbackSale || 0),
-        description: cleanText($("jobDescription").value),
-        notes: cleanText($("jobNotes").value),
-        materials: getCurrentFormMaterials(),
-        quote,
-        pricing,
-        jobType: getEstimatorTemplate($("jobEstimatorType").value || "custom").label,
-        estimate: getCurrentEstimatorForm(),
-        checklist: getFormChecklist(),
-        internalNotesLog: notesBase,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      if (!payload.clientId) return showToast("Selecciona un cliente.");
-      if (!payload.title) return showToast("Escribe el nombre del trabajo.");
-      if (payload.sale < 0) return showToast("La venta no puede ser negativa.");
-
-      try {
-        if (state.editingJobId) {
-          const existing = getJobById(state.editingJobId) || {};
-          payload.payments = existing.payments || [];
-          payload.designImages = existing.designImages || [];
-          payload.activityLog = [...logsBase, newLogEntry("edición", "Trabajo actualizado.")];
-          if (existing.paid) payload.paid = existing.paid;
-          await jobsRef().doc(state.editingJobId).update(payload);
-          showToast("Trabajo actualizado.");
-        } else {
-          payload.payments = [];
-          payload.designImages = [...state.pendingJobImages];
-          payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
-          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await jobsRef().add(payload);
-          state.pendingJobImages = [];
-          showToast("Trabajo guardado correctamente.");
-        }
-        closeModal("jobModal");
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo guardar el trabajo.");
-      }
-    }
-    async function updateJobStatus(id, status) {
-      if (!guardWrite("cambiar estados", "trabajos")) return;
-      try {
-        const job = getJobById(id);
-        const logs = [...getJobActivityLog(job), newLogEntry("estado", `Estado cambiado a ${status}.`)];
-        await jobsRef().doc(id).update({
-          status,
-          activityLog: logs,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast(`Estado cambiado a ${status}.`);
-
-        if (shouldAutoApplyInventoryForStatus(status) && !job?.inventoryApplied) {
-          try {
-            const result = await applyInventoryDiscountForJob(id, `estado ${status}`);
-            if (result?.appliedCount) showToast(`Inventario descontado en ${result.appliedCount} material(es).`);
-          } catch (inventoryError) {
-            console.error(inventoryError);
-            showToast(inventoryError?.message || "No se pudo descontar el inventario automáticamente.");
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo cambiar el estado.");
-      }
-    }
-    function editJob(id) {
-      if (!canWriteData("trabajos")) return showToast("No tienes permiso para editar trabajos.");
-      const item = getJobById(id);
-      if (!item) return;
-
-      state.editingJobId = id;
-      state.galleryJobId = id;
-      state.galleryIndex = 0;
-      $("jobModalTitle").textContent = "Editar trabajo";
-      fillClientSelect(item.clientId || "");
-      $("jobTitle").value = item.title || "";
-      $("jobStatus").value = item.status || "Cotización";
-      const installation = getJobInstallation(item);
-      $("jobDate").value = item.date || today();
-      $("jobDueDate").value = item.dueDate || "";
-      $("jobInstallDate").value = installation.date || "";
-      $("jobInstallStartTime").value = installation.startTime || "";
-      $("jobInstallEndTime").value = installation.endTime || "";
-      fillInstallationAssigneeList();
-      $("jobInstallAssignedTo").value = installation.assignedTo || "";
-      $("jobInstallCrew").value = installation.crew || "";
-      $("jobInstallStatus").value = installation.status || "";
-      $("jobInstallAddress").value = installation.address || "";
-      $("jobInstallWindow").value = installation.window || "";
-      $("jobInstallNotes").value = installation.notes || "";
-      $("jobPriority").value = item.priority || "Media";
-      $("jobSale").value = Number(item.sale || 0).toFixed(2);
-      const pricing = getJobPricing(item);
-      $("jobPriceMode").value = pricing.priceMode || "manual";
-      $("jobLaborCost").value = pricing.laborCost || "";
-      $("jobExtraCost").value = pricing.extraCost || "";
-      $("jobDesiredMargin").value = pricing.desiredMargin || "";
-      setEstimatorForm(getSavedEstimator(item));
-      $("jobDescription").value = item.description || "";
-      $("jobNotes").value = item.notes || "";
-      $("jobNewInternalNote").value = "";
-
-      $("materialsContainer").innerHTML = "";
-      const materials = item.materials && item.materials.length ? item.materials : [{ name:"", qty:"", price:"" }];
-      materials.forEach(material => $("materialsContainer").appendChild(createMaterialRow(material)));
-
-      const quote = getQuote(item);
-      const quoteItems = quote.items.length ? quote.items : [{ description: item.title || "Trabajo", qty: 1, price: item.sale || 0 }];
-      $("quoteItemsContainer").innerHTML = "";
-      quoteItems.forEach(q => $("quoteItemsContainer").appendChild(createQuoteItemRow(q)));
-      $("quoteDiscountType").value = quote.discountType || "none";
-      $("quoteDiscountValue").value = quote.discountValue || "";
-      $("quoteTaxPercent").value = quote.taxPercent ?? 0;
-
-      setChecklistForm(getChecklist(item));
-      state.pendingJobImages = [];
-      renderJobPreview();
-      renderJobDesignImages();
-      openModal("jobModal");
-    }
-    function getFilteredJobs() {
-      const q = cleanText($("jobSearch").value).toLowerCase();
-      const statusFilter = cleanText($("jobStatusFilter").value);
-      const priorityFilter = cleanText($("jobPriorityFilter").value);
-      const typeFilter = cleanText($("jobTypeFilter").value);
-      const createdFrom = cleanText($("jobCreatedFrom").value);
-      const createdTo = cleanText($("jobCreatedTo").value);
-      const dueFrom = cleanText($("jobDueFrom").value);
-      const dueTo = cleanText($("jobDueTo").value);
-
-      return state.jobs.filter(job => {
-        const client = getClientById(job.clientId);
-        const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""}`.toLowerCase();
-
-        const okText = bag.includes(q);
-        const okStatus = !statusFilter || job.status === statusFilter;
-        const okPriority = !priorityFilter || (job.priority || "Media") === priorityFilter;
-        const okType = !typeFilter || getJobTypeLabel(job) === typeFilter;
-        const okCreated = (!createdFrom && !createdTo) || isBetween(job.date, createdFrom, createdTo);
-        const okDue = (!dueFrom && !dueTo) || (job.dueDate && isBetween(job.dueDate, dueFrom, dueTo));
-
-        return okText && okStatus && okPriority && okType && okCreated && okDue;
-      });
-    }
-    function getDueSoonJobs(days = 7) {
-      const now = new Date();
-      const limit = new Date();
-      limit.setDate(limit.getDate() + days);
-      const from = now.toISOString().slice(0, 10);
-      const to = limit.toISOString().slice(0, 10);
-
-      return state.jobs
-        .filter(job =>
-          job.dueDate &&
-          !["Pagado","Cancelado"].includes(job.status) &&
-          job.dueDate >= from &&
-          job.dueDate <= to
-        )
-        .sort((a, b) => String(a.dueDate || "").localeCompare(String(b.dueDate || "")));
-    }
-    function getDueTodayJobs() {
-      return state.jobs.filter(job =>
-        job.dueDate === today() &&
-        !["Pagado","Cancelado"].includes(job.status)
-      );
-    }
-    function getPendingPaymentJobs() {
-      return state.jobs.filter(job => {
-        const calc = computeJob(job);
-        return calc.balance > 0 && !["Cancelado","Pagado"].includes(job.status);
-      });
-    }
-    function renderJobs() {
-      const rows = getFilteredJobs();
-
-      $("jobsBody").innerHTML = rows.map(job => {
-        const client = getClientById(job.clientId);
-        const calc = computeJob(job);
-        const overdue = isOverdue(job);
-
-        return `
-          <tr>
-            <td>${safe(clientLabel(client))}</td>
-            <td>
-              <div><strong>${safe(job.title || "-")}</strong></div>
-              <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
-              <div style="margin-top:6px;">${inventoryStatePill(job)}</div>
-              <small>${safe(job.description || job.notes || "-")}</small>
-            </td>
-            <td>${safe(formatDate(job.date))}</td>
-            <td class="${overdue ? "overdue" : ""}">${safe(formatDate(job.dueDate))}${overdue ? " · Vencido" : ""}</td>
-            <td>${priorityPill(job.priority || "Media")}</td>
-            <td>${money(calc.sale)}</td>
-            <td>${money(calc.cost)}</td>
-            <td>${money(calc.profit)}</td>
-            <td>${money(calc.paid)}</td>
-            <td>${money(calc.balance)}</td>
-            <td>${safe(checklistProgress(job))}</td>
-            <td>${statusPill(job.status || "Cotización")}</td>
-            <td>
-              <div class="actions-row">
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
-                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
-                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
-                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
-                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
-                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
-                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
+        <section id="view-gastos" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Gastos</h2>
+                <div class="section-note">Con filtro por fecha.</div>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-      $("jobsEmpty").classList.toggle("hidden", rows.length > 0);
-      renderKanban();
-      renderStats();
-      renderDueSoonPanel();
-      renderFrequentClients();
-      renderDeliveryCalendar();
-      fillPaymentJobSelect($("paymentJobId").value);
-      if ($("expenseJobId")) fillExpenseJobSelect($("expenseJobId").value);
-    }
-    function renderKanban() {
-      const rows = getFilteredJobs().filter(job => !["Pagado","Cancelado"].includes(job.status));
-      const board = $("kanbanBoard");
-      board.innerHTML = "";
-
-      KANBAN_STATUSES.forEach(status => {
-        const colJobs = rows.filter(job => job.status === status);
-        const col = document.createElement("div");
-        col.className = "kanban-col";
-        col.innerHTML = `
-          <div class="kanban-col-head">
-            <strong>${status}</strong>
-            <span class="kanban-count">${colJobs.length}</span>
-          </div>
-          <div class="kanban-list">
-            ${colJobs.map(job => {
-              const client = getClientById(job.clientId);
-              const calc = computeJob(job);
-              const overdue = isOverdue(job);
-              return `
-                <div class="kanban-card">
-                  <h4>${safe(job.title || "-")}</h4>
-                  <small>${safe(clientLabel(client))}</small>
-                  <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
-                  <div style="margin-top:4px;">${inventoryStatePill(job)}</div>
-                  <div class="kanban-meta">
-                    ${priorityPill(job.priority || "Media")}
-                    ${overdue ? '<span class="pill st-cancelado">Vencido</span>' : ""}
-                  </div>
-                  <small>Entrega: ${safe(job.dueDate || "-")}</small>
-                  <small>Saldo: ${money(calc.balance)}</small>
-                  <small>Checklist: ${safe(checklistProgress(job))}</small>
-                  <div class="kanban-actions">
-                    <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>
-                    ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-                  </div>
-                </div>
-              `;
-            }).join("") || `<div class="section-note">Sin trabajos aquí.</div>`}
-          </div>
-        `;
-        board.appendChild(col);
-      });
-    }
-    function renderDueSoonPanel() {
-      const rows = getDueSoonJobs(7);
-      $("dueSoonBody").innerHTML = rows.map(job => {
-        const client = getClientById(job.clientId);
-        const calc = computeJob(job);
-        const overdue = isOverdue(job);
-
-        return `
-          <tr>
-            <td>${safe(clientLabel(client))}</td>
-            <td><strong>${safe(job.title || "-")}</strong><div class="module-badge">${safe(getJobTypeLabel(job))}</div></td>
-            <td class="${overdue ? "overdue" : ""}">${safe(job.dueDate || "-")}</td>
-            <td>${priorityPill(job.priority || "Media")}</td>
-            <td>${money(calc.balance)}</td>
-            <td>${safe(checklistProgress(job))}</td>
-            <td>${statusPill(job.status || "Cotización")}</td>
-            <td>
-              <div class="actions-row">
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Avisar entrega</button>
-                <button class="btn btn-secondary btn-small" data-open-job="${job.id}">Abrir</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-      $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
-    }
-    function renderStats() {
-      const month = currentMonthKey();
-
-      const monthSales = state.jobs
-        .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
-        .reduce((sum, job) => sum + Number(job.sale || 0), 0);
-
-      const monthCollected = state.jobs.reduce((sum, job) => {
-        return sum + getPaymentsList(job)
-          .filter(payment => monthKey(payment.date) === month)
-          .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
-      }, 0);
-
-      const monthExpenses = state.expenses
-        .filter(expense => monthKey(expense.date) === month)
-        .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-
-      const monthProfitBase = state.jobs
-        .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
-        .reduce((sum, job) => sum + computeJob(job).profit, 0);
-
-      const overallReceivable = state.jobs
-        .filter(job => !["Pagado", "Cancelado"].includes(job.status))
-        .reduce((sum, job) => sum + computeJob(job).balance, 0);
-
-      const dueToday = getDueTodayJobs().length;
-      const due7 = getDueSoonJobs(7).length;
-      const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
-      const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
-      const pendingPayments = getPendingPaymentJobs().length;
-
-      $("mSales").textContent = money(monthSales);
-      $("mCollected").textContent = money(monthCollected);
-      $("mExpenses").textContent = money(monthExpenses);
-      $("mProfit").textContent = money(monthProfitBase - monthExpenses);
-      $("allReceivable").textContent = money(overallReceivable);
-      $("dueTodayCount").textContent = String(dueToday);
-      $("due7Count").textContent = String(due7);
-      $("allOverdueJobs").textContent = String(overdueJobs);
-      $("allActiveJobs").textContent = String(activeJobs);
-      $("pendingPaymentsCount").textContent = String(pendingPayments);
-      $("allClients").textContent = String(state.clients.length);
-    }
-    function renderDeliveryCalendar() {
-      const grid = $("calendarGrid");
-      grid.innerHTML = "";
-
-      const year = state.calendarDate.getFullYear();
-      const month = state.calendarDate.getMonth();
-
-      const label = state.calendarDate.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
-      $("calendarLabel").textContent = label.charAt(0).toUpperCase() + label.slice(1);
-
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-
-      let firstWeekDay = firstDay.getDay();
-      if (firstWeekDay === 0) firstWeekDay = 7;
-
-      const start = new Date(firstDay);
-      start.setDate(firstDay.getDate() - (firstWeekDay - 1));
-
-      const end = new Date(lastDay);
-      let lastWeekDay = end.getDay();
-      if (lastWeekDay === 0) lastWeekDay = 7;
-      end.setDate(lastDay.getDate() + (7 - lastWeekDay));
-
-      const dueMap = {};
-      state.jobs.forEach(job => {
-        if (!job.dueDate) return;
-        if (!dueMap[job.dueDate]) dueMap[job.dueDate] = [];
-        dueMap[job.dueDate].push(job);
-      });
-
-      const cursor = new Date(start);
-      while (cursor <= end) {
-        const cellDate = cursor.toISOString().slice(0, 10);
-        const cell = document.createElement("div");
-        cell.className = "calendar-cell";
-        if (cursor.getMonth() !== month) cell.classList.add("muted");
-        if (cellDate === today()) cell.classList.add("today");
-
-        const jobs = (dueMap[cellDate] || []).sort((a, b) => {
-          const pa = a.priority || "Media";
-          const pb = b.priority || "Media";
-          const order = { "Alta": 0, "Media": 1, "Baja": 2 };
-          return order[pa] - order[pb];
-        });
-
-        let jobsHtml = jobs.slice(0, 3).map(job => {
-          const client = getClientById(job.clientId);
-          const overdue = isOverdue(job) ? " overdue" : "";
-          return `
-            <div class="calendar-job${overdue}" data-open-job="${job.id}">
-              <strong>${safe(job.title || "-")}</strong><br>
-              <span>${safe(clientLabel(client))}</span>
             </div>
-          `;
-        }).join("");
 
-        if (jobs.length > 3) {
-          jobsHtml += `<div class="section-note">+${jobs.length - 3} más</div>`;
-        }
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="expenseSearch" class="input" placeholder="Buscar concepto o categoría" />
+                <input id="expenseFrom" type="date" class="input" />
+                <input id="expenseTo" type="date" class="input" />
+                <button id="btnClearExpenseFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+            </div>
 
-        cell.innerHTML = `
-          <div class="calendar-date">${cursor.getDate()}</div>
-          ${jobsHtml || '<div class="section-note">Sin entregas</div>'}
-        `;
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th>Categoría</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Trabajo</th>
+                    <th>Fotos</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="expensesBody"></tbody>
+              </table>
+            </div>
 
-        grid.appendChild(cell);
-        cursor.setDate(cursor.getDate() + 1);
-      }
-    }
+            <div id="expensesEmpty" class="empty hidden">No hay gastos guardados.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Gastos recurrentes</h2>
+                <div class="section-note">Se generan automáticamente una vez por mes.</div>
+              </div>
+              <div class="filters">
+                <button id="btnNewRecurring" class="btn btn-primary btn-small">+ Nuevo recurrente</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th>Categoría</th>
+                    <th>Monto</th>
+                    <th>Día del mes</th>
+                    <th>Activo</th>
+                    <th>Último mes generado</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="recurringBody"></tbody>
+              </table>
+            </div>
+
+            <div id="recurringEmpty" class="empty hidden">No hay gastos recurrentes creados.</div>
+          </div>
+        </section>
+        <section id="view-inventario" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Items</div><div id="invTotalItems" class="value">0</div></div>
+            <div class="stat"><div class="label">Valor inventario</div><div id="invTotalValue" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Stock bajo</div><div id="invLowCount" class="value warn-text">0</div></div>
+            <div class="stat"><div class="label">Sin stock</div><div id="invOutCount" class="value danger-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Inventario</h2>
+                <div class="section-note">Control de materiales, stock mínimo, valor y ubicación.</div>
+              </div>
+              <div class="filters">
+                <button id="btnNewMovement" class="btn btn-info btn-small">+ Movimiento</button>
+              </div>
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="inventorySearch" class="input" placeholder="Buscar por nombre, SKU, categoría o proveedor" />
+                <select id="inventoryCategoryFilter" class="select">
+                  <option value="">Todas las categorías</option>
+                  <option>Vinil</option>
+                  <option>Banner</option>
+                  <option>Acrílico</option>
+                  <option>ACM</option>
+                  <option>Policarbonato</option>
+                  <option>Tint</option>
+                  <option>LED</option>
+                  <option>Perfilería</option>
+                  <option>Tornillería</option>
+                  <option>Tinta</option>
+                  <option>Herramientas</option>
+                  <option>Empaque</option>
+                  <option>Otro</option>
+                </select>
+                <select id="inventoryStockFilter" class="select">
+                  <option value="">Todo el stock</option>
+                  <option value="ok">Con stock</option>
+                  <option value="low">Stock bajo</option>
+                  <option value="out">Sin stock</option>
+                </select>
+                <button id="btnClearInventoryFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Material</th>
+                    <th>Categoría</th>
+                    <th>Unidad</th>
+                    <th>Stock</th>
+                    <th>Mínimo</th>
+                    <th>Costo unitario</th>
+                    <th>Valor</th>
+                    <th>Ubicación</th>
+                    <th>Último mov.</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="inventoryBody"></tbody>
+              </table>
+            </div>
+
+            <div id="inventoryEmpty" class="empty hidden">No hay materiales en inventario.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Movimientos recientes</h2>
+                <div class="section-note">Entradas, salidas y ajustes con historial.</div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Material</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Antes</th>
+                    <th>Después</th>
+                    <th>Referencia</th>
+                    <th>Nota</th>
+                  </tr>
+                </thead>
+                <tbody id="inventoryMovementsBody"></tbody>
+              </table>
+            </div>
+
+            <div id="inventoryMovementsEmpty" class="empty hidden">Todavía no hay movimientos registrados.</div>
+          </div>
+        </section>
+
+        <section id="view-proveedores" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Proveedores</div><div id="providersTotal" class="value">0</div></div>
+            <div class="stat"><div class="label">Items vinculados</div><div id="providersLinkedInventory" class="value info-text">0</div></div>
+            <div class="stat"><div class="label">OC abiertas</div><div id="providersOpenOrders" class="value warn-text">0</div></div>
+            <div class="stat"><div class="label">OC recibidas</div><div id="providersReceivedOrders" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Proveedores</h2>
+                <div class="section-note">Base de proveedores para materiales, compras y órdenes.</div>
+              </div>
+              <div class="filters">
+                <input id="providerSearch" class="input" placeholder="Buscar por nombre, contacto, teléfono o email" />
+                <button id="btnNewProvider" class="btn btn-primary btn-small">+ Nuevo proveedor</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Proveedor</th>
+                    <th>Contacto</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Ciudad</th>
+                    <th>Items inventario</th>
+                    <th>OC abiertas</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="providersBody"></tbody>
+              </table>
+            </div>
+            <div id="providersEmpty" class="empty hidden">No hay proveedores guardados.</div>
+          </div>
+        </section>
+
+        <section id="view-compras" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">OC abiertas</div><div id="poOpenCount" class="value warn-text">0</div></div>
+            <div class="stat"><div class="label">Pendientes de recibir</div><div id="poPendingReceiveCount" class="value danger-text">0</div></div>
+            <div class="stat"><div class="label">Total ordenado</div><div id="poOrderedTotal" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Órdenes recibidas</div><div id="poReceivedCount" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Órdenes de compra</h2>
+                <div class="section-note">Crea órdenes manuales o desde la lista de compra automática del trabajo.</div>
+              </div>
+              <div class="filters">
+                <button id="btnNewPurchaseOrder" class="btn btn-primary btn-small">+ Nueva orden</button>
+              </div>
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="purchaseOrderSearch" class="input" placeholder="Buscar por OC, proveedor, trabajo o nota" />
+                <select id="purchaseOrderStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="Borrador">Borrador</option>
+                  <option value="Enviada">Enviada</option>
+                  <option value="Parcial">Parcial</option>
+                  <option value="Recibida">Recibida</option>
+                  <option value="Cancelada">Cancelada</option>
+                </select>
+                <select id="purchaseOrderSupplierFilter" class="select">
+                  <option value="">Todos los proveedores</option>
+                </select>
+                <button id="btnClearPurchaseOrderFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>OC</th>
+                    <th>Proveedor</th>
+                    <th>Trabajo</th>
+                    <th>Fecha</th>
+                    <th>Entrega esperada</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="purchaseOrdersBody"></tbody>
+              </table>
+            </div>
+            <div id="purchaseOrdersEmpty" class="empty hidden">No hay órdenes de compra guardadas.</div>
+          </div>
+        </section>
+
+        <section id="view-instalaciones" class="view hidden">
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="label">Instalaciones hoy</div><div id="installTodayCount" class="value info-text">0</div></div>
+            <div class="mini-stat"><div class="label">Próximos 7 días</div><div id="installNext7Count" class="value warn-text">0</div></div>
+            <div class="mini-stat"><div class="label">Pendientes confirmar</div><div id="installPendingCount" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">Completadas mes</div><div id="installDoneMonthCount" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Agenda de instalaciones</h2>
+                <div class="section-note">Filtra por fecha, responsable o estado y abre el trabajo para editar la instalación.</div>
+              </div>
+              <div class="filters">
+                <input id="installationSearch" class="input" placeholder="Buscar por cliente, trabajo, dirección o responsable" />
+                <input id="installationFrom" type="date" class="input" />
+                <input id="installationTo" type="date" class="input" />
+                <select id="installationAssignedFilter" class="select">
+                  <option value="">Todos los responsables</option>
+                </select>
+                <select id="installationStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Confirmada">Confirmada</option>
+                  <option value="En ruta">En ruta</option>
+                  <option value="Reprogramada">Reprogramada</option>
+                  <option value="Completada">Completada</option>
+                  <option value="Cancelada">Cancelada</option>
+                </select>
+                <button id="btnClearInstallationFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Responsable</th>
+                    <th>Dirección</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="installationBody"></tbody>
+              </table>
+            </div>
+            <div id="installationEmpty" class="empty hidden">No hay instalaciones programadas con esos filtros.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Calendario mensual de instalación</h2>
+                <div class="section-note">Vista rápida para saber quién instala, dónde y cuándo.</div>
+              </div>
+              <div class="actions-row">
+                <button id="btnPrevInstallMonth" class="btn btn-secondary btn-small">← Mes anterior</button>
+                <div id="installationCalendarLabel" class="calendar-label">Mes</div>
+                <button id="btnNextInstallMonth" class="btn btn-secondary btn-small">Mes siguiente →</button>
+              </div>
+            </div>
+            <div class="calendar-wrap">
+              <div class="calendar-grid">
+                <div class="calendar-day-head">Lun</div>
+                <div class="calendar-day-head">Mar</div>
+                <div class="calendar-day-head">Mié</div>
+                <div class="calendar-day-head">Jue</div>
+                <div class="calendar-day-head">Vie</div>
+                <div class="calendar-day-head">Sáb</div>
+                <div class="calendar-day-head">Dom</div>
+              </div>
+              <div class="calendar-grid" id="installationCalendarGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        
+        <section id="view-reportes" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Filtros del reporte</h2>
+                <div class="section-note">Filtra por fecha del trabajo/compra/gasto para revisar ventas, utilidad y operación.</div>
+              </div>
+              <div class="filters">
+                <input id="reportFrom" type="date" class="input" />
+                <input id="reportTo" type="date" class="input" />
+                <select id="reportJobStatusFilter" class="select">
+                  <option value="">Todos los estados de trabajo</option>
+                  <option value="Cotización">Cotización</option>
+                  <option value="Aprobado">Aprobado</option>
+                  <option value="Diseño">Diseño</option>
+                  <option value="Producción">Producción</option>
+                  <option value="Instalación">Instalación</option>
+                  <option value="Entregado">Entregado</option>
+                  <option value="Pagado">Pagado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+                <button id="btnClearReportFilters" class="btn btn-secondary">Limpiar filtros</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="label">Ventas filtradas</div><div id="reportSalesTotal" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Cobrado filtrado</div><div id="reportCollectedTotal" class="value info-text">$0.00</div></div>
+            <div class="stat"><div class="label">Por cobrar</div><div id="reportReceivableTotal" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div class="label">Utilidad neta</div><div id="reportNetProfitTotal" class="value ok-text">$0.00</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Resumen mensual</h2>
+                <div class="section-note">Últimos 6 meses con ventas, gastos y utilidad neta.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Ventas</th>
+                    <th>Cobrado</th>
+                    <th>Gastos</th>
+                    <th>Utilidad neta</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsMonthlyBody"></tbody>
+              </table>
+            </div>
+            <div id="reportsMonthlyEmpty" class="empty hidden">No hay movimientos suficientes para armar el resumen mensual.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Trabajos más rentables</h2>
+                <div class="section-note">Top de utilidad real considerando costo interno y gastos ligados.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Estado</th>
+                    <th>Venta</th>
+                    <th>Costo</th>
+                    <th>Utilidad</th>
+                    <th>Margen</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsBestJobsBody"></tbody>
+              </table>
+            </div>
+            <div id="reportsBestJobsEmpty" class="empty hidden">No hay trabajos para calcular rentabilidad.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Cuentas por cobrar</h2>
+                <div class="section-note">Trabajos con saldo pendiente dentro del filtro actual.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Trabajo</th>
+                    <th>Estado</th>
+                    <th>Entrega</th>
+                    <th>Venta</th>
+                    <th>Pagado</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsReceivablesBody"></tbody>
+              </table>
+            </div>
+            <div id="reportsReceivablesEmpty" class="empty hidden">No hay saldos pendientes dentro del filtro.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Gastos por categoría</h2>
+                <div class="section-note">Distribución de gastos registrados dentro del rango filtrado.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Categoría</th>
+                    <th>Total</th>
+                    <th>Movimientos</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsExpensesByCategoryBody"></tbody>
+              </table>
+            </div>
+            <div id="reportsExpensesByCategoryEmpty" class="empty hidden">No hay gastos en ese rango.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Materiales más usados</h2>
+                <div class="section-note">Basado en materiales / costo interno de los trabajos filtrados.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Unidad</th>
+                    <th>Cantidad usada</th>
+                    <th>Costo acumulado</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsMaterialsBody"></tbody>
+              </table>
+            </div>
+            <div id="reportsMaterialsEmpty" class="empty hidden">No hay materiales suficientes para mostrar.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Compras por proveedor</h2>
+                <div class="section-note">Total comprado y órdenes generadas por proveedor.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Proveedor</th>
+                    <th>Órdenes</th>
+                    <th>Total comprado</th>
+                    <th>Última orden</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsProvidersBody"></tbody>
+              </table>
+            </div>
+            <div id="reportsProvidersEmpty" class="empty hidden">No hay órdenes de compra para mostrar.</div>
+          </div>
+        </section>
+
+        <section id="view-usuarios" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Usuarios totales</div><div id="usersTotalCount" class="value">0</div></div>
+            <div class="stat"><div class="label">Admins</div><div id="usersAdminCount" class="value info-text">0</div></div>
+            <div class="stat"><div class="label">Empleados</div><div id="usersEmployeeCount" class="value purple-text">0</div></div>
+            <div class="stat"><div class="label">Solo lectura</div><div id="usersReadonlyCount" class="value warn-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Usuarios y permisos</h2>
+                <div class="section-note">Agrega personas por correo y define qué pueden hacer dentro del mismo espacio de trabajo.</div>
+              </div>
+              <div class="filters">
+                <input id="userSearch" class="input" placeholder="Buscar por nombre, correo o rol" />
+                <button id="btnNewTeamMember" class="btn btn-primary btn-small">+ Nuevo usuario</button>
+              </div>
+            </div>
+
+            <div style="padding:0 18px 18px;">
+              <div class="permission-note">
+                El usuario nuevo debe crear su cuenta con ese mismo correo. Si aquí está activo, al entrar verá este mismo negocio según el rol que le pongas.
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Último acceso</th>
+                    <th>Módulos</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="teamMembersBody"></tbody>
+              </table>
+            </div>
+            <div id="teamMembersEmpty" class="empty hidden">No hay usuarios del equipo todavía.</div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" id="clientModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="clientModalTitle">Nuevo cliente</h3>
+        <button class="btn btn-secondary btn-small" data-close="clientModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="clientName" class="input" placeholder="Nombre del cliente" />
+          <input id="clientCompany" class="input" placeholder="Empresa" />
+          <input id="clientPhone" class="input" placeholder="Teléfono con código país si puedes" />
+          <input id="clientEmail" class="input" placeholder="Correo electrónico" />
+          <input id="clientAddress" class="input" placeholder="Dirección" />
+          <input id="clientCity" class="input" placeholder="Ciudad / Estado" />
+        </div>
+        <textarea id="clientNotes" class="textarea mt-12" placeholder="Notas del cliente"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="clientModal">Cancelar</button>
+        <button id="saveClientBtn" class="btn btn-primary">Guardar cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="jobModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="jobModalTitle">Nuevo trabajo</h3>
+        <button class="btn btn-secondary btn-small" data-close="jobModal">Cerrar</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="grid-3">
+          <select id="jobClientId" class="select"></select>
+          <input id="jobTitle" class="input" placeholder="Trabajo / proyecto" />
+          <select id="jobStatus" class="select">
+            <option>Cotización</option>
+            <option>Aprobado</option>
+            <option>Diseño</option>
+            <option>Producción</option>
+            <option>Instalación</option>
+            <option>Entregado</option>
+            <option>Pagado</option>
+            <option>Cancelado</option>
+          </select>
+
+          <input id="jobDate" type="date" class="input" />
+          <input id="jobDueDate" type="date" class="input" />
+          <select id="jobPriority" class="select">
+            <option>Baja</option>
+            <option selected>Media</option>
+            <option>Alta</option>
+          </select>
+
+          <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio final al cliente" />
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Instalación</strong>
+            <span class="module-badge">Agenda del equipo</span>
+          </div>
+          <div class="section-note mt-10">Programa fecha, hora, responsable y dirección. Esto alimenta el calendario de instalación sin tocar el dashboard.</div>
+          <div class="grid-3 mt-12">
+            <input id="jobInstallDate" type="date" class="input" />
+            <input id="jobInstallStartTime" type="time" class="input" />
+            <input id="jobInstallEndTime" type="time" class="input" />
+            <input id="jobInstallAssignedTo" list="installAssigneeList" class="input" placeholder="Responsable / instalador" />
+            <input id="jobInstallCrew" class="input" placeholder="Equipo / cuadrilla" />
+            <select id="jobInstallStatus" class="select">
+              <option value="">Sin programar</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Confirmada">Confirmada</option>
+              <option value="En ruta">En ruta</option>
+              <option value="Reprogramada">Reprogramada</option>
+              <option value="Completada">Completada</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div class="grid-2 mt-12">
+            <input id="jobInstallAddress" class="input" placeholder="Dirección de instalación" />
+            <input id="jobInstallWindow" class="input" placeholder="Ventana / referencia corta" />
+          </div>
+          <textarea id="jobInstallNotes" class="textarea mt-12" placeholder="Notas de instalación, acceso, sitio, contacto, etc."></textarea>
+          <datalist id="installAssigneeList"></datalist>
+        </div>
+
+        <textarea id="jobDescription" class="textarea mt-12" placeholder="Descripción del trabajo / cotización"></textarea>
+        <textarea id="jobNotes" class="textarea mt-12" placeholder="Notas generales internas"></textarea>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Materiales / costo interno</strong>
+            <button id="addMaterialBtn" class="btn btn-secondary btn-small" type="button">+ Agregar material</button>
+          </div>
+          <div class="section-note mt-10">Ahora puedes vincular cada material con un ítem del inventario para traer nombre, costo unitario y stock disponible. Todavía no descuenta stock automático.</div>
+          <div id="materialsContainer"></div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Cotización</strong>
+            <button id="addQuoteItemBtn" class="btn btn-secondary btn-small" type="button">+ Agregar ítem</button>
+          </div>
+
+          <div id="quoteItemsContainer"></div>
+
+          <div class="grid-3 mt-12">
+            <select id="quoteDiscountType" class="select">
+              <option value="none">Sin descuento</option>
+              <option value="percent">Descuento %</option>
+              <option value="fixed">Descuento fijo</option>
+            </select>
+            <input id="quoteDiscountValue" type="number" min="0" step="0.01" class="input" placeholder="Valor descuento" />
+            <input id="quoteTaxPercent" type="number" min="0" step="0.01" class="input" placeholder="Impuesto %" value="0" />
+          </div>
+
+          <div class="summary-box">
+            <div><span>Subtotal</span><strong id="quoteSubtotal">$0.00</strong></div>
+            <div><span>Descuento</span><strong id="quoteDiscount">$0.00</strong></div>
+            <div><span>Impuesto</span><strong id="quoteTax">$0.00</strong></div>
+            <div><span>Total</span><strong id="quoteTotal">$0.00</strong></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Estimado / aprobación cliente</strong>
+            <div class="actions-row">
+              <button id="generateClientEstimateLinkBtn" class="btn btn-secondary btn-small" type="button">Generar enlace</button>
+              <button id="copyClientEstimateLinkBtn" class="btn btn-info btn-small" type="button">Copiar enlace</button>
+              <button id="previewClientEstimateBtn" class="btn btn-secondary btn-small" type="button">Vista cliente</button>
+            </div>
+          </div>
+
+          <div class="section-note mt-10">
+            Base interna lista para enviar el estimado al cliente y registrar aprobación del precio y del diseño. En el siguiente paso activamos el enlace público y la respuesta desde el celular del cliente.
+          </div>
+
+          <input id="jobApprovalToken" type="hidden" />
+
+          <div class="grid-3 mt-12">
+            <select id="jobEstimateStatus" class="select">
+              <option value="borrador">Estimado · Borrador</option>
+              <option value="enviado">Estimado · Enviado</option>
+              <option value="aprobado">Estimado · Aprobado</option>
+              <option value="cambios">Estimado · Solicita cambios</option>
+              <option value="rechazado">Estimado · Rechazado</option>
+            </select>
+            <select id="jobDesignApprovalStatus" class="select">
+              <option value="pendiente">Diseño · Pendiente</option>
+              <option value="enviado">Diseño · Enviado</option>
+              <option value="aprobado">Diseño · Aprobado</option>
+              <option value="cambios">Diseño · Solicita cambios</option>
+            </select>
+            <input id="jobClientDeposit" type="number" min="0" step="0.01" class="input" placeholder="Depósito requerido" />
+
+            <input id="jobEstimateSentAt" type="text" class="input readonly" placeholder="Fecha envío estimado" readonly />
+            <input id="jobClientApprovedAt" type="text" class="input readonly" placeholder="Fecha respuesta cliente" readonly />
+            <input id="jobClientApprovedBy" type="text" class="input readonly" placeholder="Respondido por" readonly />
+          </div>
+
+          <div class="grid-2 mt-12">
+            <textarea id="jobClientVisibleNotes" class="textarea" placeholder="Notas visibles para el cliente: alcance, tiempos, depósito, instalación, garantía, etc."></textarea>
+            <textarea id="jobClientResponseNotes" class="textarea" placeholder="Comentario o respuesta del cliente"></textarea>
+          </div>
+
+          <div class="grid-2 mt-12">
+            <input id="jobClientApprovalLink" type="text" class="input readonly" placeholder="Enlace de aprobación para cliente" readonly />
+            <input id="jobClientApprovalLinkExpiresAt" type="text" class="input readonly" placeholder="Expira / vigencia del enlace" readonly />
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Precio final y rentabilidad</strong>
+            <button id="applySuggestedSaleBtn" class="btn btn-secondary btn-small" type="button">Usar precio sugerido</button>
+          </div>
+
+          <div class="price-grid">
+            <select id="jobPriceMode" class="select">
+              <option value="manual">Precio manual</option>
+              <option value="quote">Usar total de cotización</option>
+            </select>
+            <input id="jobLaborCost" type="number" min="0" step="0.01" class="input" placeholder="Mano de obra" />
+            <input id="jobExtraCost" type="number" min="0" step="0.01" class="input" placeholder="Gastos extra / overhead" />
+            <input id="jobDesiredMargin" type="number" min="0" step="0.01" class="input" placeholder="Utilidad deseada %" />
+
+            <input id="jobMaterialsTotal" type="text" class="input readonly" placeholder="Materiales" readonly />
+            <input id="jobTotalCost" type="text" class="input readonly" placeholder="Costo total" readonly />
+            <input id="jobSuggestedSale" type="text" class="input readonly" placeholder="Precio sugerido" readonly />
+            <input id="jobProfitMargin" type="text" class="input readonly" placeholder="Margen real" readonly />
+          </div>
+
+          <div class="price-mode-note">
+            En <strong>Precio manual</strong> tú escribes el precio final del cliente en el campo de arriba.
+            En <strong>Usar total de cotización</strong>, el sistema pone automáticamente el total calculado en la cotización como precio final.
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Módulo rápido de estimado - Fase 7</strong>
+            <div class="actions-row">
+              <button id="loadEstimatorDefaultsBtn" class="btn btn-secondary btn-small" type="button">Cargar valores sugeridos</button>
+              <button id="applyEstimatorBtn" class="btn btn-info btn-small" type="button">Aplicar al trabajo</button>
+            </div>
+          </div>
+
+          <div class="estimate-grid">
+            <select id="jobEstimatorType" class="select">
+              <option value="custom">Personalizado</option>
+              <option value="decals">Decals</option>
+              <option value="printing">Printing</option>
+              <option value="window_perf">Window Perf</option>
+              <option value="commercial_tint">Commercial Tint</option>
+              <option value="banner">Banner</option>
+              <option value="wrap">Wrap de Autos</option>
+              <option value="ada">ADA Signs</option>
+              <option value="channel_letters">Channel Letters</option>
+              <option value="pylon_faces">Pylon Faces</option>
+              <option value="light_box">Light Box Graphics</option>
+            </select>
+            <input id="jobEstimatorWidth" type="number" min="0" step="0.01" class="input" placeholder="Ancho (in)" />
+            <input id="jobEstimatorHeight" type="number" min="0" step="0.01" class="input" placeholder="Alto (in)" />
+            <input id="jobEstimatorQty" type="number" min="0" step="0.01" class="input" placeholder="Cantidad" value="1" />
+
+            <input id="jobEstimatorWaste" type="number" min="0" step="0.01" class="input" placeholder="Desperdicio %" />
+            <input id="jobEstimatorMaterialRate" type="number" min="0" step="0.01" class="input" placeholder="Costo material / unidad" />
+            <input id="jobEstimatorSaleRate" type="number" min="0" step="0.01" class="input" placeholder="Precio venta / unidad" />
+            <input id="jobEstimatorLaborBase" type="number" min="0" step="0.01" class="input" placeholder="Mano de obra base" />
+
+            <input id="jobEstimatorBaseUnits" type="text" class="input readonly" placeholder="Unidad base" readonly />
+            <input id="jobEstimatorProdUnits" type="text" class="input readonly" placeholder="Unidad compra" readonly />
+            <input id="jobEstimatorCost" type="text" class="input readonly" placeholder="Costo estimado" readonly />
+            <input id="jobEstimatorSale" type="text" class="input readonly" placeholder="Venta estimada" readonly />
+          </div>
+
+          <div class="estimator-hint">
+            Este módulo te ayuda a cargar rápido trabajos repetidos. Para tipos por <strong>pie cuadrado</strong> usa ancho, alto y cantidad.
+            Para tipos por <strong>unidad</strong> como ADA o Channel Letters, el sistema usa principalmente la cantidad y las tarifas sugeridas.
+          </div>
+        </div>
+
+        <div class="box">
+          <strong>Checklist de producción</strong>
+          <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" id="ckDesignApproved"> Diseño aprobado</label>
+            <label class="check-item"><input type="checkbox" id="ckMaterialOrdered"> Material comprado</label>
+            <label class="check-item"><input type="checkbox" id="ckPrintingDone"> Impresión hecha</label>
+            <label class="check-item"><input type="checkbox" id="ckCuttingDone"> Corte listo</label>
+            <label class="check-item"><input type="checkbox" id="ckLaminationDone"> Laminado listo</label>
+            <label class="check-item"><input type="checkbox" id="ckInstallationScheduled"> Instalación programada</label>
+            <label class="check-item"><input type="checkbox" id="ckInstalled"> Instalado</label>
+            <label class="check-item"><input type="checkbox" id="ckDelivered"> Entregado al cliente</label>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Pagos registrados</strong>
+            <button id="openPaymentFromJobBtn" class="btn btn-info btn-small" type="button">+ Agregar pago</button>
+          </div>
+          <div id="jobPaymentsPreview" class="list-payments"></div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Inventario y compra</strong>
+            <div class="actions-row">
+              <button id="openPoFromJobBtn" class="btn btn-secondary btn-small" type="button">Crear orden de compra</button>
+              <button id="applyInventoryNowBtn" class="btn btn-info btn-small" type="button">Aplicar inventario</button>
+            </div>
+          </div>
+          <div id="jobInventoryStatusBox" class="list-logs"></div>
+          <div style="margin-top:10px;"><strong>Lista de compra automática</strong></div>
+          <div class="section-note mt-10">Se calcula comparando la sección Materiales / costo interno contra el stock actual del inventario.</div>
+          <div id="jobPurchaseList" class="list-logs"></div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Gastos ligados al trabajo</strong>
+            <button id="openExpenseFromJobBtn" class="btn btn-info btn-small" type="button">+ Agregar gasto</button>
+          </div>
+          <div id="jobExpensesPreview" class="list-logs"></div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Bitácora interna</strong>
+            <button id="saveInternalNoteBtn" class="btn btn-info btn-small" type="button">Guardar nota</button>
+          </div>
+          <textarea id="jobNewInternalNote" class="textarea mt-12" placeholder="Escribe una nota interna de seguimiento. Guarda primero el trabajo para poder agregar notas."></textarea>
+          <div id="jobNotesLogList" class="list-logs"></div>
+        </div>
+
+        <div class="box">
+          <strong>Historial de cambios</strong>
+          <div id="jobActivityLogList" class="list-logs"></div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Diseños / fotos del trabajo</strong>
+            <button id="uploadDesignBtn" class="btn btn-info btn-small" type="button">Subir foto</button>
+          </div>
+          <div class="section-note mt-12">
+            Aquí puedes guardar diseños, referencias o fotos del trabajo para verlas luego desde cualquier dispositivo.
+          </div>
+          <div id="designImagesGallery" class="list-logs"></div>
+        </div>
+
+        <div class="summary-box">
+          <div><span>Materiales</span><strong id="sumMaterials">$0.00</strong></div>
+          <div><span>Mano de obra</span><strong id="sumLabor">$0.00</strong></div>
+          <div><span>Gastos extra</span><strong id="sumExtras">$0.00</strong></div>
+          <div><span>Costo interno</span><strong id="sumCost">$0.00</strong></div>
+          <div><span>Ganancia</span><strong id="sumProfit">$0.00</strong></div>
+          <div><span>Margen</span><strong id="sumMargin">0.00%</strong></div>
+          <div><span>Pagado</span><strong id="sumPaid">$0.00</strong></div>
+          <div><span>Saldo</span><strong id="sumBalance">$0.00</strong></div>
+          <div><span>Gastos ligados</span><strong id="sumLinkedExpenses">$0.00</strong></div>
+          <div><span>Inventario</span><strong id="sumInventoryStatus">Pendiente</strong></div>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="jobModal">Cancelar</button>
+        <button id="saveJobBtn" class="btn btn-primary">Guardar trabajo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Agregar pago parcial</h3>
+        <button class="btn btn-secondary btn-small" data-close="paymentModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <select id="paymentJobId" class="select"></select>
+          <input id="paymentAmount" type="number" min="0" step="0.01" class="input" placeholder="Monto del pago" />
+          <input id="paymentDate" type="date" class="input" />
+          <select id="paymentMethod" class="select">
+            <option>Efectivo</option>
+            <option>Zelle</option>
+            <option>Tarjeta</option>
+            <option>Transferencia</option>
+            <option>Cheque</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <textarea id="paymentNote" class="textarea mt-12" placeholder="Nota del pago"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="paymentModal">Cancelar</button>
+        <button id="savePaymentBtn" class="btn btn-primary">Guardar pago</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="expenseModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="expenseModalTitle">Nuevo gasto</h3>
+        <button class="btn btn-secondary btn-small" data-close="expenseModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="expenseConcept" class="input" placeholder="Concepto" />
+          <select id="expenseCategory" class="select">
+            <option>Operación</option>
+            <option>Material</option>
+            <option>Renta</option>
+            <option>Servicios</option>
+            <option>Publicidad</option>
+            <option>Gasolina</option>
+            <option>Nómina</option>
+            <option>Otro</option>
+          </select>
+          <input id="expenseAmount" type="number" min="0" step="0.01" class="input" placeholder="Monto" />
+          <input id="expenseDate" type="date" class="input" />
+          <select id="expenseJobId" class="select"></select>
+        </div>
+        <textarea id="expenseNotes" class="textarea mt-12" placeholder="Notas del gasto"></textarea>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Fotos / comprobantes del gasto</strong>
+            <button id="uploadExpensePhotoBtn" class="btn btn-info btn-small" type="button">Subir foto</button>
+          </div>
+          <div class="section-note mt-12">
+            Puedes subir recibos, facturas o fotos de la compra. Si el gasto todavía no está guardado, las fotos quedan listas y se guardan junto con el gasto cuando pulses Guardar gasto.
+          </div>
+          <div id="expensePhotosGallery" class="list-logs"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="expenseModal">Cancelar</button>
+        <button id="saveExpenseBtn" class="btn btn-primary">Guardar gasto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="recurringModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="recurringModalTitle">Nuevo gasto recurrente</h3>
+        <button class="btn btn-secondary btn-small" data-close="recurringModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="recurringConcept" class="input" placeholder="Concepto" />
+          <select id="recurringCategory" class="select">
+            <option>Operación</option>
+            <option>Material</option>
+            <option>Renta</option>
+            <option>Servicios</option>
+            <option>Publicidad</option>
+            <option>Gasolina</option>
+            <option>Nómina</option>
+            <option>Otro</option>
+          </select>
+          <input id="recurringAmount" type="number" min="0" step="0.01" class="input" placeholder="Monto" />
+          <input id="recurringDay" type="number" min="1" max="31" class="input" placeholder="Día del mes" />
+        </div>
+        <textarea id="recurringNotes" class="textarea mt-12" placeholder="Notas"></textarea>
+        <div class="mt-12">
+          <label class="check-item" style="max-width:260px;">
+            <input type="checkbox" id="recurringActive" checked>
+            Activo
+          </label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="recurringModal">Cancelar</button>
+        <button id="saveRecurringBtn" class="btn btn-primary">Guardar recurrente</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="modal-backdrop" id="inventoryModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="inventoryModalTitle">Nuevo ítem de inventario</h3>
+        <button class="btn btn-secondary btn-small" data-close="inventoryModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-3">
+          <input id="inventoryName" class="input" placeholder="Nombre del material" />
+          <input id="inventorySku" class="input" placeholder="SKU / Código interno" />
+          <select id="inventoryCategory" class="select">
+            <option>Vinil</option>
+            <option>Banner</option>
+            <option>Acrílico</option>
+            <option>ACM</option>
+            <option>Policarbonato</option>
+            <option>Tint</option>
+            <option>LED</option>
+            <option>Perfilería</option>
+            <option>Tornillería</option>
+            <option>Tinta</option>
+            <option>Herramientas</option>
+            <option>Empaque</option>
+            <option>Otro</option>
+          </select>
+          <select id="inventoryUnit" class="select">
+            <option>ft</option>
+            <option>ft²</option>
+            <option>in</option>
+            <option>rollo</option>
+            <option>sheet</option>
+            <option>pieza</option>
+            <option>caja</option>
+            <option>kit</option>
+            <option>lb</option>
+            <option>gal</option>
+          </select>
+          <input id="inventoryStock" type="number" min="0" step="0.01" class="input" placeholder="Stock actual" />
+          <input id="inventoryMinStock" type="number" min="0" step="0.01" class="input" placeholder="Stock mínimo" />
+          <input id="inventoryUnitCost" type="number" min="0" step="0.01" class="input" placeholder="Costo unitario" />
+          <input id="inventoryLocation" class="input" placeholder="Ubicación / rack / estante" />
+          <input id="inventorySupplier" list="providersDatalist" class="input" placeholder="Proveedor" />
+        </div>
+        <textarea id="inventoryNotes" class="textarea mt-12" placeholder="Notas del material"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="inventoryModal">Cancelar</button>
+        <button id="saveInventoryBtn" class="btn btn-primary">Guardar ítem</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="movementModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Nuevo movimiento</h3>
+        <button class="btn btn-secondary btn-small" data-close="movementModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <select id="movementItemId" class="select"></select>
+          <select id="movementType" class="select">
+            <option value="entrada">Entrada</option>
+            <option value="salida">Salida</option>
+            <option value="ajuste">Ajuste</option>
+          </select>
+          <input id="movementQty" type="number" step="0.01" class="input" placeholder="Cantidad" />
+          <input id="movementDate" type="date" class="input" />
+          <input id="movementUnitCost" type="number" min="0" step="0.01" class="input" placeholder="Costo unitario opcional" />
+          <input id="movementReference" class="input" placeholder="Referencia / factura / orden" />
+        </div>
+        <textarea id="movementNote" class="textarea mt-12" placeholder="Nota del movimiento"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="movementModal">Cancelar</button>
+        <button id="saveMovementBtn" class="btn btn-primary">Guardar movimiento</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop" id="providerModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="providerModalTitle">Nuevo proveedor</h3>
+        <button class="btn btn-secondary btn-small" data-close="providerModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="providerName" class="input" placeholder="Nombre del proveedor" />
+          <input id="providerContact" class="input" placeholder="Contacto" />
+          <input id="providerPhone" class="input" placeholder="Teléfono" />
+          <input id="providerEmail" class="input" placeholder="Correo electrónico" />
+          <input id="providerAddress" class="input" placeholder="Dirección" />
+          <input id="providerCity" class="input" placeholder="Ciudad / Estado" />
+        </div>
+        <textarea id="providerNotes" class="textarea mt-12" placeholder="Notas del proveedor"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="providerModal">Cancelar</button>
+        <button id="saveProviderBtn" class="btn btn-primary">Guardar proveedor</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="purchaseOrderModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="purchaseOrderModalTitle">Nueva orden de compra</h3>
+        <button class="btn btn-secondary btn-small" data-close="purchaseOrderModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-3">
+          <input id="purchaseOrderNumber" class="input readonly" placeholder="Número OC" readonly />
+          <select id="purchaseOrderProviderId" class="select"></select>
+          <select id="purchaseOrderJobId" class="select"></select>
+          <input id="purchaseOrderDate" type="date" class="input" />
+          <input id="purchaseOrderExpectedDate" type="date" class="input" />
+          <select id="purchaseOrderStatus" class="select">
+            <option>Borrador</option>
+            <option>Enviada</option>
+            <option>Parcial</option>
+            <option>Recibida</option>
+            <option>Cancelada</option>
+          </select>
+        </div>
+        <textarea id="purchaseOrderNotes" class="textarea mt-12" placeholder="Notas de la orden de compra"></textarea>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Items de la orden</strong>
+            <div class="actions-row">
+              <button id="loadPoFromJobBtn" class="btn btn-secondary btn-small" type="button">Cargar faltantes del trabajo</button>
+              <button id="addPoLineBtn" class="btn btn-info btn-small" type="button">+ Agregar ítem</button>
+            </div>
+          </div>
+          <div class="section-note mt-10">Si eliges un trabajo, puedes cargar automáticamente los faltantes de la lista de compra.</div>
+          <div id="purchaseOrderItemsContainer"></div>
+          <div class="po-summary-box">
+            <span class="section-note">Total de la orden</span>
+            <strong id="purchaseOrderTotal">$0.00</strong>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="purchaseOrderModal">Cancelar</button>
+        <button id="savePurchaseOrderBtn" class="btn btn-primary">Guardar orden</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="providersDatalist"></datalist>
+
+  
+  <div class="modal-backdrop" id="designGalleryModal">
+    <div class="lightbox-modal">
+      <div class="modal-head">
+        <h3>Galería del trabajo</h3>
+        <button class="btn btn-secondary btn-small" data-close="designGalleryModal">Cerrar</button>
+      </div>
+      <div class="lightbox-wrap">
+        <div class="lightbox-stage">
+          <img id="galleryModalImage" src="" alt="Diseño del trabajo">
+        </div>
+        <div class="lightbox-meta">
+          <div>
+            <div id="galleryModalTitle" class="lightbox-title">Imagen</div>
+            <div id="galleryModalSub" class="lightbox-sub">-</div>
+          </div>
+          <div class="lightbox-actions">
+            <button id="galleryPrevBtn" type="button" class="btn btn-secondary btn-small">← Anterior</button>
+            <button id="galleryNextBtn" type="button" class="btn btn-secondary btn-small">Siguiente →</button>
+            <a id="galleryOpenOriginal" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-info btn-small">Abrir original</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop" id="teamMemberModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="teamMemberModalTitle">Nuevo usuario</h3>
+        <button class="btn btn-secondary btn-small" data-close="teamMemberModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input id="teamMemberName" class="input" placeholder="Nombre" />
+          <input id="teamMemberEmail" type="email" class="input" placeholder="Correo electrónico" />
+          <select id="teamMemberRole" class="select">
+                        <option value="admin">Admin</option>
+            <option value="employee" selected>Empleado</option>
+            <option value="readonly">Solo lectura</option>
+          </select>
+          <select id="teamMemberActive" class="select">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <textarea id="teamMemberNotes" class="textarea mt-12" placeholder="Notas del usuario"></textarea>
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Permisos por módulo</strong>
+            <div class="section-note">Puedes dejar los sugeridos por rol y luego ajustar solo lo necesario.</div>
+          </div>
+          <div class="grid-4 mt-12">
+            <select id="teamPermClientes" class="select">
+              <option value="none">Clientes · Sin acceso</option>
+              <option value="view">Clientes · Solo ver</option>
+              <option value="edit">Clientes · Editar</option>
+              <option value="delete">Clientes · Editar y borrar</option>
+            </select>
+            <select id="teamPermTrabajos" class="select">
+              <option value="none">Trabajos · Sin acceso</option>
+              <option value="view">Trabajos · Solo ver</option>
+              <option value="edit">Trabajos · Editar</option>
+              <option value="delete">Trabajos · Editar y borrar</option>
+            </select>
+            <select id="teamPermGastos" class="select">
+              <option value="none">Gastos · Sin acceso</option>
+              <option value="view">Gastos · Solo ver</option>
+              <option value="edit">Gastos · Editar</option>
+              <option value="delete">Gastos · Editar y borrar</option>
+            </select>
+            <select id="teamPermInventario" class="select">
+              <option value="none">Inventario · Sin acceso</option>
+              <option value="view">Inventario · Solo ver</option>
+              <option value="edit">Inventario · Editar</option>
+              <option value="delete">Inventario · Editar y borrar</option>
+            </select>
+            <select id="teamPermProveedores" class="select">
+              <option value="none">Proveedores · Sin acceso</option>
+              <option value="view">Proveedores · Solo ver</option>
+              <option value="edit">Proveedores · Editar</option>
+              <option value="delete">Proveedores · Editar y borrar</option>
+            </select>
+            <select id="teamPermCompras" class="select">
+              <option value="none">Compras · Sin acceso</option>
+              <option value="view">Compras · Solo ver</option>
+              <option value="edit">Compras · Editar</option>
+              <option value="delete">Compras · Editar y borrar</option>
+            </select>
+            <select id="teamPermUsuarios" class="select">
+              <option value="none">Usuarios · Sin acceso</option>
+              <option value="view">Usuarios · Solo ver</option>
+              <option value="manage">Usuarios · Administrar</option>
+            </select>
+            <label class="check-item">
+              <input type="checkbox" id="teamAllowImportBackup">
+              Permitir importar respaldo JSON
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="teamMemberModal">Cancelar</button>
+        <button id="saveTeamMemberBtn" class="btn btn-primary">Guardar usuario</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="productionModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="productionModalTitle">Actualizar producción</h3>
+        <button class="btn btn-secondary btn-small" data-close="productionModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <input id="productionJobId" type="hidden" />
+
+        <div class="grid-3">
+          <input id="productionJobName" class="input readonly" placeholder="Trabajo" readonly />
+          <input id="productionClientName" class="input readonly" placeholder="Cliente" readonly />
+          <input id="productionDueDate" class="input readonly" placeholder="Entrega" readonly />
+
+          <select id="productionStage" class="select">
+            <option value="diseno">Diseño</option>
+            <option value="aprobacion">Aprobación</option>
+            <option value="produccion">Producción</option>
+            <option value="listo_instalar">Listo para instalar</option>
+            <option value="instalacion_programada">Instalación programada</option>
+            <option value="completado">Completado</option>
+          </select>
+
+          <select id="productionPriority" class="select">
+            <option value="Baja">Baja</option>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+          </select>
+
+          <input id="productionResponsible" list="productionResponsibleList" class="input" placeholder="Responsable" />
+        </div>
+
+        <div class="mt-12">
+          <label class="check-item" style="max-width:260px;">
+            <input type="checkbox" id="productionBlocked">
+            Trabajo bloqueado
+          </label>
+        </div>
+
+        <textarea id="productionNotes" class="textarea mt-12" placeholder="Notas internas de producción"></textarea>
+
+        <div class="box">
+          <strong>Historial de producción</strong>
+          <div id="productionHistoryLog" class="list-logs"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="productionModal">Cancelar</button>
+        <button id="saveProductionBtn" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="productionResponsibleList"></datalist>
+
+<div id="toast" class="toast"></div>
+
+  <script src="assets/js/01-core.js"></script>
+  <script src="assets/js/02-clients.js"></script>
+  <script src="assets/js/03-jobs.js"></script>
+  <script src="assets/js/04-expenses.js"></script>
+  <script src="assets/js/05-inventory.js"></script>
+  <script src="assets/js/06-installation-reports.js"></script>
+  <script src="assets/js/07-pdf.js"></script>
+  <script src="assets/js/08-providers-compras.js"></script>
+  <script src="assets/js/09-users.js"></script>
+  <script src="assets/js/10-backup-misc.js"></script>
+  <script src="assets/js/11-auth.js"></script>
+  <script src="assets/js/12-init.js"></script>
+  <script src="assets/js/13-production.js"></script>
+  <script src="assets/js/16-advance-control.js"></script>
+  <script src="assets/js/17-advance-visual.js"></script>
+</body>
+</html>

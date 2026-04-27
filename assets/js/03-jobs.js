@@ -1550,201 +1550,45 @@
         return calc.balance > 0 && !["Cancelado","Pagado"].includes(job.status);
       });
     }
-
-    function getAdvanceSummarySafe(job = {}) {
-      if (typeof window.getJobAdvanceSummary === "function") {
-        return window.getJobAdvanceSummary(job);
-      }
-      const advance = job.advance || {};
-      const received = Number(advance.received || 0);
-      const ledger = Array.isArray(advance.ledger) ? advance.ledger : [];
-      const spent = ledger.reduce((sum, item) => {
-        const status = cleanText(item.status || "");
-        return sum + ((status === "Pagado" && !!item.applyToAdvance) ? Number(item.amount || 0) : 0);
-      }, 0);
-      return {
-        received,
-        spent,
-        available: received - spent
-      };
-    }
-
-    function injectJobsTableCompactStyles() {
-      if (document.getElementById("jobsCompactTableStyles")) return;
-      const style = document.createElement("style");
-      style.id = "jobsCompactTableStyles";
-      style.textContent = `
-        #jobsTableView td { vertical-align: top; }
-        .jobs-client-cell {
-          min-width: 120px;
-          font-weight: 700;
-        }
-        .jobs-work-cell {
-          min-width: 240px;
-        }
-        .jobs-work-title {
-          font-size: 15px;
-          font-weight: 800;
-          line-height: 1.2;
-          margin-bottom: 8px;
-        }
-        .jobs-work-tags {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          margin-bottom: 8px;
-        }
-        .jobs-work-note {
-          color: var(--muted);
-          font-size: 12px;
-          line-height: 1.45;
-        }
-        .jobs-delivery-cell,
-        .jobs-priority-cell,
-        .jobs-status-cell {
-          white-space: nowrap;
-          min-width: 90px;
-        }
-        .jobs-finance-cell {
-          min-width: 190px;
-        }
-        .jobs-finance-main {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          font-size: 13px;
-          margin-bottom: 6px;
-        }
-        .jobs-finance-main strong {
-          font-size: 14px;
-        }
-        .jobs-finance-sub {
-          color: var(--muted);
-          font-size: 12px;
-          line-height: 1.45;
-        }
-        .jobs-advance-cell {
-          min-width: 130px;
-          white-space: nowrap;
-        }
-        .jobs-advance-cell strong {
-          display: block;
-          font-size: 24px;
-          line-height: 1;
-          color: #b8ff2c;
-          margin-bottom: 6px;
-        }
-        .jobs-advance-cell span {
-          display: block;
-          font-size: 12px;
-          color: var(--muted);
-          font-weight: 700;
-        }
-        .jobs-actions-wrap {
-          min-width: 125px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .jobs-actions-main {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .jobs-more-menu {
-          position: relative;
-        }
-        .jobs-more-menu summary {
-          list-style: none;
-        }
-        .jobs-more-menu summary::-webkit-details-marker {
-          display: none;
-        }
-        .jobs-more-menu[open] .jobs-more-list {
-          display: flex;
-        }
-        .jobs-more-list {
-          display: none;
-          position: absolute;
-          right: 0;
-          top: calc(100% + 6px);
-          z-index: 40;
-          min-width: 190px;
-          flex-direction: column;
-          gap: 8px;
-          padding: 10px;
-          border-radius: 14px;
-          border: 1px solid var(--line);
-          background: #11151d;
-          box-shadow: 0 18px 40px rgba(0,0,0,.35);
-        }
-        .jobs-more-list .btn {
-          width: 100%;
-          justify-content: center;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
     function renderJobs() {
-      injectJobsTableCompactStyles();
       const rows = getFilteredJobs();
 
       $("jobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
-        const advance = getAdvanceSummarySafe(job);
 
         return `
           <tr>
-            <td class="jobs-client-cell">${safe(clientLabel(client))}</td>
-            <td class="jobs-work-cell">
-              <div class="jobs-work-title">${safe(job.title || "-")}</div>
-              <div class="jobs-work-tags">
-                <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
-                <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
-                <div>${inventoryStatePill(job)}</div>
-              </div>
-              <div class="jobs-work-note">${safe(job.description || job.notes || "-")}</div>
-            </td>
-            <td class="jobs-delivery-cell ${overdue ? "overdue" : ""}">
-              ${safe(formatDate(job.dueDate))}
-              ${overdue ? `<div class="section-note" style="margin-top:6px;">Vencido</div>` : ""}
-            </td>
-            <td class="jobs-priority-cell">${priorityPill(job.priority || "Media")}</td>
-            <td class="jobs-finance-cell">
-              <div class="jobs-finance-main"><span>Venta</span><strong>${money(calc.sale)}</strong></div>
-              <div class="jobs-finance-main"><span>Saldo</span><strong>${money(calc.balance)}</strong></div>
-              <div class="jobs-finance-sub">Pagado: ${money(calc.paid)}</div>
-              <div class="jobs-finance-sub">Costo: ${money(calc.cost)} · Ganancia: ${money(calc.profit)}</div>
-            </td>
-            <td class="jobs-advance-cell" data-cell="advance-available">
-              <strong>${money(advance.available)}</strong>
-              <span>${money(advance.spent)} / ${money(advance.received)}</span>
-            </td>
-            <td class="jobs-status-cell">
-              ${statusPill(job.status || "Cotización")}
-              <div class="section-note" style="margin-top:8px;">Checklist: ${safe(checklistProgress(job))}</div>
-            </td>
+            <td>${safe(clientLabel(client))}</td>
             <td>
-              <div class="jobs-actions-wrap">
-                <div class="jobs-actions-main">
-                  ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>` : ""}
-                  ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
-                </div>
-                <details class="jobs-more-menu">
-                  <summary class="btn btn-secondary btn-small">Más ▾</summary>
-                  <div class="jobs-more-list">
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Recordar cobro</button>
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Avisar entrega</button>
-                    ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
-                    <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
-                    <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
-                    ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
-                  </div>
-                </details>
+              <div><strong>${safe(job.title || "-")}</strong></div>
+              <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
+              <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
+              <div style="margin-top:6px;">${inventoryStatePill(job)}</div>
+              <small>${safe(job.description || job.notes || "-")}</small>
+            </td>
+            <td>${safe(formatDate(job.date))}</td>
+            <td class="${overdue ? "overdue" : ""}">${safe(formatDate(job.dueDate))}${overdue ? " · Vencido" : ""}</td>
+            <td>${priorityPill(job.priority || "Media")}</td>
+            <td>${money(calc.sale)}</td>
+            <td>${money(calc.cost)}</td>
+            <td>${money(calc.profit)}</td>
+            <td>${money(calc.paid)}</td>
+            <td>${money(calc.balance)}</td>
+            <td>${safe(checklistProgress(job))}</td>
+            <td>${statusPill(job.status || "Cotización")}</td>
+            <td>
+              <div class="actions-row">
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
+                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
+                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
+                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
+                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -1836,6 +1680,24 @@
         function renderStats() {
       const month = currentMonthKey();
 
+      const getAdvanceSummarySafe = (job = {}) => {
+        if (typeof window.getJobAdvanceSummary === "function") {
+          return window.getJobAdvanceSummary(job);
+        }
+        const advance = job.advance || {};
+        const received = Number(advance.received || 0);
+        const ledger = Array.isArray(advance.ledger) ? advance.ledger : [];
+        const spent = ledger.reduce((sum, item) => {
+          const status = cleanText(item.status || "");
+          return sum + ((status === "Pagado" && !!item.applyToAdvance) ? Number(item.amount || 0) : 0);
+        }, 0);
+        return {
+          received,
+          spent,
+          available: received - spent
+        };
+      };
+
       const monthSales = state.jobs
         .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + Number(job.sale || 0), 0);
@@ -1854,15 +1716,19 @@
         .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + computeJob(job).profit, 0);
 
-      const overallReceivable = state.jobs
-        .filter(job => !["Pagado", "Cancelado"].includes(job.status))
+      const openJobs = state.jobs.filter(job => !["Pagado", "Cancelado"].includes(job.status));
+
+      const overallReceivable = openJobs
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
 
       const dueToday = getDueTodayJobs().length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
       const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
       const jobsWithBalance = getPendingPaymentJobs().length;
-      const jobsInProduction = state.jobs.filter(job => cleanText(job.status) === "Producción").length;
+      const jobsInProduction = openJobs.filter(job => cleanText(job.status) === "Producción").length;
+      const dashboardAdvanceAvailable = openJobs.reduce((sum, job) => {
+        return sum + Number(getAdvanceSummarySafe(job).available || 0);
+      }, 0);
 
       const startOfToday = today();
       const todayDate = new Date(startOfToday + "T00:00:00");
@@ -1896,6 +1762,7 @@
 
       if ($("jobsWithBalanceCount")) $("jobsWithBalanceCount").textContent = String(jobsWithBalance);
       if ($("jobsInProductionCount")) $("jobsInProductionCount").textContent = String(jobsInProduction);
+      if ($("dashboardAdvanceAvailable")) $("dashboardAdvanceAvailable").textContent = money(dashboardAdvanceAvailable);
       if ($("installWeekCount")) $("installWeekCount").textContent = String(installWeekCount);
       if ($("installPendingConfirmCount")) $("installPendingConfirmCount").textContent = String(installPendingConfirmCount);
 
