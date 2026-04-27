@@ -1680,6 +1680,24 @@
         function renderStats() {
       const month = currentMonthKey();
 
+      const getAdvanceSummarySafe = (job = {}) => {
+        if (typeof window.getJobAdvanceSummary === "function") {
+          return window.getJobAdvanceSummary(job);
+        }
+        const advance = job.advance || {};
+        const received = Number(advance.received || 0);
+        const ledger = Array.isArray(advance.ledger) ? advance.ledger : [];
+        const spent = ledger.reduce((sum, item) => {
+          const status = cleanText(item.status || "");
+          return sum + ((status === "Pagado" && !!item.applyToAdvance) ? Number(item.amount || 0) : 0);
+        }, 0);
+        return {
+          received,
+          spent,
+          available: received - spent
+        };
+      };
+
       const monthSales = state.jobs
         .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + Number(job.sale || 0), 0);
@@ -1698,15 +1716,19 @@
         .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + computeJob(job).profit, 0);
 
-      const overallReceivable = state.jobs
-        .filter(job => !["Pagado", "Cancelado"].includes(job.status))
+      const openJobs = state.jobs.filter(job => !["Pagado", "Cancelado"].includes(job.status));
+
+      const overallReceivable = openJobs
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
 
       const dueToday = getDueTodayJobs().length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
       const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
       const jobsWithBalance = getPendingPaymentJobs().length;
-      const jobsInProduction = state.jobs.filter(job => cleanText(job.status) === "Producción").length;
+      const jobsInProduction = openJobs.filter(job => cleanText(job.status) === "Producción").length;
+      const dashboardAdvanceAvailable = openJobs.reduce((sum, job) => {
+        return sum + Number(getAdvanceSummarySafe(job).available || 0);
+      }, 0);
 
       const startOfToday = today();
       const todayDate = new Date(startOfToday + "T00:00:00");
@@ -1740,6 +1762,7 @@
 
       if ($("jobsWithBalanceCount")) $("jobsWithBalanceCount").textContent = String(jobsWithBalance);
       if ($("jobsInProductionCount")) $("jobsInProductionCount").textContent = String(jobsInProduction);
+      if ($("dashboardAdvanceAvailable")) $("dashboardAdvanceAvailable").textContent = money(dashboardAdvanceAvailable);
       if ($("installWeekCount")) $("installWeekCount").textContent = String(installWeekCount);
       if ($("installPendingConfirmCount")) $("installPendingConfirmCount").textContent = String(installPendingConfirmCount);
 
