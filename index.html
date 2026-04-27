@@ -303,6 +303,121 @@
           </div>
         </section>
 
+
+        <section id="view-produccion" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Trabajos activos</div><div id="productionActiveCount" class="value purple-text">0</div></div>
+            <div class="stat"><div class="label">Vencidos</div><div id="productionOverdueCount" class="value danger-text">0</div></div>
+            <div class="stat"><div class="label">Listos para instalar</div><div id="productionReadyInstallCount" class="value info-text">0</div></div>
+            <div class="stat"><div class="label">Completados</div><div id="productionCompletedCount" class="value ok-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Tablero visual de producción</h2>
+                <div class="section-note">Vista operativa por etapa para mover trabajos desde diseño hasta completado.</div>
+              </div>
+              <div class="filters">
+                <button id="btnClearProductionFilters" class="btn btn-secondary btn-small">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div style="padding:16px 18px 0;">
+              <div class="grid-4">
+                <input id="productionSearch" class="input" placeholder="Buscar por cliente o trabajo" />
+                <select id="productionStageFilter" class="select">
+                  <option value="">Todas las etapas</option>
+                  <option value="diseno">Diseño</option>
+                  <option value="aprobacion">Aprobación</option>
+                  <option value="produccion">Producción</option>
+                  <option value="listo_instalar">Listo para instalar</option>
+                  <option value="instalacion_programada">Instalación programada</option>
+                  <option value="completado">Completado</option>
+                </select>
+                <select id="productionPriorityFilter" class="select">
+                  <option value="">Todas las prioridades</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Media">Media</option>
+                  <option value="Alta">Alta</option>
+                </select>
+                <select id="productionResponsibleFilter" class="select">
+                  <option value="">Todos los responsables</option>
+                </select>
+              </div>
+
+              <div class="grid-4 mt-12">
+                <input id="productionDueFrom" type="date" class="input" />
+                <input id="productionDueTo" type="date" class="input" />
+                <select id="productionBlockedFilter" class="select">
+                  <option value="">Todos los trabajos</option>
+                  <option value="yes">Solo bloqueados</option>
+                  <option value="no">Solo no bloqueados</option>
+                </select>
+                <label class="check-item" style="max-width:280px;">
+                  <input type="checkbox" id="productionOverdueOnly">
+                  Solo vencidos
+                </label>
+              </div>
+            </div>
+
+            <div id="productionBoardWrap" class="kanban-wrap">
+              <div id="productionBoard" class="kanban-board">
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Diseño</strong>
+                    <span id="productionCountDiseno" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageDiseno" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Aprobación</strong>
+                    <span id="productionCountAprobacion" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageAprobacion" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Producción</strong>
+                    <span id="productionCountProduccion" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageProduccion" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Listo para instalar</strong>
+                    <span id="productionCountListoInstalar" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageListoInstalar" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Instalación programada</strong>
+                    <span id="productionCountInstalacionProgramada" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageInstalacionProgramada" class="kanban-list"></div>
+                </div>
+
+                <div class="kanban-col">
+                  <div class="kanban-col-head">
+                    <strong>Completado</strong>
+                    <span id="productionCountCompletado" class="module-badge">0</span>
+                  </div>
+                  <div id="productionStageCompletado" class="kanban-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="productionEmpty" class="empty hidden">No hay trabajos para mostrar en producción.</div>
+          </div>
+        </section>
+
+
         <section id="view-gastos" class="view hidden">
           <div class="panel">
             <div class="panel-head">
@@ -1560,5 +1675,8 @@
   <script src="assets/js/10-backup-misc.js"></script>
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
+  <script src="assets/js/13-production.js"></script>
+  <script src="assets/js/16-advance-control.js"></script>
+  <script src="assets/js/17-advance-visual.js"></script>
 </body>
 </html>
