@@ -15,6 +15,7 @@
     $("btnRegister").addEventListener("click", register);
     $("btnReset").addEventListener("click", resetPassword);
     $("btnLogout").addEventListener("click", logout);
+    $("btnStatusLogout")?.addEventListener("click", logout);
 
     $("btnExportJson").addEventListener("click", exportJson);
     $("btnExportPdf").addEventListener("click", exportCurrentModulePdf);
@@ -213,6 +214,11 @@
       $(id)?.addEventListener("change", renderUsers);
     });
 
+    ["platformAccountSearch","platformAccountStatusFilter"].forEach(id => {
+      $(id)?.addEventListener("input", () => { if (typeof renderPlatformAccounts === "function") renderPlatformAccounts(); });
+      $(id)?.addEventListener("change", () => { if (typeof renderPlatformAccounts === "function") renderPlatformAccounts(); });
+    });
+
     ["purchaseOrderSearch","purchaseOrderStatusFilter","purchaseOrderSupplierFilter"].forEach(id => {
       $(id)?.addEventListener("input", renderPurchaseOrders);
       $(id)?.addEventListener("change", renderPurchaseOrders);
@@ -270,6 +276,10 @@
     $("btnClearReportFilters")?.addEventListener("click", () => {
       ["reportFrom","reportTo","reportJobStatusFilter"].forEach(id => { if ($(id)) $(id).value = ""; });
       renderReportsModule();
+    });
+    $("btnClearPlatformAccountFilters")?.addEventListener("click", () => {
+      ["platformAccountSearch","platformAccountStatusFilter"].forEach(id => { if ($(id)) $(id).value = ""; });
+      if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
     });
 
     $("authPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
@@ -334,6 +344,7 @@
       if (target.dataset.editTeamMember) editTeamMember(target.dataset.editTeamMember);
       if (target.dataset.toggleTeamMember) toggleTeamMemberActive(target.dataset.toggleTeamMember);
       if (target.dataset.deleteTeamMember) removeTeamMember(target.dataset.deleteTeamMember);
+      if (target.dataset.platformStatus && target.dataset.nextStatus) updatePlatformAccountStatus(target.dataset.platformStatus, target.dataset.nextStatus);
     });
 
     resetJobForm();
@@ -349,3 +360,4 @@
     if (typeof renderProductionBoard === "function") renderProductionBoard();
     renderReportsModule();
     renderUsers();
+    if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();

@@ -13,6 +13,7 @@
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
 </head>
 <body>
   <section id="authScreen" class="auth-wrap">
@@ -21,6 +22,8 @@
       <div class="auth-sub">CRM privado fase 7 con estimador rápido por tipo de trabajo y rentabilidad completa.</div>
 
       <div class="stack">
+        <input id="authFullName" class="input" type="text" placeholder="Nombre completo (al crear cuenta)" />
+        <input id="authCompanyName" class="input" type="text" placeholder="Empresa (al crear cuenta)" />
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
         <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
       </div>
@@ -38,13 +41,22 @@
     </div>
   </section>
 
+  <section id="accessStatusScreen" class="auth-wrap hidden">
+    <div class="auth-card">
+      <div class="logo">NJ <span>Design & Print</span></div>
+      <div class="auth-sub" id="accessStatusTitle">Estado de la cuenta</div>
+      <div class="help" id="accessStatusText">Tu cuenta no puede entrar en este momento.</div>
+      <button id="btnStatusLogout" class="btn btn-secondary full mt-12">Volver</button>
+    </div>
+  </section>
+
   <section id="appScreen" class="hidden">
     <div class="app">
       <aside class="sidebar">
         <div class="brand">NJ <span>Design & Print</span></div>
         <div class="brand-sub">Fase 8 segura: inventario profesional integrado visualmente con trabajos, sin descuento automático todavía.</div>
 
-        <div class="nav">
+       <div class="nav">
   <div class="layout-sidebar-group-title">OPERACIÓN</div>
 
   <button class="active" data-view="dashboard">📊 Dashboard</button>
@@ -70,12 +82,15 @@
   <div class="layout-sidebar-group-title">ADMINISTRACIÓN</div>
 
   <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
-  </div>
+  <button data-view="cuentascrm" id="navCuentasCrmBtn">🧩 Cuentas CRM</button>
+</div>
+
         <div class="sidebar-foot">
           <div class="user-chip">
             Usuario activo:<br><strong id="activeUserEmail">-</strong><br>
             <span id="activeWorkspaceRole">Rol: -</span><br>
-            <span id="activeWorkspaceOwner">Espacio: -</span>
+            <span id="activeWorkspaceOwner">Espacio: -</span><br>
+            <span id="activeWorkspaceStatus">Cuenta: -</span>
           </div>
           <button id="btnLogout" class="btn btn-secondary">Cerrar sesión</button>
         </div>
@@ -97,6 +112,7 @@
           </div>
         </div>
 
+        
         <section id="view-dashboard" class="view">
           <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
           <div class="stats">
@@ -112,21 +128,25 @@
               <div class="label">Entregas hoy</div>
               <div id="dueTodayCount" class="value info-text">0</div>
             </div>
-            <div class="alert-card alert-cobro">
-              <div class="label">Cobros pendientes</div>
-              <div id="pendingPaymentsCount" class="value warn-text">0</div>
-            </div>
             <div class="alert-card alert-vencido">
               <div class="label">Trabajos vencidos</div>
               <div id="allOverdueJobs" class="value danger-text">0</div>
+            </div>
+            <div class="alert-card alert-cobro">
+              <div class="label">Instalaciones esta semana</div>
+              <div id="installWeekCount" class="value warn-text">0</div>
+            </div>
+            <div class="alert-card alert-entrega">
+              <div class="label">Pendientes confirmar</div>
+              <div id="installPendingConfirmCount" class="value info-text">0</div>
             </div>
           </div>
 
           <div class="mini-stats">
             <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
-            <div class="mini-stat"><div class="label">Vencen 7 días</div><div id="due7Count" class="value danger-text">0</div></div>
-            <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value purple-text">0</div></div>
-            <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
+            <div class="mini-stat"><div class="label">Trabajos con saldo</div><div id="jobsWithBalanceCount" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">En proceso</div><div id="allActiveJobs" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">En producción</div><div id="jobsInProductionCount" class="value">0</div></div>
           </div>
 
           <div class="panel">
@@ -182,6 +202,7 @@
             </div>
           </div>
         </section>
+
 
         <section id="view-clientes" class="view hidden">
           <div class="panel">
@@ -281,10 +302,15 @@
                     <tr>
                       <th>Cliente</th>
                       <th>Trabajo</th>
+                      <th>Fecha</th>
                       <th>Entrega</th>
                       <th>Prioridad</th>
-                      <th>Finanzas</th>
-                      <th>Anticipo disp.</th>
+                      <th>Venta</th>
+                      <th>Costo</th>
+                      <th>Ganancia</th>
+                      <th>Pagado</th>
+                      <th>Saldo</th>
+                      <th>Checklist</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -302,7 +328,6 @@
             </div>
           </div>
         </section>
-
 
         <section id="view-produccion" class="view hidden">
           <div class="stats">
@@ -416,7 +441,6 @@
             <div id="productionEmpty" class="empty hidden">No hay trabajos para mostrar en producción.</div>
           </div>
         </section>
-
 
         <section id="view-gastos" class="view hidden">
           <div class="panel">
@@ -999,6 +1023,53 @@
           </div>
         </section>
 
+        <section id="view-cuentascrm" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Cuentas totales</div><div id="platformAccountsTotalCount" class="value">0</div></div>
+            <div class="stat"><div class="label">Pendientes</div><div id="platformAccountsPendingCount" class="value warn-text">0</div></div>
+            <div class="stat"><div class="label">Activas</div><div id="platformAccountsActiveCount" class="value ok-text">0</div></div>
+            <div class="stat"><div class="label">Bloqueadas</div><div id="platformAccountsBlockedCount" class="value danger-text">0</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Cuentas registradas en la app</h2>
+                <div class="section-note">Aquí puedes ver quién se registra, qué empresa usa y activar, dejar pendiente o bloquear la cuenta.</div>
+              </div>
+              <div class="filters">
+                <input id="platformAccountSearch" class="input" placeholder="Buscar por empresa, nombre o correo" />
+                <select id="platformAccountStatusFilter" class="select">
+                  <option value="">Todos los estados</option>
+                  <option value="pending">Pendientes</option>
+                  <option value="active">Activas</option>
+                  <option value="blocked">Bloqueadas</option>
+                </select>
+                <button id="btnClearPlatformAccountFilters" class="btn btn-secondary btn-small">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Empresa / UID</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Último acceso</th>
+                    <th>Registro</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="platformAccountsBody"></tbody>
+              </table>
+            </div>
+            <div id="platformAccountsEmpty" class="empty hidden">No hay cuentas registradas todavía.</div>
+          </div>
+        </section>
+
       </main>
     </div>
   </section>
@@ -1125,6 +1196,54 @@
             <div><span>Descuento</span><strong id="quoteDiscount">$0.00</strong></div>
             <div><span>Impuesto</span><strong id="quoteTax">$0.00</strong></div>
             <div><span>Total</span><strong id="quoteTotal">$0.00</strong></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Estimado / aprobación cliente</strong>
+            <div class="actions-row">
+              <button id="generateClientEstimateLinkBtn" class="btn btn-secondary btn-small" type="button">Generar enlace</button>
+              <button id="copyClientEstimateLinkBtn" class="btn btn-info btn-small" type="button">Copiar enlace</button>
+              <button id="previewClientEstimateBtn" class="btn btn-secondary btn-small" type="button">Vista cliente</button>
+            </div>
+          </div>
+
+          <div class="section-note mt-10">
+            Base interna lista para enviar el estimado al cliente y registrar aprobación del precio y del diseño. En el siguiente paso activamos el enlace público y la respuesta desde el celular del cliente.
+          </div>
+
+          <input id="jobApprovalToken" type="hidden" />
+
+          <div class="grid-3 mt-12">
+            <select id="jobEstimateStatus" class="select">
+              <option value="borrador">Estimado · Borrador</option>
+              <option value="enviado">Estimado · Enviado</option>
+              <option value="aprobado">Estimado · Aprobado</option>
+              <option value="cambios">Estimado · Solicita cambios</option>
+              <option value="rechazado">Estimado · Rechazado</option>
+            </select>
+            <select id="jobDesignApprovalStatus" class="select">
+              <option value="pendiente">Diseño · Pendiente</option>
+              <option value="enviado">Diseño · Enviado</option>
+              <option value="aprobado">Diseño · Aprobado</option>
+              <option value="cambios">Diseño · Solicita cambios</option>
+            </select>
+            <input id="jobClientDeposit" type="number" min="0" step="0.01" class="input" placeholder="Depósito requerido" />
+
+            <input id="jobEstimateSentAt" type="text" class="input readonly" placeholder="Fecha envío estimado" readonly />
+            <input id="jobClientApprovedAt" type="text" class="input readonly" placeholder="Fecha respuesta cliente" readonly />
+            <input id="jobClientApprovedBy" type="text" class="input readonly" placeholder="Respondido por" readonly />
+          </div>
+
+          <div class="grid-2 mt-12">
+            <textarea id="jobClientVisibleNotes" class="textarea" placeholder="Notas visibles para el cliente: alcance, tiempos, depósito, instalación, garantía, etc."></textarea>
+            <textarea id="jobClientResponseNotes" class="textarea" placeholder="Comentario o respuesta del cliente"></textarea>
+          </div>
+
+          <div class="grid-2 mt-12">
+            <input id="jobClientApprovalLink" type="text" class="input readonly" placeholder="Enlace de aprobación para cliente" readonly />
+            <input id="jobClientApprovalLinkExpiresAt" type="text" class="input readonly" placeholder="Expira / vigencia del enlace" readonly />
           </div>
         </div>
 
@@ -1661,6 +1780,61 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="productionModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="productionModalTitle">Actualizar producción</h3>
+        <button class="btn btn-secondary btn-small" data-close="productionModal">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <input id="productionJobId" type="hidden" />
+
+        <div class="grid-3">
+          <input id="productionJobName" class="input readonly" placeholder="Trabajo" readonly />
+          <input id="productionClientName" class="input readonly" placeholder="Cliente" readonly />
+          <input id="productionDueDate" class="input readonly" placeholder="Entrega" readonly />
+
+          <select id="productionStage" class="select">
+            <option value="diseno">Diseño</option>
+            <option value="aprobacion">Aprobación</option>
+            <option value="produccion">Producción</option>
+            <option value="listo_instalar">Listo para instalar</option>
+            <option value="instalacion_programada">Instalación programada</option>
+            <option value="completado">Completado</option>
+          </select>
+
+          <select id="productionPriority" class="select">
+            <option value="Baja">Baja</option>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+          </select>
+
+          <input id="productionResponsible" list="productionResponsibleList" class="input" placeholder="Responsable" />
+        </div>
+
+        <div class="mt-12">
+          <label class="check-item" style="max-width:260px;">
+            <input type="checkbox" id="productionBlocked">
+            Trabajo bloqueado
+          </label>
+        </div>
+
+        <textarea id="productionNotes" class="textarea mt-12" placeholder="Notas internas de producción"></textarea>
+
+        <div class="box">
+          <strong>Historial de producción</strong>
+          <div id="productionHistoryLog" class="list-logs"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-close="productionModal">Cancelar</button>
+        <button id="saveProductionBtn" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="productionResponsibleList"></datalist>
+
 <div id="toast" class="toast"></div>
 
   <script src="assets/js/01-core.js"></script>
@@ -1675,8 +1849,11 @@
   <script src="assets/js/10-backup-misc.js"></script>
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
-  <script src="assets/js/13-production.js"></script>
-  <script src="assets/js/16-advance-control.js"></script>
-  <script src="assets/js/17-advance-visual.js"></script>
+  <script src="assets/js/10-backup-misc.js"></script>
+<script src="assets/js/11-auth.js"></script>
+<script src="assets/js/12-init.js"></script>
+<script src="assets/js/13-production.js"></script>
+<script src="assets/js/16-advance-control.js"></script>
+<script src="assets/js/17-advance-visual.js"></script>
 </body>
 </html>

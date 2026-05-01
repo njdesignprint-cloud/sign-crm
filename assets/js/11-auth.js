@@ -83,7 +83,24 @@
         renderReportsModule();
       }
 
-      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubTeamMembers);
+      let unsubPlatformUsers = () => {};
+      let unsubPlatformWorkspaces = () => {};
+      if (isSuperAdmin()) {
+        unsubPlatformUsers = platformUsersRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
+          state.platformUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
+        }, error => console.error(error));
+        unsubPlatformWorkspaces = platformWorkspacesRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
+          state.platformWorkspaces = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
+        }, error => console.error(error));
+      } else {
+        state.platformUsers = [];
+        state.platformWorkspaces = [];
+        if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
+      }
+
+      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
     async function login() {
       const email = cleanText($("authEmail").value);
@@ -108,12 +125,52 @@
     async function register() {
       const email = cleanText($("authEmail").value);
       const password = cleanText($("authPassword").value);
+      const name = cleanText($("authFullName")?.value || "");
+      const companyName = cleanText($("authCompanyName")?.value || "");
       if (!email || !password) return showToast("Escribe correo y contraseña.");
       if (password.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres.");
 
       try {
-        await auth.createUserWithEmailAndPassword(email, password);
-        showToast("Cuenta creada correctamente.");
+        sessionStorage.setItem("register_name", name);
+        sessionStorage.setItem("register_company", companyName);
+        const credential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = credential.user;
+        const accessSnap = await db.collection("teamAccess").doc(emailDocId(email)).get();
+        const isInvited = accessSnap.exists && accessSnap.data()?.active !== false;
+        const isSuper = SUPERADMIN_EMAILS.includes(normalizedEmail(email));
+        const status = isSuper || isInvited ? "active" : "pending";
+        const appRole = isSuper ? "superadmin" : (isInvited ? "employee" : "owner");
+
+        await db.collection("platformUsers").doc(user.uid).set({
+          uid: user.uid,
+          email: normalizedEmail(email),
+          name,
+          companyName,
+          status,
+          appRole,
+          workspaceRole: isInvited ? "employee" : "owner",
+          ownerId: isInvited ? cleanText(accessSnap.data()?.ownerId || "") : user.uid,
+          ownerEmail: isInvited ? cleanText(accessSnap.data()?.ownerEmail || accessSnap.data()?.workspaceOwnerEmail || "") : normalizedEmail(email),
+          invited: isInvited,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        if (!isInvited) {
+          await db.collection("platformWorkspaces").doc(user.uid).set({
+            ownerUid: user.uid,
+            ownerEmail: normalizedEmail(email),
+            companyName: companyName || email,
+            status,
+            plan: "starter",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+
+        showToast(isInvited ? "Cuenta creada y ligada al espacio compartido." : "Cuenta creada correctamente. Ya quedó registrada en la plataforma.");
       } catch (error) {
         console.error(error);
         if (error.code === "auth/email-already-in-use") {
@@ -147,12 +204,23 @@
     }
     async function handleSignedIn(user) {
       await resolveWorkspaceAccess(user);
+      if (state.currentPlatformStatus === "blocked" && !isSuperAdmin()) {
+        $("authScreen").classList.add("hidden");
+        $("appScreen").classList.add("hidden");
+        $("accessStatusTitle").textContent = "Cuenta bloqueada";
+        $("accessStatusText").textContent = "Tu cuenta fue bloqueada temporalmente. Contacta al administrador de la app para reactivarla.";
+        $("accessStatusScreen").classList.remove("hidden");
+        return;
+      }
+
       $("activeUserEmail").textContent = state.userEmail;
       $("authScreen").classList.add("hidden");
+      $("accessStatusScreen").classList.add("hidden");
       $("appScreen").classList.remove("hidden");
       bindRealtime();
-      setView(canManageUsers() && state.currentView === "usuarios" ? "usuarios" : "dashboard");
+      setView(isSuperAdmin() && state.currentView === "cuentascrm" ? "cuentascrm" : (canManageUsers() && state.currentView === "usuarios" ? "usuarios" : "dashboard"));
       applyPermissionUi();
+      if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
     }
     function handleSignedOut() {
       clearUnsubscribers();
@@ -161,6 +229,12 @@
       state.userEmail = "";
       state.currentUserRole = "owner";
       state.currentWorkspaceOwnerEmail = "";
+      state.currentModulePermissions = {};
+      state.isSuperAdmin = false;
+      state.currentPlatformStatus = "active";
+      state.currentWorkspaceStatus = "active";
+      state.platformUsers = [];
+      state.platformWorkspaces = [];
       state.clients = [];
       state.jobs = [];
       state.expenses = [];
@@ -172,6 +246,7 @@
       state.teamMembers = [];
       state.galleryIndex = 0;
       state.galleryJobId = null;
+      $("accessStatusScreen")?.classList.add("hidden");
       $("authScreen").classList.remove("hidden");
       $("appScreen").classList.add("hidden");
     }

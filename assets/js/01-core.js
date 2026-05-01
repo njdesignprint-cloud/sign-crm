@@ -30,6 +30,11 @@
       currentUserRole: "owner",
       currentWorkspaceOwnerEmail: "",
       currentModulePermissions: {},
+      isSuperAdmin: false,
+      currentPlatformStatus: "active",
+      currentWorkspaceStatus: "active",
+      platformUsers: [],
+      platformWorkspaces: [],
       currentView: "dashboard",
       clients: [],
       jobs: [],
@@ -63,6 +68,8 @@
     const $ = (id) => document.getElementById(id);
     const today = () => new Date().toISOString().slice(0, 10);
     const cleanText = (value) => String(value || "").trim();
+    const normalizedEmail = (value) => cleanText(value).toLowerCase();
+    const emailDocId = (value) => normalizedEmail(value).replace(/[^a-z0-9]/g, "_");
     const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const safe = (value) => String(value || "")
       .replace(/&/g, "&amp;")
@@ -70,6 +77,8 @@
       .replace(/>/g, "&gt;")
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
+
+    const SUPERADMIN_EMAILS = [normalizedEmail(COMPANY.email), normalizedEmail("njdesignprint@gmail.com")];
 
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
@@ -82,10 +91,12 @@
       compras: ["Compras", "Órdenes de compra y recepción de materiales."],
       instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
-      usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."]
+      usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
+      cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     };
 
     const STATUS_FLOW = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Cancelado"];
+    const PLATFORM_ACCOUNT_STATUSES = ["pending", "active", "blocked"];
     const KANBAN_STATUSES = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
 
@@ -316,7 +327,7 @@
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
       if (view === "compras") btnNew.textContent = "+ Nueva orden";
       if (view === "usuarios") btnNew.textContent = "+ Nuevo usuario";
-      if (!canEditModule(view) || view === "produccion") btnNew.classList.add("hidden");
+      if (!canEditModule(view) || ["produccion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
     }
@@ -331,10 +342,12 @@
     }
     function openModal(id) { $(id).classList.add("show"); }
     function closeModal(id) { $(id).classList.remove("show"); }
-    function normalizedEmail(value) { return cleanText(value).toLowerCase(); }
-    function emailDocId(email) { return encodeURIComponent(normalizedEmail(email)); }
     function userRef() { return db.collection("users").doc(state.accountOwnerId || state.uid); }
     function ownUserRootRef() { return db.collection("users").doc(state.uid); }
+    function platformUsersRef() { return db.collection("platformUsers"); }
+    function platformUserRef(uid = state.uid) { return platformUsersRef().doc(uid); }
+    function platformWorkspacesRef() { return db.collection("platformWorkspaces"); }
+    function platformWorkspaceRef(uid = state.accountOwnerId || state.uid) { return platformWorkspacesRef().doc(uid); }
     function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
     function clientsRef() { return userRef().collection("clients"); }
     function jobsRef() { return userRef().collection("jobs"); }
@@ -447,9 +460,20 @@
       return ALL_PERMISSION_MODULES.map(module => `${moduleLabel(module)}: ${permissionLabel(perms[module], module)}`).join(" · ");
     }
     function isOwner() { return state.currentUserRole === "owner"; }
+    function isSuperAdmin() { return !!state.isSuperAdmin; }
     function isAdmin() { return isOwner() || getCurrentModulePermission("usuarios") === "manage"; }
+    function platformStatusLabel(status = "") {
+      return { pending: "Pendiente", active: "Activa", blocked: "Bloqueada" }[cleanText(status)] || "Pendiente";
+    }
+    function platformStatusClass(status = "") {
+      return { pending: "st-diseno", active: "st-aprobado", blocked: "st-cancelado" }[cleanText(status)] || "st-diseno";
+    }
+    function platformStatusPill(status = "") {
+      return `<span class="pill ${platformStatusClass(status)}">${safe(platformStatusLabel(status))}</span>`;
+    }
     function canViewModule(module = state.currentView) {
       if (module === "dashboard") return true;
+      if (module === "cuentascrm") return isSuperAdmin();
       if (module === "reportes") return isAdmin();
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
@@ -457,14 +481,14 @@
         : ["view", "edit", "delete"].includes(level);
     }
     function canEditModule(module = state.currentView) {
-      if (module === "dashboard" || module === "reportes") return false;
+      if (["dashboard", "reportes", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
         ? level === "manage"
         : ["edit", "delete"].includes(level);
     }
     function canDeleteModule(module = state.currentView) {
-      if (module === "dashboard" || module === "reportes") return false;
+      if (["dashboard", "reportes", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios" ? level === "manage" : level === "delete";
     }
@@ -511,9 +535,14 @@
     }
     function applyPermissionUi() {
       const roleEl = $("activeWorkspaceRole");
-      if (roleEl) roleEl.textContent = `Rol: ${roleLabel(state.currentUserRole)}`;
+      if (roleEl) {
+        const extra = state.isSuperAdmin ? " · Super Admin" : "";
+        roleEl.textContent = `Rol: ${roleLabel(state.currentUserRole)}${extra}`;
+      }
       const ownerEl = $("activeWorkspaceOwner");
       if (ownerEl) ownerEl.textContent = `Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`;
+      const statusEl = $("activeWorkspaceStatus");
+      if (statusEl) statusEl.innerHTML = `Cuenta: ${platformStatusPill(state.currentPlatformStatus || "active")}`;
 
       document.querySelectorAll('.nav button[data-view]').forEach(btn => {
         const view = btn.dataset.view;
@@ -530,7 +559,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = ["dashboard", "produccion"].includes(state.currentView) || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 
@@ -584,6 +613,17 @@
       state.currentUserRole = "owner";
       state.currentWorkspaceOwnerEmail = state.userEmail || "";
       state.currentModulePermissions = defaultModulePermissionsForRole("owner");
+      state.isSuperAdmin = SUPERADMIN_EMAILS.includes(normalizedEmail(state.userEmail));
+      state.currentPlatformStatus = state.isSuperAdmin ? "active" : "pending";
+      state.currentWorkspaceStatus = state.currentPlatformStatus;
+
+      let ownRootExists = false;
+      try {
+        const ownSnap = await ownUserRootRef().get();
+        ownRootExists = ownSnap.exists;
+      } catch (error) {
+        console.error(error);
+      }
 
       const ownPayload = {
         email: normalizedEmail(state.userEmail),
@@ -597,31 +637,88 @@
         console.error(error);
       }
 
-      if (!state.currentModulePermissions || !Object.keys(state.currentModulePermissions).length) {
-        state.currentModulePermissions = defaultModulePermissionsForRole(state.currentUserRole || "employee");
-      }
-
+      let invitedAccess = null;
       try {
         const accessSnap = await teamAccessRefByEmail(state.userEmail).get();
-        if (accessSnap.exists) {
-          const access = accessSnap.data() || {};
-          if (access.active !== false && cleanText(access.ownerId)) {
-            state.accountOwnerId = cleanText(access.ownerId);
-            state.currentUserRole = state.accountOwnerId === state.uid ? "owner" : (cleanText(access.role) || "employee");
-            state.currentWorkspaceOwnerEmail = cleanText(access.ownerEmail) || cleanText(access.workspaceOwnerEmail) || state.currentWorkspaceOwnerEmail;
-            state.currentModulePermissions = normalizeModulePermissions(access);
-          }
-        }
+        if (accessSnap.exists) invitedAccess = accessSnap.data() || {};
       } catch (error) {
         console.error(error);
       }
 
+      let platformAccount = null;
+      try {
+        const platformSnap = await platformUserRef(user.uid).get();
+        if (platformSnap.exists) platformAccount = platformSnap.data() || {};
+      } catch (error) {
+        console.error(error);
+      }
+
+      if (invitedAccess && invitedAccess.active !== false && cleanText(invitedAccess.ownerId)) {
+        state.accountOwnerId = cleanText(invitedAccess.ownerId);
+        state.currentUserRole = state.accountOwnerId === state.uid ? "owner" : (cleanText(invitedAccess.role) || "employee");
+        state.currentWorkspaceOwnerEmail = cleanText(invitedAccess.ownerEmail) || cleanText(invitedAccess.workspaceOwnerEmail) || state.currentWorkspaceOwnerEmail;
+        state.currentModulePermissions = normalizeModulePermissions(invitedAccess);
+        state.currentPlatformStatus = cleanText(platformAccount?.status || "active") || "active";
+      } else if (platformAccount) {
+        state.currentPlatformStatus = cleanText(platformAccount.status || (state.isSuperAdmin ? "active" : (ownRootExists ? "active" : "pending"))) || "pending";
+        state.currentUserRole = cleanText(platformAccount.workspaceRole || platformAccount.appRole || state.currentUserRole) || state.currentUserRole;
+      } else {
+        state.currentPlatformStatus = state.isSuperAdmin ? "active" : (ownRootExists ? "active" : "pending");
+      }
+
       if (!state.currentModulePermissions || !Object.keys(state.currentModulePermissions).length) {
         state.currentModulePermissions = defaultModulePermissionsForRole(state.currentUserRole || "employee");
       }
 
+      const storedName = cleanText(sessionStorage.getItem("register_name") || "");
+      const storedCompany = cleanText(sessionStorage.getItem("register_company") || "");
+      const basePlatformPayload = {
+        uid: user.uid,
+        email: normalizedEmail(state.userEmail),
+        name: cleanText(platformAccount?.name || user.displayName || storedName),
+        companyName: cleanText(platformAccount?.companyName || storedCompany),
+        appRole: state.isSuperAdmin ? "superadmin" : (invitedAccess ? "employee" : "owner"),
+        workspaceRole: state.currentUserRole,
+        ownerId: state.accountOwnerId,
+        ownerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
+        status: state.currentPlatformStatus || "pending",
+        invited: !!invitedAccess,
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
       try {
-        if (state.accountOwnerId !== state.uid) {
+        await platformUserRef(user.uid).set({
+          ...basePlatformPayload,
+          createdAt: platformAccount?.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (error) {
+        console.error(error);
+      }
+
+      if (state.accountOwnerId === state.uid) {
+        try {
+          const existingWorkspaceSnap = await platformWorkspaceRef(user.uid).get();
+          const existingWorkspace = existingWorkspaceSnap.exists ? (existingWorkspaceSnap.data() || {}) : {};
+          const companyName = cleanText(existingWorkspace.companyName || basePlatformPayload.companyName || state.userEmail || "Mi empresa");
+          state.currentWorkspaceStatus = cleanText(existingWorkspace.status || state.currentPlatformStatus || "pending") || "pending";
+          await platformWorkspaceRef(user.uid).set({
+            ownerUid: user.uid,
+            ownerEmail: normalizedEmail(state.userEmail),
+            companyName,
+            status: state.currentWorkspaceStatus,
+            plan: cleanText(existingWorkspace.plan || "starter"),
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdAt: existingWorkspace.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      if (state.accountOwnerId !== state.uid) {
+        try {
           const teamDocId = emailDocId(state.userEmail);
           const loginPayload = {
             lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -632,9 +729,9 @@
           };
           await teamMembersRef().doc(teamDocId).set(loginPayload, { merge: true });
           await teamAccessRefByEmail(state.userEmail).set(loginPayload, { merge: true });
+        } catch (error) {
+          console.error(error);
         }
-      } catch (error) {
-        console.error(error);
       }
     }
     function clearUnsubscribers() {

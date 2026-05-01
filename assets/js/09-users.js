@@ -207,3 +207,76 @@
         showToast("No se pudo quitar el acceso.");
       }
     }
+
+
+    function getWorkspaceByOwnerId(ownerId = "") {
+      return state.platformWorkspaces.find(item => cleanText(item.ownerUid || item.id) === cleanText(ownerId)) || null;
+    }
+    function getFilteredPlatformAccounts() {
+      const q = normalizeMatchText($("platformAccountSearch")?.value);
+      const statusFilter = cleanText($("platformAccountStatusFilter")?.value);
+      return state.platformUsers.filter(item => {
+        const workspace = getWorkspaceByOwnerId(item.ownerId || item.uid || item.id);
+        const bag = normalizeMatchText(`${item.name || ""} ${item.email || ""} ${item.companyName || ""} ${workspace?.companyName || ""} ${item.appRole || ""} ${item.status || ""}`);
+        const okText = !q || bag.includes(q);
+        const okStatus = !statusFilter || cleanText(item.status) === statusFilter;
+        return okText && okStatus;
+      }).slice().sort((a, b) => String(b.createdAt?.seconds || 0).localeCompare(String(a.createdAt?.seconds || 0)));
+    }
+    function renderPlatformAccounts() {
+      const tbody = $("platformAccountsBody");
+      if (!tbody) return;
+      const rows = getFilteredPlatformAccounts();
+      const allRows = state.platformUsers.slice();
+      $("platformAccountsTotalCount").textContent = String(allRows.length);
+      $("platformAccountsPendingCount").textContent = String(allRows.filter(item => cleanText(item.status) === "pending").length);
+      $("platformAccountsActiveCount").textContent = String(allRows.filter(item => cleanText(item.status) === "active").length);
+      $("platformAccountsBlockedCount").textContent = String(allRows.filter(item => cleanText(item.status) === "blocked").length);
+      $("platformAccountsEmpty").classList.toggle("hidden", rows.length > 0);
+
+      tbody.innerHTML = rows.map(item => {
+        const workspace = getWorkspaceByOwnerId(item.ownerId || item.uid || item.id);
+        const isSuper = cleanText(item.appRole) === "superadmin";
+        return `
+          <tr>
+            <td><strong>${safe(item.companyName || workspace?.companyName || item.email || "-")}</strong><br><small>${safe(item.uid || item.id || "-")}</small></td>
+            <td>${safe(item.name || "-")}</td>
+            <td>${safe(item.email || "-")}</td>
+            <td>${safe(roleLabel(item.workspaceRole || (item.appRole === "owner" ? "owner" : "employee")))}</td>
+            <td>${platformStatusPill(item.status || "pending")}</td>
+            <td>${safe(formatDateTime(item.lastLoginAt))}</td>
+            <td>${safe(formatDateTime(item.createdAt))}</td>
+            <td>
+              <div class="actions-row">
+                ${!isSuper ? `<button class="btn btn-info btn-small" data-platform-status="${item.uid || item.id}" data-next-status="active">Activar</button>` : ""}
+                ${!isSuper ? `<button class="btn btn-secondary btn-small" data-platform-status="${item.uid || item.id}" data-next-status="pending">Pendiente</button>` : ""}
+                ${!isSuper ? `<button class="btn btn-danger btn-small" data-platform-status="${item.uid || item.id}" data-next-status="blocked">Bloquear</button>` : ""}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+    async function updatePlatformAccountStatus(uid, status) {
+      if (!isSuperAdmin()) return showToast("Solo el superadmin puede cambiar el estado de cuentas.");
+      if (!uid || !PLATFORM_ACCOUNT_STATUSES.includes(cleanText(status))) return;
+      const account = state.platformUsers.find(item => cleanText(item.uid || item.id) === cleanText(uid));
+      if (!account) return showToast("No se encontró la cuenta.");
+      try {
+        await platformUserRef(uid).set({
+          status,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        const ownerId = cleanText(account.ownerId || account.uid || account.id);
+        if (ownerId === cleanText(uid)) {
+          await platformWorkspaceRef(ownerId).set({
+            status,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+        showToast(`Cuenta ${platformStatusLabel(status).toLowerCase()}.`);
+      } catch (error) {
+        console.error(error);
+        showToast("No se pudo cambiar el estado de la cuenta.");
+      }
+    }
