@@ -471,6 +471,14 @@
     function platformStatusPill(status = "") {
       return `<span class="pill ${platformStatusClass(status)}">${safe(platformStatusLabel(status))}</span>`;
     }
+    function mergeAccessStatuses(accountStatus = "", workspaceStatus = "") {
+      const account = cleanText(accountStatus || "");
+      const workspace = cleanText(workspaceStatus || "");
+      if (account === "blocked" || workspace === "blocked") return "blocked";
+      if (account === "pending" || workspace === "pending") return "pending";
+      return "active";
+    }
+
     function canViewModule(module = state.currentView) {
       if (module === "dashboard") return true;
       if (module === "cuentascrm") return isSuperAdmin();
@@ -542,7 +550,14 @@
       const ownerEl = $("activeWorkspaceOwner");
       if (ownerEl) ownerEl.textContent = `Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`;
       const statusEl = $("activeWorkspaceStatus");
-      if (statusEl) statusEl.innerHTML = `Cuenta: ${platformStatusPill(state.currentPlatformStatus || "active")}`;
+      if (statusEl) {
+        const accountStatus = platformStatusPill(state.currentPlatformStatus || "active");
+        const workspaceStatus = platformStatusPill(state.currentWorkspaceStatus || state.currentPlatformStatus || "active");
+        const sameStatus = cleanText(state.currentWorkspaceStatus || state.currentPlatformStatus) === cleanText(state.currentPlatformStatus || "active");
+        statusEl.innerHTML = sameStatus
+          ? `Cuenta: ${accountStatus}`
+          : `Cuenta: ${accountStatus} · Espacio: ${workspaceStatus}`;
+      }
 
       document.querySelectorAll('.nav button[data-view]').forEach(btn => {
         const view = btn.dataset.view;
@@ -658,12 +673,8 @@
         state.currentUserRole = state.accountOwnerId === state.uid ? "owner" : (cleanText(invitedAccess.role) || "employee");
         state.currentWorkspaceOwnerEmail = cleanText(invitedAccess.ownerEmail) || cleanText(invitedAccess.workspaceOwnerEmail) || state.currentWorkspaceOwnerEmail;
         state.currentModulePermissions = normalizeModulePermissions(invitedAccess);
-        state.currentPlatformStatus = cleanText(platformAccount?.status || "active") || "active";
       } else if (platformAccount) {
-        state.currentPlatformStatus = cleanText(platformAccount.status || (state.isSuperAdmin ? "active" : (ownRootExists ? "active" : "pending"))) || "pending";
         state.currentUserRole = cleanText(platformAccount.workspaceRole || platformAccount.appRole || state.currentUserRole) || state.currentUserRole;
-      } else {
-        state.currentPlatformStatus = state.isSuperAdmin ? "active" : (ownRootExists ? "active" : "pending");
       }
 
       if (!state.currentModulePermissions || !Object.keys(state.currentModulePermissions).length) {
@@ -672,11 +683,29 @@
 
       const storedName = cleanText(sessionStorage.getItem("register_name") || "");
       const storedCompany = cleanText(sessionStorage.getItem("register_company") || "");
+      const baseAccountStatus = cleanText(platformAccount?.status || (state.isSuperAdmin ? "active" : (ownRootExists ? "active" : "pending"))) || "pending";
+
+      let workspaceDoc = null;
+      try {
+        const workspaceSnap = await platformWorkspaceRef(state.accountOwnerId).get();
+        if (workspaceSnap.exists) workspaceDoc = workspaceSnap.data() || {};
+      } catch (error) {
+        console.error(error);
+      }
+
+      const baseWorkspaceStatus = cleanText(
+        workspaceDoc?.status ||
+        (state.accountOwnerId === state.uid ? baseAccountStatus : "active")
+      ) || "active";
+
+      state.currentWorkspaceStatus = baseWorkspaceStatus;
+      state.currentPlatformStatus = state.isSuperAdmin ? "active" : mergeAccessStatuses(baseAccountStatus, baseWorkspaceStatus);
+
       const basePlatformPayload = {
         uid: user.uid,
         email: normalizedEmail(state.userEmail),
         name: cleanText(platformAccount?.name || user.displayName || storedName),
-        companyName: cleanText(platformAccount?.companyName || storedCompany),
+        companyName: cleanText(platformAccount?.companyName || workspaceDoc?.companyName || storedCompany),
         appRole: state.isSuperAdmin ? "superadmin" : (invitedAccess ? "employee" : "owner"),
         workspaceRole: state.currentUserRole,
         ownerId: state.accountOwnerId,
@@ -684,6 +713,7 @@
         status: state.currentPlatformStatus || "pending",
         invited: !!invitedAccess,
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -698,19 +728,17 @@
 
       if (state.accountOwnerId === state.uid) {
         try {
-          const existingWorkspaceSnap = await platformWorkspaceRef(user.uid).get();
-          const existingWorkspace = existingWorkspaceSnap.exists ? (existingWorkspaceSnap.data() || {}) : {};
-          const companyName = cleanText(existingWorkspace.companyName || basePlatformPayload.companyName || state.userEmail || "Mi empresa");
-          state.currentWorkspaceStatus = cleanText(existingWorkspace.status || state.currentPlatformStatus || "pending") || "pending";
+          const companyName = cleanText(workspaceDoc?.companyName || basePlatformPayload.companyName || state.userEmail || "Mi empresa");
           await platformWorkspaceRef(user.uid).set({
             ownerUid: user.uid,
             ownerEmail: normalizedEmail(state.userEmail),
             companyName,
             status: state.currentWorkspaceStatus,
-            plan: cleanText(existingWorkspace.plan || "starter"),
+            plan: cleanText(workspaceDoc?.plan || "starter"),
             lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            createdAt: existingWorkspace.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: workspaceDoc?.createdAt || firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
         } catch (error) {
           console.error(error);
@@ -722,6 +750,7 @@
           const teamDocId = emailDocId(state.userEmail);
           const loginPayload = {
             lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
             lastLoginEmail: normalizedEmail(state.userEmail),
             active: true,
             ownerId: state.accountOwnerId,

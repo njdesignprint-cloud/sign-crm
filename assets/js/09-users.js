@@ -217,7 +217,7 @@
       const statusFilter = cleanText($("platformAccountStatusFilter")?.value);
       return state.platformUsers.filter(item => {
         const workspace = getWorkspaceByOwnerId(item.ownerId || item.uid || item.id);
-        const bag = normalizeMatchText(`${item.name || ""} ${item.email || ""} ${item.companyName || ""} ${workspace?.companyName || ""} ${item.appRole || ""} ${item.status || ""}`);
+        const bag = normalizeMatchText(`${item.name || ""} ${item.email || ""} ${item.companyName || ""} ${workspace?.companyName || ""} ${item.appRole || ""} ${item.status || ""} ${workspace?.status || ""}`);
         const okText = !q || bag.includes(q);
         const okStatus = !statusFilter || cleanText(item.status) === statusFilter;
         return okText && okStatus;
@@ -237,14 +237,19 @@
       tbody.innerHTML = rows.map(item => {
         const workspace = getWorkspaceByOwnerId(item.ownerId || item.uid || item.id);
         const isSuper = cleanText(item.appRole) === "superadmin";
+        const workspaceStatus = cleanText(workspace?.status || item.status || "pending") || "pending";
+        const companyLabel = item.companyName || workspace?.companyName || item.email || "-";
+        const workspaceLabel = cleanText(item.invited) ? "Miembro invitado" : safe(workspace?.plan || "starter");
         return `
           <tr>
-            <td><strong>${safe(item.companyName || workspace?.companyName || item.email || "-")}</strong><br><small>${safe(item.uid || item.id || "-")}</small></td>
+            <td><strong>${safe(companyLabel)}</strong><br><small>${safe(item.uid || item.id || "-")}</small></td>
             <td>${safe(item.name || "-")}</td>
             <td>${safe(item.email || "-")}</td>
-            <td>${safe(roleLabel(item.workspaceRole || (item.appRole === "owner" ? "owner" : "employee")))}</td>
+            <td>${safe(roleLabel(item.workspaceRole || (item.appRole === "owner" ? "owner" : "employee")))}<br><small>${workspaceLabel}</small></td>
             <td>${platformStatusPill(item.status || "pending")}</td>
+            <td>${platformStatusPill(workspaceStatus)}</td>
             <td>${safe(formatDateTime(item.lastLoginAt))}</td>
+            <td>${safe(formatDateTime(item.lastSeenAt || item.lastLoginAt))}</td>
             <td>${safe(formatDateTime(item.createdAt))}</td>
             <td>
               <div class="actions-row">
@@ -263,16 +268,22 @@
       const account = state.platformUsers.find(item => cleanText(item.uid || item.id) === cleanText(uid));
       if (!account) return showToast("No se encontró la cuenta.");
       try {
-        await platformUserRef(uid).set({
+        const patch = {
           status,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        };
+        if (status === "active") patch.approvedAt = firebase.firestore.FieldValue.serverTimestamp();
+        if (status === "blocked") patch.blockedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await platformUserRef(uid).set(patch, { merge: true });
         const ownerId = cleanText(account.ownerId || account.uid || account.id);
         if (ownerId === cleanText(uid)) {
-          await platformWorkspaceRef(ownerId).set({
+          const workspacePatch = {
             status,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
+          };
+          if (status === "active") workspacePatch.approvedAt = firebase.firestore.FieldValue.serverTimestamp();
+          if (status === "blocked") workspacePatch.blockedAt = firebase.firestore.FieldValue.serverTimestamp();
+          await platformWorkspaceRef(ownerId).set(workspacePatch, { merge: true });
         }
         showToast(`Cuenta ${platformStatusLabel(status).toLowerCase()}.`);
       } catch (error) {

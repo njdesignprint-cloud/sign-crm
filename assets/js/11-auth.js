@@ -102,6 +102,55 @@
 
       state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
+
+    function showAccessStatus(title, text) {
+      $("authScreen").classList.add("hidden");
+      $("appScreen").classList.add("hidden");
+      $("accessStatusTitle").textContent = title;
+      $("accessStatusText").textContent = text;
+      $("accessStatusScreen").classList.remove("hidden");
+    }
+
+    async function persistLoginPresence() {
+      if (!state.uid) return;
+      try {
+        await platformUserRef(state.uid).set({
+          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (error) {
+        console.error(error);
+      }
+
+      if (state.accountOwnerId && state.accountOwnerId === state.uid) {
+        try {
+          await platformWorkspaceRef(state.accountOwnerId).set({
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      if (state.accountOwnerId && state.accountOwnerId !== state.uid) {
+        const teamDocId = emailDocId(state.userEmail);
+        const presencePatch = {
+          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+          await teamMembersRef().doc(teamDocId).set(presencePatch, { merge: true });
+          await teamAccessRefByEmail(state.userEmail).set(presencePatch, { merge: true });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+
     async function login() {
       const email = cleanText($("authEmail").value);
       const password = cleanText($("authPassword").value);
@@ -131,13 +180,19 @@
       if (password.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres.");
 
       try {
+        const accessSnap = await db.collection("teamAccess").doc(emailDocId(email)).get();
+        const isInvited = accessSnap.exists && accessSnap.data()?.active !== false;
+        const isSuper = SUPERADMIN_EMAILS.includes(normalizedEmail(email));
+
+        if (!isInvited && !isSuper) {
+          if (!name) return showToast("Escribe tu nombre completo para crear la cuenta.");
+          if (!companyName) return showToast("Escribe el nombre de tu empresa para crear la cuenta.");
+        }
+
         sessionStorage.setItem("register_name", name);
         sessionStorage.setItem("register_company", companyName);
         const credential = await auth.createUserWithEmailAndPassword(email, password);
         const user = credential.user;
-        const accessSnap = await db.collection("teamAccess").doc(emailDocId(email)).get();
-        const isInvited = accessSnap.exists && accessSnap.data()?.active !== false;
-        const isSuper = SUPERADMIN_EMAILS.includes(normalizedEmail(email));
         const status = isSuper || isInvited ? "active" : "pending";
         const appRole = isSuper ? "superadmin" : (isInvited ? "employee" : "owner");
 
@@ -152,9 +207,13 @@
           ownerId: isInvited ? cleanText(accessSnap.data()?.ownerId || "") : user.uid,
           ownerEmail: isInvited ? cleanText(accessSnap.data()?.ownerEmail || accessSnap.data()?.workspaceOwnerEmail || "") : normalizedEmail(email),
           invited: isInvited,
+          requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          approvedAt: status === "active" ? firebase.firestore.FieldValue.serverTimestamp() : null,
+          blockedAt: null,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastSeenAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         if (!isInvited) {
@@ -164,13 +223,19 @@
             companyName: companyName || email,
             status,
             plan: "starter",
+            requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            approvedAt: status === "active" ? firebase.firestore.FieldValue.serverTimestamp() : null,
+            blockedAt: null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSeenAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
         }
 
-        showToast(isInvited ? "Cuenta creada y ligada al espacio compartido." : "Cuenta creada correctamente. Ya quedó registrada en la plataforma.");
+        showToast(isInvited
+          ? "Cuenta creada y ligada al espacio compartido."
+          : "Cuenta creada. Quedó pendiente de activación en Cuentas CRM.");
       } catch (error) {
         console.error(error);
         if (error.code === "auth/email-already-in-use") {
@@ -204,14 +269,19 @@
     }
     async function handleSignedIn(user) {
       await resolveWorkspaceAccess(user);
-      if (state.currentPlatformStatus === "blocked" && !isSuperAdmin()) {
-        $("authScreen").classList.add("hidden");
-        $("appScreen").classList.add("hidden");
-        $("accessStatusTitle").textContent = "Cuenta bloqueada";
-        $("accessStatusText").textContent = "Tu cuenta fue bloqueada temporalmente. Contacta al administrador de la app para reactivarla.";
-        $("accessStatusScreen").classList.remove("hidden");
-        return;
+
+      if (!isSuperAdmin()) {
+        if (state.currentPlatformStatus === "blocked") {
+          showAccessStatus("Cuenta bloqueada", "Tu cuenta fue bloqueada temporalmente. Contacta al administrador de la app para reactivarla.");
+          return;
+        }
+        if (state.currentPlatformStatus === "pending") {
+          showAccessStatus("Cuenta pendiente", "Tu registro ya quedó creado. Entra un superadmin a Cuentas CRM y activa tu cuenta para poder usar la app.");
+          return;
+        }
       }
+
+      await persistLoginPresence();
 
       $("activeUserEmail").textContent = state.userEmail;
       $("authScreen").classList.add("hidden");
