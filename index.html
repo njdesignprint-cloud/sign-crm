@@ -22,8 +22,6 @@
       <div class="auth-sub">CRM privado fase 7 con estimador rápido por tipo de trabajo y rentabilidad completa.</div>
 
       <div class="stack">
-        <input id="authFullName" class="input" type="text" placeholder="Nombre completo (al crear cuenta)" />
-        <input id="authCompanyName" class="input" type="text" placeholder="Empresa (al crear cuenta)" />
         <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
         <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
       </div>
@@ -36,17 +34,8 @@
       <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
 
       <div class="help">
-        Esta versión usa Firebase Authentication y Firestore. Si creas una cuenta nueva, quedará pendiente hasta que el superadmin la active en Cuentas CRM.
+        Esta versión usa Firebase Authentication y Firestore. No necesita Firebase Storage.
       </div>
-    </div>
-  </section>
-
-  <section id="accessStatusScreen" class="auth-wrap hidden">
-    <div class="auth-card">
-      <div class="logo">NJ <span>Design & Print</span></div>
-      <div class="auth-sub" id="accessStatusTitle">Estado de la cuenta</div>
-      <div class="help" id="accessStatusText">Tu cuenta no puede entrar en este momento.</div>
-      <button id="btnStatusLogout" class="btn btn-secondary full mt-12">Volver</button>
     </div>
   </section>
 
@@ -56,41 +45,34 @@
         <div class="brand">NJ <span>Design & Print</span></div>
         <div class="brand-sub">Fase 8 segura: inventario profesional integrado visualmente con trabajos, sin descuento automático todavía.</div>
 
-       <div class="nav">
-  <div class="layout-sidebar-group-title">OPERACIÓN</div>
+        <div class="nav">
+          <div class="nav-group-label">Operación</div>
+          <button class="active" data-view="dashboard">📊 Dashboard</button>
+          <button data-view="trabajos">🛠️ Trabajos</button>
+          <button data-view="produccion">🏭 Producción</button>
+          <button data-view="instalaciones">🗓️ Instalación</button>
 
-  <button class="active" data-view="dashboard">📊 Dashboard</button>
-  <button data-view="clientes">👥 Clientes</button>
-  <button data-view="trabajos">🛠️ Trabajos</button>
-  <button data-view="produccion">🏭 Producción</button>
-  <button data-view="instalaciones">🗓️ Instalación</button>
+          <div class="nav-group-label">Comercial</div>
+          <button data-view="clientes">👥 Clientes</button>
 
-  <div class="layout-sidebar-divider"></div>
-  <div class="layout-sidebar-group-title">MATERIALES Y COMPRAS</div>
+          <div class="nav-group-label">Materiales y compras</div>
+          <button data-view="inventario">📦 Inventario</button>
+          <button data-view="proveedores">🏭 Proveedores</button>
+          <button data-view="compras">🧾 Compras</button>
 
-  <button data-view="inventario">📦 Inventario</button>
-  <button data-view="proveedores">🏭 Proveedores</button>
-  <button data-view="compras">🧾 Compras</button>
+          <div class="nav-group-label">Finanzas</div>
+          <button data-view="gastos">💸 Gastos</button>
+          <button data-view="reportes">📈 Reportes</button>
 
-  <div class="layout-sidebar-divider"></div>
-  <div class="layout-sidebar-group-title">FINANZAS</div>
-
-  <button data-view="gastos">💸 Gastos</button>
-  <button data-view="reportes">📈 Reportes</button>
-
-  <div class="layout-sidebar-divider"></div>
-  <div class="layout-sidebar-group-title">ADMINISTRACIÓN</div>
-
-  <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
-  <button data-view="cuentascrm" id="navCuentasCrmBtn">🧩 Cuentas CRM</button>
-</div>
+          <div class="nav-group-label">Administración</div>
+          <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
+        </div>
 
         <div class="sidebar-foot">
           <div class="user-chip">
             Usuario activo:<br><strong id="activeUserEmail">-</strong><br>
             <span id="activeWorkspaceRole">Rol: -</span><br>
-            <span id="activeWorkspaceOwner">Espacio: -</span><br>
-            <span id="activeWorkspaceStatus">Cuenta: -</span>
+            <span id="activeWorkspaceOwner">Espacio: -</span>
           </div>
           <button id="btnLogout" class="btn btn-secondary">Cerrar sesión</button>
         </div>
@@ -112,14 +94,32 @@
           </div>
         </div>
 
-        
         <section id="view-dashboard" class="view">
-          <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-head">
+              <div>
+                <h2>Período del dashboard</h2>
+                <div id="dashboardPeriodNote" class="section-note">Resumen del período seleccionado.</div>
+              </div>
+              <div class="filters">
+                <select id="dashboardPeriod" class="select">
+                  <option value="last30" selected>Últimos 30 días</option>
+                  <option value="thisMonth">Este mes</option>
+                  <option value="lastMonth">Mes pasado</option>
+                  <option value="thisYear">Año actual</option>
+                </select>
+              </div>
+            </div>
+            <div id="dashboardPeriodHint" class="section-note" style="padding:0 18px 16px;">
+              Así el dashboard no se verá vacío solo porque empezó un mes nuevo.
+            </div>
+          </div>
+
           <div class="stats">
-            <div class="stat"><div class="label">Ventas del mes</div><div id="mSales" class="value brand-text">$0.00</div></div>
-            <div class="stat"><div class="label">Cobrado del mes</div><div id="mCollected" class="value info-text">$0.00</div></div>
-            <div class="stat"><div class="label">Gastos del mes</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
-            <div class="stat"><div class="label">Ganancia neta mes</div><div id="mProfit" class="value ok-text">$0.00</div></div>
+            <div class="stat"><div id="dashSalesLabel" class="label">Ventas del período</div><div id="mSales" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div id="dashCollectedLabel" class="label">Cobrado del período</div><div id="mCollected" class="value info-text">$0.00</div></div>
+            <div class="stat"><div id="dashExpensesLabel" class="label">Gastos del período</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div id="dashProfitLabel" class="label">Ganancia neta</div><div id="mProfit" class="value ok-text">$0.00</div></div>
           </div>
 
           <div class="section-note" style="margin-bottom:10px;">Alertas rápidas</div>
@@ -128,25 +128,21 @@
               <div class="label">Entregas hoy</div>
               <div id="dueTodayCount" class="value info-text">0</div>
             </div>
+            <div class="alert-card alert-cobro">
+              <div class="label">Cobros pendientes</div>
+              <div id="pendingPaymentsCount" class="value warn-text">0</div>
+            </div>
             <div class="alert-card alert-vencido">
               <div class="label">Trabajos vencidos</div>
               <div id="allOverdueJobs" class="value danger-text">0</div>
-            </div>
-            <div class="alert-card alert-cobro">
-              <div class="label">Instalaciones esta semana</div>
-              <div id="installWeekCount" class="value warn-text">0</div>
-            </div>
-            <div class="alert-card alert-entrega">
-              <div class="label">Pendientes confirmar</div>
-              <div id="installPendingConfirmCount" class="value info-text">0</div>
             </div>
           </div>
 
           <div class="mini-stats">
             <div class="mini-stat"><div class="label">Por cobrar</div><div id="allReceivable" class="value warn-text">$0.00</div></div>
-            <div class="mini-stat"><div class="label">Trabajos con saldo</div><div id="jobsWithBalanceCount" class="value danger-text">0</div></div>
-            <div class="mini-stat"><div class="label">En proceso</div><div id="allActiveJobs" class="value purple-text">0</div></div>
-            <div class="mini-stat"><div class="label">En producción</div><div id="jobsInProductionCount" class="value">0</div></div>
+            <div class="mini-stat"><div class="label">Vencen 7 días</div><div id="due7Count" class="value danger-text">0</div></div>
+            <div class="mini-stat"><div class="label">Trabajos activos</div><div id="allActiveJobs" class="value purple-text">0</div></div>
+            <div class="mini-stat"><div class="label">Clientes</div><div id="allClients" class="value">0</div></div>
           </div>
 
           <div class="panel">
@@ -202,7 +198,6 @@
             </div>
           </div>
         </section>
-
 
         <section id="view-clientes" class="view hidden">
           <div class="panel">
@@ -1023,55 +1018,6 @@
           </div>
         </section>
 
-        <section id="view-cuentascrm" class="view hidden">
-          <div class="stats">
-            <div class="stat"><div class="label">Cuentas totales</div><div id="platformAccountsTotalCount" class="value">0</div></div>
-            <div class="stat"><div class="label">Pendientes</div><div id="platformAccountsPendingCount" class="value warn-text">0</div></div>
-            <div class="stat"><div class="label">Activas</div><div id="platformAccountsActiveCount" class="value ok-text">0</div></div>
-            <div class="stat"><div class="label">Bloqueadas</div><div id="platformAccountsBlockedCount" class="value danger-text">0</div></div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <h2>Cuentas registradas en la app</h2>
-                <div class="section-note">Aquí puedes ver quién se registra, qué empresa usa y activar, dejar pendiente o bloquear la cuenta.</div>
-              </div>
-              <div class="filters">
-                <input id="platformAccountSearch" class="input" placeholder="Buscar por empresa, nombre o correo" />
-                <select id="platformAccountStatusFilter" class="select">
-                  <option value="">Todos los estados</option>
-                  <option value="pending">Pendientes</option>
-                  <option value="active">Activas</option>
-                  <option value="blocked">Bloqueadas</option>
-                </select>
-                <button id="btnClearPlatformAccountFilters" class="btn btn-secondary btn-small">Limpiar filtros</button>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Empresa / UID</th>
-                    <th>Nombre</th>
-                    <th>Correo</th>
-                    <th>Rol / plan</th>
-                    <th>Cuenta</th>
-                    <th>Espacio</th>
-                    <th>Último acceso</th>
-                    <th>Última actividad</th>
-                    <th>Registro</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="platformAccountsBody"></tbody>
-              </table>
-            </div>
-            <div id="platformAccountsEmpty" class="empty hidden">No hay cuentas registradas todavía.</div>
-          </div>
-        </section>
-
       </main>
     </div>
   </section>
@@ -1198,54 +1144,6 @@
             <div><span>Descuento</span><strong id="quoteDiscount">$0.00</strong></div>
             <div><span>Impuesto</span><strong id="quoteTax">$0.00</strong></div>
             <div><span>Total</span><strong id="quoteTotal">$0.00</strong></div>
-          </div>
-        </div>
-
-        <div class="box">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-            <strong>Estimado / aprobación cliente</strong>
-            <div class="actions-row">
-              <button id="generateClientEstimateLinkBtn" class="btn btn-secondary btn-small" type="button">Generar enlace</button>
-              <button id="copyClientEstimateLinkBtn" class="btn btn-info btn-small" type="button">Copiar enlace</button>
-              <button id="previewClientEstimateBtn" class="btn btn-secondary btn-small" type="button">Vista cliente</button>
-            </div>
-          </div>
-
-          <div class="section-note mt-10">
-            Base interna lista para enviar el estimado al cliente y registrar aprobación del precio y del diseño. En el siguiente paso activamos el enlace público y la respuesta desde el celular del cliente.
-          </div>
-
-          <input id="jobApprovalToken" type="hidden" />
-
-          <div class="grid-3 mt-12">
-            <select id="jobEstimateStatus" class="select">
-              <option value="borrador">Estimado · Borrador</option>
-              <option value="enviado">Estimado · Enviado</option>
-              <option value="aprobado">Estimado · Aprobado</option>
-              <option value="cambios">Estimado · Solicita cambios</option>
-              <option value="rechazado">Estimado · Rechazado</option>
-            </select>
-            <select id="jobDesignApprovalStatus" class="select">
-              <option value="pendiente">Diseño · Pendiente</option>
-              <option value="enviado">Diseño · Enviado</option>
-              <option value="aprobado">Diseño · Aprobado</option>
-              <option value="cambios">Diseño · Solicita cambios</option>
-            </select>
-            <input id="jobClientDeposit" type="number" min="0" step="0.01" class="input" placeholder="Depósito requerido" />
-
-            <input id="jobEstimateSentAt" type="text" class="input readonly" placeholder="Fecha envío estimado" readonly />
-            <input id="jobClientApprovedAt" type="text" class="input readonly" placeholder="Fecha respuesta cliente" readonly />
-            <input id="jobClientApprovedBy" type="text" class="input readonly" placeholder="Respondido por" readonly />
-          </div>
-
-          <div class="grid-2 mt-12">
-            <textarea id="jobClientVisibleNotes" class="textarea" placeholder="Notas visibles para el cliente: alcance, tiempos, depósito, instalación, garantía, etc."></textarea>
-            <textarea id="jobClientResponseNotes" class="textarea" placeholder="Comentario o respuesta del cliente"></textarea>
-          </div>
-
-          <div class="grid-2 mt-12">
-            <input id="jobClientApprovalLink" type="text" class="input readonly" placeholder="Enlace de aprobación para cliente" readonly />
-            <input id="jobClientApprovalLinkExpiresAt" type="text" class="input readonly" placeholder="Expira / vigencia del enlace" readonly />
           </div>
         </div>
 
@@ -1851,11 +1749,6 @@
   <script src="assets/js/10-backup-misc.js"></script>
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
-  <script src="assets/js/10-backup-misc.js"></script>
-<script src="assets/js/11-auth.js"></script>
-<script src="assets/js/12-init.js"></script>
-<script src="assets/js/13-production.js"></script>
-<script src="assets/js/16-advance-control.js"></script>
-<script src="assets/js/17-advance-visual.js"></script>
+  <!-- Próximo paso: aquí añadiremos el JS del módulo Producción cuando te pase ese archivo. -->
 </body>
 </html>

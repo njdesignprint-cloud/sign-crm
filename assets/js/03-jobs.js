@@ -1550,116 +1550,45 @@
         return calc.balance > 0 && !["Cancelado","Pagado"].includes(job.status);
       });
     }
-
-    function getAdvanceSummarySafe(job = {}) {
-      if (typeof window.getJobAdvanceSummary === "function") {
-        return window.getJobAdvanceSummary(job);
-      }
-      const advance = job.advance || {};
-      const received = Number(advance.received || 0);
-      const ledger = Array.isArray(advance.ledger) ? advance.ledger : [];
-      const spent = ledger.reduce((sum, item) => {
-        const status = cleanText(item.status || "");
-        return sum + ((status === "Pagado" && !!item.applyToAdvance) ? Number(item.amount || 0) : 0);
-      }, 0);
-      return { received, spent, available: received - spent };
-    }
-
-    function injectJobsTableCompactStyles() {
-      if (document.getElementById("jobsCompactTableStyles")) return;
-      const style = document.createElement("style");
-      style.id = "jobsCompactTableStyles";
-      style.textContent = `
-        #jobsTableView td { vertical-align: top; }
-        .jobs-client-cell { min-width: 120px; font-weight: 700; }
-        .jobs-work-cell { min-width: 240px; }
-        .jobs-work-title { font-size: 15px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
-        .jobs-work-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-        .jobs-work-note { color: var(--muted); font-size: 12px; line-height: 1.45; }
-        .jobs-delivery-cell, .jobs-priority-cell, .jobs-status-cell { white-space: nowrap; min-width: 90px; }
-        .jobs-finance-cell { min-width: 190px; }
-        .jobs-finance-main { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 6px; }
-        .jobs-finance-main strong { font-size: 14px; }
-        .jobs-finance-sub { color: var(--muted); font-size: 12px; line-height: 1.45; }
-        .jobs-advance-cell { min-width: 130px; white-space: nowrap; }
-        .jobs-advance-cell strong { display: block; font-size: 24px; line-height: 1; color: #b8ff2c; margin-bottom: 6px; }
-        .jobs-advance-cell span { display: block; font-size: 12px; color: var(--muted); font-weight: 700; }
-        .jobs-actions-wrap { min-width: 125px; display: flex; flex-direction: column; gap: 8px; }
-        .jobs-actions-main { display: flex; gap: 8px; flex-wrap: wrap; }
-        .jobs-more-menu { position: relative; }
-        .jobs-more-menu summary { list-style: none; }
-        .jobs-more-menu summary::-webkit-details-marker { display: none; }
-        .jobs-more-menu[open] .jobs-more-list { display: flex; }
-        .jobs-more-list {
-          display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
-          min-width: 190px; flex-direction: column; gap: 8px; padding: 10px;
-          border-radius: 14px; border: 1px solid var(--line); background: #11151d;
-          box-shadow: 0 18px 40px rgba(0,0,0,.35);
-        }
-        .jobs-more-list .btn { width: 100%; justify-content: center; }
-      `;
-      document.head.appendChild(style);
-    }
-
     function renderJobs() {
-      injectJobsTableCompactStyles();
       const rows = getFilteredJobs();
 
       $("jobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
-        const advance = getAdvanceSummarySafe(job);
 
         return `
           <tr>
-            <td class="jobs-client-cell">${safe(clientLabel(client))}</td>
-            <td class="jobs-work-cell">
-              <div class="jobs-work-title">${safe(job.title || "-")}</div>
-              <div class="jobs-work-tags">
-                <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
-                <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
-                <div>${inventoryStatePill(job)}</div>
-              </div>
-              <div class="jobs-work-note">${safe(job.description || job.notes || "-")}</div>
-            </td>
-            <td class="jobs-delivery-cell ${overdue ? "overdue" : ""}">
-              ${safe(formatDate(job.dueDate))}
-              ${overdue ? `<div class="section-note" style="margin-top:6px;">Vencido</div>` : ""}
-            </td>
-            <td class="jobs-priority-cell">${priorityPill(job.priority || "Media")}</td>
-            <td class="jobs-finance-cell">
-              <div class="jobs-finance-main"><span>Venta</span><strong>${money(calc.sale)}</strong></div>
-              <div class="jobs-finance-main"><span>Saldo</span><strong>${money(calc.balance)}</strong></div>
-              <div class="jobs-finance-sub">Pagado: ${money(calc.paid)}</div>
-              <div class="jobs-finance-sub">Costo: ${money(calc.cost)} · Ganancia: ${money(calc.profit)}</div>
-            </td>
-            <td class="jobs-advance-cell">
-              <strong>${money(advance.available)}</strong>
-              <span>${money(advance.spent)} / ${money(advance.received)}</span>
-            </td>
-            <td class="jobs-status-cell">
-              ${statusPill(job.status || "Cotización")}
-              <div class="section-note" style="margin-top:8px;">Checklist: ${safe(checklistProgress(job))}</div>
-            </td>
+            <td>${safe(clientLabel(client))}</td>
             <td>
-              <div class="jobs-actions-wrap">
-                <div class="jobs-actions-main">
-                  ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>` : ""}
-                  ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
-                </div>
-                <details class="jobs-more-menu">
-                  <summary class="btn btn-secondary btn-small">Más ▾</summary>
-                  <div class="jobs-more-list">
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Recordar cobro</button>
-                    <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Avisar entrega</button>
-                    ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
-                    <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
-                    <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
-                    ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
-                  </div>
-                </details>
+              <div><strong>${safe(job.title || "-")}</strong></div>
+              <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
+              <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
+              <div style="margin-top:6px;">${inventoryStatePill(job)}</div>
+              <small>${safe(job.description || job.notes || "-")}</small>
+            </td>
+            <td>${safe(formatDate(job.date))}</td>
+            <td class="${overdue ? "overdue" : ""}">${safe(formatDate(job.dueDate))}${overdue ? " · Vencido" : ""}</td>
+            <td>${priorityPill(job.priority || "Media")}</td>
+            <td>${money(calc.sale)}</td>
+            <td>${money(calc.cost)}</td>
+            <td>${money(calc.profit)}</td>
+            <td>${money(calc.paid)}</td>
+            <td>${money(calc.balance)}</td>
+            <td>${safe(checklistProgress(job))}</td>
+            <td>${statusPill(job.status || "Cotización")}</td>
+            <td>
+              <div class="actions-row">
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
+                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
+                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
+                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
+                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
@@ -1748,25 +1677,112 @@
       }).join("");
       $("dueSoonEmpty").classList.toggle("hidden", rows.length > 0);
     }
-        function renderStats() {
-      const month = currentMonthKey();
+    
+    function getDashboardPeriodValue() {
+      const fallback = "last30";
+      if (!state.dashboardPeriod) {
+        try {
+          state.dashboardPeriod = localStorage.getItem("crm_dashboard_period") || fallback;
+        } catch (error) {
+          state.dashboardPeriod = fallback;
+        }
+      }
+      return state.dashboardPeriod || fallback;
+    }
 
-      const monthSales = state.jobs
-        .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
+    function setDashboardPeriodValue(value = "last30") {
+      state.dashboardPeriod = value || "last30";
+      try {
+        localStorage.setItem("crm_dashboard_period", state.dashboardPeriod);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function bindDashboardPeriodControl() {
+      const select = $("dashboardPeriod");
+      if (!select || select.dataset.bound === "true") return;
+      select.value = getDashboardPeriodValue();
+      select.addEventListener("change", () => {
+        setDashboardPeriodValue(select.value);
+        renderStats();
+      });
+      select.dataset.bound = "true";
+    }
+
+    function formatDashboardPeriodLabel(period = "last30") {
+      if (period === "thisMonth") return "Este mes";
+      if (period === "lastMonth") return "Mes pasado";
+      if (period === "thisYear") return "Año actual";
+      return "Últimos 30 días";
+    }
+
+    function getDashboardDateRange() {
+      const period = getDashboardPeriodValue();
+      const todayStr = today();
+      const todayDate = new Date(todayStr + "T00:00:00");
+
+      let startDate = new Date(todayDate);
+      let endDate = new Date(todayDate);
+
+      if (period === "thisMonth") {
+        startDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
+        endDate = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
+      } else if (period === "lastMonth") {
+        startDate = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1);
+        endDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 0);
+      } else if (period === "thisYear") {
+        startDate = new Date(todayDate.getFullYear(), 0, 1);
+        endDate = new Date(todayDate.getFullYear(), 11, 31);
+      } else {
+        startDate = new Date(todayDate);
+        startDate.setDate(startDate.getDate() - 29);
+        endDate = new Date(todayDate);
+      }
+
+      return {
+        period,
+        label: formatDashboardPeriodLabel(period),
+        start: startDate.toISOString().slice(0, 10),
+        end: endDate.toISOString().slice(0, 10)
+      };
+    }
+
+    function isWithinDashboardRange(dateValue = "", range = null) {
+      if (!dateValue) return false;
+      const currentRange = range || getDashboardDateRange();
+      return dateValue >= currentRange.start && dateValue <= currentRange.end;
+    }
+
+    function renderStats() {
+      bindDashboardPeriodControl();
+      const range = getDashboardDateRange();
+      if ($("dashboardPeriod")) $("dashboardPeriod").value = range.period;
+      if ($("dashboardPeriodNote")) $("dashboardPeriodNote").textContent = `Período activo: ${range.label} · ${range.start} → ${range.end}`;
+      if ($("dashboardPeriodHint")) $("dashboardPeriodHint").textContent = range.period === "last30"
+        ? "Recomendado para no ver el dashboard vacío cuando empieza un mes nuevo."
+        : "Puedes cambiar el período cuando quieras para comparar tu operación.";
+      if ($("dashSalesLabel")) $("dashSalesLabel").textContent = `Ventas · ${range.label}`;
+      if ($("dashCollectedLabel")) $("dashCollectedLabel").textContent = `Cobrado · ${range.label}`;
+      if ($("dashExpensesLabel")) $("dashExpensesLabel").textContent = `Gastos · ${range.label}`;
+      if ($("dashProfitLabel")) $("dashProfitLabel").textContent = `Ganancia neta · ${range.label}`;
+
+      const filteredJobs = state.jobs.filter(job => isWithinDashboardRange(job.date, range) && !["Cancelado"].includes(job.status));
+      const filteredExpenses = state.expenses.filter(expense => isWithinDashboardRange(expense.date, range));
+
+      const periodSales = filteredJobs
         .reduce((sum, job) => sum + Number(job.sale || 0), 0);
 
-      const monthCollected = state.jobs.reduce((sum, job) => {
+      const periodCollected = state.jobs.reduce((sum, job) => {
         return sum + getPaymentsList(job)
-          .filter(payment => monthKey(payment.date) === month)
+          .filter(payment => isWithinDashboardRange(payment.date, range))
           .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
       }, 0);
 
-      const monthExpenses = state.expenses
-        .filter(expense => monthKey(expense.date) === month)
+      const periodExpenses = filteredExpenses
         .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
-      const monthProfitBase = state.jobs
-        .filter(job => monthKey(job.date) === month && !["Cancelado"].includes(job.status))
+      const periodProfitBase = filteredJobs
         .reduce((sum, job) => sum + computeJob(job).profit, 0);
 
       const overallReceivable = state.jobs
@@ -1800,10 +1816,10 @@
         return ["Pendiente", "Reprogramada", ""].includes(cleanText(install.status));
       }).length;
 
-      $("mSales").textContent = money(monthSales);
-      $("mCollected").textContent = money(monthCollected);
-      $("mExpenses").textContent = money(monthExpenses);
-      $("mProfit").textContent = money(monthProfitBase - monthExpenses);
+      $("mSales").textContent = money(periodSales);
+      $("mCollected").textContent = money(periodCollected);
+      $("mExpenses").textContent = money(periodExpenses);
+      $("mProfit").textContent = money(periodProfitBase - periodExpenses);
       $("allReceivable").textContent = money(overallReceivable);
       $("dueTodayCount").textContent = String(dueToday);
       $("allOverdueJobs").textContent = String(overdueJobs);
@@ -1813,7 +1829,6 @@
       if ($("jobsInProductionCount")) $("jobsInProductionCount").textContent = String(jobsInProduction);
       if ($("installWeekCount")) $("installWeekCount").textContent = String(installWeekCount);
       if ($("installPendingConfirmCount")) $("installPendingConfirmCount").textContent = String(installPendingConfirmCount);
-
       if ($("pendingPaymentsCount")) $("pendingPaymentsCount").textContent = String(jobsWithBalance);
       if ($("due7Count")) $("due7Count").textContent = String(getDueSoonJobs(7).length);
       if ($("allClients")) $("allClients").textContent = String(state.clients.length);
