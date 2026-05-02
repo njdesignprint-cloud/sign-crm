@@ -1557,37 +1557,52 @@
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
+        const statusText = overdue ? "Vencido" : "En tiempo";
+        const statusCls = overdue ? "st-cancelado" : "st-entregado";
 
         return `
           <tr>
-            <td>${safe(clientLabel(client))}</td>
+            <td>
+              <div><strong>${safe(clientLabel(client))}</strong></div>
+              <div class="section-note">${safe(client?.company || client?.phone || "-")}</div>
+            </td>
             <td>
               <div><strong>${safe(job.title || "-")}</strong></div>
               <div class="module-badge">${safe(getJobTypeLabel(job))}</div>
               <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
               <div style="margin-top:6px;">${inventoryStatePill(job)}</div>
-              <small>${safe(job.description || job.notes || "-")}</small>
+              <div class="section-note" style="margin-top:8px;">${safe(job.description || job.notes || "-")}</div>
             </td>
-            <td>${safe(formatDate(job.date))}</td>
-            <td class="${overdue ? "overdue" : ""}">${safe(formatDate(job.dueDate))}${overdue ? " · Vencido" : ""}</td>
-            <td>${priorityPill(job.priority || "Media")}</td>
-            <td>${money(calc.sale)}</td>
-            <td>${money(calc.cost)}</td>
-            <td>${money(calc.profit)}</td>
-            <td>${money(calc.paid)}</td>
-            <td>${money(calc.balance)}</td>
-            <td>${safe(checklistProgress(job))}</td>
-            <td>${statusPill(job.status || "Cotización")}</td>
             <td>
-              <div class="actions-row">
+              <div><strong>${safe(formatDate(job.dueDate))}</strong></div>
+              <div style="margin-top:8px;">${priorityPill(job.priority || "Media")}</div>
+              <div style="margin-top:8px;"><span class="pill ${statusCls}">${statusText}</span></div>
+              <div class="section-note" style="margin-top:8px;">Creado: ${safe(formatDate(job.date))}</div>
+            </td>
+            <td>
+              <div><strong>Venta:</strong> ${money(calc.sale)}</div>
+              <div><strong>Costo:</strong> ${money(calc.cost)}</div>
+              <div><strong>Ganancia:</strong> ${money(calc.profit)}</div>
+            </td>
+            <td>
+              <div><strong>Pagado:</strong> ${money(calc.paid)}</div>
+              <div><strong>Saldo:</strong> ${money(calc.balance)}</div>
+              <div class="section-note" style="margin-top:8px;">Checklist: ${safe(checklistProgress(job))}</div>
+            </td>
+            <td>
+              <div>${statusPill(job.status || "Cotización")}</div>
+              <div class="section-note" style="margin-top:10px;">${safe(getClientApprovalSummaryText(job))}</div>
+            </td>
+            <td>
+              <div class="actions-row" style="min-width:240px;max-width:280px;">
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
                 ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
                 ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
                 ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
-                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización PDF</button>
-                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">PDF compra</button>
+                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización</button>
+                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">Compra</button>
                 ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
               </div>
             </td>
