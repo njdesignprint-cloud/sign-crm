@@ -1782,9 +1782,6 @@
       const periodExpenses = filteredExpenses
         .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
-      const periodProfitBase = filteredJobs
-        .reduce((sum, job) => sum + computeJob(job).profit, 0);
-
       const overallReceivable = state.jobs
         .filter(job => !["Pagado", "Cancelado"].includes(job.status))
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
@@ -1819,7 +1816,7 @@
       $("mSales").textContent = money(periodSales);
       $("mCollected").textContent = money(periodCollected);
       $("mExpenses").textContent = money(periodExpenses);
-      $("mProfit").textContent = money(periodProfitBase - periodExpenses);
+      $("mProfit").textContent = money(periodSales - periodExpenses);
       $("allReceivable").textContent = money(overallReceivable);
       $("dueTodayCount").textContent = String(dueToday);
       $("allOverdueJobs").textContent = String(overdueJobs);
