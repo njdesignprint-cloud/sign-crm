@@ -38,6 +38,25 @@
       <div class="help">
         Esta versión usa Firebase Authentication y Firestore. Si creas una cuenta nueva, quedará pendiente hasta que el superadmin la active en Cuentas CRM.
       </div>
+
+      <div class="box mt-12">
+        <strong>¿Cómo registrarse?</strong>
+
+        <div class="section-note mt-10">
+          <strong>Si eres una empresa nueva:</strong><br>
+          1. Escribe tu nombre completo, empresa, correo y contraseña.<br>
+          2. Pulsa <strong>Crear cuenta</strong>.<br>
+          3. Tu cuenta quedará <strong>pendiente</strong>.<br>
+          4. El administrador debe activarla en <strong>Cuentas CRM</strong> antes de que puedas entrar.
+        </div>
+
+        <div class="section-note mt-12">
+          <strong>Si eres empleado de una empresa existente:</strong><br>
+          1. Primero el dueño debe agregarte en el módulo <strong>Usuarios</strong>.<br>
+          2. Después crea tu cuenta con <strong>ese mismo correo</strong>.<br>
+          3. Al entrar, verás el mismo espacio de trabajo según los permisos que te asignen.
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1017,7 +1036,11 @@
 
             <div style="padding:0 18px 18px;">
               <div class="permission-note">
-                El usuario nuevo debe crear su cuenta con ese mismo correo. Si aquí está activo, al entrar verá este mismo negocio según el rol que le pongas.
+                <strong>Cómo funciona este módulo:</strong><br>
+                1. Agrega aquí al empleado usando el mismo correo que él va a registrar.<br>
+                2. Asígnale rol y permisos.<br>
+                3. Luego esa persona crea su cuenta en la pantalla de acceso usando ese mismo correo.<br>
+                4. Cuando entre, verá este mismo negocio según los permisos que le hayas dado.
               </div>
             </div>
 
@@ -1055,6 +1078,12 @@
               <div>
                 <h2>Cuentas registradas en la app</h2>
                 <div class="section-note">Aquí puedes ver quién se registra, qué empresa usa y activar, dejar pendiente o bloquear la cuenta.</div>
+                <div class="permission-note" style="margin:12px 0 0;">
+                  <strong>Flujo de activación:</strong><br>
+                  - Una empresa nueva se registra desde la pantalla principal y queda en <strong>Pending</strong>.<br>
+                  - Desde aquí puedes cambiarla a <strong>Active</strong> para permitirle entrar.<br>
+                  - Si la pones en <strong>Blocked</strong>, no podrá acceder a la app.
+                </div>
               </div>
               <div class="filters">
                 <input id="platformAccountSearch" class="input" placeholder="Buscar por empresa, nombre o correo" />
@@ -1870,8 +1899,11 @@
   <script src="assets/js/10-backup-misc.js"></script>
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
-  <script src="assets/js/13-production.js"></script>
-  <script src="assets/js/16-advance-control.js"></script>
-  <script src="assets/js/17-advance-visual.js"></script>
+  <script src="assets/js/10-backup-misc.js"></script>
+<script src="assets/js/11-auth.js"></script>
+<script src="assets/js/12-init.js"></script>
+<script src="assets/js/13-production.js"></script>
+<script src="assets/js/16-advance-control.js"></script>
+<script src="assets/js/17-advance-visual.js"></script>
 </body>
 </html>
