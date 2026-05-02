@@ -114,12 +114,31 @@
 
         
         <section id="view-dashboard" class="view">
-          <div class="section-note" style="margin-bottom:10px;">Mes actual</div>
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-head">
+              <div>
+                <h2>Período del dashboard</h2>
+                <div id="dashboardPeriodNote" class="section-note">Resumen del período seleccionado.</div>
+              </div>
+              <div class="filters">
+                <select id="dashboardPeriod" class="select">
+                  <option value="last30" selected>Últimos 30 días</option>
+                  <option value="thisMonth">Este mes</option>
+                  <option value="lastMonth">Mes pasado</option>
+                  <option value="thisYear">Año actual</option>
+                </select>
+              </div>
+            </div>
+            <div id="dashboardPeriodHint" class="section-note" style="padding:0 18px 16px;">
+              Así el dashboard no se verá vacío solo porque empezó un mes nuevo.
+            </div>
+          </div>
+
           <div class="stats">
-            <div class="stat"><div class="label">Ventas del mes</div><div id="mSales" class="value brand-text">$0.00</div></div>
-            <div class="stat"><div class="label">Cobrado del mes</div><div id="mCollected" class="value info-text">$0.00</div></div>
-            <div class="stat"><div class="label">Gastos del mes</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
-            <div class="stat"><div class="label">Ganancia neta mes</div><div id="mProfit" class="value ok-text">$0.00</div></div>
+            <div class="stat"><div id="dashSalesLabel" class="label">Ventas del período</div><div id="mSales" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div id="dashCollectedLabel" class="label">Cobrado del período</div><div id="mCollected" class="value info-text">$0.00</div></div>
+            <div class="stat"><div id="dashExpensesLabel" class="label">Gastos del período</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div id="dashProfitLabel" class="label">Ganancia neta</div><div id="mProfit" class="value ok-text">$0.00</div></div>
           </div>
 
           <div class="section-note" style="margin-bottom:10px;">Alertas rápidas</div>
