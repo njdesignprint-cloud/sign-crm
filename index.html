@@ -125,6 +125,7 @@
   <div id="navGroupFinance" class="layout-sidebar-group-title">FINANZAS</div>
 
   <button id="navGastosBtn" data-view="gastos">💸 Gastos</button>
+  <button id="navLiquidacionesBtn" data-view="liquidaciones">💰 Liquidación semanal</button>
   <button id="navReportesBtn" data-view="reportes">📈 Reportes</button>
 
   <div class="layout-sidebar-divider"></div>
@@ -867,6 +868,105 @@
         </section>
 
         
+        <section id="view-liquidaciones" class="view hidden">
+          <div class="panel settlement-toolbar">
+            <div class="panel-head">
+              <div>
+                <h2>Semana de liquidación</h2>
+                <div class="section-note">Los cálculos usan cobros y gastos registrados, no ventas pendientes.</div>
+              </div>
+              <div class="filters">
+                <button id="btnSettlementPrevWeek" class="btn btn-secondary">← Semana anterior</button>
+                <input id="settlementWeekStart" class="input" type="date" />
+                <button id="btnSettlementCurrentWeek" class="btn btn-info">Semana actual</button>
+                <button id="btnSettlementNextWeek" class="btn btn-secondary">Semana siguiente →</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats settlement-stats">
+            <div class="stat"><div class="label">Cobros recibidos</div><div id="settlementGrossCollected" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Sales tax separado</div><div id="settlementSalesTax" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div class="label">Gastos pagados</div><div id="settlementExpenses" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div class="label">Ganancia disponible</div><div id="settlementNetProfit" class="value ok-text">$0.00</div></div>
+          </div>
+
+          <div class="settlement-layout">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Distribución recomendada</h2>
+                  <div id="settlementRangeLabel" class="section-note">Lunes a domingo</div>
+                </div>
+                <span id="settlementStatusPill" class="pill pr-media">Borrador</span>
+              </div>
+              <div class="settlement-breakdown">
+                <div><span>Ganancia neta de caja</span><strong id="settlementBaseProfit">$0.00</strong></div>
+                <div><span>Reserva para impuestos (<b id="settlementTaxRateLabel">30%</b>)</span><strong id="settlementTaxReserve">$0.00</strong></div>
+                <div><span>Reserva para el negocio (<b id="settlementBusinessRateLabel">30%</b>)</span><strong id="settlementBusinessReserve">$0.00</strong></div>
+                <div class="settlement-owner-pay"><span>Pago máximo recomendado</span><strong id="settlementRecommendedPay">$0.00</strong></div>
+              </div>
+              <div id="settlementClosedNotice" class="section-note hidden"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Registrar tu pago</h2>
+                  <div class="section-note">Al cerrar la semana se guarda una fotografía de todos los cálculos.</div>
+                </div>
+              </div>
+              <div class="stack">
+                <label class="field-label">Pago real al propietario
+                  <input id="settlementActualPay" class="input" type="number" min="0" step="0.01" />
+                </label>
+                <label class="field-label">Fecha del pago
+                  <input id="settlementPaidAt" class="input" type="date" />
+                </label>
+                <label class="field-label">Referencia o método
+                  <input id="settlementPaymentReference" class="input" placeholder="Ej. Transferencia #1234" />
+                </label>
+                <label class="field-label">Notas
+                  <textarea id="settlementNotes" class="textarea" placeholder="Comentario opcional"></textarea>
+                </label>
+                <button id="btnCloseSettlement" class="btn btn-primary full">Registrar pago y cerrar semana</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Detalle de la semana</h2>
+                <div class="section-note">Trazabilidad de los cobros y gastos usados en el cálculo.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Monto</th></tr></thead>
+                <tbody id="settlementDetailBody"></tbody>
+              </table>
+            </div>
+            <div id="settlementDetailEmpty" class="empty hidden">No hay movimientos registrados durante esta semana.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Historial de liquidaciones</h2>
+                <div class="section-note">Semanas cerradas y pagos realizados al propietario.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Semana</th><th>Cobrado</th><th>Gastos</th><th>Impuestos</th><th>Reserva negocio</th><th>Pago</th><th>Referencia</th><th>Estado</th></tr></thead>
+                <tbody id="settlementHistoryBody"></tbody>
+              </table>
+            </div>
+            <div id="settlementHistoryEmpty" class="empty hidden">Todavía no hay semanas cerradas.</div>
+          </div>
+        </section>
+
         <section id="view-reportes" class="view hidden">
           <div class="panel">
             <div class="panel-head">
@@ -1931,6 +2031,7 @@
   <script src="assets/js/11-auth.js"></script>
   <script src="assets/js/12-init.js"></script>
   <script src="assets/js/13-production.js"></script>
+  <script src="assets/js/15-weekly-settlements.js"></script>
   <script src="assets/js/16-advance-control.js"></script>
   <script src="assets/js/17-advance-visual.js"></script>
   <script src="assets/js/18-i18n.js"></script>

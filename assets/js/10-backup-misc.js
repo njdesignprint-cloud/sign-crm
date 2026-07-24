@@ -11,6 +11,7 @@
         const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
         const inventory = Array.isArray(data.inventoryItems) ? data.inventoryItems : [];
         const movements = Array.isArray(data.inventoryMovements) ? data.inventoryMovements : [];
+        const weeklySettlements = Array.isArray(data.weeklySettlements) ? data.weeklySettlements : [];
 
         if (!clients.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
           return showToast("Ese JSON no tiene datos válidos.");
@@ -140,6 +141,28 @@
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           };
           await inventoryMovementsRef().add(payload);
+        }
+
+        if (isOwner()) {
+          for (const item of weeklySettlements) {
+            if (!item.weekStart) continue;
+            const payload = {
+              ...item,
+              weekStart: item.weekStart,
+              weekEnd: item.weekEnd || item.weekStart,
+              grossCollected: Number(item.grossCollected || 0),
+              salesTax: Number(item.salesTax || 0),
+              expenseTotal: Number(item.expenseTotal || 0),
+              netProfit: Number(item.netProfit || 0),
+              taxReserve: Number(item.taxReserve || 0),
+              businessReserve: Number(item.businessReserve || 0),
+              recommendedPay: Number(item.recommendedPay || 0),
+              actualPay: Number(item.actualPay || 0),
+              importedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            delete payload.id;
+            await weeklySettlementsRef().doc(item.weekStart).set(payload, { merge: false });
+          }
         }
 
         showToast("Importación completada.");

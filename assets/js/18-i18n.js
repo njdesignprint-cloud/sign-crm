@@ -33,6 +33,7 @@
       navProveedoresBtn: "🏭 Proveedores",
       navComprasBtn: "🧾 Compras",
       navGastosBtn: "💸 Gastos",
+      navLiquidacionesBtn: "💰 Liquidación semanal",
       navReportesBtn: "📈 Reportes",
       navUsuariosBtn: "🔐 Usuarios",
       navCuentasCrmBtn: "🧩 Cuentas CRM",
@@ -117,6 +118,7 @@
       navProveedoresBtn: "🏭 Suppliers",
       navComprasBtn: "🧾 Purchases",
       navGastosBtn: "💸 Expenses",
+      navLiquidacionesBtn: "💰 Weekly settlement",
       navReportesBtn: "📈 Reports",
       navUsuariosBtn: "🔐 Users",
       navCuentasCrmBtn: "🧩 CRM Accounts",
@@ -186,6 +188,7 @@
       compras: ["Compras", "Órdenes de compra y recepción de materiales."],
       instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
+      liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     },
@@ -200,6 +203,7 @@
       compras: ["Purchases", "Purchase orders and material receiving."],
       instalaciones: ["Installation calendar", "Installation schedule, assignees and team routes."],
       reportes: ["Advanced reports", "Commercial summary, profitability, receivables and purchases."],
+      liquidaciones: ["Weekly settlement", "Professional tracking of owner pay and business reserves."],
       usuarios: ["Users", "Team access, roles and permissions."],
       cuentascrm: ["CRM Accounts", "Global control of registrations, companies and access status."]
     }
@@ -350,6 +354,7 @@
     setText("navProveedoresBtn", t("navProveedoresBtn"));
     setText("navComprasBtn", t("navComprasBtn"));
     setText("navGastosBtn", t("navGastosBtn"));
+    setText("navLiquidacionesBtn", t("navLiquidacionesBtn"));
     setText("navReportesBtn", t("navReportesBtn"));
     setText("navUsuariosBtn", t("navUsuariosBtn"));
     setText("navCuentasCrmBtn", t("navCuentasCrmBtn"));
