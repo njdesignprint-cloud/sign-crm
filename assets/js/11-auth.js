@@ -7,6 +7,7 @@
         renderJobs();
         renderInstallationModule();
         renderReportsModule();
+        if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
       }, error => console.error(error));
 
       const unsubJobs = jobsRef().orderBy("date", "desc").onSnapshot(snapshot => {
@@ -14,6 +15,7 @@
         renderJobs();
         renderInstallationModule();
         renderReportsModule();
+        if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
         if (state.editingJobId) {
           const currentJob = getJobById(state.editingJobId);
           if (currentJob) renderJobPreview();
@@ -25,6 +27,7 @@
         renderExpenses();
         renderInstallationModule();
         renderReportsModule();
+        if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
         if (state.editingJobId) renderJobPreview();
       }, error => console.error(error));
 
@@ -68,6 +71,16 @@
         renderReportsModule();
       }, error => console.error(error));
 
+      let unsubWeeklySettlements = () => {};
+      if (isOwner()) {
+        unsubWeeklySettlements = weeklySettlementsRef().orderBy("weekStart", "desc").onSnapshot(snapshot => {
+          state.weeklySettlements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
+        }, error => console.error(error));
+      } else {
+        state.weeklySettlements = [];
+      }
+
       let unsubTeamMembers = () => {};
       if (canManageUsers()) {
         unsubTeamMembers = teamMembersRef().orderBy("email", "asc").onSnapshot(snapshot => {
@@ -100,7 +113,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {

@@ -45,6 +45,7 @@
       providers: [],
       purchaseOrders: [],
       teamMembers: [],
+      weeklySettlements: [],
       editingClientId: null,
       editingJobId: null,
       editingExpenseId: null,
@@ -91,6 +92,7 @@
       compras: ["Compras", "Órdenes de compra y recepción de materiales."],
       instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
+      liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     };
@@ -301,6 +303,7 @@
         compras: 'PDF compras',
         instalaciones: 'PDF instalaciones',
         reportes: 'PDF reportes',
+        liquidaciones: 'PDF liquidación',
         usuarios: 'PDF usuarios'
       };
       if ($('btnExportPdf')) $('btnExportPdf').textContent = labels[state.currentView] || 'PDF módulo';
@@ -319,7 +322,7 @@
 
       const btnNew = $("btnNewMain");
       btnNew.classList.remove("hidden");
-      if (view === "dashboard" || view === "produccion") btnNew.classList.add("hidden");
+      if (["dashboard", "produccion", "liquidaciones"].includes(view)) btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
@@ -327,7 +330,7 @@
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
       if (view === "compras") btnNew.textContent = "+ Nueva orden";
       if (view === "usuarios") btnNew.textContent = "+ Nuevo usuario";
-      if (!canEditModule(view) || ["produccion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
+      if (!canEditModule(view) || ["produccion", "liquidaciones", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
     }
@@ -358,6 +361,7 @@
     function providersRef() { return userRef().collection("providers"); }
     function purchaseOrdersRef() { return userRef().collection("purchaseOrders"); }
     function teamMembersRef() { return userRef().collection("teamMembers"); }
+    function weeklySettlementsRef() { return userRef().collection("weeklySettlements"); }
 
     const DATA_PERMISSION_MODULES = ["clientes", "trabajos", "gastos", "inventario", "proveedores", "compras"];
     const ALL_PERMISSION_MODULES = [...DATA_PERMISSION_MODULES, "usuarios"];
@@ -482,6 +486,7 @@
     function canViewModule(module = state.currentView) {
       if (module === "dashboard") return true;
       if (module === "cuentascrm") return isSuperAdmin();
+      if (module === "liquidaciones") return isOwner();
       if (module === "reportes") return isAdmin();
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
@@ -489,6 +494,7 @@
         : ["view", "edit", "delete"].includes(level);
     }
     function canEditModule(module = state.currentView) {
+      if (module === "liquidaciones") return isOwner();
       if (["dashboard", "reportes", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
@@ -574,7 +580,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = ["dashboard", "produccion", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion", "liquidaciones", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 

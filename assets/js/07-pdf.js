@@ -117,7 +117,8 @@
         expenses: state.expenses,
         recurringExpenses: state.recurringExpenses,
         inventoryItems: state.inventoryItems,
-        inventoryMovements: state.inventoryMovements
+        inventoryMovements: state.inventoryMovements,
+        weeklySettlements: state.weeklySettlements
       };
 
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -511,6 +512,7 @@
       if (state.currentView === 'compras') return exportPurchaseOrdersPdf();
       if (state.currentView === 'instalaciones') return exportInstallationCalendarPdf();
       if (state.currentView === 'reportes') return exportReportsPdf();
+      if (state.currentView === 'liquidaciones' && typeof window.exportWeeklySettlementPdf === 'function') return window.exportWeeklySettlementPdf();
       if (state.currentView === 'usuarios') return exportUsersPdf();
       return exportDashboardPdf();
     }
