@@ -101,6 +101,7 @@
     const PLATFORM_ACCOUNT_STATUSES = ["pending", "active", "blocked"];
     const KANBAN_STATUSES = ["Cotización", "Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
     const ACTIVE_STATUSES = ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado"];
+    const INVENTORY_AUTO_APPLY_STATUSES = ["Producción"];
 
     const ESTIMATOR_TEMPLATES = {
       custom: { label: "Personalizado", mode: "custom", wastePercent: 0, materialRate: 0, saleRate: 0, laborBase: 0 },

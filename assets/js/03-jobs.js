@@ -62,8 +62,7 @@
       };
     }
  function buildClientApprovalLink(token = "") {
-  const origin = window.location?.origin || "";
-  const baseUrl = `${origin}/sign-crm/client-approval-public.html`;
+  const baseUrl = new URL("client-approval-public.html", window.location.href).href;
 
   const clientId = cleanText($("jobClientId")?.value || "");
   const client = getClientById(clientId);
@@ -429,6 +428,59 @@
         balance,
         margin
       };
+    }
+    function getJobNextAction(job = {}) {
+      const status = cleanText(job.status || "Cotización");
+      const approval = getJobClientApproval(job);
+      const calc = computeJob(job);
+      const installation = getJobInstallation(job);
+      const production = job.production || {};
+      const assignments = job.workflow?.assignments || {};
+
+      if (status === "Cancelado") return { key: "closed", label: "Trabajo cancelado", tone: "muted" };
+      if (status === "Pagado") return { key: "closed", label: "Trabajo cerrado y pagado", tone: "success" };
+      if (approval.estimateStatus === "cambios") return { key: "quote_changes", label: "Revisar cambios solicitados", tone: "danger" };
+      if (approval.estimateStatus === "rechazado") return { key: "quote_rejected", label: "Contactar al cliente", tone: "danger" };
+      if (["", "borrador"].includes(approval.estimateStatus) && status === "Cotización") return { key: "send_quote", label: "Enviar cotización al cliente", tone: "info" };
+      if (approval.estimateStatus === "enviado") return { key: "await_quote", label: "Esperando aprobación del cliente", tone: "warning" };
+      if (Number(approval.deposit || 0) > 0 && calc.paid < Number(approval.deposit || 0)) {
+        return { key: "collect_deposit", label: `Cobrar depósito (${money(Number(approval.deposit) - calc.paid)})`, tone: "warning" };
+      }
+      if (["Aprobado", "Diseño"].includes(status) && approval.designStatus !== "aprobado") {
+        return approval.designStatus === "cambios"
+          ? { key: "design_changes", label: assignments.design ? `Aplicar cambios de diseño · ${assignments.design}` : "Aplicar cambios de diseño", tone: "danger" }
+          : { key: "design_approval", label: assignments.design ? `Obtener aprobación del diseño · ${assignments.design}` : "Obtener aprobación del diseño", tone: "info" };
+      }
+      if (production.blocked) return { key: "unblock", label: "Resolver bloqueo de producción", tone: "danger" };
+      if (status === "Producción") {
+        const responsible = assignments.production || production.responsible;
+        return { key: "produce", label: responsible ? `Producción · ${responsible}` : "Asignar responsable de producción", tone: "info" };
+      }
+      if (status === "Instalación" && !installation.date) return { key: "schedule_install", label: "Programar instalación", tone: "warning" };
+      if (installation.date && !["Completada", "Cancelada"].includes(installation.status)) return { key: "complete_install", label: `Completar instalación · ${formatDate(installation.date)}`, tone: "info" };
+      if (status === "Entregado" && calc.balance > 0) return { key: "collect_balance", label: `Cobrar saldo (${money(calc.balance)})${assignments.collections ? ` · ${assignments.collections}` : ""}`, tone: "warning" };
+      if (status === "Entregado" && calc.balance <= 0) return { key: "close_paid", label: "Marcar trabajo como pagado", tone: "success" };
+      return { key: "advance", label: `Avanzar a ${nextStatus(status)}`, tone: "info" };
+    }
+    function reconcileJobStatus(job = {}, requestedStatus = "") {
+      const current = cleanText(requestedStatus || job.status || "Cotización");
+      if (["Pagado", "Cancelado"].includes(current)) return current;
+
+      const rank = { "Cotización": 0, "Aprobado": 1, "Diseño": 2, "Producción": 3, "Instalación": 4, "Entregado": 5 };
+      let suggested = current;
+      const promote = candidate => {
+        if ((rank[candidate] ?? -1) > (rank[suggested] ?? -1)) suggested = candidate;
+      };
+      const approval = getJobClientApproval(job);
+      const installation = getJobInstallation(job);
+      const checklist = getChecklist(job);
+
+      if (approval.estimateStatus === "aprobado") promote("Aprobado");
+      if (approval.designStatus === "aprobado") promote("Producción");
+      if (["produccion", "listo_instalar"].includes(job.production?.stage)) promote("Producción");
+      if (job.production?.stage === "instalacion_programada" || installation.date || ["Pendiente", "Confirmada", "En ruta", "Reprogramada"].includes(installation.status)) promote("Instalación");
+      if (job.production?.stage === "completado" || installation.status === "Completada" || checklist.delivered) promote("Entregado");
+      return suggested;
     }
     function cleanPhoneForWhatsapp(phone) {
       let digits = String(phone || "").replace(/[^\d]/g, "");
@@ -1306,6 +1358,7 @@
         link: "",
         linkExpiresAt: ""
       });
+      if (typeof setJobWorkflowForm === "function") setJobWorkflowForm({});
 
       $("materialsContainer").innerHTML = "";
       $("materialsContainer").appendChild(createMaterialRow());
@@ -1357,6 +1410,7 @@
     }
     async function saveJob() {
       if (!guardWrite("guardar trabajos", "trabajos")) return;
+      const currentJob = state.editingJobId ? (getJobById(state.editingJobId) || {}) : {};
       const quote = getCurrentQuoteForm();
       const quoteCalc = computeQuote(quote);
       const pricing = getCurrentPricingForm();
@@ -1385,8 +1439,10 @@
         estimate: getCurrentEstimatorForm(),
         checklist: getFormChecklist(),
         internalNotesLog: notesBase,
+        workflow: typeof getCurrentJobWorkflow === "function" ? getCurrentJobWorkflow(currentJob) : (currentJob.workflow || {}),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      payload.status = reconcileJobStatus(payload, payload.status);
 
       if (!payload.clientId) return showToast("Selecciona un cliente.");
       if (!payload.title) return showToast("Escribe el nombre del trabajo.");
@@ -1479,6 +1535,7 @@
       $("jobNotes").value = item.notes || "";
       $("jobNewInternalNote").value = "";
       setClientApprovalForm(item.clientApproval || {});
+      if (typeof setJobWorkflowForm === "function") setJobWorkflowForm(item);
 
       $("materialsContainer").innerHTML = "";
       const materials = item.materials && item.materials.length ? item.materials : [{ name:"", qty:"", price:"" }];
@@ -1572,6 +1629,7 @@
               <div class="module-badge">${safe(getClientApprovalSummaryText(job))}</div>
               <div style="margin-top:6px;">${inventoryStatePill(job)}</div>
               <div class="section-note" style="margin-top:8px;">${safe(job.description || job.notes || "-")}</div>
+              <div class="next-action next-action-${safe(getJobNextAction(job).tone)}" style="margin-top:8px;">${safe(getJobNextAction(job).label)}</div>
             </td>
             <td>
               <div><strong>${safe(formatDate(job.dueDate))}</strong></div>
@@ -1652,6 +1710,7 @@
                   <small>Entrega: ${safe(job.dueDate || "-")}</small>
                   <small>Saldo: ${money(calc.balance)}</small>
                   <small>Checklist: ${safe(checklistProgress(job))}</small>
+                  <div class="next-action next-action-${safe(getJobNextAction(job).tone)}">${safe(getJobNextAction(job).label)}</div>
                   <div class="kanban-actions">
                     <button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Abrir</button>
                     ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}

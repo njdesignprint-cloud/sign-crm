@@ -75,6 +75,7 @@
     const box = document.createElement("div");
     box.className = "box";
     box.id = "advanceControlBox";
+    box.dataset.jobTab = "finanzas";
     box.innerHTML = `
       <div class="advance-header">
         <div>
@@ -331,14 +332,16 @@
         materials: getCurrentFormMaterials(),
         quote,
         pricing,
+        clientApproval: getCurrentClientApprovalForm(),
         jobType: getEstimatorTemplate($("jobEstimatorType").value || "custom").label,
         estimate: getCurrentEstimatorForm(),
         checklist: getFormChecklist(),
         internalNotesLog: notesBase,
         advance: getCurrentAdvanceForm(),
+        workflow: typeof getCurrentJobWorkflow === "function" ? getCurrentJobWorkflow(currentJob || {}) : (currentJob?.workflow || {}),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
-      console.log("ADVANCE before save:", JSON.stringify(payload.advance));
+      if (typeof reconcileJobStatus === "function") payload.status = reconcileJobStatus(payload, payload.status);
 
       if (!payload.clientId) return showToast("Selecciona un cliente.");
       if (!payload.title) return showToast("Escribe el nombre del trabajo.");
