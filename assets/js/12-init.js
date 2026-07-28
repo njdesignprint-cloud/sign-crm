@@ -28,6 +28,7 @@
 
     $("saveClientBtn").addEventListener("click", saveClient);
     $("saveSalespersonBtn")?.addEventListener("click", saveSalesperson);
+    $("saveCommissionSettlementBtn")?.addEventListener("click", saveCommissionSettlement);
     $("clientSource")?.addEventListener("change", toggleClientCommissionFields);
     $("clientSalespersonId")?.addEventListener("change", applySelectedSalespersonDefaults);
     $("saveJobBtn").addEventListener("click", () => saveJob());

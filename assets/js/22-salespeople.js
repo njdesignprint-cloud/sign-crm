@@ -23,10 +23,10 @@
     function getSalespersonCommissionEstimate(id = "") {
       return state.jobs.filter(job => cleanText(job.status) !== "Cancelado").filter(job => {
         const client = state.clients.find(item => item.id === job.clientId);
-        return (job.commission?.salespersonId || client?.salespersonId) === id;
+        return (Object.hasOwn(job, "commission") ? job.commission?.salespersonId : client?.salespersonId) === id;
       }).reduce((sum, job) => {
         const client = state.clients.find(item => item.id === job.clientId) || {};
-        const terms = job.commission?.salespersonId ? job.commission : client;
+        const terms = Object.hasOwn(job, "commission") ? (job.commission || {}) : client;
         const rate = Number(terms.percent ?? terms.commissionPercent ?? 0) / 100;
         const baseType = terms.base || terms.commissionBase || "collected";
         let base = 0;
@@ -78,7 +78,7 @@
       $("jobCommissionBox")?.classList.toggle("hidden", !isAdmin());
       if (!isAdmin()) return;
       const client = state.clients.find(item => item.id === job.clientId) || {};
-      const terms = job.commission?.salespersonId ? job.commission : {
+      const terms = Object.hasOwn(job, "commission") ? (job.commission || {}) : {
         salespersonId: client.salesSource === "salesperson" ? client.salespersonId : "",
         percent: client.commissionPercent,
         base: client.commissionBase
@@ -100,6 +100,89 @@
       $("jobCommissionRate").textContent = `${rate.toFixed(2)}%`;
       $("jobCommissionProjected").textContent = money(projectedBase * rate / 100);
       $("jobCommissionEarned").textContent = money(earnedBase * rate / 100);
+    }
+    function getJobCommissionBreakdown(job = {}) {
+      const client = state.clients.find(item => item.id === job.clientId) || {};
+      const terms = job.commission?.salespersonId ? job.commission : {
+        salespersonId: client.salespersonId || "", salespersonName: client.salespersonNameSnapshot || "",
+        percent: client.commissionPercent || 0, base: client.commissionBase || "collected"
+      };
+      const sale = Math.max(0, Number(job.sale || 0));
+      const paid = Math.max(0, Number(getPaymentsTotal(job) || 0));
+      const rate = Math.max(0, Math.min(100, Number(terms.percent || 0)));
+      const baseType = terms.base || "collected";
+      const subtotal = Math.max(0, Number(computeQuote(getQuote(job)).subtotal || sale));
+      const profit = Math.max(0, Number(computeJob(job).profit || 0));
+      const projectedBase = baseType === "gross_profit" ? profit : baseType === "subtotal" ? subtotal : sale;
+      const earnedBase = baseType === "collected" ? paid : projectedBase * (sale > 0 ? Math.min(paid / sale, 1) : 0);
+      const earned = cleanText(job.status) === "Cancelado" ? 0 : earnedBase * rate / 100;
+      const previouslyPaid = state.commissionSettlements
+        .filter(item => item.status !== "void")
+        .flatMap(item => Array.isArray(item.lineItems) ? item.lineItems : [])
+        .filter(line => line.jobId === job.id)
+        .reduce((sum, line) => sum + Number(line.amount || 0), 0);
+      return { salespersonId: terms.salespersonId || "", salespersonName: terms.salespersonName || getSalespersonName(terms.salespersonId, ""), rate, baseType, projectedBase, earned, previouslyPaid, available: Math.max(0, earned - previouslyPaid), overpaid: Math.max(0, previouslyPaid - earned) };
+    }
+    function getSalespersonOutstanding(id = "") {
+      return state.jobs.reduce((sum, job) => { const calc = getJobCommissionBreakdown(job); return sum + (calc.salespersonId === id ? calc.available : 0); }, 0);
+    }
+    function getCommissionPaidTotal() {
+      return state.commissionSettlements.filter(item => item.status !== "void").reduce((sum, item) => sum + Number(item.total || 0), 0);
+    }
+    function openCommissionSettlement(id) {
+      const person = state.salespeople.find(item => item.id === id); if (!person) return;
+      $("commissionSettlementSalespersonId").value = id;
+      $("commissionSettlementTitle").textContent = `Commission settlement · ${person.name}`;
+      $("commissionSettlementDate").value = today();
+      const monthStart = `${today().slice(0, 7)}-01`;
+      $("commissionSettlementFrom").value = monthStart; $("commissionSettlementTo").value = today();
+      $("commissionSettlementMethod").value = "check"; $("commissionSettlementReference").value = ""; $("commissionSettlementNotes").value = "";
+      renderCommissionSettlementLines(); openModal("commissionSettlementModal");
+    }
+    function renderCommissionSettlementLines() {
+      const salespersonId = $("commissionSettlementSalespersonId")?.value || "";
+      const lines = state.jobs.map(job => ({ job, calc: getJobCommissionBreakdown(job) })).filter(item => item.calc.salespersonId === salespersonId && item.calc.available > 0.005);
+      $("commissionSettlementLines").innerHTML = lines.map(({ job, calc }) => {
+        const client = getClientById(job.clientId);
+        return `<tr><td><input type="checkbox" data-commission-line="${safe(job.id)}" data-commission-amount="${calc.available.toFixed(2)}" checked /></td><td><strong>${safe(job.title || "Job")}</strong><br><small>${safe(clientLabel(client))}</small></td><td>${calc.rate.toFixed(2)}%<br><small>${safe(COMMISSION_BASE_LABELS[calc.baseType] || calc.baseType)}</small></td><td>${money(calc.earned)}</td><td>${money(calc.previouslyPaid)}</td><td><strong>${money(calc.available)}</strong>${calc.overpaid ? `<br><small class="danger-text">Overpaid ${money(calc.overpaid)}</small>` : ""}</td></tr>`;
+      }).join("");
+      $("commissionSettlementNoLines").classList.toggle("hidden", lines.length > 0);
+      document.querySelectorAll("[data-commission-line]").forEach(input => input.addEventListener("change", updateCommissionSettlementTotal));
+      updateCommissionSettlementTotal();
+    }
+    function updateCommissionSettlementTotal() {
+      const checked = Array.from(document.querySelectorAll("[data-commission-line]:checked"));
+      const total = checked.reduce((sum, input) => sum + Number(input.dataset.commissionAmount || 0), 0);
+      $("commissionSettlementSelectedCount").textContent = String(checked.length); $("commissionSettlementTotal").textContent = money(total);
+    }
+    async function saveCommissionSettlement() {
+      if (!guardWrite("record commission payments", "vendedores")) return;
+      const salespersonId = $("commissionSettlementSalespersonId").value;
+      const person = state.salespeople.find(item => item.id === salespersonId);
+      const periodFrom = $("commissionSettlementFrom").value || "";
+      const periodTo = $("commissionSettlementTo").value || "";
+      if (periodFrom && periodTo && periodFrom > periodTo) return showToast("The statement start date cannot be after the end date.");
+      const selected = Array.from(document.querySelectorAll("[data-commission-line]:checked"));
+      if (!person || !selected.length) return showToast("Select at least one earned commission.");
+      const lineItems = selected.map(input => {
+        const job = getJobById(input.dataset.commissionLine); const calc = getJobCommissionBreakdown(job); const client = getClientById(job.clientId);
+        return { jobId: job.id, jobTitle: job.title || "Job", clientId: job.clientId || "", clientName: clientLabel(client), rate: calc.rate, base: calc.baseType, earnedAtSettlement: Number(calc.earned.toFixed(2)), previouslyPaid: Number(calc.previouslyPaid.toFixed(2)), amount: Number(calc.available.toFixed(2)) };
+      }).filter(line => line.amount > 0);
+      const total = lineItems.reduce((sum, line) => sum + line.amount, 0);
+      if (total <= 0) return showToast("There is no outstanding commission to pay.");
+      const button = $("saveCommissionSettlementBtn"); button.disabled = true;
+      try {
+        await commissionSettlementsRef().add({ salespersonId, salespersonName: person.name, paymentDate: $("commissionSettlementDate").value || today(), periodFrom, periodTo, method: $("commissionSettlementMethod").value || "other", reference: cleanText($("commissionSettlementReference").value), notes: cleanText($("commissionSettlementNotes").value), status: "paid", lineItems, total: Number(total.toFixed(2)), recordedBy: state.userEmail || "", createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        closeModal("commissionSettlementModal"); showToast("Commission payment recorded.");
+      } catch (error) { console.error(error); showToast("The commission payment could not be recorded."); }
+      finally { button.disabled = false; }
+    }
+    async function voidCommissionSettlement(id) {
+      if (!guardWrite("void commission settlements", "vendedores")) return;
+      const item = state.commissionSettlements.find(row => row.id === id); if (!item || item.status === "void") return;
+      if (!confirm("Void this commission settlement? The record will remain in the audit history.")) return;
+      try { await commissionSettlementsRef().doc(id).update({ status: "void", voidedAt: firebase.firestore.FieldValue.serverTimestamp(), voidedBy: state.userEmail || "", updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); showToast("Commission settlement voided."); }
+      catch (error) { console.error(error); showToast("The settlement could not be voided."); }
     }
     function fillClientSalespersonSelect(selected = "") {
       const select = $("clientSalespersonId");
@@ -161,7 +244,8 @@
     async function deleteSalesperson(id) {
       if (!guardDelete("delete salespeople", "vendedores")) return;
       const assigned = state.clients.filter(client => client.salespersonId === id).length;
-      if (assigned) return showToast(`This salesperson has ${assigned} assigned client(s). Set them inactive instead.`);
+      const referenced = state.jobs.some(job => job.commission?.salespersonId === id) || state.commissionSettlements.some(item => item.salespersonId === id);
+      if (assigned || referenced) return showToast("This salesperson has business history. Set them inactive instead.");
       if (!confirm("Delete this salesperson? This cannot be undone.")) return;
       try { await salespeopleRef().doc(id).delete(); showToast("Salesperson deleted."); } catch (error) { console.error(error); showToast("The salesperson could not be deleted."); }
     }
@@ -171,11 +255,18 @@
       const rows = state.salespeople.filter(item => `${item.name || ""} ${item.company || ""} ${item.email || ""} ${item.phone || ""}`.toLowerCase().includes(q));
       body.innerHTML = rows.map(item => {
         const clients = state.clients.filter(client => client.salespersonId === item.id).length;
-        return `<tr><td><strong>${safe(item.name)}</strong><br><small>${safe(item.company || "-")}</small></td><td>${safe(item.email || "-")}<br><small>${safe(item.phone || "-")}</small></td><td>${Number(item.commissionPercent || 0).toFixed(2)}%<br><small>${safe(COMMISSION_BASE_LABELS[item.commissionBase] || COMMISSION_BASE_LABELS.collected)}</small></td><td>${clients}</td><td><strong>${money(getSalespersonCommissionEstimate(item.id))}</strong><br><small>Based on current CRM records</small></td><td><span class="pill ${item.status === "inactive" ? "state-disabled" : "state-active"}">${item.status === "inactive" ? "Inactive" : "Active"}</span></td><td><div class="actions-row"><button class="btn btn-info btn-small" data-salesperson-agreement="${item.id}">Agreement PDF</button><button class="btn btn-secondary btn-small" data-edit-salesperson="${item.id}">Edit</button><button class="btn btn-danger btn-small" data-delete-salesperson="${item.id}">Delete</button></div></td></tr>`;
+        return `<tr><td><strong>${safe(item.name)}</strong><br><small>${safe(item.company || "-")}</small></td><td>${safe(item.email || "-")}<br><small>${safe(item.phone || "-")}</small></td><td>${Number(item.commissionPercent || 0).toFixed(2)}%<br><small>${safe(COMMISSION_BASE_LABELS[item.commissionBase] || COMMISSION_BASE_LABELS.collected)}</small></td><td>${clients}</td><td><strong>${money(getSalespersonOutstanding(item.id))}</strong><br><small>Earned and not settled</small></td><td><span class="pill ${item.status === "inactive" ? "state-disabled" : "state-active"}">${item.status === "inactive" ? "Inactive" : "Active"}</span></td><td><div class="actions-row"><button class="btn btn-primary btn-small" data-new-commission-settlement="${item.id}">Pay commission</button><button class="btn btn-info btn-small" data-salesperson-agreement="${item.id}">Agreement PDF</button><button class="btn btn-secondary btn-small" data-edit-salesperson="${item.id}">Edit</button><button class="btn btn-danger btn-small" data-delete-salesperson="${item.id}">Delete</button></div></td></tr>`;
       }).join("");
       $("salespeopleEmpty").classList.toggle("hidden", rows.length > 0);
       $("activeSalespeopleCount").textContent = state.salespeople.filter(item => item.status !== "inactive").length;
       $("salespersonClientsCount").textContent = state.clients.filter(client => client.salesSource === "salesperson").length;
+      $("commissionOutstandingTotal").textContent = money(state.salespeople.reduce((sum, item) => sum + getSalespersonOutstanding(item.id), 0));
+      $("commissionPaidTotal").textContent = money(getCommissionPaidTotal());
+    }
+    function renderCommissionSettlements() {
+      const body = $("commissionSettlementsBody"); if (!body) return;
+      body.innerHTML = state.commissionSettlements.map(item => `<tr class="${item.status === "void" ? "commission-settlement-void" : ""}"><td>${safe(item.paymentDate || "-")}</td><td>${safe(item.salespersonName || getSalespersonName(item.salespersonId, "-"))}</td><td>${Array.isArray(item.lineItems) ? item.lineItems.length : 0}</td><td>${safe(item.method || "-")}<br><small>${safe(item.reference || "-")}</small></td><td><strong>${money(item.total)}</strong></td><td><span class="pill ${item.status === "void" ? "state-disabled" : "state-active"}">${item.status === "void" ? "Voided" : "Paid"}</span></td><td><div class="actions-row"><button class="btn btn-info btn-small" data-commission-settlement-pdf="${item.id}">Statement PDF</button>${item.status !== "void" ? `<button class="btn btn-danger btn-small" data-void-commission-settlement="${item.id}">Void</button>` : ""}</div></td></tr>`).join("");
+      $("commissionSettlementsEmpty").classList.toggle("hidden", state.commissionSettlements.length > 0);
     }
     function pdfWrappedText(pdf, text, x, y, width, lineHeight = 5) {
       const lines = pdf.splitTextToSize(text, width); pdf.text(lines, x, y); return y + lines.length * lineHeight;
@@ -214,12 +305,27 @@
     function exportSalespeoplePdf() {
       const { jsPDF } = window.jspdf; const pdf = new jsPDF();
       pdf.setFontSize(16); pdf.text("Salespeople & commissions", 14, 16); pdf.setFontSize(9); pdf.text(`Generated ${today()}`, 14, 23);
-      pdf.autoTable({ startY: 29, head: [["Salesperson", "Contact", "Default rate", "Base", "Clients", "Estimated earned", "Status"]], body: state.salespeople.map(item => [item.name, item.email || item.phone || "-", `${Number(item.commissionPercent || 0).toFixed(2)}%`, COMMISSION_BASE_LABELS[item.commissionBase] || COMMISSION_BASE_LABELS.collected, state.clients.filter(client => client.salespersonId === item.id).length, money(getSalespersonCommissionEstimate(item.id)), item.status === "inactive" ? "Inactive" : "Active"]), headStyles: { fillColor: [15,23,42] }, styles: { fontSize: 8 } });
+      pdf.autoTable({ startY: 29, head: [["Salesperson", "Contact", "Default rate", "Base", "Clients", "Outstanding", "Status"]], body: state.salespeople.map(item => [item.name, item.email || item.phone || "-", `${Number(item.commissionPercent || 0).toFixed(2)}%`, COMMISSION_BASE_LABELS[item.commissionBase] || COMMISSION_BASE_LABELS.collected, state.clients.filter(client => client.salespersonId === item.id).length, money(getSalespersonOutstanding(item.id)), item.status === "inactive" ? "Inactive" : "Active"]), headStyles: { fillColor: [15,23,42] }, styles: { fontSize: 8 } });
       pdf.save(`Salespeople_Commissions_${today()}.pdf`);
+    }
+    function exportCommissionSettlementPdf(id) {
+      const item = state.commissionSettlements.find(row => row.id === id); if (!item) return showToast("Settlement not found.");
+      const { jsPDF } = window.jspdf; const pdf = new jsPDF("p", "mm", "letter");
+      pdf.setFillColor(15,23,42); pdf.rect(0,0,216,30,"F"); pdf.setTextColor(255,255,255); pdf.setFontSize(18); pdf.text("COMMISSION PAYMENT STATEMENT",14,18);
+      pdf.setTextColor(35,35,35); pdf.setFontSize(10);
+      pdf.autoTable({ startY: 38, head: [["Field", "Details"]], body: [["Salesperson", item.salespersonName || "-"],["Payment date", item.paymentDate || "-"],["Statement period", `${item.periodFrom || "-"} to ${item.periodTo || "-"}`],["Payment method", item.method || "-"],["Reference", item.reference || "-"],["Status", item.status === "void" ? "VOID" : "PAID"]], headStyles:{fillColor:[15,23,42]}, styles:{fontSize:9} });
+      pdf.autoTable({ startY: pdf.lastAutoTable.finalY + 8, head: [["Job", "Client", "Rate", "Base", "Amount"]], body: (item.lineItems || []).map(line => [line.jobTitle || "-", line.clientName || "-", `${Number(line.rate || 0).toFixed(2)}%`, COMMISSION_BASE_LABELS[line.base] || line.base || "-", money(line.amount)]), headStyles:{fillColor:[15,23,42]}, styles:{fontSize:8} });
+      let y = pdf.lastAutoTable.finalY + 10; pdf.setFont(undefined,"bold"); pdf.setFontSize(12); pdf.text(`TOTAL PAID: ${money(item.total)}`,14,y); y += 10; pdf.setFont(undefined,"normal"); pdf.setFontSize(9); y = pdfWrappedText(pdf, `Notes: ${item.notes || "-"}`,14,y,188) + 14;
+      if (y > 235) { pdf.addPage(); y = 25; } pdf.text("Company representative: __________________________",14,y); pdf.text("Salesperson: __________________________",112,y); y += 10; pdf.text("Signature: ______________________________________",14,y); pdf.text("Signature: ______________________________",112,y); y += 10; pdf.text("Date: __________________________________________",14,y); pdf.text("Date: __________________________________",112,y);
+      pdf.setFontSize(7); pdf.setTextColor(100,100,100); pdf.text("This statement acknowledges the listed commission payment. Keep a signed copy with business records.",14,272);
+      pdf.save(`Commission_Statement_${(item.salespersonName || "salesperson").replace(/[^a-z0-9]+/gi,"_")}_${item.paymentDate || today()}.pdf`); showToast("Commission statement PDF downloaded.");
     }
     document.addEventListener("click", event => {
       const edit = event.target.closest("[data-edit-salesperson]"); if (edit) editSalesperson(edit.dataset.editSalesperson);
       const remove = event.target.closest("[data-delete-salesperson]"); if (remove) deleteSalesperson(remove.dataset.deleteSalesperson);
       const agreement = event.target.closest("[data-salesperson-agreement]"); if (agreement) exportSalespersonAgreement(agreement.dataset.salespersonAgreement);
+      const settle = event.target.closest("[data-new-commission-settlement]"); if (settle) openCommissionSettlement(settle.dataset.newCommissionSettlement);
+      const settlementPdf = event.target.closest("[data-commission-settlement-pdf]"); if (settlementPdf) exportCommissionSettlementPdf(settlementPdf.dataset.commissionSettlementPdf);
+      const voidButton = event.target.closest("[data-void-commission-settlement]"); if (voidButton) voidCommissionSettlement(voidButton.dataset.voidCommissionSettlement);
     });
     $("salespersonSearch")?.addEventListener("input", renderSalespeople);

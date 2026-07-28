@@ -114,6 +114,7 @@
         user: state.userEmail,
         clients: state.clients,
         salespeople: state.salespeople,
+        commissionSettlements: state.commissionSettlements,
         jobs: state.jobs,
         expenses: state.expenses,
         recurringExpenses: state.recurringExpenses,

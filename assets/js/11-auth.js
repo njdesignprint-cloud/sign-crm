@@ -74,6 +74,7 @@
       }, error => console.error(error));
 
       let unsubSalespeople = () => {};
+      let unsubCommissionSettlements = () => {};
       if (isAdmin()) {
         unsubSalespeople = salespeopleRef().orderBy("name", "asc").onSnapshot(snapshot => {
           state.salespeople = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -82,8 +83,14 @@
           if (typeof fillJobSalespersonSelect === "function") fillJobSalespersonSelect(cleanText($("jobSalespersonId")?.value));
           renderClients();
         }, error => console.error(error));
+        unsubCommissionSettlements = commissionSettlementsRef().orderBy("paymentDate", "desc").onSnapshot(snapshot => {
+          state.commissionSettlements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (typeof renderCommissionSettlements === "function") renderCommissionSettlements();
+          if (typeof renderSalespeople === "function") renderSalespeople();
+        }, error => console.error(error));
       } else {
         state.salespeople = [];
+        state.commissionSettlements = [];
       }
 
       let unsubWeeklySettlements = () => {};
@@ -128,7 +135,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubClients, unsubSalespeople, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubClients, unsubSalespeople, unsubCommissionSettlements, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {

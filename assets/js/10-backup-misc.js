@@ -7,6 +7,7 @@
 
         const clients = Array.isArray(data.clients) ? data.clients : [];
         const salespeople = Array.isArray(data.salespeople) ? data.salespeople : [];
+        const commissionSettlements = Array.isArray(data.commissionSettlements) ? data.commissionSettlements : [];
         const jobs = Array.isArray(data.jobs) ? data.jobs : [];
         const expenses = Array.isArray(data.expenses) ? data.expenses : [];
         const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
@@ -14,7 +15,7 @@
         const movements = Array.isArray(data.inventoryMovements) ? data.inventoryMovements : [];
         const weeklySettlements = Array.isArray(data.weeklySettlements) ? data.weeklySettlements : [];
 
-        if (!clients.length && !salespeople.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
+        if (!clients.length && !salespeople.length && !commissionSettlements.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
           return showToast("Ese JSON no tiene datos válidos.");
         }
 
@@ -22,6 +23,7 @@
           `Se van a importar:\n` +
           `Clientes: ${clients.length}\n` +
           `Vendedores: ${salespeople.length}\n` +
+          `Liquidaciones de comisión: ${commissionSettlements.length}\n` +
           `Trabajos: ${jobs.length}\n` +
           `Gastos: ${expenses.length}\n` +
           `Recurrentes: ${recurring.length}\n\n` +
@@ -32,6 +34,7 @@
 
         const clientMap = {};
         const salespersonMap = {};
+        const jobMap = {};
 
         for (const item of salespeople) {
           const payload = {
@@ -80,14 +83,28 @@
             materials: Array.isArray(item.materials) ? item.materials : [],
             quote: item.quote || { items: [], discountType: "none", discountValue: 0, taxPercent: 0 },
             checklist: item.checklist || {},
-            commission: item.commission || {},
+            commission: item.commission ? { ...item.commission, salespersonId: salespersonMap[item.commission.salespersonId] || item.commission.salespersonId || "" } : {},
             payments: Array.isArray(item.payments) ? item.payments : [],
             internalNotesLog: Array.isArray(item.internalNotesLog) ? item.internalNotesLog : [],
             activityLog: Array.isArray(item.activityLog) ? item.activityLog : [newLogEntry("importación", "Trabajo importado desde respaldo JSON.")],
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };
-          await jobsRef().add(payload);
+          const doc = await jobsRef().add(payload);
+          if (item.id) jobMap[item.id] = doc.id;
+        }
+
+        for (const item of commissionSettlements) {
+          const payload = {
+            salespersonId: salespersonMap[item.salespersonId] || item.salespersonId || "",
+            salespersonName: item.salespersonName || "", paymentDate: item.paymentDate || today(),
+            periodFrom: item.periodFrom || "", periodTo: item.periodTo || "", method: item.method || "other",
+            reference: item.reference || "", notes: item.notes || "", status: item.status === "void" ? "void" : "paid",
+            lineItems: Array.isArray(item.lineItems) ? item.lineItems.map(line => ({ ...line, jobId: jobMap[line.jobId] || line.jobId || "", clientId: clientMap[line.clientId] || line.clientId || "" })) : [],
+            total: Number(item.total || 0), importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await commissionSettlementsRef().add(payload);
         }
 
         for (const item of expenses) {

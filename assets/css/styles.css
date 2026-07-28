@@ -1584,3 +1584,4 @@ body.sidebar-collapsed .nav button.active::before{top:8px;bottom:8px;left:-4px}
   body.mobile-nav-open .mobile-nav-backdrop{display:block}
 }
 .commission-field-muted { opacity:.48; }
+.commission-settlement-void { opacity:.55; text-decoration:line-through; }

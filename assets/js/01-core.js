@@ -38,6 +38,7 @@
       currentView: "dashboard",
       clients: [],
       salespeople: [],
+      commissionSettlements: [],
       jobs: [],
       expenses: [],
       recurringExpenses: [],
@@ -362,6 +363,7 @@
     function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
     function clientsRef() { return userRef().collection("clients"); }
     function salespeopleRef() { return userRef().collection("salespeople"); }
+    function commissionSettlementsRef() { return userRef().collection("commissionSettlements"); }
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
     function recurringRef() { return userRef().collection("recurringExpenses"); }
@@ -600,6 +602,7 @@
       const buttonModuleMap = {
         saveClientBtn: 'clientes',
         saveSalespersonBtn: 'vendedores',
+        saveCommissionSettlementBtn: 'vendedores',
         saveJobBtn: 'trabajos',
         saveExpenseBtn: 'gastos',
         saveRecurringBtn: 'gastos',

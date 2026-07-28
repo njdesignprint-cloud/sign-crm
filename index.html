@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-5" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-6" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -348,14 +348,21 @@
           <div class="stats">
             <div class="stat"><div class="label">Active salespeople</div><div id="activeSalespeopleCount" class="value">0</div></div>
             <div class="stat"><div class="label">Assigned clients</div><div id="salespersonClientsCount" class="value">0</div></div>
+            <div class="stat"><div class="label">Outstanding commissions</div><div id="commissionOutstandingTotal" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div class="label">Commissions paid</div><div id="commissionPaidTotal" class="value ok-text">$0.00</div></div>
           </div>
           <div class="panel">
             <div class="panel-head">
               <div><h2>Salespeople & commission agreements</h2><div class="section-note">Store salesperson details, default commission terms and signed-agreement templates.</div></div>
               <div class="filters"><input id="salespersonSearch" class="input" placeholder="Search name, company, email or phone" /></div>
             </div>
-            <div class="table-wrap"><table><thead><tr><th>Salesperson</th><th>Contact</th><th>Default commission</th><th>Clients</th><th>Estimated earned</th><th>Status</th><th>Actions</th></tr></thead><tbody id="salespeopleBody"></tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th>Salesperson</th><th>Contact</th><th>Default commission</th><th>Clients</th><th>Outstanding</th><th>Status</th><th>Actions</th></tr></thead><tbody id="salespeopleBody"></tbody></table></div>
             <div id="salespeopleEmpty" class="empty hidden">No salespeople saved yet.</div>
+          </div>
+          <div class="panel mt-12">
+            <div class="panel-head"><div><h2>Commission settlements</h2><div class="section-note">Permanent payment statements. Incorrect entries are voided, never silently deleted.</div></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Date</th><th>Salesperson</th><th>Jobs</th><th>Method / reference</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="commissionSettlementsBody"></tbody></table></div>
+            <div id="commissionSettlementsEmpty" class="empty hidden">No commission settlements recorded yet.</div>
           </div>
         </section>
 
@@ -1465,6 +1472,28 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="commissionSettlementModal">
+    <div class="modal modal-wide">
+      <div class="modal-head"><h3 id="commissionSettlementTitle">New commission settlement</h3><button class="btn btn-secondary btn-small" data-close="commissionSettlementModal">Close</button></div>
+      <div class="modal-body">
+        <input id="commissionSettlementSalespersonId" type="hidden" />
+        <div class="grid-3">
+          <label class="field-label">Payment date<input id="commissionSettlementDate" class="input" type="date" /></label>
+          <label class="field-label">Period from<input id="commissionSettlementFrom" class="input" type="date" /></label>
+          <label class="field-label">Period to<input id="commissionSettlementTo" class="input" type="date" /></label>
+          <label class="field-label">Payment method<select id="commissionSettlementMethod" class="select"><option value="check">Check</option><option value="ach">ACH / bank transfer</option><option value="cash">Cash</option><option value="zelle">Zelle</option><option value="other">Other</option></select></label>
+          <label class="field-label grid-span-2">Reference / confirmation<input id="commissionSettlementReference" class="input" /></label>
+        </div>
+        <div class="section-note mt-12">Only unpaid earned commission is available. Previously settled amounts are automatically deducted. The period dates label the statement; the list includes every currently outstanding job.</div>
+        <div class="table-wrap mt-12"><table><thead><tr><th>Include</th><th>Job / client</th><th>Rate</th><th>Earned</th><th>Previously paid</th><th>Available</th></tr></thead><tbody id="commissionSettlementLines"></tbody></table></div>
+        <div id="commissionSettlementNoLines" class="empty hidden">This salesperson has no unpaid earned commissions.</div>
+        <textarea id="commissionSettlementNotes" class="textarea mt-12" placeholder="Payment notes"></textarea>
+        <div class="summary-box"><div><span>Selected jobs</span><strong id="commissionSettlementSelectedCount">0</strong></div><div><span>Settlement total</span><strong id="commissionSettlementTotal">$0.00</strong></div></div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="commissionSettlementModal">Cancel</button><button id="saveCommissionSettlementBtn" class="btn btn-primary">Record payment</button></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="jobModal">
     <div class="modal">
       <div class="modal-head">
@@ -2230,20 +2259,20 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260728-4"></script>
+  <script src="assets/js/01-core.js?v=20260728-5"></script>
   <script src="assets/js/02-clients.js?v=20260728-3"></script>
-  <script src="assets/js/22-salespeople.js?v=20260728-2"></script>
+  <script src="assets/js/22-salespeople.js?v=20260728-3"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
   <script src="assets/js/03-jobs.js?v=20260728-3"></script>
   <script src="assets/js/04-expenses.js?v=20260728-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
-  <script src="assets/js/07-pdf.js?v=20260728-3"></script>
+  <script src="assets/js/07-pdf.js?v=20260728-4"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-2"></script>
-  <script src="assets/js/10-backup-misc.js?v=20260728-4"></script>
-  <script src="assets/js/11-auth.js?v=20260728-4"></script>
-  <script src="assets/js/12-init.js?v=20260728-4"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260728-5"></script>
+  <script src="assets/js/11-auth.js?v=20260728-5"></script>
+  <script src="assets/js/12-init.js?v=20260728-5"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
