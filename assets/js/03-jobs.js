@@ -1575,7 +1575,7 @@
     }
     function jobMatchesQuickFilter(job, filter = state.jobsQuickFilter || "all") {
       const dates = getJobQuickFilterDates();
-      const normalizedJob = { ...job, installation: getJobInstallation(job) };
+      const normalizedJob = { ...job, installation: getJobInstallation(job), clientApproval: getJobClientApproval(job) };
       return JobQuickFilters.matches(normalizedJob, filter, {
         aliases: getCurrentUserJobAliases(),
         overdue: isOverdue(job),
@@ -1660,6 +1660,7 @@
     }
     function renderJobs() {
       renderJobsQuickFilters();
+      if (typeof renderOperationsAlerts === "function") renderOperationsAlerts();
       const rows = getFilteredJobs();
 
       $("jobsBody").innerHTML = rows.map(job => {
