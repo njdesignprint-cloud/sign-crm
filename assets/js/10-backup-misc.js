@@ -235,15 +235,8 @@
   if (!confirm(`¿Seguro que quieres eliminar este ${label}?`)) return;
 
   try {
-    if (type === "clients") await clientsRef().doc(id).delete();
-    if (type === "jobs") await jobsRef().doc(id).delete();
-    if (type === "expenses") await expensesRef().doc(id).delete();
-    if (type === "recurring") await recurringRef().doc(id).delete();
-    if (type === "inventory") await inventoryRef().doc(id).delete();
-    if (type === "providers") await providersRef().doc(id).delete();
-    if (type === "purchaseOrders") await purchaseOrdersRef().doc(id).delete();
-
-    showToast(`${label} eliminado.`);
+    await moveRecordToTrash(type, id, label);
+    showToast(`${label} moved to Trash.`);
   } catch (error) {
     console.error(error);
     showToast(`No se pudo eliminar ${label}.`);

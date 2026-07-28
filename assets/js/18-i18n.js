@@ -45,6 +45,7 @@
       navReportesBtn: "📈 Reportes",
       navUsuariosBtn: "🔐 Usuarios",
       navConfiguracionBtn: "⚙️ Configuración de empresa",
+      navPapeleraBtn: "♻️ Papelera y recuperación",
       navCuentasCrmBtn: "🧩 Cuentas CRM",
       activeUserLabel: "Usuario activo:",
       btnLogout: "Cerrar sesión",
@@ -138,6 +139,7 @@
       navReportesBtn: "📈 Reports",
       navUsuariosBtn: "🔐 Users",
       navConfiguracionBtn: "⚙️ Company settings",
+      navPapeleraBtn: "♻️ Trash & recovery",
       navCuentasCrmBtn: "🧩 CRM Accounts",
       activeUserLabel: "Active user:",
       btnLogout: "Sign out",
@@ -209,6 +211,7 @@
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Configuración de empresa", "Identidad, preferencias regionales y marca de documentos."],
+      papelera: ["Papelera y recuperación", "Restaura registros archivados conservando sus identificadores."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     },
     en: {
@@ -226,6 +229,7 @@
       liquidaciones: ["Weekly settlement", "Professional tracking of owner pay and business reserves."],
       usuarios: ["Users", "Team access, roles and permissions."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
+      papelera: ["Trash & recovery", "Restore archived records while preserving their original IDs."],
       cuentascrm: ["CRM Accounts", "Global control of registrations, companies and access status."]
     }
   };
@@ -390,6 +394,7 @@
     setText("navReportesBtn", t("navReportesBtn"));
     setText("navUsuariosBtn", t("navUsuariosBtn"));
     setText("navConfiguracionBtn", t("navConfiguracionBtn"));
+    setText("navPapeleraBtn", t("navPapeleraBtn"));
     setText("navCuentasCrmBtn", t("navCuentasCrmBtn"));
     setText("activeUserLabel", t("activeUserLabel"));
     setText("btnLogout", t("btnLogout"));
@@ -503,6 +508,7 @@
     try { localStorage.setItem(LANGUAGE_STORAGE_KEY, next); } catch (_) {}
     if (window.state) window.state.language = next;
     applyLanguage();
+    window.dispatchEvent(new CustomEvent("crm-language-changed", { detail: { language: next } }));
   }
 
   function patchFunctions() {

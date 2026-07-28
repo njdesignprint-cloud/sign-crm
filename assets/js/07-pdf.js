@@ -121,6 +121,10 @@
         recurringExpenses: state.recurringExpenses,
         inventoryItems: state.inventoryItems,
         inventoryMovements: state.inventoryMovements,
+        providers: state.providers,
+        purchaseOrders: state.purchaseOrders,
+        teamMembers: state.teamMembers,
+        trashItems: state.trashItems,
         weeklySettlements: state.weeklySettlements
       };
 

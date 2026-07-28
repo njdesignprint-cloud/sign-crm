@@ -152,6 +152,7 @@
 
   <button data-view="usuarios" id="navUsuariosBtn" data-nav-icon="🔐">🔐 Usuarios</button>
   <button data-view="configuracion" id="navConfiguracionBtn" data-nav-icon="⚙️">⚙️ Company settings</button>
+  <button data-view="papelera" id="navPapeleraBtn" data-nav-icon="♻️">♻️ Trash & recovery</button>
   <button data-view="cuentascrm" id="navCuentasCrmBtn" data-nav-icon="🧩">🧩 Cuentas CRM</button>
 </div>
 
@@ -1372,6 +1373,15 @@
           </div>
         </section>
 
+        <section id="view-papelera" class="view hidden">
+          <div class="stats"><div class="stat"><div class="label">Archived records</div><div id="trashTotalCount" class="value">0</div></div></div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Trash & recovery</h2><div class="section-note">Records remain recoverable with their original IDs. Restoring does not overwrite an existing record.</div></div><div class="filters"><select id="trashTypeFilter" class="select"><option value="">All record types</option><option value="clients">Clients</option><option value="jobs">Jobs</option><option value="expenses">Expenses</option><option value="recurring">Recurring expenses</option><option value="inventory">Inventory</option><option value="providers">Suppliers</option><option value="purchaseOrders">Purchase orders</option><option value="salespeople">Salespeople</option></select></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Archived</th><th>Type</th><th>Record</th><th>Archived by</th><th>Original ID</th><th>Actions</th></tr></thead><tbody id="trashBody"></tbody></table></div>
+            <div id="trashEmpty" class="empty hidden">The trash is empty.</div>
+          </div>
+        </section>
+
         <section id="view-cuentascrm" class="view hidden">
           <div class="stats">
             <div class="stat"><div class="label">Cuentas totales</div><div id="platformAccountsTotalCount" class="value">0</div></div>
@@ -2273,26 +2283,28 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260728-6"></script>
+  <script src="assets/js/01-core.js?v=20260728-7"></script>
   <script src="assets/js/02-clients.js?v=20260728-3"></script>
   <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
+  <script src="assets/js/24-trash.js?v=20260728-1"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
   <script src="assets/js/03-jobs.js?v=20260728-4"></script>
   <script src="assets/js/04-expenses.js?v=20260728-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
-  <script src="assets/js/07-pdf.js?v=20260728-6"></script>
+  <script src="assets/js/07-pdf.js?v=20260728-7"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
-  <script src="assets/js/09-users.js?v=20260728-2"></script>
-  <script src="assets/js/10-backup-misc.js?v=20260728-6"></script>
-  <script src="assets/js/11-auth.js?v=20260728-7"></script>
+  <script src="assets/js/09-users.js?v=20260728-3"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260728-7"></script>
+  <script src="assets/js/11-auth.js?v=20260728-8"></script>
   <script src="assets/js/12-init.js?v=20260728-6"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
   <script src="assets/js/17-advance-visual.js?v=20260728-2"></script>
-  <script src="assets/js/18-i18n.js?v=20260728-4"></script>
+  <script src="assets/js/18-i18n.js?v=20260728-5"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260728-1"></script>
   <script src="assets/js/19-job-workflow.js?v=20260728-2"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>

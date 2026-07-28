@@ -159,6 +159,7 @@
           workspaceOwnerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
           teamDocId: docId
         }, { merge: true });
+        batch.set(legacyTeamAccessRefByEmail(email), { ...payload, workspaceOwnerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "", teamDocId: docId }, { merge:true });
 
         await batch.commit();
         closeModal("teamMemberModal");
@@ -184,6 +185,7 @@
           active: nextActive,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
+        await legacyTeamAccessRefByEmail(member.email).set({ active: nextActive, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
         showToast(nextActive ? "Usuario activado." : "Usuario desactivado.");
       } catch (error) {
         console.error(error);
@@ -200,6 +202,7 @@
         const batch = db.batch();
         batch.delete(teamMembersRef().doc(id));
         batch.delete(teamAccessRefByEmail(member.email));
+        batch.delete(legacyTeamAccessRefByEmail(member.email));
         await batch.commit();
         showToast("Acceso eliminado.");
       } catch (error) {

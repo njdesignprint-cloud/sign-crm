@@ -254,8 +254,8 @@
       const assigned = state.clients.filter(client => client.salespersonId === id).length;
       const referenced = state.jobs.some(job => job.commission?.salespersonId === id) || state.commissionSettlements.some(item => item.salespersonId === id);
       if (assigned || referenced) return showToast("This salesperson has business history. Set them inactive instead.");
-      if (!confirm("Delete this salesperson? This cannot be undone.")) return;
-      try { await salespeopleRef().doc(id).delete(); showToast("Salesperson deleted."); } catch (error) { console.error(error); showToast("The salesperson could not be deleted."); }
+      if (!confirm("Move this salesperson to Trash?")) return;
+      try { await moveRecordToTrash("salespeople", id, "salesperson"); showToast("Salesperson moved to Trash."); } catch (error) { console.error(error); showToast(error?.message || "The salesperson could not be archived."); }
     }
     function renderSalespeople() {
       const body = $("salespeopleBody"); if (!body) return;

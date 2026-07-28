@@ -81,6 +81,7 @@
 
       let unsubSalespeople = () => {};
       let unsubCommissionSettlements = () => {};
+      let unsubTrash = () => {};
       if (isAdmin()) {
         unsubSalespeople = salespeopleRef().orderBy("name", "asc").onSnapshot(snapshot => {
           state.salespeople = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -95,9 +96,14 @@
           if (typeof renderSalespeople === "function") renderSalespeople();
           renderJobs();
         }, error => console.error(error));
+        unsubTrash = trashRef().orderBy("archivedAt", "desc").onSnapshot(snapshot => {
+          state.trashItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (typeof renderTrash === "function") renderTrash();
+        }, error => console.error(error));
       } else {
         state.salespeople = [];
         state.commissionSettlements = [];
+        state.trashItems = [];
       }
 
       let unsubWeeklySettlements = () => {};
@@ -142,7 +148,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubSalespeople, unsubCommissionSettlements, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {
@@ -239,7 +245,8 @@
         let isInvited = false;
 
         try {
-          accessSnap = await db.collection("teamAccess").doc(emailDocId(email)).get();
+          accessSnap = await db.collection("teamAccess").doc(normalizedEmail(email)).get();
+          if (!accessSnap.exists) accessSnap = await db.collection("teamAccess").doc(emailDocId(email)).get();
           isInvited = accessSnap.exists && accessSnap.data()?.active !== false;
         } catch (innerError) {
           console.error("No se pudo leer teamAccess después del registro:", innerError);

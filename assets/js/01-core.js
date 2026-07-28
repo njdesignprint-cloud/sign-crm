@@ -40,7 +40,7 @@
       salespeople: [],
       commissionSettlements: [],
       companySettings: {},
-      companySettings: {},
+      trashItems: [],
       jobs: [],
       expenses: [],
       recurringExpenses: [],
@@ -102,6 +102,7 @@
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
+      papelera: ["Trash & recovery", "Restore archived business records without changing their original IDs."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     };
 
@@ -332,7 +333,7 @@
 
       const btnNew = $("btnNewMain");
       btnNew.classList.remove("hidden");
-      if (["dashboard", "produccion", "liquidaciones", "configuracion"].includes(view)) btnNew.classList.add("hidden");
+      if (["dashboard", "produccion", "liquidaciones", "configuracion", "papelera"].includes(view)) btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "vendedores") btnNew.textContent = "+ New salesperson";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
@@ -362,12 +363,14 @@
     function platformUserRef(uid = state.uid) { return platformUsersRef().doc(uid); }
     function platformWorkspacesRef() { return db.collection("platformWorkspaces"); }
     function platformWorkspaceRef(uid = state.accountOwnerId || state.uid) { return platformWorkspacesRef().doc(uid); }
-    function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
+    function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(normalizedEmail(email)); }
+    function legacyTeamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
+    function workspaceMembersRef() { return userRef().collection("workspaceMembers"); }
     function clientsRef() { return userRef().collection("clients"); }
     function salespeopleRef() { return userRef().collection("salespeople"); }
     function commissionSettlementsRef() { return userRef().collection("commissionSettlements"); }
     function companySettingsRef() { return userRef().collection("settings").doc("company"); }
-    function companySettingsRef() { return userRef().collection("settings").doc("company"); }
+    function trashRef() { return userRef().collection("trash"); }
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
     function recurringRef() { return userRef().collection("recurringExpenses"); }
@@ -502,6 +505,7 @@
       if (module === "dashboard") return true;
       if (module === "cuentascrm") return isSuperAdmin();
       if (module === "configuracion") return isAdmin();
+      if (module === "papelera") return isAdmin();
       if (module === "vendedores") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (module === "reportes") return isAdmin();
@@ -513,6 +517,7 @@
     function canEditModule(module = state.currentView) {
       if (module === "vendedores") return isAdmin();
       if (module === "configuracion") return isAdmin();
+      if (module === "papelera") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (["dashboard", "reportes", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
@@ -600,7 +605,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = ["dashboard", "produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion", "liquidaciones", "configuracion", "papelera", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 
@@ -683,7 +688,8 @@
 
       let invitedAccess = null;
       try {
-        const accessSnap = await teamAccessRefByEmail(state.userEmail).get();
+        let accessSnap = await teamAccessRefByEmail(state.userEmail).get();
+        if (!accessSnap.exists) accessSnap = await legacyTeamAccessRefByEmail(state.userEmail).get();
         if (accessSnap.exists) invitedAccess = accessSnap.data() || {};
       } catch (error) {
         console.error(error);
@@ -787,6 +793,7 @@
           };
           await teamMembersRef().doc(teamDocId).set(loginPayload, { merge: true });
           await teamAccessRefByEmail(state.userEmail).set(loginPayload, { merge: true });
+          await workspaceMembersRef().doc(state.uid).set({ ...invitedAccess, ...loginPayload, uid:state.uid, email:normalizedEmail(state.userEmail), role:state.currentUserRole, active:true }, { merge:true });
         } catch (error) {
           console.error(error);
         }
