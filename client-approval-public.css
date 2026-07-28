@@ -31,8 +31,8 @@ body {
   box-shadow: 0 24px 80px rgba(0,0,0,.35);
 }
 .approval-header { margin-bottom: 20px; }
-.brand { width: min(360px, 100%); overflow: hidden; }
-.brand img { display: block; width: 125%; height: auto; margin: -7% -12.5% -6%; }
+.brand { font-size: 28px; font-weight: 900; letter-spacing: .02em; }
+.brand span { color: var(--brand); }
 .muted { color: var(--muted); }
 .hidden { display: none !important; }
 .hero-row {
