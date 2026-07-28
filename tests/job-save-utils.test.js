@@ -10,6 +10,7 @@ test("editing preserves sensitive form sections and existing collections", () =>
     clientApproval: { estimateStatus: "aprobado", token: "safe-token" },
     advance: { received: 500, ledger: [{ amount: 120 }] },
     workflow: { assignments: { production: "Ana" } },
+    commission: { salespersonId: "seller-1", percent: 10, base: "collected" },
     internalNotesLog: [{ text: "Mantener esta nota" }]
   };
   const existingJob = {
@@ -28,6 +29,7 @@ test("editing preserves sensitive form sections and existing collections", () =>
   assert.deepEqual(result.clientApproval, basePayload.clientApproval);
   assert.deepEqual(result.advance, basePayload.advance);
   assert.deepEqual(result.workflow, basePayload.workflow);
+  assert.deepEqual(result.commission, basePayload.commission);
   assert.deepEqual(result.internalNotesLog, basePayload.internalNotesLog);
   assert.deepEqual(result.payments, existingJob.payments);
   assert.deepEqual(result.designImages, existingJob.designImages);

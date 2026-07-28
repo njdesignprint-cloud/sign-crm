@@ -80,6 +80,7 @@
             materials: Array.isArray(item.materials) ? item.materials : [],
             quote: item.quote || { items: [], discountType: "none", discountValue: 0, taxPercent: 0 },
             checklist: item.checklist || {},
+            commission: item.commission || {},
             payments: Array.isArray(item.payments) ? item.payments : [],
             internalNotesLog: Array.isArray(item.internalNotesLog) ? item.internalNotesLog : [],
             activityLog: Array.isArray(item.activityLog) ? item.activityLog : [newLogEntry("importación", "Trabajo importado desde respaldo JSON.")],

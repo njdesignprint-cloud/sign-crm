@@ -1294,6 +1294,7 @@
       $("sumBalance").textContent = money(balance);
       if ($("sumLinkedExpenses")) $("sumLinkedExpenses").textContent = money(linkedExpenses);
       if ($("sumInventoryStatus")) $("sumInventoryStatus").textContent = inventoryText;
+      if (typeof renderJobCommissionPreview === "function") renderJobCommissionPreview({ sale, realProfit, paid });
 
       renderJobPaymentsPreview();
       renderJobInventoryAndPurchase();
@@ -1307,6 +1308,7 @@
       state.galleryIndex = 0;
       $("jobModalTitle").textContent = "Nuevo trabajo";
       fillClientSelect();
+      if (typeof resetJobCommissionForm === "function") resetJobCommissionForm();
       $("jobTitle").value = "";
       $("jobStatus").value = "Cotización";
       $("jobDate").value = today();
@@ -1437,6 +1439,7 @@
         internalNotesLog: getJobInternalNotes(currentJob),
         advance: typeof getCurrentAdvanceForm === "function" ? getCurrentAdvanceForm() : (currentJob.advance || {}),
         workflow: typeof getCurrentJobWorkflow === "function" ? getCurrentJobWorkflow(currentJob) : (currentJob.workflow || {}),
+        commission: typeof getCurrentJobCommissionTerms === "function" ? getCurrentJobCommissionTerms(currentJob) : (currentJob.commission || {}),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       payload.status = reconcileJobStatus(payload, payload.status);
@@ -1513,6 +1516,7 @@
       state.galleryIndex = 0;
       $("jobModalTitle").textContent = "Editar trabajo";
       fillClientSelect(item.clientId || "");
+      if (typeof setJobCommissionForm === "function") setJobCommissionForm(item);
       $("jobTitle").value = item.title || "";
       $("jobStatus").value = item.status || "Cotización";
       const installation = getJobInstallation(item);

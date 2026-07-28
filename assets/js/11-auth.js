@@ -79,6 +79,7 @@
           state.salespeople = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           if (typeof renderSalespeople === "function") renderSalespeople();
           if (typeof fillClientSalespersonSelect === "function") fillClientSalespersonSelect(cleanText($("clientSalespersonId")?.value));
+          if (typeof fillJobSalespersonSelect === "function") fillJobSalespersonSelect(cleanText($("jobSalespersonId")?.value));
           renderClients();
         }, error => console.error(error));
       } else {

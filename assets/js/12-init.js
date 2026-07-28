@@ -154,6 +154,10 @@
     });
 
     $("jobSale").addEventListener("input", renderJobPreview);
+    $("jobClientId").addEventListener("change", () => { syncJobCommissionFromClient(); renderJobPreview(); });
+    $("jobSalespersonId")?.addEventListener("change", () => { applyJobSalespersonDefaults(); renderJobPreview(); });
+    $("jobCommissionPercent")?.addEventListener("input", renderJobPreview);
+    $("jobCommissionBase")?.addEventListener("change", renderJobPreview);
     $("jobPriceMode").addEventListener("change", renderJobPreview);
     $("jobLaborCost").addEventListener("input", renderJobPreview);
     $("jobExtraCost").addEventListener("input", renderJobPreview);

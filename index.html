@@ -1498,6 +1498,24 @@
           <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio final al cliente" />
         </div>
 
+        <div id="jobCommissionBox" class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <strong>Salesperson commission</strong><span class="module-badge">Calculated automatically</span>
+          </div>
+          <div class="section-note mt-10">Selecting a client loads its assigned salesperson. You can choose a different salesperson for this specific job.</div>
+          <div class="grid-3 mt-12">
+            <label class="field-label">Salesperson<select id="jobSalespersonId" class="select"><option value="">No salesperson</option></select></label>
+            <label class="field-label">Commission %<input id="jobCommissionPercent" class="input" type="number" min="0" max="100" step="0.01" /></label>
+            <label class="field-label">Commission base<select id="jobCommissionBase" class="select"><option value="collected">Customer payments actually collected</option><option value="subtotal">Sale subtotal before tax</option><option value="gross_profit">Gross profit</option></select></label>
+          </div>
+          <div class="summary-box">
+            <div><span>Projected eligible base</span><strong id="jobCommissionProjectedBase">$0.00</strong></div>
+            <div><span>Commission rate</span><strong id="jobCommissionRate">0.00%</strong></div>
+            <div><span>Projected commission</span><strong id="jobCommissionProjected">$0.00</strong></div>
+            <div><span>Earned so far</span><strong id="jobCommissionEarned">$0.00</strong></div>
+          </div>
+        </div>
+
         <div class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <strong>Instalación</strong>
@@ -2214,18 +2232,18 @@
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
   <script src="assets/js/01-core.js?v=20260728-4"></script>
   <script src="assets/js/02-clients.js?v=20260728-3"></script>
-  <script src="assets/js/22-salespeople.js?v=20260728-1"></script>
+  <script src="assets/js/22-salespeople.js?v=20260728-2"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
-  <script src="assets/js/03-jobs.js?v=20260728-2"></script>
+  <script src="assets/js/03-jobs.js?v=20260728-3"></script>
   <script src="assets/js/04-expenses.js?v=20260728-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
   <script src="assets/js/07-pdf.js?v=20260728-3"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-2"></script>
-  <script src="assets/js/10-backup-misc.js?v=20260728-3"></script>
-  <script src="assets/js/11-auth.js?v=20260728-3"></script>
-  <script src="assets/js/12-init.js?v=20260728-3"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260728-4"></script>
+  <script src="assets/js/11-auth.js?v=20260728-4"></script>
+  <script src="assets/js/12-init.js?v=20260728-4"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>

@@ -21,7 +21,85 @@
       }, 0);
     }
     function getSalespersonCommissionEstimate(id = "") {
-      return state.clients.filter(client => client.salespersonId === id).reduce((sum, client) => sum + getClientCommissionEstimate(client), 0);
+      return state.jobs.filter(job => cleanText(job.status) !== "Cancelado").filter(job => {
+        const client = state.clients.find(item => item.id === job.clientId);
+        return (job.commission?.salespersonId || client?.salespersonId) === id;
+      }).reduce((sum, job) => {
+        const client = state.clients.find(item => item.id === job.clientId) || {};
+        const terms = job.commission?.salespersonId ? job.commission : client;
+        const rate = Number(terms.percent ?? terms.commissionPercent ?? 0) / 100;
+        const baseType = terms.base || terms.commissionBase || "collected";
+        let base = 0;
+        if (baseType === "gross_profit") base = Math.max(0, Number(computeJob(job).profit || 0));
+        else if (baseType === "subtotal") base = Math.max(0, Number(computeQuote(getQuote(job)).subtotal || job.sale || 0));
+        else base = Math.max(0, Number(getPaymentsTotal(job) || 0));
+        return sum + base * rate;
+      }, 0);
+    }
+    function fillJobSalespersonSelect(selected = "") {
+      const select = $("jobSalespersonId"); if (!select) return;
+      const current = selected || select.value;
+      select.innerHTML = '<option value="">No salesperson</option>' + state.salespeople
+        .filter(item => item.status !== "inactive" || item.id === current)
+        .map(item => `<option value="${safe(item.id)}">${safe(item.name)}${item.company ? ` · ${safe(item.company)}` : ""}</option>`).join("");
+      select.value = current;
+    }
+    function resetJobCommissionForm() {
+      $("jobCommissionBox")?.classList.toggle("hidden", !isAdmin());
+      fillJobSalespersonSelect();
+      if (isAdmin()) syncJobCommissionFromClient();
+    }
+    function syncJobCommissionFromClient() {
+      if (!isAdmin()) return;
+      const client = state.clients.find(item => item.id === $("jobClientId")?.value);
+      const sellerId = client?.salesSource === "salesperson" ? (client.salespersonId || "") : "";
+      fillJobSalespersonSelect(sellerId);
+      $("jobSalespersonId").value = sellerId;
+      $("jobCommissionPercent").value = sellerId ? Number(client.commissionPercent ?? getSalespersonDefaultPercent(sellerId) ?? 0) : 0;
+      $("jobCommissionBase").value = client?.commissionBase || "collected";
+    }
+    function applyJobSalespersonDefaults() {
+      const seller = state.salespeople.find(item => item.id === $("jobSalespersonId")?.value);
+      $("jobCommissionPercent").value = seller ? Number(seller.commissionPercent || 0) : 0;
+      $("jobCommissionBase").value = seller?.commissionBase || "collected";
+    }
+    function getCurrentJobCommissionTerms(currentJob = {}) {
+      if (!isAdmin()) return currentJob.commission || {};
+      const salespersonId = cleanText($("jobSalespersonId")?.value);
+      if (!salespersonId) return { salespersonId: "", salespersonName: "", percent: 0, base: "collected" };
+      return {
+        salespersonId,
+        salespersonName: getSalespersonName(salespersonId),
+        percent: Math.max(0, Math.min(100, Number($("jobCommissionPercent")?.value || 0))),
+        base: cleanText($("jobCommissionBase")?.value) || "collected"
+      };
+    }
+    function setJobCommissionForm(job = {}) {
+      $("jobCommissionBox")?.classList.toggle("hidden", !isAdmin());
+      if (!isAdmin()) return;
+      const client = state.clients.find(item => item.id === job.clientId) || {};
+      const terms = job.commission?.salespersonId ? job.commission : {
+        salespersonId: client.salesSource === "salesperson" ? client.salespersonId : "",
+        percent: client.commissionPercent,
+        base: client.commissionBase
+      };
+      fillJobSalespersonSelect(terms.salespersonId || "");
+      $("jobCommissionPercent").value = Number(terms.percent ?? getSalespersonDefaultPercent(terms.salespersonId) ?? 0);
+      $("jobCommissionBase").value = terms.base || "collected";
+    }
+    function renderJobCommissionPreview(values = {}) {
+      if (!$("jobCommissionProjected")) return;
+      const rate = Math.max(0, Math.min(100, Number($("jobCommissionPercent")?.value || 0)));
+      const baseType = $("jobCommissionBase")?.value || "collected";
+      const quoteSubtotal = Number(computeQuote(getCurrentQuoteForm()).subtotal || 0);
+      const projectedBase = baseType === "gross_profit" ? Math.max(0, Number(values.realProfit || 0)) : baseType === "subtotal" ? Math.max(0, quoteSubtotal || Number(values.sale || 0)) : Math.max(0, Number(values.sale || 0));
+      const paid = Math.max(0, Number(values.paid || 0));
+      const sale = Math.max(0, Number(values.sale || 0));
+      const earnedBase = baseType === "collected" ? paid : projectedBase * (sale > 0 ? Math.min(paid / sale, 1) : 0);
+      $("jobCommissionProjectedBase").textContent = money(projectedBase);
+      $("jobCommissionRate").textContent = `${rate.toFixed(2)}%`;
+      $("jobCommissionProjected").textContent = money(projectedBase * rate / 100);
+      $("jobCommissionEarned").textContent = money(earnedBase * rate / 100);
     }
     function fillClientSalespersonSelect(selected = "") {
       const select = $("clientSalespersonId");
