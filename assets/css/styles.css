@@ -1516,3 +1516,70 @@
   .grid-span-2{grid-column:auto}
   .settings-logo-row{align-items:flex-start}
 }
+
+/* ===== Responsive navigation shell ===== */
+.sidebar-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sidebar-header .app-brand-mark{flex:1;min-width:0;margin-bottom:0}
+.sidebar-icon-btn,.mobile-nav-toggle,.mobile-nav-backdrop{border:0;font:inherit}
+.sidebar-icon-btn{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.035);color:var(--text);cursor:pointer;font-size:22px;line-height:1}
+.sidebar-icon-btn:hover{border-color:rgba(59,130,246,.45);background:rgba(59,130,246,.10)}
+.mobile-sidebar-close,.mobile-nav-toggle,.mobile-nav-backdrop{display:none}
+.app,.sidebar,.content{transition:grid-template-columns .2s ease,width .2s ease,transform .2s ease,padding .2s ease}
+
+body.sidebar-collapsed .app{grid-template-columns:88px minmax(0,1fr)}
+body.sidebar-collapsed .sidebar{padding-left:12px;padding-right:12px}
+body.sidebar-collapsed .sidebar-header{display:grid;justify-items:center}
+body.sidebar-collapsed .sidebar-header .app-brand-mark{display:block}
+body.sidebar-collapsed .app-brand-mark img{width:46px;height:46px;margin:auto}
+body.sidebar-collapsed .app-brand-mark .brand,
+body.sidebar-collapsed .brand-sub,
+body.sidebar-collapsed .layout-sidebar-group-title,
+body.sidebar-collapsed .layout-sidebar-divider,
+body.sidebar-collapsed .sidebar-foot{display:none!important}
+body.sidebar-collapsed .desktop-sidebar-toggle{margin-top:4px}
+body.sidebar-collapsed .nav{padding-right:0;max-height:calc(100vh - 120px)}
+body.sidebar-collapsed .nav button{height:48px;padding:0;text-align:center;font-size:0;overflow:visible}
+body.sidebar-collapsed .nav button::after{content:attr(data-nav-icon);font-size:20px;line-height:1}
+body.sidebar-collapsed .nav button.active::before{top:8px;bottom:8px;left:-4px}
+
+@media (max-width:780px){
+  body.sidebar-collapsed .app{grid-template-columns:1fr}
+  body.sidebar-collapsed .content{padding:18px}
+  .content{padding:18px}
+  .topbar{align-items:center}
+  .mobile-nav-toggle{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--text);font-weight:800;cursor:pointer}
+  .mobile-nav-toggle span{font-size:20px;line-height:1}
+  .desktop-sidebar-toggle{display:none}
+  .mobile-sidebar-close{display:grid}
+  .sidebar,
+  body.sidebar-collapsed .sidebar{
+    position:fixed;
+    z-index:120;
+    inset:0 auto 0 0;
+    width:min(310px,88vw);
+    height:100vh;
+    padding:18px;
+    border:0;
+    border-right:1px solid var(--line);
+    border-radius:0;
+    background:var(--panel);
+    transform:translateX(-105%);
+    box-shadow:20px 0 60px rgba(0,0,0,.42);
+  }
+  body.mobile-nav-open{overflow:hidden}
+  body.mobile-nav-open .sidebar{transform:translateX(0)}
+  .sidebar-header{margin-bottom:8px}
+  .sidebar-header .app-brand-mark,
+  body.sidebar-collapsed .sidebar-header .app-brand-mark{display:flex}
+  body.sidebar-collapsed .app-brand-mark .brand{display:block}
+  .app-brand-mark img,body.sidebar-collapsed .app-brand-mark img{width:48px;height:48px;margin:0}
+  .brand-sub,body.sidebar-collapsed .brand-sub{display:block!important;margin-bottom:16px}
+  .nav,body.sidebar-collapsed .nav{display:grid;grid-template-columns:1fr;gap:7px;max-height:none;flex:1;padding:4px 4px 12px 0;overflow-y:auto}
+  .nav button,body.sidebar-collapsed .nav button{height:auto;padding:12px 14px;text-align:left;font-size:13px;overflow:hidden}
+  body.sidebar-collapsed .nav button::after{content:none}
+  .layout-sidebar-group-title,body.sidebar-collapsed .layout-sidebar-group-title{display:block!important;margin-top:8px}
+  .layout-sidebar-divider,body.sidebar-collapsed .layout-sidebar-divider{display:block!important}
+  .sidebar-foot,body.sidebar-collapsed .sidebar-foot{display:grid!important;margin-top:12px;padding-top:12px}
+  .mobile-nav-backdrop{position:fixed;z-index:110;inset:0;width:100%;height:100%;background:rgba(3,7,18,.66);cursor:pointer}
+  body.mobile-nav-open .mobile-nav-backdrop{display:block}
+}
