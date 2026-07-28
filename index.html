@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-2" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-3" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -117,7 +117,7 @@
           <img src="assets/images/signshophq-icon-contrast.png" alt="" width="48" height="48" />
           <div class="brand">SignShop <span>HQ</span></div>
         </div>
-        <div class="brand-sub">Gestión integral para negocios de carteles.</div>
+        <div class="brand-sub">Complete management for sign businesses.</div>
 
        <div class="nav">
   <div id="navGroupOperation" class="layout-sidebar-group-title">OPERACIÓN</div>
@@ -146,6 +146,7 @@
   <div id="navGroupAdmin" class="layout-sidebar-group-title">ADMINISTRACIÓN</div>
 
   <button data-view="usuarios" id="navUsuariosBtn">🔐 Usuarios</button>
+  <button data-view="configuracion" id="navConfiguracionBtn">⚙️ Company settings</button>
   <button data-view="cuentascrm" id="navCuentasCrmBtn">🧩 Cuentas CRM</button>
 </div>
 
@@ -1233,6 +1234,100 @@
           </div>
         </section>
 
+        <section id="view-configuracion" class="view hidden">
+          <div class="settings-preview-banner">
+            <div>
+              <span class="settings-preview-label">DESIGN PREVIEW</span>
+              <strong>Company settings are not connected to your data yet.</strong>
+              <p>Review the fields and layout safely. Saving will be enabled only after the data structure and backup plan are approved.</p>
+            </div>
+            <span class="pill st-cotizacion">No data writes</span>
+          </div>
+
+          <div class="settings-layout">
+            <div class="settings-form-stack">
+              <section class="panel settings-panel">
+                <div class="panel-head">
+                  <div>
+                    <h2>Business identity</h2>
+                    <div class="section-note">Information shown to customers on estimates, approvals and PDFs.</div>
+                  </div>
+                </div>
+                <div class="settings-logo-row">
+                  <div class="settings-logo-placeholder">YOUR<br>LOGO</div>
+                  <div>
+                    <button class="btn btn-secondary btn-small" type="button" disabled>Upload company logo</button>
+                    <div class="section-note mt-10">PNG, JPG or SVG · Recommended: 800 × 300 px</div>
+                  </div>
+                </div>
+                <div class="settings-fields grid-2">
+                  <label class="field-label">Business name<input class="input" type="text" value="Example Sign Company" /></label>
+                  <label class="field-label">Public email<input class="input" type="email" placeholder="hello@yourcompany.com" /></label>
+                  <label class="field-label">Phone<input class="input" type="tel" placeholder="+1 555 000 0000" /></label>
+                  <label class="field-label">Website<input class="input" type="url" placeholder="https://yourcompany.com" /></label>
+                  <label class="field-label grid-span-2">Business address<input class="input" type="text" placeholder="Street, city, state and ZIP code" /></label>
+                </div>
+              </section>
+
+              <section class="panel settings-panel">
+                <div class="panel-head">
+                  <div>
+                    <h2>Regional preferences</h2>
+                    <div class="section-note">Defaults used for money, dates and schedules.</div>
+                  </div>
+                </div>
+                <div class="settings-fields grid-2">
+                  <label class="field-label">Currency
+                    <select class="select"><option>USD — US Dollar</option><option>CAD — Canadian Dollar</option><option>EUR — Euro</option><option>MXN — Mexican Peso</option></select>
+                  </label>
+                  <label class="field-label">Time zone
+                    <select class="select"><option>America/Chicago</option><option>America/New_York</option><option>America/Denver</option><option>America/Los_Angeles</option></select>
+                  </label>
+                  <label class="field-label">Language
+                    <select class="select"><option>English</option><option>Español</option></select>
+                  </label>
+                  <label class="field-label">Date format
+                    <select class="select"><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select>
+                  </label>
+                </div>
+              </section>
+
+              <section class="panel settings-panel">
+                <div class="panel-head">
+                  <div>
+                    <h2>Brand color</h2>
+                    <div class="section-note">Used for customer documents and company-specific highlights.</div>
+                  </div>
+                </div>
+                <div class="settings-colors" aria-label="Brand color preview options">
+                  <button type="button" class="settings-color-option active" style="--swatch:#3b82f6" aria-label="Blue"></button>
+                  <button type="button" class="settings-color-option" style="--swatch:#14b8a6" aria-label="Teal"></button>
+                  <button type="button" class="settings-color-option" style="--swatch:#8b5cf6" aria-label="Purple"></button>
+                  <button type="button" class="settings-color-option" style="--swatch:#f97316" aria-label="Orange"></button>
+                  <button type="button" class="settings-color-option" style="--swatch:#22c55e" aria-label="Green"></button>
+                </div>
+              </section>
+            </div>
+
+            <aside class="settings-preview-card">
+              <div class="settings-preview-card-head">
+                <div class="settings-preview-logo">ES</div>
+                <div><strong>Example Sign Company</strong><span>Estimate preview</span></div>
+              </div>
+              <div class="settings-preview-document">
+                <span>ESTIMATE #1042</span>
+                <h3>Storefront channel letters</h3>
+                <div><span>Customer</span><strong>Sample Customer</strong></div>
+                <div><span>Project total</span><strong>$4,850.00</strong></div>
+                <div><span>Deposit required</span><strong>$2,425.00</strong></div>
+              </div>
+              <div class="settings-preview-contact">hello@yourcompany.com · +1 555 000 0000</div>
+              <button class="btn btn-primary full" type="button" disabled>Save company settings</button>
+              <p class="section-note">Saving is intentionally disabled in this design-only phase.</p>
+            </aside>
+          </div>
+        </section>
+
         <section id="view-cuentascrm" class="view hidden">
           <div class="stats">
             <div class="stat"><div class="label">Cuentas totales</div><div id="platformAccountsTotalCount" class="value">0</div></div>
@@ -2063,7 +2158,7 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260728-2"></script>
+  <script src="assets/js/01-core.js?v=20260728-3"></script>
   <script src="assets/js/02-clients.js?v=20260728-2"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
   <script src="assets/js/03-jobs.js?v=20260728-2"></script>
@@ -2080,7 +2175,7 @@
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
   <script src="assets/js/17-advance-visual.js?v=20260728-2"></script>
-  <script src="assets/js/18-i18n.js?v=20260728-2"></script>
+  <script src="assets/js/18-i18n.js?v=20260728-3"></script>
   <script src="assets/js/19-job-workflow.js?v=20260728-2"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
 </body>

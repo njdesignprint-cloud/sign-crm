@@ -95,6 +95,7 @@
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
+      configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     };
 
@@ -324,7 +325,7 @@
 
       const btnNew = $("btnNewMain");
       btnNew.classList.remove("hidden");
-      if (["dashboard", "produccion", "liquidaciones"].includes(view)) btnNew.classList.add("hidden");
+      if (["dashboard", "produccion", "liquidaciones", "configuracion"].includes(view)) btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
@@ -332,7 +333,7 @@
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
       if (view === "compras") btnNew.textContent = "+ Nueva orden";
       if (view === "usuarios") btnNew.textContent = "+ Nuevo usuario";
-      if (!canEditModule(view) || ["produccion", "liquidaciones", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
+      if (!canEditModule(view) || ["produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
     }
@@ -488,6 +489,7 @@
     function canViewModule(module = state.currentView) {
       if (module === "dashboard") return true;
       if (module === "cuentascrm") return isSuperAdmin();
+      if (module === "configuracion") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (module === "reportes") return isAdmin();
       const level = getCurrentModulePermission(module);
@@ -497,7 +499,7 @@
     }
     function canEditModule(module = state.currentView) {
       if (module === "liquidaciones") return isOwner();
-      if (["dashboard", "reportes", "cuentascrm"].includes(module)) return false;
+      if (["dashboard", "reportes", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
         ? level === "manage"
@@ -582,7 +584,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = ["dashboard", "produccion", "liquidaciones", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 

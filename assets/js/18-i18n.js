@@ -43,6 +43,7 @@
       navLiquidacionesBtn: "💰 Liquidación semanal",
       navReportesBtn: "📈 Reportes",
       navUsuariosBtn: "🔐 Usuarios",
+      navConfiguracionBtn: "⚙️ Configuración de empresa",
       navCuentasCrmBtn: "🧩 Cuentas CRM",
       activeUserLabel: "Usuario activo:",
       btnLogout: "Cerrar sesión",
@@ -134,6 +135,7 @@
       navLiquidacionesBtn: "💰 Weekly settlement",
       navReportesBtn: "📈 Reports",
       navUsuariosBtn: "🔐 Users",
+      navConfiguracionBtn: "⚙️ Company settings",
       navCuentasCrmBtn: "🧩 CRM Accounts",
       activeUserLabel: "Active user:",
       btnLogout: "Sign out",
@@ -203,6 +205,7 @@
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
+      configuracion: ["Configuración de empresa", "Identidad, preferencias regionales y marca de documentos."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     },
     en: {
@@ -218,6 +221,7 @@
       reportes: ["Advanced reports", "Commercial summary, profitability, receivables and purchases."],
       liquidaciones: ["Weekly settlement", "Professional tracking of owner pay and business reserves."],
       usuarios: ["Users", "Team access, roles and permissions."],
+      configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
       cuentascrm: ["CRM Accounts", "Global control of registrations, companies and access status."]
     }
   };
@@ -376,6 +380,7 @@
     setText("navLiquidacionesBtn", t("navLiquidacionesBtn"));
     setText("navReportesBtn", t("navReportesBtn"));
     setText("navUsuariosBtn", t("navUsuariosBtn"));
+    setText("navConfiguracionBtn", t("navConfiguracionBtn"));
     setText("navCuentasCrmBtn", t("navCuentasCrmBtn"));
     setText("activeUserLabel", t("activeUserLabel"));
     setText("btnLogout", t("btnLogout"));
