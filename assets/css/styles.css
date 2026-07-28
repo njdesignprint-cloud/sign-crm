@@ -123,6 +123,22 @@
     }
     .brand span{color:var(--brand)}
 
+    .app-brand-mark{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-height:44px;
+      margin-bottom:8px;
+    }
+    .app-brand-mark img{
+      display:block;
+      width:44px;
+      height:44px;
+      flex:0 0 44px;
+      object-fit:contain;
+    }
+    .app-brand-mark .brand{margin-bottom:0}
+
     .brand-sub{
       color:var(--muted);
       font-size:12px;
@@ -830,7 +846,7 @@
         border-right:none;
         border-top:1px solid var(--line);
       }
-      .brand,.brand-sub{display:none}
+      .app-brand-mark,.brand-sub{display:none}
       .nav{grid-template-columns:repeat(3,1fr)}
       .nav button{text-align:center;padding:10px 8px;font-size:12px}
       .sidebar-foot{display:none}
