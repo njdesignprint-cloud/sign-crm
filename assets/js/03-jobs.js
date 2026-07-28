@@ -8,6 +8,7 @@
           id: "legacy-" + (job.id || "job"),
           date: job.date || "",
           amount: Number(job.paid || 0),
+          type: "legacy",
           method: "Legacy",
           note: "Pago migrado desde una versión anterior."
         });
@@ -15,7 +16,7 @@
       return payments;
     }
     function getPaymentsTotal(job = {}) {
-      return getPaymentsList(job).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      return PaymentUtils.netPaid(getPaymentsList(job));
     }
     function getChecklist(job = {}) {
       return {
@@ -1237,7 +1238,7 @@
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
         .map(item => `
           <div class="payment-item">
-            <strong>${money(item.amount)}</strong> · ${safe(item.method || "Pago")}
+            <strong>${item.type === "refund" ? "−" : ""}${money(Math.abs(Number(item.amount || 0)))}</strong> · ${safe(PaymentUtils.typeLabel(item.type, state.language))} · ${safe(item.method || "Pago")}
             <div class="section-note">${safe(item.date || "Sin fecha")}${item.note ? " · " + safe(item.note) : ""}</div>
           </div>
         `).join("");

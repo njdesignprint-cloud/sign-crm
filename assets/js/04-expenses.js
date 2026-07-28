@@ -118,6 +118,7 @@
       state.workingPaymentJobId = jobId || "";
       fillPaymentJobSelect(jobId || "");
       $("paymentAmount").value = "";
+      $("paymentType").value = "partial";
       $("paymentDate").value = today();
       $("paymentMethod").value = "Efectivo";
       $("paymentNote").value = "";
@@ -192,6 +193,7 @@
       if (!guardWrite("guardar pagos", "trabajos")) return;
       const jobId = cleanText($("paymentJobId").value);
       const amount = Number($("paymentAmount").value || 0);
+      const type = PaymentUtils.normalizeType($("paymentType").value);
       const date = cleanText($("paymentDate").value) || today();
       const method = cleanText($("paymentMethod").value) || "Efectivo";
       const note = cleanText($("paymentNote").value);
@@ -203,26 +205,33 @@
       if (!job) return showToast("No se encontró el trabajo.");
 
       try {
-        const payments = getPaymentsList(job).filter(item => !String(item.id || "").startsWith("legacy-"));
-        const legacyPaid = Array.isArray(job.payments) && job.payments.length ? 0 : Number(job.paid || 0);
-        const currentPaid = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0) + legacyPaid;
+        const payments = getPaymentsList(job).map(item => String(item.id || "").startsWith("legacy-")
+          ? { ...item, id: "p-legacy-" + (job.id || Date.now()), type: "legacy" }
+          : { ...item });
+        const currentPaid = PaymentUtils.netPaid(payments);
         const sale = Number(job.sale || 0);
+        const paymentEffect = PaymentUtils.effect({ amount, type });
 
-        if (sale > 0 && currentPaid + amount > sale) {
+        if (type === "refund" && Math.abs(paymentEffect) > currentPaid) {
+          return showToast("El reembolso supera el total cobrado.");
+        }
+        if (paymentEffect > 0 && sale > 0 && currentPaid + paymentEffect > sale) {
           return showToast("Ese pago supera el total del trabajo.");
         }
 
         payments.push({
           id: "p-" + Date.now(),
           amount,
+          type,
           date,
           method,
           note
         });
 
-        const totalAfter = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-        const newStatus = sale > 0 && totalAfter >= sale ? "Pagado" : job.status;
-        const logs = [...getJobActivityLog(job), newLogEntry("pago", `Pago agregado por ${amount.toFixed(2)}.`)];
+        const totalAfter = PaymentUtils.netPaid(payments);
+        const newStatus = sale > 0 && totalAfter >= sale ? "Pagado" : (job.status === "Pagado" && type === "refund" ? "Entregado" : job.status);
+        const typeLabel = PaymentUtils.typeLabel(type, "es");
+        const logs = [...getJobActivityLog(job), newLogEntry("pago", `${typeLabel} registrado por ${amount.toFixed(2)}.`)];
 
         await jobsRef().doc(jobId).update({
           payments,

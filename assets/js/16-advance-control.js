@@ -93,6 +93,7 @@
         <input id="jobAdvanceReceived" type="number" min="0" step="0.01" class="input" placeholder="Anticipo / pago inicial recibido" />
         <input id="jobAdvanceClientPending" type="text" class="input readonly" placeholder="Saldo pendiente del cliente" readonly />
       </div>
+      <div id="jobAdvanceSourceNote" class="section-note mt-10"></div>
 
       <div class="advance-summary-grid">
         <div class="advance-stat"><span>Anticipo recibido</span><strong id="jobAdvanceReceivedPreview">$0.00</strong></div>
@@ -221,16 +222,47 @@
   }
 
   window.getJobAdvanceSummary = function (job = {}) {
-    return computeAdvance(job.advance || {});
+    const deposit = getPaymentDepositSummary(job);
+    return computeAdvance({ ...(job.advance || {}), received: deposit.received });
   };
 
+  function getPaymentDepositSummary(job = {}) {
+    const payments = typeof getPaymentsList === "function" ? getPaymentsList(job) : (job.payments || []);
+    if (window.PaymentUtils?.depositSummary) return window.PaymentUtils.depositSummary(job, payments);
+    const received = Number(job.advance?.received || 0);
+    return { received, classifiedReceived: 0, manualReceived: received, usesPayments: false, mismatch: false };
+  }
+
+  function setAdvancePaymentSource(job = {}) {
+    const summary = getPaymentDepositSummary(job);
+    const input = qs("#jobAdvanceReceived");
+    const note = qs("#jobAdvanceSourceNote");
+    if (input) {
+      input.readOnly = summary.usesPayments;
+      input.classList.toggle("readonly", summary.usesPayments);
+      input.title = summary.usesPayments ? "Calculado desde pagos marcados como depósito / anticipo." : "Valor manual compatible con trabajos anteriores.";
+    }
+    if (note) {
+      if (summary.usesPayments) {
+        note.textContent = summary.mismatch
+          ? "Calculado desde los pagos tipo Depósito / anticipo. El valor manual anterior era diferente y se conserva en la base de datos hasta que guardes el trabajo."
+          : "Calculado automáticamente desde los pagos tipo Depósito / anticipo.";
+      } else {
+        note.textContent = "Modo compatible: puedes indicar el anticipo manualmente. Al registrar un pago tipo Depósito / anticipo, este valor se calculará automáticamente.";
+      }
+    }
+    return summary;
+  }
+
   function copyFromCurrentPayments() {
+    const job = state.editingJobId ? (getJobById(state.editingJobId) || {}) : {};
+    const deposit = getPaymentDepositSummary(job);
     const paidText = qs("#sumPaid")?.textContent || "0";
-    const paid = Number(String(paidText).replace(/[^\d.-]/g, "")) || 0;
+    const paid = deposit.usesPayments ? deposit.received : (Number(String(paidText).replace(/[^\d.-]/g, "")) || 0);
     const input = qs("#jobAdvanceReceived");
     if (input) input.value = paid ? paid.toFixed(2) : "";
     renderAdvancePreview();
-    if (typeof showToast === "function") showToast("Anticipo copiado desde el total cobrado del trabajo.");
+    if (typeof showToast === "function") showToast(deposit.usesPayments ? "Anticipo actualizado desde los pagos clasificados." : "Anticipo copiado desde el total cobrado del trabajo.");
   }
 
   function loadRowsFromMaterials() {
@@ -260,7 +292,8 @@
     ensureAdvanceSection();
     ensureSummaryExtraCards();
 
-    const advance = normalizeAdvance(job.advance || {});
+    const deposit = setAdvancePaymentSource(job);
+    const advance = normalizeAdvance({ ...(job.advance || {}), received: deposit.received });
     const received = qs("#jobAdvanceReceived");
     const container = getLedgerContainer();
 

@@ -54,13 +54,16 @@
       (typeof getPaymentsList === "function" ? getPaymentsList(job) : []).forEach(payment => {
         const date = cleanText(payment.date);
         if (!date || date < weekStart || date > weekEnd) return;
-        const amount = Math.max(Number(payment.amount || 0), 0);
+        const effect = window.PaymentUtils?.effect ? window.PaymentUtils.effect(payment) : Math.max(Number(payment.amount || 0), 0);
+        const amount = Math.abs(effect);
+        const isRefund = effect < 0;
         payments.push({
           date,
-          type: "Cobro",
+          type: isRefund ? "Reembolso" : "Cobro",
           concept: jobLabel,
           amount,
-          salesTax: paymentSalesTaxShare(job, amount)
+          effect,
+          salesTax: paymentSalesTaxShare(job, effect)
         });
       });
     });
@@ -74,7 +77,7 @@
         amount: Math.max(Number(expense.amount || 0), 0)
       }));
 
-    const grossCollected = payments.reduce((sum, item) => sum + item.amount, 0);
+    const grossCollected = payments.reduce((sum, item) => sum + item.effect, 0);
     const salesTax = payments.reduce((sum, item) => sum + item.salesTax, 0);
     const expenseTotal = expenses.reduce((sum, item) => sum + item.amount, 0);
     const netProfit = Math.max(grossCollected - salesTax - expenseTotal, 0);
