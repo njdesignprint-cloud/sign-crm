@@ -1586,3 +1586,17 @@ body.sidebar-collapsed .nav button.active::before{top:8px;bottom:8px;left:-4px}
 .commission-field-muted { opacity:.48; }
 .commission-settlement-void { opacity:.55; text-decoration:line-through; }
 .settings-company-logo{width:160px;height:82px;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px}
+.environment-badge{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  z-index:99999;
+  padding:8px 12px;
+  border:1px solid #f59e0b;
+  border-radius:999px;
+  background:#451a03;
+  color:#fde68a;
+  font:700 12px/1.2 system-ui,sans-serif;
+  letter-spacing:.06em;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}

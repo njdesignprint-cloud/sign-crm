@@ -1,11 +1,9 @@
-    const firebaseConfig = {
-      apiKey: "AIzaSyAAf9HnAJppIMUx3cz2RdrR2dkgLx8InSI",
-      authDomain: "sign-crm-a7bda.firebaseapp.com",
-      projectId: "sign-crm-a7bda",
-      storageBucket: "sign-crm-a7bda.firebasestorage.app",
-      messagingSenderId: "404561016263",
-      appId: "1:404561016263:web:ae655261c64c41400ed5e2"
-    };
+    const runtimeConfig = window.SIGNSHOPHQ_RUNTIME_CONFIG;
+    if (!runtimeConfig?.firebase?.projectId) throw new Error("Missing SignShop HQ runtime configuration.");
+    const firebaseConfig = runtimeConfig.firebase;
+    const APP_ENVIRONMENT = runtimeConfig.environment || "production";
+    const EXPECTED_PROJECTS = { production:"sign-crm-a7bda", development:"signshophq-dev" };
+    if (EXPECTED_PROJECTS[APP_ENVIRONMENT] !== firebaseConfig.projectId) throw new Error("Firebase project does not match the selected application environment.");
 
     const COMPANY = {
       name: "SignShop HQ",
@@ -22,6 +20,15 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    if (APP_ENVIRONMENT !== "production") {
+      document.addEventListener("DOMContentLoaded", () => {
+        const badge = document.createElement("div");
+        badge.className = "environment-badge";
+        badge.textContent = `${APP_ENVIRONMENT.toUpperCase()} · TEST DATA ONLY`;
+        document.body.appendChild(badge);
+      });
+    }
 
     const state = {
       uid: null,
