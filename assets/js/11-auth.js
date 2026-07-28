@@ -93,6 +93,7 @@
           state.commissionSettlements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           if (typeof renderCommissionSettlements === "function") renderCommissionSettlements();
           if (typeof renderSalespeople === "function") renderSalespeople();
+          renderJobs();
         }, error => console.error(error));
       } else {
         state.salespeople = [];

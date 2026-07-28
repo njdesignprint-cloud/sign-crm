@@ -1625,10 +1625,13 @@
       const createdTo = cleanText($("jobCreatedTo").value);
       const dueFrom = cleanText($("jobDueFrom").value);
       const dueTo = cleanText($("jobDueTo").value);
+      const salespersonFilter = cleanText($("jobSalespersonFilter")?.value);
+      const commissionFilter = cleanText($("jobCommissionFilter")?.value);
 
       return state.jobs.filter(job => {
         const client = getClientById(job.clientId);
-        const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""}`.toLowerCase();
+        const commission = isAdmin() && typeof getJobCommissionBreakdown === "function" ? getJobCommissionBreakdown(job) : null;
+        const bag = `${job.title || ""} ${clientLabel(client)} ${job.description || ""} ${commission?.salespersonName || ""}`.toLowerCase();
 
         const okText = bag.includes(q);
         const okStatus = !statusFilter || job.status === statusFilter;
@@ -1637,8 +1640,15 @@
         const okCreated = (!createdFrom && !createdTo) || isBetween(job.date, createdFrom, createdTo);
         const okDue = (!dueFrom && !dueTo) || (job.dueDate && isBetween(job.dueDate, dueFrom, dueTo));
         const okQuick = jobMatchesQuickFilter(job);
+        const okSalesperson = !salespersonFilter || commission?.salespersonId === salespersonFilter;
+        const hasClientSeller = client?.salesSource === "salesperson" && !!client?.salespersonId;
+        const okCommission = !commissionFilter
+          || (commissionFilter === "with_salesperson" && !!commission?.salespersonId)
+          || (commissionFilter === "outstanding" && Number(commission?.available || 0) > 0.005)
+          || (commissionFilter === "zero_rate" && !!commission?.salespersonId && Number(commission?.rate || 0) <= 0)
+          || (commissionFilter === "missing_assignment" && hasClientSeller && !commission?.salespersonId);
 
-        return okText && okStatus && okPriority && okType && okCreated && okDue && okQuick;
+        return okText && okStatus && okPriority && okType && okCreated && okDue && okQuick && okSalesperson && okCommission;
       });
     }
     function getDueSoonJobs(days = 7) {
@@ -1673,6 +1683,11 @@
       renderJobsQuickFilters();
       if (typeof renderOperationsAlerts === "function") renderOperationsAlerts();
       const rows = getFilteredJobs();
+      const showCommission = isAdmin() && typeof getJobCommissionBreakdown === "function";
+      $("jobCommissionHeader")?.classList.toggle("hidden", !showCommission);
+      $("jobSalespersonFilter")?.classList.toggle("hidden", !showCommission);
+      $("jobCommissionFilter")?.classList.toggle("hidden", !showCommission);
+      if (showCommission && typeof fillJobSalespersonFilter === "function") fillJobSalespersonFilter();
 
       $("jobsBody").innerHTML = rows.map(job => {
         const client = getClientById(job.clientId);
@@ -1680,6 +1695,7 @@
         const overdue = isOverdue(job);
         const statusText = overdue ? "Vencido" : "En tiempo";
         const statusCls = overdue ? "st-cancelado" : "st-entregado";
+        const commission = showCommission ? getJobCommissionBreakdown(job) : null;
 
         return `
           <tr>
@@ -1711,6 +1727,7 @@
               <div><strong>Saldo:</strong> ${money(calc.balance)}</div>
               <div class="section-note" style="margin-top:8px;">Checklist: ${safe(checklistProgress(job))}</div>
             </td>
+            ${showCommission ? `<td><div><strong>${safe(commission.salespersonName || "Not assigned")}</strong> · ${commission.rate.toFixed(2)}%</div><div class="section-note">Projected: ${money(commission.projected)}</div><div class="section-note">Earned: ${money(commission.earned)}</div><div><strong>Outstanding: ${money(commission.available)}</strong></div>${commission.salespersonId && commission.rate <= 0 ? '<div class="pill st-cancelado mt-10">Rate is 0%</div>' : ""}${client?.salesSource === "salesperson" && client?.salespersonId && !commission.salespersonId ? '<div class="pill st-diseno mt-10">Assignment missing</div>' : ""}</td>` : ""}
             <td>
               <div>${statusPill(job.status || "Cotización")}</div>
               <div class="section-note" style="margin-top:10px;">${safe(getClientApprovalSummaryText(job))}</div>

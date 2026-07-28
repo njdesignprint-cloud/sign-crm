@@ -306,6 +306,20 @@
         styles: { fontSize: 8 }
       });
 
+      if (isAdmin() && typeof getJobCommissionBreakdown === "function") {
+        const commissionRows = rows.map(job => {
+          const calc = getJobCommissionBreakdown(job);
+          return [job.title || "-", calc.salespersonName || "Not assigned", `${calc.rate.toFixed(2)}%`, money(calc.projected), money(calc.earned), money(calc.previouslyPaid), money(calc.available)];
+        });
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 10,
+          head: [["Job", "Salesperson", "Rate", "Projected", "Earned", "Settled", "Outstanding"]],
+          body: commissionRows.length ? commissionRows : [["-","-","0.00%","$0.00","$0.00","$0.00","$0.00"]],
+          headStyles: { fillColor: companyPdfColor() },
+          styles: { fontSize: 8 }
+        });
+      }
+
       pdf.save(`Lista_Materiales_Trabajos_${today()}.pdf`);
       showToast('PDF de materiales exportado.');
     }

@@ -121,7 +121,15 @@
         .flatMap(item => Array.isArray(item.lineItems) ? item.lineItems : [])
         .filter(line => line.jobId === job.id)
         .reduce((sum, line) => sum + Number(line.amount || 0), 0);
-      return { salespersonId: terms.salespersonId || "", salespersonName: terms.salespersonName || getSalespersonName(terms.salespersonId, ""), rate, baseType, projectedBase, earned, previouslyPaid, available: Math.max(0, earned - previouslyPaid), overpaid: Math.max(0, previouslyPaid - earned) };
+      return { salespersonId: terms.salespersonId || "", salespersonName: terms.salespersonName || getSalespersonName(terms.salespersonId, ""), rate, baseType, projectedBase, projected: projectedBase * rate / 100, earned, previouslyPaid, available: Math.max(0, earned - previouslyPaid), overpaid: Math.max(0, previouslyPaid - earned) };
+    }
+    function fillJobSalespersonFilter() {
+      const select = $("jobSalespersonFilter"); if (!select) return;
+      const current = select.value;
+      const options = state.salespeople.map(item => `<option value="${safe(item.id)}">${safe(item.name)}</option>`).join("");
+      const html = `<option value="">All salespeople</option>${options}`;
+      if (select.innerHTML !== html) select.innerHTML = html;
+      select.value = state.salespeople.some(item => item.id === current) ? current : "";
     }
     function getSalespersonOutstanding(id = "") {
       return state.jobs.reduce((sum, job) => { const calc = getJobCommissionBreakdown(job); return sum + (calc.salespersonId === id ? calc.available : 0); }, 0);

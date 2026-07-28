@@ -183,7 +183,7 @@
 
     $("clientSearch").addEventListener("input", renderClients);
 
-    ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
+    ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobSalespersonFilter","jobCommissionFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
       $(id).addEventListener("input", renderJobs);
       $(id).addEventListener("change", renderJobs);
     });
@@ -239,7 +239,7 @@
     });
 
     $("btnClearJobFilters").addEventListener("click", () => {
-      ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
+      ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobSalespersonFilter","jobCommissionFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
       setJobsQuickFilter("all");
     });
 

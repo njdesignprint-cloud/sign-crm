@@ -428,6 +428,8 @@
               </div>
 
               <div class="grid-4 mt-12">
+                <select id="jobSalespersonFilter" class="select hidden"><option value="">All salespeople</option></select>
+                <select id="jobCommissionFilter" class="select hidden"><option value="">All commission states</option><option value="with_salesperson">With salesperson</option><option value="outstanding">Commission outstanding</option><option value="zero_rate">Salesperson with 0% rate</option><option value="missing_assignment">Client salesperson not assigned to job</option></select>
                 <input id="jobCreatedFrom" type="date" class="input" />
                 <input id="jobCreatedTo" type="date" class="input" />
                 <input id="jobDueFrom" type="date" class="input" />
@@ -449,6 +451,7 @@
                       <th>Entrega / prioridad</th>
                       <th>Finanzas</th>
                       <th>Cobro / avance</th>
+                      <th id="jobCommissionHeader" class="hidden">Salesperson / commission</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -2272,19 +2275,19 @@
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
   <script src="assets/js/01-core.js?v=20260728-6"></script>
   <script src="assets/js/02-clients.js?v=20260728-3"></script>
-  <script src="assets/js/22-salespeople.js?v=20260728-4"></script>
+  <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
-  <script src="assets/js/03-jobs.js?v=20260728-3"></script>
+  <script src="assets/js/03-jobs.js?v=20260728-4"></script>
   <script src="assets/js/04-expenses.js?v=20260728-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
-  <script src="assets/js/07-pdf.js?v=20260728-5"></script>
+  <script src="assets/js/07-pdf.js?v=20260728-6"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-2"></script>
   <script src="assets/js/10-backup-misc.js?v=20260728-6"></script>
-  <script src="assets/js/11-auth.js?v=20260728-6"></script>
-  <script src="assets/js/12-init.js?v=20260728-5"></script>
+  <script src="assets/js/11-auth.js?v=20260728-7"></script>
+  <script src="assets/js/12-init.js?v=20260728-6"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
