@@ -142,7 +142,7 @@
       pdf.setTextColor(240, 240, 240);
       pdf.setFontSize(10);
       pdf.text(`Tel: ${COMPANY.phone}`, 14, 25);
-      pdf.text(`Email: ${COMPANY.email}`, 68, 25);
+      pdf.text(`Web: ${COMPANY.website}`, 68, 25);
       pdf.text(`Fecha: ${new Date().toLocaleString()}`, 145, 25);
       pdf.setTextColor(20, 20, 20);
       pdf.setFontSize(15);
@@ -717,7 +717,7 @@
       pdf.setTextColor(240, 240, 240);
       pdf.setFontSize(10);
       pdf.text(`Tel: ${COMPANY.phone}`, 14, 25);
-      pdf.text(`Email: ${COMPANY.email}`, 70, 25);
+      pdf.text(`Web: ${COMPANY.website}`, 70, 25);
       pdf.text(`Fecha: ${today()}`, 160, 25);
 
       pdf.setTextColor(20, 20, 20);
@@ -813,7 +813,7 @@
       pdf.text("Términos básicos:", 14, finalY);
       pdf.text("1. Esta cotización puede cambiar si cambian medidas, materiales o alcance.", 14, finalY + 6);
       pdf.text("2. Producción e instalación avanzan según aprobación y pagos acordados.", 14, finalY + 12);
-      pdf.text("3. Gracias por confiar en NJ Design & Print.", 14, finalY + 18);
+      pdf.text("3. Gracias por confiar en SignShop HQ.", 14, finalY + 18);
 
       pdf.save(`Cotizacion_F6_${(job.title || "trabajo").replace(/\s+/g, "_")}_${today()}.pdf`);
       showToast(getJobDesignImages(job).length ? "Cotización PDF generada con foto." : "Cotización PDF generada.");

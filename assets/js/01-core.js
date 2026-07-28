@@ -8,9 +8,9 @@
     };
 
     const COMPANY = {
-      name: "NJ Design & Print",
+      name: "SignShop HQ",
       phone: "346-213-5545",
-      email: "njdesignprint@gmail.com"
+      website: "www.signshophq.com"
     };
 
     const CLOUDINARY_CONFIG = {
@@ -80,7 +80,7 @@
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
 
-    const SUPERADMIN_EMAILS = [normalizedEmail(COMPANY.email), normalizedEmail("njdesignprint@gmail.com")];
+    const SUPERADMIN_EMAILS = [normalizedEmail("njdesignprint@gmail.com")];
 
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
