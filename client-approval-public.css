@@ -1,11 +1,11 @@
 :root {
-  --bg: #0a0f18;
-  --panel: #111827;
+  --bg: #0b0f17;
+  --panel: #121826;
   --panel-2: #0f172a;
   --line: rgba(255,255,255,0.08);
   --text: #f8fafc;
   --muted: #94a3b8;
-  --brand: #b8ff2c;
+  --brand: #3b82f6;
   --danger: #ff6b6b;
   --warn: #ffb84d;
   --ok: #38d39f;
@@ -45,8 +45,8 @@ body {
 .hero-row h1 { margin: 0 0 8px; font-size: 34px; }
 .total-box {
   min-width: 220px;
-  background: rgba(184,255,44,.08);
-  border: 1px solid rgba(184,255,44,.18);
+  background: rgba(59,130,246,.10);
+  border: 1px solid rgba(59,130,246,.22);
   border-radius: 18px;
   padding: 16px;
 }
@@ -92,17 +92,17 @@ body {
   color: var(--text);
   background: rgba(255,255,255,.04);
 }
-.action-btn.active { border-color: rgba(184,255,44,.35); background: rgba(184,255,44,.12); }
+.action-btn.active { border-color: rgba(59,130,246,.45); background: rgba(59,130,246,.16); }
 .action-btn.warn { border-color: rgba(255,184,77,.25); }
 .action-btn.danger { border-color: rgba(255,107,107,.25); }
 .submit-btn {
-  background: rgba(184,255,44,.16);
-  border-color: rgba(184,255,44,.25);
+  background: #3b82f6;
+  border-color: #3b82f6;
 }
 .submit-btn:disabled { opacity: .55; cursor: not-allowed; }
 .selected-action {
-  background: rgba(184,255,44,.08);
-  border: 1px solid rgba(184,255,44,.18);
+  background: rgba(59,130,246,.10);
+  border: 1px solid rgba(59,130,246,.22);
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 12px;

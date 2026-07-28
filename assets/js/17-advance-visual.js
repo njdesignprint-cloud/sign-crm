@@ -36,11 +36,11 @@
     style.id = "advanceVisualStyles";
     style.textContent = `
       .advance-table-col { min-width: 120px; }
-      .advance-table-cell { font-weight: 800; color: #b8ff2c; white-space: nowrap; }
+      .advance-table-cell { font-weight: 800; color: #4ade80; white-space: nowrap; }
       .advance-table-sub { display:block; margin-top:4px; font-size:11px; color: var(--muted); font-weight: 600; }
       .production-advance-line {
-        margin-top: 8px; padding: 8px 10px; border: 1px solid rgba(184,255,44,.12);
-        border-radius: 10px; background: rgba(184,255,44,.06); font-size: 12px; line-height: 1.35;
+        margin-top: 8px; padding: 8px 10px; border: 1px solid rgba(34,197,94,.18);
+        border-radius: 10px; background: rgba(34,197,94,.08); font-size: 12px; line-height: 1.35;
       }
       .production-advance-line strong { color: #d9ff7a; font-size: 13px; }
       .production-advance-line .muted { color: var(--text-soft, #b8c0cf); font-size: 11px; display: block; margin-top: 2px; }
