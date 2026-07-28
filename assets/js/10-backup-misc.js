@@ -6,6 +6,7 @@
         const data = JSON.parse(text);
 
         const clients = Array.isArray(data.clients) ? data.clients : [];
+        const salespeople = Array.isArray(data.salespeople) ? data.salespeople : [];
         const jobs = Array.isArray(data.jobs) ? data.jobs : [];
         const expenses = Array.isArray(data.expenses) ? data.expenses : [];
         const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
@@ -13,13 +14,14 @@
         const movements = Array.isArray(data.inventoryMovements) ? data.inventoryMovements : [];
         const weeklySettlements = Array.isArray(data.weeklySettlements) ? data.weeklySettlements : [];
 
-        if (!clients.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
+        if (!clients.length && !salespeople.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
           return showToast("Ese JSON no tiene datos válidos.");
         }
 
         const ok = confirm(
           `Se van a importar:\n` +
           `Clientes: ${clients.length}\n` +
+          `Vendedores: ${salespeople.length}\n` +
           `Trabajos: ${jobs.length}\n` +
           `Gastos: ${expenses.length}\n` +
           `Recurrentes: ${recurring.length}\n\n` +
@@ -29,6 +31,19 @@
         if (!ok) return;
 
         const clientMap = {};
+        const salespersonMap = {};
+
+        for (const item of salespeople) {
+          const payload = {
+            name: item.name || "", company: item.company || "", email: item.email || "", phone: item.phone || "",
+            address: item.address || "", commissionPercent: Number(item.commissionPercent || 0),
+            commissionBase: item.commissionBase || "collected", paymentSchedule: item.paymentSchedule || "monthly",
+            status: item.status === "inactive" ? "inactive" : "active", notes: item.notes || "",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          const doc = await salespeopleRef().add(payload);
+          if (item.id) salespersonMap[item.id] = doc.id;
+        }
 
         for (const item of clients) {
           const payload = {
@@ -39,6 +54,11 @@
             address: item.address || "",
             city: item.city || "",
             notes: item.notes || "",
+            salesSource: item.salesSource === "salesperson" ? "salesperson" : "company",
+            salespersonId: salespersonMap[item.salespersonId] || item.salespersonId || "",
+            salespersonNameSnapshot: item.salespersonNameSnapshot || "",
+            commissionPercent: Number(item.commissionPercent || 0),
+            commissionBase: item.commissionBase || "collected",
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };

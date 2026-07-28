@@ -2,6 +2,8 @@
       state.editingClientId = null;
       $("clientModalTitle").textContent = "Nuevo cliente";
       ["clientName","clientCompany","clientPhone","clientEmail","clientAddress","clientCity","clientNotes"].forEach(id => $(id).value = "");
+      $("clientCommissionBox")?.classList.toggle("hidden", !isAdmin());
+      if (isAdmin()) { $("clientSource").value = "company"; fillClientSalespersonSelect(); toggleClientCommissionFields(); }
     }
     async function saveClient() {
       if (!guardWrite("guardar clientes", "clientes")) return;
@@ -17,6 +19,15 @@
       };
 
       if (!payload.name && !payload.company) return showToast("Escribe al menos el nombre o la empresa.");
+      if (isAdmin()) {
+        payload.salesSource = cleanText($("clientSource").value) === "salesperson" ? "salesperson" : "company";
+        payload.salespersonId = cleanText($("clientSalespersonId").value);
+        payload.commissionPercent = Math.max(0, Math.min(100, Number($("clientCommissionPercent").value || 0)));
+        payload.commissionBase = cleanText($("clientCommissionBase").value) || "collected";
+        if (payload.salesSource === "salesperson" && !payload.salespersonId) return showToast("Select the salesperson for this client.");
+        if (payload.salesSource === "company") { payload.salespersonId = ""; payload.commissionPercent = 0; }
+        payload.salespersonNameSnapshot = state.salespeople.find(item => item.id === payload.salespersonId)?.name || "";
+      }
 
       try {
         if (state.editingClientId) {
@@ -46,6 +57,14 @@
       $("clientAddress").value = item.address || "";
       $("clientCity").value = item.city || "";
       $("clientNotes").value = item.notes || "";
+      $("clientCommissionBox")?.classList.toggle("hidden", !isAdmin());
+      if (isAdmin()) {
+        $("clientSource").value = item.salesSource === "salesperson" ? "salesperson" : "company";
+        fillClientSalespersonSelect(item.salespersonId || "");
+        $("clientCommissionPercent").value = Number(item.commissionPercent ?? getSalespersonDefaultPercent(item.salespersonId) ?? 0);
+        $("clientCommissionBase").value = item.commissionBase || "collected";
+        toggleClientCommissionFields();
+      }
       openModal("clientModal");
     }
     function renderClients() {
@@ -59,6 +78,7 @@
           <td>${safe(client.email || "-")}</td>
           <td>${safe([client.address, client.city].filter(Boolean).join(", ") || "-")}</td>
           <td><small>${safe(client.notes || "-")}</small></td>
+          <td>${client.salesSource === "salesperson" ? `<span class="pill st-aprobado">${safe(isAdmin() ? `${getSalespersonName(client.salespersonId, client.salespersonNameSnapshot)} · ${Number(client.commissionPercent || 0).toFixed(2)}%` : "Salesperson referred")}</span>` : '<span class="pill">Company direct</span>'}</td>
           <td>
             <div class="actions-row">
               <button class="btn btn-info btn-small" data-wa-client="${client.id}" data-wa-mode="general">WhatsApp</button>

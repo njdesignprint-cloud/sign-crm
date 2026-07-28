@@ -37,6 +37,7 @@
       platformWorkspaces: [],
       currentView: "dashboard",
       clients: [],
+      salespeople: [],
       jobs: [],
       expenses: [],
       recurringExpenses: [],
@@ -47,6 +48,7 @@
       teamMembers: [],
       weeklySettlements: [],
       editingClientId: null,
+      editingSalespersonId: null,
       editingJobId: null,
       editingExpenseId: null,
       editingRecurringId: null,
@@ -85,6 +87,7 @@
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
+      vendedores: ["Salespeople & commissions", "Manage client ownership, commission terms and agreements."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
@@ -298,6 +301,7 @@
       const labels = {
         dashboard: 'PDF dashboard',
         clientes: 'PDF clientes',
+        vendedores: 'PDF salespeople',
         trabajos: 'PDF materiales',
         produccion: 'PDF producción',
         gastos: 'PDF gastos',
@@ -327,6 +331,7 @@
       btnNew.classList.remove("hidden");
       if (["dashboard", "produccion", "liquidaciones", "configuracion"].includes(view)) btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
+      if (view === "vendedores") btnNew.textContent = "+ New salesperson";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
       if (view === "inventario") btnNew.textContent = "+ Nuevo ítem";
@@ -356,6 +361,7 @@
     function platformWorkspaceRef(uid = state.accountOwnerId || state.uid) { return platformWorkspacesRef().doc(uid); }
     function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
     function clientsRef() { return userRef().collection("clients"); }
+    function salespeopleRef() { return userRef().collection("salespeople"); }
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
     function recurringRef() { return userRef().collection("recurringExpenses"); }
@@ -490,6 +496,7 @@
       if (module === "dashboard") return true;
       if (module === "cuentascrm") return isSuperAdmin();
       if (module === "configuracion") return isAdmin();
+      if (module === "vendedores") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (module === "reportes") return isAdmin();
       const level = getCurrentModulePermission(module);
@@ -498,6 +505,7 @@
         : ["view", "edit", "delete"].includes(level);
     }
     function canEditModule(module = state.currentView) {
+      if (module === "vendedores") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (["dashboard", "reportes", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
@@ -506,6 +514,7 @@
         : ["edit", "delete"].includes(level);
     }
     function canDeleteModule(module = state.currentView) {
+      if (module === "vendedores") return isAdmin();
       if (["dashboard", "reportes", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios" ? level === "manage" : level === "delete";
@@ -590,6 +599,7 @@
 
       const buttonModuleMap = {
         saveClientBtn: 'clientes',
+        saveSalespersonBtn: 'vendedores',
         saveJobBtn: 'trabajos',
         saveExpenseBtn: 'gastos',
         saveRecurringBtn: 'gastos',

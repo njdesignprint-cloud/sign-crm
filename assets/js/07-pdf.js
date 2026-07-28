@@ -113,6 +113,7 @@
         company: COMPANY,
         user: state.userEmail,
         clients: state.clients,
+        salespeople: state.salespeople,
         jobs: state.jobs,
         expenses: state.expenses,
         recurringExpenses: state.recurringExpenses,
@@ -505,6 +506,7 @@
     function exportCurrentModulePdf() {
       if (state.currentView === 'dashboard') return exportDashboardPdf();
       if (state.currentView === 'clientes') return exportClientsPdf();
+      if (state.currentView === 'vendedores') return exportSalespeoplePdf();
       if (state.currentView === 'trabajos') return exportJobsPdf();
       if (state.currentView === 'gastos') return exportExpensesPdf();
       if (state.currentView === 'inventario') return exportInventoryPdf();

@@ -33,6 +33,7 @@
       navGroupAdmin: "ADMINISTRACIÓN",
       navDashboardBtn: "📊 Dashboard",
       navClientesBtn: "👥 Clientes",
+      navVendedoresBtn: "🤝 Vendedores",
       navTrabajosBtn: "🛠️ Trabajos",
       navProduccionBtn: "🏭 Producción",
       navInstalacionesBtn: "🗓️ Instalación",
@@ -125,6 +126,7 @@
       navGroupAdmin: "ADMINISTRATION",
       navDashboardBtn: "📊 Dashboard",
       navClientesBtn: "👥 Clients",
+      navVendedoresBtn: "🤝 Salespeople",
       navTrabajosBtn: "🛠️ Jobs",
       navProduccionBtn: "🏭 Production",
       navInstalacionesBtn: "🗓️ Installation",
@@ -195,6 +197,7 @@
     es: {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
+      vendedores: ["Vendedores y comisiones", "Clientes asignados, condiciones de comisión y contratos."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
@@ -211,6 +214,7 @@
     en: {
       dashboard: ["Dashboard", "General business summary."],
       clientes: ["Clients", "Database of clients and companies."],
+      vendedores: ["Salespeople & commissions", "Assigned clients, commission terms and agreements."],
       trabajos: ["Jobs", "Table and Kanban view to organize production."],
       produccion: ["Production", "Visual workflow board for jobs, assignees and deliveries."],
       gastos: ["Expenses", "Regular and recurring expense control."],
@@ -230,6 +234,7 @@
     es: {
       dashboard: "PDF dashboard",
       clientes: "PDF clientes",
+      vendedores: "PDF vendedores",
       trabajos: "PDF trabajos",
       produccion: "PDF producción",
       gastos: "PDF gastos",
@@ -245,6 +250,7 @@
     en: {
       dashboard: "Dashboard PDF",
       clientes: "Clients PDF",
+      vendedores: "Salespeople PDF",
       trabajos: "Jobs PDF",
       produccion: "Production PDF",
       gastos: "Expenses PDF",
@@ -262,6 +268,7 @@
   const MODULE_LABELS = {
     es: {
       clientes: "Clientes",
+      vendedores: "Vendedores",
       trabajos: "Trabajos",
       gastos: "Gastos",
       inventario: "Inventario",
@@ -271,6 +278,7 @@
     },
     en: {
       clientes: "Clients",
+      vendedores: "Salespeople",
       trabajos: "Jobs",
       gastos: "Expenses",
       inventario: "Inventory",
@@ -370,6 +378,7 @@
     setText("navGroupAdmin", t("navGroupAdmin"));
     setText("navDashboardBtn", t("navDashboardBtn"));
     setText("navClientesBtn", t("navClientesBtn"));
+    setText("navVendedoresBtn", t("navVendedoresBtn"));
     setText("navTrabajosBtn", t("navTrabajosBtn"));
     setText("navProduccionBtn", t("navProduccionBtn"));
     setText("navInstalacionesBtn", t("navInstalacionesBtn"));
@@ -458,6 +467,7 @@
       const map = {
         es: {
           clientes: "+ Nuevo cliente",
+          vendedores: "+ Nuevo vendedor",
           trabajos: "+ Nuevo trabajo",
           gastos: "+ Nuevo gasto",
           inventario: "+ Nuevo ítem",
@@ -467,6 +477,7 @@
         },
         en: {
           clientes: "+ New client",
+          vendedores: "+ New salesperson",
           trabajos: "+ New job",
           gastos: "+ New expense",
           inventario: "+ New item",

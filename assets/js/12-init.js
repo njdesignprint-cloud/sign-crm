@@ -27,6 +27,9 @@
     });
 
     $("saveClientBtn").addEventListener("click", saveClient);
+    $("saveSalespersonBtn")?.addEventListener("click", saveSalesperson);
+    $("clientSource")?.addEventListener("change", toggleClientCommissionFields);
+    $("clientSalespersonId")?.addEventListener("change", applySelectedSalespersonDefaults);
     $("saveJobBtn").addEventListener("click", () => saveJob());
     $("saveExpenseBtn").addEventListener("click", saveExpense);
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
@@ -80,6 +83,9 @@
       if (state.currentView === "clientes") {
         resetClientForm();
         openModal("clientModal");
+      } else if (state.currentView === "vendedores") {
+        resetSalespersonForm();
+        openModal("salespersonModal");
       } else if (state.currentView === "trabajos" || state.currentView === "instalaciones") {
         if (!state.clients.length) return showToast("Primero crea un cliente.");
         resetJobForm();

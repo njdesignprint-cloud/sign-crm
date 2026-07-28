@@ -4,6 +4,7 @@
       const unsubClients = clientsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
         state.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderClients();
+        if (typeof renderSalespeople === "function") renderSalespeople();
         renderJobs();
         renderInstallationModule();
         renderReportsModule();
@@ -12,6 +13,7 @@
 
       const unsubJobs = jobsRef().orderBy("date", "desc").onSnapshot(snapshot => {
         state.jobs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (typeof renderSalespeople === "function") renderSalespeople();
         renderJobs();
         renderInstallationModule();
         renderReportsModule();
@@ -71,6 +73,18 @@
         renderReportsModule();
       }, error => console.error(error));
 
+      let unsubSalespeople = () => {};
+      if (isAdmin()) {
+        unsubSalespeople = salespeopleRef().orderBy("name", "asc").onSnapshot(snapshot => {
+          state.salespeople = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (typeof renderSalespeople === "function") renderSalespeople();
+          if (typeof fillClientSalespersonSelect === "function") fillClientSalespersonSelect(cleanText($("clientSalespersonId")?.value));
+          renderClients();
+        }, error => console.error(error));
+      } else {
+        state.salespeople = [];
+      }
+
       let unsubWeeklySettlements = () => {};
       if (isOwner()) {
         unsubWeeklySettlements = weeklySettlementsRef().orderBy("weekStart", "desc").onSnapshot(snapshot => {
@@ -113,7 +127,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubClients, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubClients, unsubSalespeople, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {
