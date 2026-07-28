@@ -266,7 +266,7 @@
         if (error.code === "auth/email-already-in-use") {
           showToast("Ese correo ya existe. Usa Entrar o Recuperar contraseña.");
         } else if (error.code === "auth/operation-not-allowed") {
-          showToast("Activa Email/Password en Firebase Authentication.");
+          showToast("El acceso por correo no está disponible. Contacta al soporte de SignShop HQ.");
         } else {
           showToast(error.message || "No se pudo crear la cuenta.");
         }

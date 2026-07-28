@@ -49,46 +49,55 @@
 
 
   <section id="authScreen" class="auth-wrap">
-    <div class="auth-card">
-      <div class="logo">SignShop <span>HQ</span></div>
-      <div id="authSubtitle" class="auth-sub">CRM privado fase 7 con estimador rápido por tipo de trabajo y rentabilidad completa.</div>
+    <div class="auth-card auth-login-card">
+      <section class="auth-intro">
+        <div class="auth-brand-row">
+          <img src="assets/images/signshophq-icon-contrast.png" alt="" width="56" height="56" />
+          <div class="logo">SignShop <span>HQ</span></div>
+        </div>
+        <div id="authAccessLabel" class="auth-eyebrow">Gestión para negocios de carteles</div>
+        <h1 id="authHeadline">Controla cada trabajo, desde la cotización hasta la instalación.</h1>
+        <div id="authSubtitle" class="auth-sub">Clientes, producción, inventario y finanzas organizados en un solo lugar.</div>
+        <div class="auth-benefits" aria-label="Beneficios principales">
+          <div><span>✓</span><strong id="authBenefitWorkflow">Flujo de trabajo claro</strong></div>
+          <div><span>✓</span><strong id="authBenefitProfit">Rentabilidad y cobros bajo control</strong></div>
+          <div><span>✓</span><strong id="authBenefitTeam">Equipo y responsabilidades organizados</strong></div>
+        </div>
+      </section>
 
-      <div class="stack">
-        <input id="authFullName" class="input" type="text" placeholder="Nombre completo (al crear cuenta)" />
-        <input id="authCompanyName" class="input" type="text" placeholder="Empresa (al crear cuenta)" />
-        <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
-        <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
-      </div>
+      <section class="auth-form-panel">
+        <div id="authFormTitle" class="auth-form-title">Accede a tu espacio de trabajo</div>
 
-      <div class="auth-actions mt-16">
-        <button id="btnLogin" class="btn btn-primary">Entrar</button>
-        <button id="btnRegister" class="btn btn-secondary">Crear cuenta</button>
-      </div>
-
-      <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
-
-      <div id="authHelpText" class="help">
-        Esta versión usa Firebase Authentication y Firestore. Si creas una cuenta nueva, quedará pendiente hasta que el superadmin la active en Cuentas CRM.
-      </div>
-
-      <div class="box mt-12">
-        <strong id="authGuideTitle">¿Cómo registrarse?</strong>
-
-        <div id="authGuideCompany" class="section-note mt-10">
-          <strong>Si eres una empresa nueva:</strong><br>
-          1. Escribe tu nombre completo, empresa, correo y contraseña.<br>
-          2. Pulsa <strong>Crear cuenta</strong>.<br>
-          3. Tu cuenta quedará <strong>pendiente</strong>.<br>
-          4. El administrador debe activarla en <strong>Cuentas CRM</strong> antes de que puedas entrar.
+        <div class="stack">
+          <input id="authFullName" class="input" type="text" placeholder="Nombre completo (al crear cuenta)" />
+          <input id="authCompanyName" class="input" type="text" placeholder="Empresa (al crear cuenta)" />
+          <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
+          <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
         </div>
 
-        <div id="authGuideEmployee" class="section-note mt-12">
-          <strong>Si eres empleado de una empresa existente:</strong><br>
-          1. Primero el dueño debe agregarte en el módulo <strong>Usuarios</strong>.<br>
-          2. Después crea tu cuenta con <strong>ese mismo correo</strong>.<br>
-          3. Al entrar, verás el mismo espacio de trabajo según los permisos que te asignen.
+        <div class="auth-actions mt-16">
+          <button id="btnLogin" class="btn btn-primary">Entrar</button>
+          <button id="btnRegister" class="btn btn-secondary">Crear cuenta</button>
         </div>
-      </div>
+
+        <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
+
+        <div id="authHelpText" class="help">
+          Las cuentas nuevas requieren aprobación antes de acceder al espacio de trabajo.
+        </div>
+
+        <div class="box auth-guide mt-12">
+          <strong id="authGuideTitle">¿Primera vez en SignShop HQ?</strong>
+
+          <div id="authGuideCompany" class="section-note mt-10">
+            <strong>Empresa nueva:</strong> completa tus datos y selecciona <strong>Crear cuenta</strong>. Te avisaremos cuando el acceso esté aprobado.
+          </div>
+
+          <div id="authGuideEmployee" class="section-note mt-12">
+            <strong>Miembro de un equipo:</strong> usa el mismo correo con el que te invitó el administrador de tu empresa.
+          </div>
+        </div>
+      </section>
     </div>
   </section>
 
@@ -108,7 +117,7 @@
           <img src="assets/images/signshophq-icon-contrast.png" alt="" width="48" height="48" />
           <div class="brand">SignShop <span>HQ</span></div>
         </div>
-        <div class="brand-sub">Fase 8 segura: inventario profesional integrado visualmente con trabajos, sin descuento automático todavía.</div>
+        <div class="brand-sub">Gestión integral para negocios de carteles.</div>
 
        <div class="nav">
   <div id="navGroupOperation" class="layout-sidebar-group-title">OPERACIÓN</div>
@@ -1485,7 +1494,7 @@
 
         <div class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-            <strong>Módulo rápido de estimado - Fase 7</strong>
+            <strong>Estimador rápido de trabajos</strong>
             <div class="actions-row">
               <button id="loadEstimatorDefaultsBtn" class="btn btn-secondary btn-small" type="button">Cargar valores sugeridos</button>
               <button id="applyEstimatorBtn" class="btn btn-info btn-small" type="button">Aplicar al trabajo</button>

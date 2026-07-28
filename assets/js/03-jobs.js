@@ -10,7 +10,7 @@
           amount: Number(job.paid || 0),
           type: "legacy",
           method: "Legacy",
-          note: "Pago migrado desde una versión anterior."
+          note: "Pago importado desde un respaldo anterior."
         });
       }
       return payments;

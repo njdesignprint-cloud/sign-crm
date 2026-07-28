@@ -5,7 +5,13 @@
 
   const TEXTS = {
     es: {
-      authSubtitle: "CRM privado fase 7 con estimador rápido por tipo de trabajo y rentabilidad completa.",
+      authAccessLabel: "Gestión para negocios de carteles",
+      authHeadline: "Controla cada trabajo, desde la cotización hasta la instalación.",
+      authSubtitle: "Clientes, producción, inventario y finanzas organizados en un solo lugar.",
+      authBenefitWorkflow: "Flujo de trabajo claro",
+      authBenefitProfit: "Rentabilidad y cobros bajo control",
+      authBenefitTeam: "Equipo y responsabilidades organizados",
+      authFormTitle: "Accede a tu espacio de trabajo",
       authFullNamePh: "Nombre completo (al crear cuenta)",
       authCompanyNamePh: "Empresa (al crear cuenta)",
       authEmailPh: "Correo electrónico",
@@ -13,10 +19,10 @@
       btnLogin: "Entrar",
       btnRegister: "Crear cuenta",
       btnReset: "Recuperar contraseña",
-      authHelpText: "Esta versión usa Firebase Authentication y Firestore. Si creas una cuenta nueva, quedará pendiente hasta que el superadmin la active en Cuentas CRM.",
-      authGuideTitle: "¿Cómo registrarse?",
-      authGuideCompany: "<strong>Si eres una empresa nueva:</strong><br>1. Escribe tu nombre completo, empresa, correo y contraseña.<br>2. Pulsa <strong>Crear cuenta</strong>.<br>3. Tu cuenta quedará <strong>pendiente</strong>.<br>4. El administrador debe activarla en <strong>Cuentas CRM</strong> antes de que puedas entrar.",
-      authGuideEmployee: "<strong>Si eres empleado de una empresa existente:</strong><br>1. Primero el dueño debe agregarte en el módulo <strong>Usuarios</strong>.<br>2. Después crea tu cuenta con <strong>ese mismo correo</strong>.<br>3. Al entrar, verás el mismo espacio de trabajo según los permisos que te asignen.",
+      authHelpText: "Las cuentas nuevas requieren aprobación antes de acceder al espacio de trabajo.",
+      authGuideTitle: "¿Primera vez en SignShop HQ?",
+      authGuideCompany: "<strong>Empresa nueva:</strong> completa tus datos y selecciona <strong>Crear cuenta</strong>. Te avisaremos cuando el acceso esté aprobado.",
+      authGuideEmployee: "<strong>Miembro de un equipo:</strong> usa el mismo correo con el que te invitó el administrador de tu empresa.",
       accessStatusTitleDefault: "Estado de la cuenta",
       accessStatusTextDefault: "Tu cuenta no puede entrar en este momento.",
       btnStatusLogout: "Volver",
@@ -90,7 +96,13 @@
       pdfDefault: "PDF módulo"
     },
     en: {
-      authSubtitle: "Private CRM with quick estimator by job type and full profitability tracking.",
+      authAccessLabel: "Management for sign businesses",
+      authHeadline: "Control every job, from estimate to installation.",
+      authSubtitle: "Clients, production, inventory, and finances organized in one place.",
+      authBenefitWorkflow: "A clear job workflow",
+      authBenefitProfit: "Profitability and payments under control",
+      authBenefitTeam: "Organized teams and responsibilities",
+      authFormTitle: "Access your workspace",
       authFullNamePh: "Full name (when creating an account)",
       authCompanyNamePh: "Company (when creating an account)",
       authEmailPh: "Email address",
@@ -98,10 +110,10 @@
       btnLogin: "Sign in",
       btnRegister: "Create account",
       btnReset: "Reset password",
-      authHelpText: "This version uses Firebase Authentication and Firestore. If you create a new account, it will stay pending until the superadmin activates it in CRM Accounts.",
-      authGuideTitle: "How to register",
-      authGuideCompany: "<strong>If you are a new company:</strong><br>1. Enter your full name, company, email and password.<br>2. Click <strong>Create account</strong>.<br>3. Your account will stay <strong>pending</strong>.<br>4. An administrator must activate it in <strong>CRM Accounts</strong> before you can enter.",
-      authGuideEmployee: "<strong>If you are an employee of an existing company:</strong><br>1. First, the owner must add you in the <strong>Users</strong> module.<br>2. Then create your account using <strong>that same email</strong>.<br>3. When you sign in, you will see the same workspace according to the permissions assigned to you.",
+      authHelpText: "New accounts require approval before accessing a workspace.",
+      authGuideTitle: "New to SignShop HQ?",
+      authGuideCompany: "<strong>New company:</strong> complete your details and select <strong>Create account</strong>. We will let you know when access is approved.",
+      authGuideEmployee: "<strong>Team member:</strong> use the same email address your company administrator invited.",
       accessStatusTitleDefault: "Account status",
       accessStatusTextDefault: "Your account cannot access the app right now.",
       btnStatusLogout: "Back",
@@ -322,7 +334,13 @@
 
   function setTopShellTexts() {
     document.documentElement.lang = getLang();
+    setText("authAccessLabel", t("authAccessLabel"));
+    setText("authHeadline", t("authHeadline"));
     setText("authSubtitle", t("authSubtitle"));
+    setText("authBenefitWorkflow", t("authBenefitWorkflow"));
+    setText("authBenefitProfit", t("authBenefitProfit"));
+    setText("authBenefitTeam", t("authBenefitTeam"));
+    setText("authFormTitle", t("authFormTitle"));
     setPlaceholder("authFullName", t("authFullNamePh"));
     setPlaceholder("authCompanyName", t("authCompanyNamePh"));
     setPlaceholder("authEmail", t("authEmailPh"));

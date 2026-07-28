@@ -125,7 +125,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nj_crm_fase8_${today()}.json`;
+      a.download = `signshophq_backup_${today()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
@@ -762,7 +762,7 @@
       const estimator = computeEstimator(getSavedEstimator(job));
       const estimatorRows = estimator.baseUnits > 0 || estimator.materialRate > 0 || estimator.saleRate > 0
         ? [[
-            "Estimador fase 7",
+            "Estimador de trabajos",
             `${estimator.label} · Base ${estimator.baseUnits.toFixed(2)} ${estimator.mode === "unit" ? "und" : "ft²"} · Compra ${estimator.productionUnits.toFixed(2)} ${estimator.mode === "unit" ? "und" : "ft²"}`
           ]]
         : [];
