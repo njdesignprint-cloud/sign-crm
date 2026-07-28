@@ -1,6 +1,12 @@
     function bindRealtime() {
       clearUnsubscribers();
 
+      const unsubCompanySettings = companySettingsRef().onSnapshot(snapshot => {
+        state.companySettings = snapshot.exists ? snapshot.data() : {};
+        if (typeof applyCompanySettingsRuntime === "function") applyCompanySettingsRuntime();
+        if (typeof renderCompanySettingsForm === "function") renderCompanySettingsForm();
+      }, error => console.error(error));
+
       const unsubClients = clientsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
         state.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderClients();
@@ -135,7 +141,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubClients, unsubSalespeople, unsubCommissionSettlements, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubSalespeople, unsubCommissionSettlements, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {

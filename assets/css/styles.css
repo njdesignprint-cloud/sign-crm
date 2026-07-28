@@ -1585,3 +1585,4 @@ body.sidebar-collapsed .nav button.active::before{top:8px;bottom:8px;left:-4px}
 }
 .commission-field-muted { opacity:.48; }
 .commission-settlement-void { opacity:.55; text-decoration:line-through; }
+.settings-company-logo{width:160px;height:82px;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px}

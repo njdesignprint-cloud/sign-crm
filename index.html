@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-6" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-7" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -1265,13 +1265,13 @@
         </section>
 
         <section id="view-configuracion" class="view hidden">
-          <div class="settings-preview-banner">
+          <div class="settings-preview-banner settings-live-banner">
             <div>
-              <span class="settings-preview-label">DESIGN PREVIEW</span>
-              <strong>Company settings are not connected to your data yet.</strong>
-              <p>Review the fields and layout safely. Saving will be enabled only after the data structure and backup plan are approved.</p>
+              <span class="settings-preview-label">LIVE COMPANY PROFILE</span>
+              <strong>These details identify this workspace and appear on customer documents.</strong>
+              <p>Only owners and administrators can update them. Saving does not modify clients, jobs, payments or commissions.</p>
             </div>
-            <span class="pill st-cotizacion">No data writes</span>
+            <span id="companySettingsStatus" class="pill st-aprobado">Ready</span>
           </div>
 
           <div class="settings-layout">
@@ -1284,18 +1284,28 @@
                   </div>
                 </div>
                 <div class="settings-logo-row">
-                  <div class="settings-logo-placeholder">YOUR<br>LOGO</div>
+                  <div id="companyLogoPlaceholder" class="settings-logo-placeholder">YOUR<br>LOGO</div>
+                  <img id="companyLogoPreview" class="settings-company-logo hidden" alt="Company logo preview" />
                   <div>
-                    <button class="btn btn-secondary btn-small" type="button" disabled>Upload company logo</button>
+                    <button id="uploadCompanyLogoBtn" class="btn btn-secondary btn-small" type="button">Upload company logo</button>
                     <div class="section-note mt-10">PNG, JPG or SVG · Recommended: 800 × 300 px</div>
                   </div>
                 </div>
                 <div class="settings-fields grid-2">
-                  <label class="field-label">Business name<input class="input" type="text" value="Example Sign Company" /></label>
-                  <label class="field-label">Public email<input class="input" type="email" placeholder="hello@yourcompany.com" /></label>
-                  <label class="field-label">Phone<input class="input" type="tel" placeholder="+1 555 000 0000" /></label>
-                  <label class="field-label">Website<input class="input" type="url" placeholder="https://yourcompany.com" /></label>
-                  <label class="field-label grid-span-2">Business address<input class="input" type="text" placeholder="Street, city, state and ZIP code" /></label>
+                  <input id="companyLogoUrl" type="hidden" />
+                  <label class="field-label">Legal business name *<input id="companyLegalName" class="input" type="text" /></label>
+                  <label class="field-label">Trade name / DBA<input id="companyTradeName" class="input" type="text" placeholder="Name customers recognize" /></label>
+                  <label class="field-label">Public email<input id="companyPublicEmail" class="input" type="email" placeholder="hello@yourcompany.com" /></label>
+                  <label class="field-label">Phone<input id="companyPhone" class="input" type="tel" placeholder="+1 555 000 0000" /></label>
+                  <label class="field-label">Website<input id="companyWebsite" class="input" type="url" placeholder="https://yourcompany.com" /></label>
+                  <label class="field-label">Governing state<select id="companyGoverningState" class="select"><option value="Texas">Texas</option><option value="Florida">Florida</option><option value="California">California</option><option value="New York">New York</option><option value="Other">Other</option></select></label>
+                  <label class="field-label grid-span-2">Street address<input id="companyAddress" class="input" type="text" /></label>
+                  <label class="field-label">City<input id="companyCity" class="input" type="text" /></label>
+                  <label class="field-label">State<input id="companyState" class="input" type="text" /></label>
+                  <label class="field-label">ZIP / postal code<input id="companyZip" class="input" type="text" /></label>
+                  <label class="field-label">Country<input id="companyCountry" class="input" type="text" value="United States" /></label>
+                  <label class="field-label">Authorized representative<input id="companyRepresentativeName" class="input" type="text" /></label>
+                  <label class="field-label">Representative title<input id="companyRepresentativeTitle" class="input" type="text" placeholder="Owner, President, Manager..." /></label>
                 </div>
               </section>
 
@@ -1308,16 +1318,16 @@
                 </div>
                 <div class="settings-fields grid-2">
                   <label class="field-label">Currency
-                    <select class="select"><option>USD — US Dollar</option><option>CAD — Canadian Dollar</option><option>EUR — Euro</option><option>MXN — Mexican Peso</option></select>
+                    <select id="companyCurrency" class="select"><option value="USD">USD — US Dollar</option><option value="CAD">CAD — Canadian Dollar</option><option value="EUR">EUR — Euro</option><option value="MXN">MXN — Mexican Peso</option></select>
                   </label>
                   <label class="field-label">Time zone
-                    <select class="select"><option>America/Chicago</option><option>America/New_York</option><option>America/Denver</option><option>America/Los_Angeles</option></select>
+                    <select id="companyTimeZone" class="select"><option>America/Chicago</option><option>America/New_York</option><option>America/Denver</option><option>America/Los_Angeles</option></select>
                   </label>
                   <label class="field-label">Language
-                    <select class="select"><option>English</option><option>Español</option></select>
+                    <select id="companyLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select>
                   </label>
                   <label class="field-label">Date format
-                    <select class="select"><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select>
+                    <select id="companyDateFormat" class="select"><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select>
                   </label>
                 </div>
               </section>
@@ -1330,19 +1340,20 @@
                   </div>
                 </div>
                 <div class="settings-colors" aria-label="Brand color preview options">
-                  <button type="button" class="settings-color-option active" style="--swatch:#3b82f6" aria-label="Blue"></button>
-                  <button type="button" class="settings-color-option" style="--swatch:#14b8a6" aria-label="Teal"></button>
-                  <button type="button" class="settings-color-option" style="--swatch:#8b5cf6" aria-label="Purple"></button>
-                  <button type="button" class="settings-color-option" style="--swatch:#f97316" aria-label="Orange"></button>
-                  <button type="button" class="settings-color-option" style="--swatch:#22c55e" aria-label="Green"></button>
+                  <input id="companyBrandColor" type="hidden" value="#3b82f6" />
+                  <button type="button" class="settings-color-option active" data-company-color="#3b82f6" style="--swatch:#3b82f6" aria-label="Blue"></button>
+                  <button type="button" class="settings-color-option" data-company-color="#14b8a6" style="--swatch:#14b8a6" aria-label="Teal"></button>
+                  <button type="button" class="settings-color-option" data-company-color="#8b5cf6" style="--swatch:#8b5cf6" aria-label="Purple"></button>
+                  <button type="button" class="settings-color-option" data-company-color="#f97316" style="--swatch:#f97316" aria-label="Orange"></button>
+                  <button type="button" class="settings-color-option" data-company-color="#22c55e" style="--swatch:#22c55e" aria-label="Green"></button>
                 </div>
               </section>
             </div>
 
             <aside class="settings-preview-card">
               <div class="settings-preview-card-head">
-                <div class="settings-preview-logo">ES</div>
-                <div><strong>Example Sign Company</strong><span>Estimate preview</span></div>
+                <div id="companyPreviewInitials" class="settings-preview-logo">SC</div>
+                <div><strong id="companyPreviewName">Your company</strong><span>Estimate preview</span></div>
               </div>
               <div class="settings-preview-document">
                 <span>ESTIMATE #1042</span>
@@ -1351,9 +1362,9 @@
                 <div><span>Project total</span><strong>$4,850.00</strong></div>
                 <div><span>Deposit required</span><strong>$2,425.00</strong></div>
               </div>
-              <div class="settings-preview-contact">hello@yourcompany.com · +1 555 000 0000</div>
-              <button class="btn btn-primary full" type="button" disabled>Save company settings</button>
-              <p class="section-note">Saving is intentionally disabled in this design-only phase.</p>
+              <div id="companyPreviewContact" class="settings-preview-contact">Email · phone · website</div>
+              <button id="saveCompanySettingsBtn" class="btn btn-primary full" type="button">Save company settings</button>
+              <p class="section-note">Changes apply to future documents. Existing business records are not rewritten.</p>
             </aside>
           </div>
         </section>
@@ -2259,19 +2270,20 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260728-5"></script>
+  <script src="assets/js/01-core.js?v=20260728-6"></script>
   <script src="assets/js/02-clients.js?v=20260728-3"></script>
-  <script src="assets/js/22-salespeople.js?v=20260728-3"></script>
+  <script src="assets/js/22-salespeople.js?v=20260728-4"></script>
+  <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
   <script src="assets/js/03-jobs.js?v=20260728-3"></script>
   <script src="assets/js/04-expenses.js?v=20260728-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
-  <script src="assets/js/07-pdf.js?v=20260728-4"></script>
+  <script src="assets/js/07-pdf.js?v=20260728-5"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-2"></script>
-  <script src="assets/js/10-backup-misc.js?v=20260728-5"></script>
-  <script src="assets/js/11-auth.js?v=20260728-5"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260728-6"></script>
+  <script src="assets/js/11-auth.js?v=20260728-6"></script>
   <script src="assets/js/12-init.js?v=20260728-5"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>

@@ -39,6 +39,8 @@
       clients: [],
       salespeople: [],
       commissionSettlements: [],
+      companySettings: {},
+      companySettings: {},
       jobs: [],
       expenses: [],
       recurringExpenses: [],
@@ -364,6 +366,8 @@
     function clientsRef() { return userRef().collection("clients"); }
     function salespeopleRef() { return userRef().collection("salespeople"); }
     function commissionSettlementsRef() { return userRef().collection("commissionSettlements"); }
+    function companySettingsRef() { return userRef().collection("settings").doc("company"); }
+    function companySettingsRef() { return userRef().collection("settings").doc("company"); }
     function jobsRef() { return userRef().collection("jobs"); }
     function expensesRef() { return userRef().collection("expenses"); }
     function recurringRef() { return userRef().collection("recurringExpenses"); }
@@ -508,6 +512,7 @@
     }
     function canEditModule(module = state.currentView) {
       if (module === "vendedores") return isAdmin();
+      if (module === "configuracion") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (["dashboard", "reportes", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
@@ -603,6 +608,7 @@
         saveClientBtn: 'clientes',
         saveSalespersonBtn: 'vendedores',
         saveCommissionSettlementBtn: 'vendedores',
+        saveCompanySettingsBtn: 'configuracion',
         saveJobBtn: 'trabajos',
         saveExpenseBtn: 'gastos',
         saveRecurringBtn: 'gastos',

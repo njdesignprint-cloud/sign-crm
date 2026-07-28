@@ -276,9 +276,9 @@
       const { jsPDF } = window.jspdf; const pdf = new jsPDF("p", "mm", "letter");
       const percent = Number(person.commissionPercent || 0).toFixed(2); const base = COMMISSION_BASE_LABELS[person.commissionBase] || COMMISSION_BASE_LABELS.collected;
       const schedule = { monthly: "monthly, within 10 business days after month-end", biweekly: "every two weeks", per_job: "after each eligible job is fully collected" }[person.paymentSchedule] || "monthly";
-      pdf.setFillColor(15, 23, 42); pdf.rect(0, 0, 216, 30, "F"); pdf.setTextColor(255,255,255); pdf.setFontSize(19); pdf.text("SALES COMMISSION AGREEMENT", 14, 18);
+      pdf.setFillColor(...(typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42])); pdf.rect(0, 0, 216, 30, "F"); pdf.setTextColor(255,255,255); pdf.setFontSize(19); pdf.text("SALES COMMISSION AGREEMENT", 14, 18);
       pdf.setTextColor(35,35,35); pdf.setFontSize(9); let y = 39;
-      y = pdfWrappedText(pdf, `Effective date: ____________________   Company legal name: ______________________________   Salesperson: ${person.name}${person.company ? ` (${person.company})` : ""}`, 14, y, 188) + 3;
+      y = pdfWrappedText(pdf, `Effective date: ____________________   Company legal name: ${COMPANY.legalName || COMPANY.name}   Salesperson: ${person.name}${person.company ? ` (${person.company})` : ""}`, 14, y, 188) + 3;
       const sections = [
         ["1. Appointment and scope", "The Company appoints the Salesperson on a non-exclusive basis to introduce prospective customers and support sales activity. The Salesperson may not sign contracts, promise pricing, extend credit, collect funds, or otherwise bind the Company unless separately authorized in writing."],
         ["2. Commission", `The commission rate is ${percent}% of ${base}. A commission is earned only after the Company receives and clears the applicable customer payment. Sales tax, refunds, credits, chargebacks, financing fees, bad debt, and amounts never collected are excluded. If a qualifying payment is later refunded or charged back, the related commission may be offset against a future payment.`],
@@ -288,7 +288,7 @@
         ["6. Confidentiality and customer information", "Pricing, customer lists, designs, estimates, credentials, financial information, and non-public business information are confidential. They may be used only for authorized Company business and must be returned or deleted upon request or termination. The Salesperson must protect customer data and immediately report suspected unauthorized access."],
         ["7. Term and termination", "Either party may terminate this agreement by written notice. Properly earned commissions on payments cleared before termination remain payable. Post-termination payments qualify only if the Company confirms the applicable customer and sale in writing. Sections concerning payment adjustments, confidentiality, records, and dispute terms survive termination."],
         ["8. Relationship and compliance", "The parties will comply with applicable law and Company-approved sales practices. Nothing in this agreement guarantees work, exclusivity, territory, or minimum compensation. The parties acknowledge that worker classification depends on the actual facts, including direction and control, and cannot be established merely by a contract label."],
-        ["9. General terms", "Texas law governs this agreement, without regard to conflict-of-law rules. This document and approved written addenda are the entire agreement about commissions. Changes must be in writing and signed by both parties. Electronic signatures and counterparts are permitted."],
+        ["9. General terms", `${COMPANY.governingState || "Texas"} law governs this agreement, without regard to conflict-of-law rules. This document and approved written addenda are the entire agreement about commissions. Changes must be in writing and signed by both parties. Electronic signatures and counterparts are permitted.`],
       ];
       sections.forEach(([heading, text]) => {
         const needed = pdf.splitTextToSize(text, 188).length * 5 + 11; if (y + needed > 245) { pdf.addPage(); y = 18; }
@@ -296,7 +296,7 @@
       });
       if (y > 220) { pdf.addPage(); y = 20; }
       pdf.setFont(undefined, "bold"); pdf.text("AGREED AND ACCEPTED", 14, y); y += 13; pdf.setFont(undefined, "normal");
-      pdf.text("Company representative / title: __________________", 14, y); pdf.text("Salesperson: __________________________", 112, y); y += 10;
+      pdf.text(`Company representative / title: ${COMPANY.representativeName || "________________"}${COMPANY.representativeTitle ? ` / ${COMPANY.representativeTitle}` : ""}`, 14, y); pdf.text("Salesperson: __________________________", 112, y); y += 10;
       pdf.text("Signature: ______________________________________", 14, y); pdf.text("Signature: ______________________________", 112, y); y += 10;
       pdf.text("Date: __________________________________________", 14, y); pdf.text("Date: __________________________________", 112, y);
       pdf.setFontSize(7); pdf.setTextColor(100,100,100); pdf.text("Template generated by SignShop HQ. Have qualified legal and tax professionals review it for your actual relationship and jurisdiction.", 14, 272);
@@ -311,9 +311,9 @@
     function exportCommissionSettlementPdf(id) {
       const item = state.commissionSettlements.find(row => row.id === id); if (!item) return showToast("Settlement not found.");
       const { jsPDF } = window.jspdf; const pdf = new jsPDF("p", "mm", "letter");
-      pdf.setFillColor(15,23,42); pdf.rect(0,0,216,30,"F"); pdf.setTextColor(255,255,255); pdf.setFontSize(18); pdf.text("COMMISSION PAYMENT STATEMENT",14,18);
+      pdf.setFillColor(...(typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42])); pdf.rect(0,0,216,30,"F"); pdf.setTextColor(255,255,255); pdf.setFontSize(18); pdf.text("COMMISSION PAYMENT STATEMENT",14,18);
       pdf.setTextColor(35,35,35); pdf.setFontSize(10);
-      pdf.autoTable({ startY: 38, head: [["Field", "Details"]], body: [["Salesperson", item.salespersonName || "-"],["Payment date", item.paymentDate || "-"],["Statement period", `${item.periodFrom || "-"} to ${item.periodTo || "-"}`],["Payment method", item.method || "-"],["Reference", item.reference || "-"],["Status", item.status === "void" ? "VOID" : "PAID"]], headStyles:{fillColor:[15,23,42]}, styles:{fontSize:9} });
+      pdf.autoTable({ startY: 38, head: [["Field", "Details"]], body: [["Company", COMPANY.legalName || COMPANY.name],["Salesperson", item.salespersonName || "-"],["Payment date", item.paymentDate || "-"],["Statement period", `${item.periodFrom || "-"} to ${item.periodTo || "-"}`],["Payment method", item.method || "-"],["Reference", item.reference || "-"],["Status", item.status === "void" ? "VOID" : "PAID"]], headStyles:{fillColor:[15,23,42]}, styles:{fontSize:9} });
       pdf.autoTable({ startY: pdf.lastAutoTable.finalY + 8, head: [["Job", "Client", "Rate", "Base", "Amount"]], body: (item.lineItems || []).map(line => [line.jobTitle || "-", line.clientName || "-", `${Number(line.rate || 0).toFixed(2)}%`, COMMISSION_BASE_LABELS[line.base] || line.base || "-", money(line.amount)]), headStyles:{fillColor:[15,23,42]}, styles:{fontSize:8} });
       let y = pdf.lastAutoTable.finalY + 10; pdf.setFont(undefined,"bold"); pdf.setFontSize(12); pdf.text(`TOTAL PAID: ${money(item.total)}`,14,y); y += 10; pdf.setFont(undefined,"normal"); pdf.setFontSize(9); y = pdfWrappedText(pdf, `Notes: ${item.notes || "-"}`,14,y,188) + 14;
       if (y > 235) { pdf.addPage(); y = 25; } pdf.text("Company representative: __________________________",14,y); pdf.text("Salesperson: __________________________",112,y); y += 10; pdf.text("Signature: ______________________________________",14,y); pdf.text("Signature: ______________________________",112,y); y += 10; pdf.text("Date: __________________________________________",14,y); pdf.text("Date: __________________________________",112,y);

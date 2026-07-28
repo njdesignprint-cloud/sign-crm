@@ -115,6 +115,7 @@
         clients: state.clients,
         salespeople: state.salespeople,
         commissionSettlements: state.commissionSettlements,
+        companySettings: state.companySettings,
         jobs: state.jobs,
         expenses: state.expenses,
         recurringExpenses: state.recurringExpenses,
@@ -132,11 +133,15 @@
       URL.revokeObjectURL(url);
       showToast("Respaldo JSON exportado.");
     }
+    function companyPdfColor() {
+      const hex = /^#[0-9a-f]{6}$/i.test(COMPANY.brandColor || "") ? COMPANY.brandColor : "#0f172a";
+      return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+    }
     function createModulePdf(title, subtitle = "") {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
 
-      pdf.setFillColor(15, 18, 24);
+      pdf.setFillColor(...companyPdfColor());
       pdf.rect(0, 0, 210, 34, "F");
       pdf.setTextColor(184, 255, 0);
       pdf.setFontSize(20);
@@ -710,7 +715,7 @@
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
 
-      pdf.setFillColor(15, 18, 24);
+      pdf.setFillColor(...companyPdfColor());
       pdf.rect(0, 0, 210, 34, "F");
 
       pdf.setTextColor(184, 255, 0);

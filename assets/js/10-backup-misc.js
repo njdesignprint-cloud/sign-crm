@@ -8,6 +8,7 @@
         const clients = Array.isArray(data.clients) ? data.clients : [];
         const salespeople = Array.isArray(data.salespeople) ? data.salespeople : [];
         const commissionSettlements = Array.isArray(data.commissionSettlements) ? data.commissionSettlements : [];
+        const companySettings = data.companySettings && typeof data.companySettings === "object" ? data.companySettings : {};
         const jobs = Array.isArray(data.jobs) ? data.jobs : [];
         const expenses = Array.isArray(data.expenses) ? data.expenses : [];
         const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
@@ -31,6 +32,12 @@
         );
 
         if (!ok) return;
+
+        if (Object.keys(companySettings).length) {
+          const settingsPayload = { ...companySettings, importedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+          delete settingsPayload.id;
+          await companySettingsRef().set(settingsPayload, { merge: true });
+        }
 
         const clientMap = {};
         const salespersonMap = {};
