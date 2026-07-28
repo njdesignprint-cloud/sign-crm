@@ -324,6 +324,18 @@
             </div>
 
             <div style="padding:16px 18px 0;">
+              <div id="jobsQuickFilters" class="jobs-quick-filters" aria-label="Filtros operativos de trabajos">
+                <button class="jobs-quick-filter active" type="button" data-job-quick-filter="all">Todos <span data-job-quick-count="all">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="mine">Mis trabajos <span data-job-quick-count="mine">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="unassigned">Sin responsable <span data-job-quick-count="unassigned">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="overdue">Vencidos <span data-job-quick-count="overdue">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="blocked">Bloqueados <span data-job-quick-count="blocked">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="waiting_client">Esperando cliente <span data-job-quick-count="waiting_client">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="production">En producción <span data-job-quick-count="production">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="install_week">Instalaciones 7 días <span data-job-quick-count="install_week">0</span></button>
+                <button class="jobs-quick-filter" type="button" data-job-quick-filter="balance">Entregados con saldo <span data-job-quick-count="balance">0</span></button>
+              </div>
+
               <div class="grid-4">
                 <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
                 <select id="jobStatusFilter" class="select">
@@ -2019,6 +2031,7 @@
 <div id="toast" class="toast"></div>
 
   <script src="assets/js/00-job-save-utils.js"></script>
+  <script src="assets/js/01-job-quick-filters.js"></script>
   <script src="assets/js/01-core.js"></script>
   <script src="assets/js/02-clients.js"></script>
   <script src="assets/js/03-jobs.js"></script>

@@ -1559,6 +1559,52 @@
       renderJobDesignImages();
       openModal("jobModal");
     }
+    function getCurrentUserJobAliases() {
+      const email = normalizedEmail(state.userEmail);
+      const member = state.teamMembers.find(item => normalizedEmail(item.email) === email);
+      return [
+        email,
+        member ? getTeamMemberDisplayName(member) : ""
+      ].map(cleanText).filter(Boolean);
+    }
+    function getJobQuickFilterDates() {
+      const start = today();
+      const end = new Date(start + "T00:00:00");
+      end.setDate(end.getDate() + 7);
+      return { today: start, weekEnd: end.toISOString().slice(0, 10) };
+    }
+    function jobMatchesQuickFilter(job, filter = state.jobsQuickFilter || "all") {
+      const dates = getJobQuickFilterDates();
+      const normalizedJob = { ...job, installation: getJobInstallation(job) };
+      return JobQuickFilters.matches(normalizedJob, filter, {
+        aliases: getCurrentUserJobAliases(),
+        overdue: isOverdue(job),
+        balance: computeJob(job).balance,
+        ...dates
+      });
+    }
+    function setJobsQuickFilter(filter = "all") {
+      state.jobsQuickFilter = cleanText(filter) || "all";
+      document.querySelectorAll("[data-job-quick-filter]").forEach(button => {
+        const active = button.dataset.jobQuickFilter === state.jobsQuickFilter;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      renderJobs();
+    }
+    function renderJobsQuickFilters() {
+      const filters = ["all", "mine", "unassigned", "overdue", "blocked", "waiting_client", "production", "install_week", "balance"];
+      filters.forEach(filter => {
+        const count = filter === "all" ? state.jobs.length : state.jobs.filter(job => jobMatchesQuickFilter(job, filter)).length;
+        const badge = document.querySelector(`[data-job-quick-count="${filter}"]`);
+        if (badge) badge.textContent = String(count);
+      });
+      document.querySelectorAll("[data-job-quick-filter]").forEach(button => {
+        const active = button.dataset.jobQuickFilter === (state.jobsQuickFilter || "all");
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
     function getFilteredJobs() {
       const q = cleanText($("jobSearch").value).toLowerCase();
       const statusFilter = cleanText($("jobStatusFilter").value);
@@ -1579,8 +1625,9 @@
         const okType = !typeFilter || getJobTypeLabel(job) === typeFilter;
         const okCreated = (!createdFrom && !createdTo) || isBetween(job.date, createdFrom, createdTo);
         const okDue = (!dueFrom && !dueTo) || (job.dueDate && isBetween(job.dueDate, dueFrom, dueTo));
+        const okQuick = jobMatchesQuickFilter(job);
 
-        return okText && okStatus && okPriority && okType && okCreated && okDue;
+        return okText && okStatus && okPriority && okType && okCreated && okDue && okQuick;
       });
     }
     function getDueSoonJobs(days = 7) {
@@ -1612,6 +1659,7 @@
       });
     }
     function renderJobs() {
+      renderJobsQuickFilters();
       const rows = getFilteredJobs();
 
       $("jobsBody").innerHTML = rows.map(job => {

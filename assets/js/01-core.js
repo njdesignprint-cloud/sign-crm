@@ -63,7 +63,8 @@
       unsubscribers: [],
       calendarDate: new Date(),
       installationCalendarDate: new Date(),
-      jobsViewMode: "table"
+      jobsViewMode: "table",
+      jobsQuickFilter: "all"
     };
 
     const $ = (id) => document.getElementById(id);

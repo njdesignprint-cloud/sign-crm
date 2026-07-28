@@ -176,6 +176,9 @@
       $(id).addEventListener("input", renderJobs);
       $(id).addEventListener("change", renderJobs);
     });
+    document.querySelectorAll("[data-job-quick-filter]").forEach(button => {
+      button.addEventListener("click", () => setJobsQuickFilter(button.dataset.jobQuickFilter));
+    });
 
     ["productionSearch","productionStageFilter","productionPriorityFilter","productionResponsibleFilter","productionDueFrom","productionDueTo","productionBlockedFilter","productionOverdueOnly"].forEach(id => {
       $(id)?.addEventListener("input", () => {
@@ -226,7 +229,7 @@
 
     $("btnClearJobFilters").addEventListener("click", () => {
       ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => $(id).value = "");
-      renderJobs();
+      setJobsQuickFilter("all");
     });
 
     $("btnClearProductionFilters")?.addEventListener("click", () => {
