@@ -1599,6 +1599,12 @@
         const count = filter === "all" ? state.jobs.length : state.jobs.filter(job => jobMatchesQuickFilter(job, filter)).length;
         const badge = document.querySelector(`[data-job-quick-count="${filter}"]`);
         if (badge) badge.textContent = String(count);
+        const button = document.querySelector(`[data-job-quick-filter="${filter}"]`);
+        if (button) {
+          const hasPendingItems = filter !== "all" && count > 0;
+          button.classList.toggle("has-items", hasPendingItems);
+          button.setAttribute("data-count", String(count));
+        }
       });
       document.querySelectorAll("[data-job-quick-filter]").forEach(button => {
         const active = button.dataset.jobQuickFilter === (state.jobsQuickFilter || "all");
