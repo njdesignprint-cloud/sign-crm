@@ -1408,15 +1408,10 @@
         showToast("No se pudo guardar la nota.");
       }
     }
-    async function saveJob() {
-      if (!guardWrite("guardar trabajos", "trabajos")) return;
-      const currentJob = state.editingJobId ? (getJobById(state.editingJobId) || {}) : {};
+    function buildJobPayload(currentJob = {}) {
       const quote = getCurrentQuoteForm();
       const quoteCalc = computeQuote(quote);
       const pricing = getCurrentPricingForm();
-      const logsBase = state.editingJobId ? getJobActivityLog(getJobById(state.editingJobId) || {}) : [];
-      const notesBase = state.editingJobId ? getJobInternalNotes(getJobById(state.editingJobId) || {}) : [];
-
       const saleValue = Number($("jobSale").value || 0);
       const fallbackSale = pricing.priceMode === "quote" ? quoteCalc.total : saleValue;
 
@@ -1438,30 +1433,39 @@
         jobType: getEstimatorTemplate($("jobEstimatorType").value || "custom").label,
         estimate: getCurrentEstimatorForm(),
         checklist: getFormChecklist(),
-        internalNotesLog: notesBase,
+        internalNotesLog: getJobInternalNotes(currentJob),
+        advance: typeof getCurrentAdvanceForm === "function" ? getCurrentAdvanceForm() : (currentJob.advance || {}),
         workflow: typeof getCurrentJobWorkflow === "function" ? getCurrentJobWorkflow(currentJob) : (currentJob.workflow || {}),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       payload.status = reconcileJobStatus(payload, payload.status);
+      return payload;
+    }
 
-      if (!payload.clientId) return showToast("Selecciona un cliente.");
-      if (!payload.title) return showToast("Escribe el nombre del trabajo.");
-      if (payload.sale < 0) return showToast("La venta no puede ser negativa.");
+    async function saveJob() {
+      if (!guardWrite("guardar trabajos", "trabajos")) return;
+      const currentJob = state.editingJobId ? (getJobById(state.editingJobId) || {}) : {};
+      const basePayload = buildJobPayload(currentJob);
+
+      if (!basePayload.clientId) return showToast("Selecciona un cliente.");
+      if (!basePayload.title) return showToast("Escribe el nombre del trabajo.");
+      if (basePayload.sale < 0) return showToast("La venta no puede ser negativa.");
 
       try {
-        if (state.editingJobId) {
-          const existing = getJobById(state.editingJobId) || {};
-          payload.payments = existing.payments || [];
-          payload.designImages = existing.designImages || [];
-          payload.activityLog = [...logsBase, newLogEntry("edición", "Trabajo actualizado.")];
-          if (existing.paid) payload.paid = existing.paid;
+        const isNew = !state.editingJobId;
+        const payload = JobSaveUtils.prepareJobPayload(basePayload, {
+          existingJob: currentJob,
+          isNew,
+          pendingImages: state.pendingJobImages,
+          activityLogBase: getJobActivityLog(currentJob),
+          logEntry: newLogEntry(isNew ? "creación" : "edición", isNew ? "Trabajo creado." : "Trabajo actualizado."),
+          createdAt: isNew ? firebase.firestore.FieldValue.serverTimestamp() : undefined
+        });
+
+        if (!isNew) {
           await jobsRef().doc(state.editingJobId).update(payload);
           showToast("Trabajo actualizado.");
         } else {
-          payload.payments = [];
-          payload.designImages = [...state.pendingJobImages];
-          payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
-          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           await jobsRef().add(payload);
           state.pendingJobImages = [];
           showToast("Trabajo guardado correctamente.");

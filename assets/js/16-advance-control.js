@@ -205,6 +205,7 @@
       ledger: getCurrentLedger()
     });
   }
+  window.getCurrentAdvanceForm = getCurrentAdvanceForm;
 
   function computeAdvance(data = {}) {
     const normalized = normalizeAdvance(data);
@@ -302,77 +303,6 @@
     if (qs("#sumAdvanceAvailable")) qs("#sumAdvanceAvailable").textContent = moneySafe(advance.available);
   }
 
-  function patchSaveJob() {
-    if (window.__advanceSavePatched || typeof saveJob !== "function") return;
-    window.__advanceSavePatched = true;
-
-    saveJob = async function saveJobWithAdvance() {
-      if (!guardWrite("guardar trabajos", "trabajos")) return;
-      const quote = getCurrentQuoteForm();
-      const quoteCalc = computeQuote(quote);
-      const pricing = getCurrentPricingForm();
-      const currentJob = state.editingJobId ? (typeof getJobById === "function" ? getJobById(state.editingJobId) : null) : null;
-      const logsBase = state.editingJobId ? getJobActivityLog(currentJob || {}) : [];
-      const notesBase = state.editingJobId ? getJobInternalNotes(currentJob || {}) : [];
-
-      const saleValue = Number($("jobSale").value || 0);
-      const fallbackSale = pricing.priceMode === "quote" ? quoteCalc.total : saleValue;
-
-      const payload = {
-        clientId: cleanText($("jobClientId").value),
-        title: cleanText($("jobTitle").value),
-        status: cleanText($("jobStatus").value) || "Cotización",
-        date: cleanText($("jobDate").value) || today(),
-        dueDate: cleanText($("jobDueDate").value),
-        priority: cleanText($("jobPriority").value) || "Media",
-        installation: getCurrentInstallationForm(cleanText($("jobClientId").value)),
-        sale: Number(fallbackSale || 0),
-        description: cleanText($("jobDescription").value),
-        notes: cleanText($("jobNotes").value),
-        materials: getCurrentFormMaterials(),
-        quote,
-        pricing,
-        clientApproval: getCurrentClientApprovalForm(),
-        jobType: getEstimatorTemplate($("jobEstimatorType").value || "custom").label,
-        estimate: getCurrentEstimatorForm(),
-        checklist: getFormChecklist(),
-        internalNotesLog: notesBase,
-        advance: getCurrentAdvanceForm(),
-        workflow: typeof getCurrentJobWorkflow === "function" ? getCurrentJobWorkflow(currentJob || {}) : (currentJob?.workflow || {}),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      if (typeof reconcileJobStatus === "function") payload.status = reconcileJobStatus(payload, payload.status);
-
-      if (!payload.clientId) return showToast("Selecciona un cliente.");
-      if (!payload.title) return showToast("Escribe el nombre del trabajo.");
-      if (payload.sale < 0) return showToast("La venta no puede ser negativa.");
-
-      try {
-        if (state.editingJobId) {
-          const existing = currentJob || {};
-          payload.payments = existing.payments || [];
-          payload.designImages = existing.designImages || [];
-          payload.activityLog = [...logsBase, newLogEntry("edición", "Trabajo actualizado.")];
-          if (existing.paid) payload.paid = existing.paid;
-          await jobsRef().doc(state.editingJobId).update(payload);
-          showToast("Trabajo actualizado.");
-        } else {
-          payload.payments = [];
-          payload.designImages = [...state.pendingJobImages];
-          payload.activityLog = [newLogEntry("creación", "Trabajo creado.")];
-          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await jobsRef().add(payload);
-          state.pendingJobImages = [];
-          showToast("Trabajo guardado correctamente.");
-        }
-        closeModal("jobModal");
-      } catch (error) {
-        console.error(error);
-        showToast("No se pudo guardar el trabajo.");
-      }
-    };
-  }
-
   function patchLifecycle() {
     if (typeof resetJobForm === "function" && !window.__advanceResetPatched) {
       const original = resetJobForm;
@@ -401,8 +331,6 @@
       };
       window.__advancePreviewPatched = true;
     }
-
-    patchSaveJob();
   }
 
   function bindLive() {
