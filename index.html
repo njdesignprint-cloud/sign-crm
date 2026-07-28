@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SignShop HQ | Gestión para negocios de carteles</title>
-  <link rel="icon" type="image/png" href="assets/images/signshophq-icon-contrast.png" />
-  <link rel="apple-touch-icon" href="assets/images/signshophq-icon-contrast.png" />
+  <link rel="icon" type="image/png" href="assets/images/signshophq-icon-contrast.png?v=20260728-2" />
+  <link rel="apple-touch-icon" href="assets/images/signshophq-icon-contrast.png?v=20260728-2" />
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-2" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -55,46 +55,46 @@
           <img src="assets/images/signshophq-icon-contrast.png" alt="" width="56" height="56" />
           <div class="logo">SignShop <span>HQ</span></div>
         </div>
-        <div id="authAccessLabel" class="auth-eyebrow">Gestión para negocios de carteles</div>
-        <h1 id="authHeadline">Controla cada trabajo, desde la cotización hasta la instalación.</h1>
-        <div id="authSubtitle" class="auth-sub">Clientes, producción, inventario y finanzas organizados en un solo lugar.</div>
+        <div id="authAccessLabel" class="auth-eyebrow">Management for sign businesses</div>
+        <h1 id="authHeadline">Control every job, from estimate to installation.</h1>
+        <div id="authSubtitle" class="auth-sub">Clients, production, inventory, and finances organized in one place.</div>
         <div class="auth-benefits" aria-label="Beneficios principales">
-          <div><span>✓</span><strong id="authBenefitWorkflow">Flujo de trabajo claro</strong></div>
-          <div><span>✓</span><strong id="authBenefitProfit">Rentabilidad y cobros bajo control</strong></div>
-          <div><span>✓</span><strong id="authBenefitTeam">Equipo y responsabilidades organizados</strong></div>
+          <div><span>✓</span><strong id="authBenefitWorkflow">A clear job workflow</strong></div>
+          <div><span>✓</span><strong id="authBenefitProfit">Profitability and payments under control</strong></div>
+          <div><span>✓</span><strong id="authBenefitTeam">Organized teams and responsibilities</strong></div>
         </div>
       </section>
 
       <section class="auth-form-panel">
-        <div id="authFormTitle" class="auth-form-title">Accede a tu espacio de trabajo</div>
+        <div id="authFormTitle" class="auth-form-title">Access your workspace</div>
 
         <div class="stack">
-          <input id="authFullName" class="input" type="text" placeholder="Nombre completo (al crear cuenta)" />
-          <input id="authCompanyName" class="input" type="text" placeholder="Empresa (al crear cuenta)" />
-          <input id="authEmail" class="input" type="email" placeholder="Correo electrónico" />
-          <input id="authPassword" class="input" type="password" placeholder="Contraseña" />
+          <input id="authFullName" class="input" type="text" placeholder="Full name (when creating an account)" />
+          <input id="authCompanyName" class="input" type="text" placeholder="Company (when creating an account)" />
+          <input id="authEmail" class="input" type="email" placeholder="Email address" />
+          <input id="authPassword" class="input" type="password" placeholder="Password" />
         </div>
 
         <div class="auth-actions mt-16">
-          <button id="btnLogin" class="btn btn-primary">Entrar</button>
-          <button id="btnRegister" class="btn btn-secondary">Crear cuenta</button>
+          <button id="btnLogin" class="btn btn-primary">Sign in</button>
+          <button id="btnRegister" class="btn btn-secondary">Create account</button>
         </div>
 
-        <button id="btnReset" class="btn btn-info full mt-12">Recuperar contraseña</button>
+        <button id="btnReset" class="btn btn-info full mt-12">Reset password</button>
 
         <div id="authHelpText" class="help">
-          Las cuentas nuevas requieren aprobación antes de acceder al espacio de trabajo.
+          New accounts require approval before accessing a workspace.
         </div>
 
         <div class="box auth-guide mt-12">
-          <strong id="authGuideTitle">¿Primera vez en SignShop HQ?</strong>
+          <strong id="authGuideTitle">New to SignShop HQ?</strong>
 
           <div id="authGuideCompany" class="section-note mt-10">
-            <strong>Empresa nueva:</strong> completa tus datos y selecciona <strong>Crear cuenta</strong>. Te avisaremos cuando el acceso esté aprobado.
+            <strong>New company:</strong> complete your details and select <strong>Create account</strong>. We will let you know when access is approved.
           </div>
 
           <div id="authGuideEmployee" class="section-note mt-12">
-            <strong>Miembro de un equipo:</strong> usa el mismo correo con el que te invitó el administrador de tu empresa.
+            <strong>Team member:</strong> use the same email address your company administrator invited.
           </div>
         </div>
       </section>
@@ -2061,27 +2061,27 @@
 
 <div id="toast" class="toast"></div>
 
-  <script src="assets/js/00-job-save-utils.js"></script>
-  <script src="assets/js/01-job-quick-filters.js"></script>
-  <script src="assets/js/01-core.js"></script>
-  <script src="assets/js/02-clients.js"></script>
-  <script src="assets/js/02-payment-utils.js"></script>
-  <script src="assets/js/03-jobs.js"></script>
-  <script src="assets/js/04-expenses.js"></script>
-  <script src="assets/js/05-inventory.js"></script>
-  <script src="assets/js/06-installation-reports.js"></script>
-  <script src="assets/js/07-pdf.js"></script>
-  <script src="assets/js/08-providers-compras.js"></script>
-  <script src="assets/js/09-users.js"></script>
-  <script src="assets/js/10-backup-misc.js"></script>
-  <script src="assets/js/11-auth.js"></script>
-  <script src="assets/js/12-init.js"></script>
-  <script src="assets/js/13-production.js"></script>
-  <script src="assets/js/15-weekly-settlements.js"></script>
-  <script src="assets/js/16-advance-control.js"></script>
-  <script src="assets/js/17-advance-visual.js"></script>
-  <script src="assets/js/18-i18n.js"></script>
-  <script src="assets/js/19-job-workflow.js"></script>
-  <script src="assets/js/20-operations-alerts.js"></script>
+  <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
+  <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
+  <script src="assets/js/01-core.js?v=20260728-2"></script>
+  <script src="assets/js/02-clients.js?v=20260728-2"></script>
+  <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
+  <script src="assets/js/03-jobs.js?v=20260728-2"></script>
+  <script src="assets/js/04-expenses.js?v=20260728-2"></script>
+  <script src="assets/js/05-inventory.js?v=20260728-2"></script>
+  <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
+  <script src="assets/js/07-pdf.js?v=20260728-2"></script>
+  <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
+  <script src="assets/js/09-users.js?v=20260728-2"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260728-2"></script>
+  <script src="assets/js/11-auth.js?v=20260728-2"></script>
+  <script src="assets/js/12-init.js?v=20260728-2"></script>
+  <script src="assets/js/13-production.js?v=20260728-2"></script>
+  <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
+  <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
+  <script src="assets/js/17-advance-visual.js?v=20260728-2"></script>
+  <script src="assets/js/18-i18n.js?v=20260728-2"></script>
+  <script src="assets/js/19-job-workflow.js?v=20260728-2"></script>
+  <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
 </body>
 </html>

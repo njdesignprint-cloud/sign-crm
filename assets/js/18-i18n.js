@@ -1,7 +1,8 @@
 
 (function () {
   const LANGS = ["es", "en"];
-  const DEFAULT_LANG = "es";
+  const DEFAULT_LANG = "en";
+  const LANGUAGE_STORAGE_KEY = "signshophq_lang_v2";
 
   const TEXTS = {
     es: {
@@ -287,7 +288,7 @@
 
   function getLang() {
     try {
-      const stored = localStorage.getItem("crm_lang");
+      const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
       if (LANGS.includes(stored)) return stored;
     } catch (_) {}
     return (window.state && LANGS.includes(window.state.language)) ? window.state.language : DEFAULT_LANG;
@@ -483,7 +484,7 @@
 
   function setLanguage(lang) {
     const next = LANGS.includes(lang) ? lang : DEFAULT_LANG;
-    try { localStorage.setItem("crm_lang", next); } catch (_) {}
+    try { localStorage.setItem(LANGUAGE_STORAGE_KEY, next); } catch (_) {}
     if (window.state) window.state.language = next;
     applyLanguage();
   }

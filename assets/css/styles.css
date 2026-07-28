@@ -70,7 +70,7 @@
     .auth-benefits{display:grid;gap:12px}
     .auth-benefits>div{display:flex;align-items:center;gap:10px;color:#dbeafe;font-size:14px}
     .auth-benefits span{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:rgba(34,197,94,.14);color:#86efac;font-weight:900}
-    .auth-form-panel{padding:36px;background:var(--panel)}
+    .auth-form-panel{padding:36px;background:var(--card)}
     .auth-form-title{font-size:20px;font-weight:900;margin-bottom:20px}
     .auth-guide{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.20)}
 
@@ -878,7 +878,7 @@
       .auth-intro{padding:28px;border-right:none;border-bottom:1px solid var(--line)}
       .auth-brand-row{margin-bottom:24px}
       .auth-intro h1{font-size:30px}
-      .auth-form-panel{padding:24px}
+      .auth-form-panel{padding:26px 28px 30px;background:#151e2d}
       .app{grid-template-columns:1fr}
       .sidebar{
         position:fixed;
