@@ -111,10 +111,15 @@
       const message = prospectDefaultMessage(item), body = encodeURIComponent(message);
       const windows = /Windows/i.test(navigator.userAgent || "");
       const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent || "") || (/Macintosh/i.test(navigator.userAgent || "") && Number(navigator.maxTouchPoints || 0) > 1);
+      if (appleMobile) {
+        navigator.clipboard?.writeText(message).then(() => showToast(prospectText("Message copied. Paste it in Messages after choosing the recipient.", "Mensaje copiado. Pégalo en Mensajes después de elegir el destinatario."))).catch(() => {});
+        window.location.href = `sms:${phone}`;
+        return;
+      }
       if (windows && navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(`${phone}\n\n${message}`).then(() => showToast(prospectText("Phone and message copied. If Phone Link does not open, paste them in Messages.", "Teléfono y mensaje copiados. Si Phone Link no abre, pégalos en Mensajes."))).catch(() => {});
       }
-      window.location.href = `sms:${phone}${appleMobile ? "&" : "?"}body=${body}`;
+      window.location.href = `sms:${phone}?body=${body}`;
     }
     function openProspectEmail(id) {
       const item = getProspectById(id); if (!item?.email) return showToast(prospectText("This prospect has no email address.", "Este prospecto no tiene correo."));
