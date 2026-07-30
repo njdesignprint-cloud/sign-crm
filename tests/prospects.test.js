@@ -22,6 +22,11 @@ test("prospects support outreach, follow-up, maps and safe client conversion", (
   assert.match(module, /openProspectMaps/);
   assert.match(module, /saveProspectFollowup/);
   assert.match(module, /findDuplicateClient/);
+  assert.match(module, /findDuplicateProspect/);
+  assert.match(module, /prospectMessageWithPortfolio/);
+  assert.match(module, /https:\/\/njdesignprintllc\.com\//);
+  assert.match(module, /Already a client/);
+  assert.match(module, /whatsappStatus/);
   assert.match(module, /batch\.set\(clientDoc/);
   assert.match(module, /batch\.update\(prospectsRef/);
   assert.match(module, /convertedClientId/);

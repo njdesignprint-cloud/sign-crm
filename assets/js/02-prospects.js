@@ -11,6 +11,14 @@
     function getProspectById(id) { return state.prospects.find(item => String(item.id) === String(id)) || null; }
     function prospectNormalize(value) { return cleanText(value).toLowerCase().replace(/[^a-z0-9@]+/g, ""); }
     function prospectPhone(value) { return String(value || "").replace(/\D/g, ""); }
+    function prospectComparablePhone(value) { const digits = prospectPhone(value); return digits.length > 10 ? digits.slice(-10) : digits; }
+    function prospectPortfolioUrl() { return "https://njdesignprintllc.com/"; }
+    function prospectMessageWithPortfolio(message = "") {
+      const base = cleanText(message);
+      const url = prospectPortfolioUrl();
+      if (base.toLowerCase().includes(url.toLowerCase())) return base;
+      return `${base}${base ? "\n\n" : ""}${prospectText("See photos of our work:", "Puede ver fotos de nuestros trabajos aquí:")} ${url}`;
+    }
     function prospectActivityLabel(type) {
       return ({ call:["Call","Llamada"], whatsapp:["WhatsApp","WhatsApp"], email:["Email","Correo"], visit:["Visit","Visita"], note:["Note","Nota"], created:["Created","Creado"], converted:["Converted","Convertido"] }[type] || ["Activity","Actividad"])[prospectEnglish() ? 0 : 1];
     }
@@ -21,17 +29,19 @@
       return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
     }
     function prospectDefaultMessage(item = {}) {
-      if (cleanText(item.message)) return cleanText(item.message);
-      return prospectText(
+      const saved = cleanText(item.message);
+      const base = saved || prospectText(
         `Hello, my name is ${state.userEmail || ""} from SignShop HQ. We help businesses with professional signs, graphics and printing. I would like to learn about your upcoming signage needs.`,
         `Hola, soy ${state.userEmail || ""} de SignShop HQ. Ayudamos a negocios con letreros, gráficos e impresión profesional. Me gustaría conocer sus próximas necesidades de rotulación.`
       );
+      return prospectMessageWithPortfolio(base);
     }
     function resetProspectForm() {
       state.editingProspectId = null;
       $("prospectModalTitle").textContent = prospectText("New prospect", "Nuevo prospecto");
       ["prospectCompany","prospectName","prospectRole","prospectCategory","prospectPhone","prospectEmail","prospectAddress","prospectCity","prospectWebsite","prospectMapsUrl","prospectOwner","prospectNextAction","prospectNextDate","prospectMessage","prospectNotes"].forEach(id => $(id).value = "");
       $("prospectSource").value = "google_maps"; $("prospectStatus").value = "new"; $("prospectPriority").value = "medium";
+      if ($("prospectWhatsappStatus")) $("prospectWhatsappStatus").value = "pending";
       $("prospectTimelineBox").classList.add("hidden"); $("prospectTimeline").innerHTML = "";
     }
     function prospectPayloadFromForm() {
@@ -40,7 +50,8 @@
         phone: cleanText($("prospectPhone").value), email: cleanText($("prospectEmail").value), address: cleanText($("prospectAddress").value), city: cleanText($("prospectCity").value),
         website: cleanText($("prospectWebsite").value), mapsUrl: cleanText($("prospectMapsUrl").value), source: cleanText($("prospectSource").value) || "google_maps",
         status: cleanText($("prospectStatus").value) || "new", priority: cleanText($("prospectPriority").value) || "medium", owner: cleanText($("prospectOwner").value),
-        nextAction: cleanText($("prospectNextAction").value), nextFollowupDate: cleanText($("prospectNextDate").value), message: cleanText($("prospectMessage").value), notes: cleanText($("prospectNotes").value),
+        nextAction: cleanText($("prospectNextAction").value), nextFollowupDate: cleanText($("prospectNextDate").value), message: prospectMessageWithPortfolio($("prospectMessage").value), notes: cleanText($("prospectNotes").value),
+        whatsappStatus: cleanText($("prospectWhatsappStatus")?.value) || "pending",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
     }
@@ -48,6 +59,10 @@
       if (!guardWrite(prospectText("save prospects", "guardar prospectos"), "prospectos")) return;
       const payload = prospectPayloadFromForm();
       if (!payload.company) return showToast(prospectText("Enter the business name.", "Escribe el nombre del negocio."));
+      const existingClient = findDuplicateClient(payload);
+      if (!state.editingProspectId && existingClient) return showToast(prospectText(`This business is already a client: ${clientLabel(existingClient)}. Prospect not saved.`, `Este negocio ya es cliente: ${clientLabel(existingClient)}. No se guardó el prospecto.`));
+      const existingProspect = findDuplicateProspect(payload, state.editingProspectId);
+      if (existingProspect) return showToast(prospectText(`A matching prospect already exists: ${existingProspect.company}.`, `Ya existe un prospecto coincidente: ${existingProspect.company}.`));
       try {
         if (state.editingProspectId) await prospectsRef().doc(state.editingProspectId).update(payload);
         else {
@@ -67,7 +82,7 @@
       if (!canWriteData("prospectos")) return showToast(prospectText("You cannot edit prospects.", "No tienes permiso para editar prospectos."));
       const item = getProspectById(id); if (!item) return;
       state.editingProspectId = id; $("prospectModalTitle").textContent = prospectText("Edit prospect", "Editar prospecto");
-      const fields = { prospectCompany:"company", prospectName:"name", prospectRole:"role", prospectCategory:"category", prospectPhone:"phone", prospectEmail:"email", prospectAddress:"address", prospectCity:"city", prospectWebsite:"website", prospectMapsUrl:"mapsUrl", prospectSource:"source", prospectStatus:"status", prospectPriority:"priority", prospectOwner:"owner", prospectNextAction:"nextAction", prospectNextDate:"nextFollowupDate", prospectMessage:"message", prospectNotes:"notes" };
+      const fields = { prospectCompany:"company", prospectName:"name", prospectRole:"role", prospectCategory:"category", prospectPhone:"phone", prospectEmail:"email", prospectAddress:"address", prospectCity:"city", prospectWebsite:"website", prospectMapsUrl:"mapsUrl", prospectSource:"source", prospectStatus:"status", prospectPriority:"priority", prospectOwner:"owner", prospectNextAction:"nextAction", prospectNextDate:"nextFollowupDate", prospectMessage:"message", prospectNotes:"notes", prospectWhatsappStatus:"whatsappStatus" };
       Object.entries(fields).forEach(([id,key]) => $(id).value = item[key] || "");
       $("prospectTimelineBox").classList.remove("hidden"); renderProspectTimeline(item); openModal("prospectModal");
     }
@@ -97,8 +112,18 @@
     }
     function openProspectMaps(id) { const item = getProspectById(id); if (item) window.open(prospectMapsLink(item), "_blank", "noopener"); }
     function findDuplicateClient(item = {}) {
-      const email = prospectNormalize(item.email), phone = prospectPhone(item.phone), company = prospectNormalize(item.company);
-      return state.clients.find(client => (email && prospectNormalize(client.email) === email) || (phone && prospectPhone(client.phone) === phone) || (company && prospectNormalize(client.company) === company));
+      const email = prospectNormalize(item.email), phone = prospectComparablePhone(item.phone), company = prospectNormalize(item.company);
+      return state.clients.find(client => (email && prospectNormalize(client.email) === email) || (phone && prospectComparablePhone(client.phone) === phone) || (company && prospectNormalize(client.company) === company));
+    }
+    function findDuplicateProspect(item = {}, excludeId = "") {
+      const email = prospectNormalize(item.email), phone = prospectComparablePhone(item.phone), company = prospectNormalize(item.company);
+      return state.prospects.find(prospect => String(prospect.id) !== String(excludeId || "") && ((email && prospectNormalize(prospect.email) === email) || (phone && prospectComparablePhone(prospect.phone) === phone) || (company && prospectNormalize(prospect.company) === company)));
+    }
+    function prospectWhatsappLabel(item = {}) {
+      if (!item.phone) return prospectText("No phone", "Sin teléfono");
+      if (item.whatsappStatus === "confirmed") return prospectText("WhatsApp confirmed", "WhatsApp confirmado");
+      if (item.whatsappStatus === "unavailable") return prospectText("No WhatsApp", "Sin WhatsApp");
+      return prospectText("WhatsApp pending verification", "WhatsApp por verificar");
     }
     async function convertProspectToClient(id) {
       if (!guardWrite(prospectText("convert prospects", "convertir prospectos"), "prospectos")) return;
@@ -125,7 +150,8 @@
       if (!$("prospectsBody")) return; const date = today(); const rows = getFilteredProspects();
       $("prospectsBody").innerHTML = rows.map(item => {
         const activity = Array.isArray(item.activity) ? item.activity[item.activity.length - 1] : null; const overdue = item.nextFollowupDate && item.nextFollowupDate < date && !["won","lost"].includes(item.status);
-        return `<tr><td><strong>${safe(item.company || "-")}</strong><div class="section-note">${safe([item.name,item.role].filter(Boolean).join(" · ") || "-")}</div></td><td>${safe(item.phone || "-")}<div>${safe(item.email || "-")}</div><div class="section-note">${safe([item.category,item.city].filter(Boolean).join(" · ") || "-")}</div></td><td><span class="pill ${item.status === "won" ? "st-aprobado" : item.status === "lost" ? "st-cancelado" : "st-diseno"}">${safe(prospectStatusLabel(item.status))}</span><div class="section-note">${safe(prospectPriorityLabel(item.priority))} · ${safe(item.owner || prospectText("Unassigned","Sin asignar"))}</div></td><td><strong class="${overdue ? "danger-text" : ""}">${safe(item.nextFollowupDate || "-")}</strong><div>${safe(item.nextAction || "-")}</div></td><td>${activity ? `<strong>${safe(prospectActivityLabel(activity.type))}</strong><div>${safe(String(activity.date || "").slice(0,10))}</div><small>${safe(activity.note || "-")}</small>` : "-"}</td><td><div class="actions-row"><button class="btn btn-info btn-small" data-prospect-followup="${item.id}">${prospectText("Follow-up","Seguimiento")}</button><button class="btn btn-info btn-small" data-prospect-wa="${item.id}">WhatsApp</button><button class="btn btn-secondary btn-small" data-prospect-email="${item.id}">${prospectText("Email","Correo")}</button><button class="btn btn-secondary btn-small" data-prospect-maps="${item.id}">Google Maps</button>${canWriteData("prospectos") ? `<button class="btn btn-secondary btn-small" data-edit-prospect="${item.id}">${prospectText("Edit","Editar")}</button>` : ""}${canWriteData("prospectos") && !item.convertedClientId ? `<button class="btn btn-primary btn-small" data-convert-prospect="${item.id}">${prospectText("Convert to client","Convertir en cliente")}</button>` : ""}${item.convertedClientId ? `<span class="pill st-aprobado">${prospectText("Client created","Cliente creado")}</span>` : ""}</div></td></tr>`;
+        const duplicateClient = findDuplicateClient(item);
+        return `<tr><td><strong>${safe(item.company || "-")}</strong>${duplicateClient ? `<div><span class="pill st-cancelado">${safe(prospectText(`Already a client: ${clientLabel(duplicateClient)}`, `Ya es cliente: ${clientLabel(duplicateClient)}`))}</span></div>` : ""}<div class="section-note">${safe([item.name,item.role].filter(Boolean).join(" · ") || "-")}</div></td><td>${safe(item.phone || "-")}<div>${safe(item.email || "-")}</div><div class="section-note">${safe([item.category,item.city].filter(Boolean).join(" · ") || "-")}</div><div class="section-note">${safe(prospectWhatsappLabel(item))}</div></td><td><span class="pill ${item.status === "won" ? "st-aprobado" : item.status === "lost" ? "st-cancelado" : "st-diseno"}">${safe(prospectStatusLabel(item.status))}</span><div class="section-note">${safe(prospectPriorityLabel(item.priority))} · ${safe(item.owner || prospectText("Unassigned","Sin asignar"))}</div></td><td><strong class="${overdue ? "danger-text" : ""}">${safe(item.nextFollowupDate || "-")}</strong><div>${safe(item.nextAction || "-")}</div></td><td>${activity ? `<strong>${safe(prospectActivityLabel(activity.type))}</strong><div>${safe(String(activity.date || "").slice(0,10))}</div><small>${safe(activity.note || "-")}</small>` : "-"}</td><td><div class="actions-row"><button class="btn btn-info btn-small" data-prospect-followup="${item.id}">${prospectText("Follow-up","Seguimiento")}</button><button class="btn btn-info btn-small" data-prospect-wa="${item.id}" ${!item.phone || item.whatsappStatus === "unavailable" ? "disabled" : ""}>WhatsApp</button><button class="btn btn-secondary btn-small" data-prospect-email="${item.id}">${prospectText("Email","Correo")}</button><button class="btn btn-secondary btn-small" data-prospect-maps="${item.id}">Google Maps</button>${canWriteData("prospectos") ? `<button class="btn btn-secondary btn-small" data-edit-prospect="${item.id}">${prospectText("Edit","Editar")}</button>` : ""}${canWriteData("prospectos") && !item.convertedClientId && !duplicateClient ? `<button class="btn btn-primary btn-small" data-convert-prospect="${item.id}">${prospectText("Convert to client","Convertir en cliente")}</button>` : ""}${item.convertedClientId ? `<span class="pill st-aprobado">${prospectText("Client created","Cliente creado")}</span>` : ""}</div></td></tr>`;
       }).join("");
       $("prospectsEmpty").classList.toggle("hidden", rows.length > 0);
       $("prospectsActiveCount").textContent = state.prospects.filter(item => !["won","lost"].includes(item.status)).length;
