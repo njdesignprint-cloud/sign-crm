@@ -18,6 +18,8 @@ test("prospects are a client-connected secured module", () => {
 test("prospects support outreach, follow-up, maps and safe client conversion", () => {
   const module = read("assets/js/02-prospects.js");
   assert.match(module, /openProspectWhatsapp/);
+  assert.match(module, /openProspectSms/);
+  assert.match(module, /sms:\$\{prospectPhone\(item\.phone\)\}\?body=/);
   assert.match(module, /openProspectEmail/);
   assert.match(module, /openProspectMaps/);
   assert.match(module, /saveProspectFollowup/);

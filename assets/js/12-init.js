@@ -341,6 +341,7 @@
       if (target.dataset.editProspect) editProspect(target.dataset.editProspect);
       if (target.dataset.prospectFollowup) openProspectFollowup(target.dataset.prospectFollowup);
       if (target.dataset.prospectWa) openProspectWhatsapp(target.dataset.prospectWa);
+      if (target.dataset.prospectSms) openProspectSms(target.dataset.prospectSms);
       if (target.dataset.prospectEmail) openProspectEmail(target.dataset.prospectEmail);
       if (target.dataset.prospectMaps) openProspectMaps(target.dataset.prospectMaps);
       if (target.dataset.convertProspect) convertProspectToClient(target.dataset.convertProspect);
