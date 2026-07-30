@@ -545,6 +545,7 @@
     if (typeof window.setView === "function") {
       const original = window.setView;
       window.setView = function (...args) {
+        applyLanguage();
         const result = original.apply(this, args);
         setTimeout(applyLanguage, 0);
         return result;
