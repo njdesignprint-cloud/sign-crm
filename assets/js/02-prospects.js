@@ -183,7 +183,7 @@
       });
     }
     function openNextProspect() {
-      const candidates = state.prospects.filter(item => !item.convertedClientId && !["won","lost"].includes(item.status)).sort((a,b) => { const aa = prospectContactActivities(a), ba = prospectContactActivities(b); if (!aa.length !== !ba.length) return !aa.length ? -1 : 1; const ad = a.nextFollowupDate || "9999-12-31", bd = b.nextFollowupDate || "9999-12-31"; if (ad !== bd) return ad.localeCompare(bd); const al = aa[aa.length - 1]?.date || "", bl = ba[ba.length - 1]?.date || ""; return al.localeCompare(bl); });
+      const candidates = state.prospects.filter(item => !item.convertedClientId && !findDuplicateClient(item) && !["won","lost"].includes(item.status)).sort((a,b) => { const aa = prospectContactActivities(a), ba = prospectContactActivities(b); if (!aa.length !== !ba.length) return !aa.length ? -1 : 1; const ad = a.nextFollowupDate || "9999-12-31", bd = b.nextFollowupDate || "9999-12-31"; if (ad !== bd) return ad.localeCompare(bd); const al = aa[aa.length - 1]?.date || "", bl = ba[ba.length - 1]?.date || ""; return al.localeCompare(bl); });
       if (!candidates.length) return showToast(prospectText("No active prospects are pending contact.", "No hay prospectos activos pendientes de contacto."));
       openProspectFollowup(candidates[0].id);
     }
