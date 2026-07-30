@@ -328,6 +328,7 @@
     }
     async function handleSignedIn(user) {
       await resolveWorkspaceAccess(user);
+      if (typeof window.setCrmLanguage === "function") window.setCrmLanguage(state.language, { persist: false });
 
       if (!isSuperAdmin()) {
         if (state.currentPlatformStatus === "blocked") {

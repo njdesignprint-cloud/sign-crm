@@ -77,7 +77,8 @@
       calendarDate: new Date(),
       installationCalendarDate: new Date(),
       jobsViewMode: "table",
-      jobsQuickFilter: "all"
+      jobsQuickFilter: "all",
+      language: "en"
     };
     window.state = state;
 
@@ -434,6 +435,14 @@
     function ownUserRootRef() { return db.collection("users").doc(state.uid); }
     function platformUsersRef() { return db.collection("platformUsers"); }
     function platformUserRef(uid = state.uid) { return platformUsersRef().doc(uid); }
+    async function persistUserLanguagePreference(language) {
+      if (!state.uid || !["es", "en"].includes(language)) return;
+      await platformUserRef(state.uid).set({
+        language,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+    window.persistUserLanguagePreference = persistUserLanguagePreference;
     function platformWorkspacesRef() { return db.collection("platformWorkspaces"); }
     function platformWorkspaceRef(uid = state.accountOwnerId || state.uid) { return platformWorkspacesRef().doc(uid); }
     function teamAccessRefByEmail(email) { return db.collection("teamAccess").doc(normalizedEmail(email)); }
@@ -778,6 +787,14 @@
         console.error(error);
       }
 
+      let localLanguage = "";
+      try { localLanguage = cleanText(localStorage.getItem("signshophq_lang_v2")); } catch (_) {}
+      const accountLanguage = cleanText(platformAccount?.language);
+      state.language = ["es", "en"].includes(accountLanguage)
+        ? accountLanguage
+        : (["es", "en"].includes(localLanguage) ? localLanguage : "en");
+      try { localStorage.setItem("signshophq_lang_v2", state.language); } catch (_) {}
+
       if (invitedAccess && invitedAccess.active !== false && cleanText(invitedAccess.ownerId)) {
         state.accountOwnerId = cleanText(invitedAccess.ownerId);
         state.currentUserRole = state.accountOwnerId === state.uid ? "owner" : (cleanText(invitedAccess.role) || "employee");
@@ -826,6 +843,7 @@
         ownerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
         status: platformAccount ? (savedPlatformStatus || "pending") : (state.currentPlatformStatus || "pending"),
         invited: !!invitedAccess,
+        language: state.language,
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()

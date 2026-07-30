@@ -517,12 +517,20 @@
     });
   }
 
-  function setLanguage(lang) {
+  function setLanguage(lang, options = {}) {
     const next = LANGS.includes(lang) ? lang : DEFAULT_LANG;
     try { localStorage.setItem(LANGUAGE_STORAGE_KEY, next); } catch (_) {}
     if (window.state) window.state.language = next;
     applyLanguage();
     window.dispatchEvent(new CustomEvent("crm-language-changed", { detail: { language: next } }));
+    if (options.persist !== false && typeof window.persistUserLanguagePreference === "function" && window.state?.uid) {
+      window.persistUserLanguagePreference(next).catch(error => {
+        console.error(error);
+        if (typeof window.showToast === "function") window.showToast(next === "es"
+          ? "El idioma quedó guardado en este dispositivo, pero no se pudo sincronizar con tu cuenta."
+          : "The language was saved on this device, but it could not be synced with your account.");
+      });
+    }
     setTimeout(() => {
       const viewRenderers = {
         clientes: "renderClients", vendedores: "renderSalespeople", trabajos: "renderJobs",
@@ -646,5 +654,6 @@
 
   patchFunctions();
   bindLanguageButtons();
-  setLanguage(getLang());
+  window.setCrmLanguage = setLanguage;
+  setLanguage(getLang(), { persist: false });
 })();
