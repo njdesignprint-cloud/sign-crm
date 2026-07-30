@@ -35,6 +35,7 @@
     $("saveClientBtn").addEventListener("click", () => withSaveButton("saveClientBtn", "Guardando cliente…", saveClient));
     $("saveProspectBtn")?.addEventListener("click", () => withSaveButton("saveProspectBtn", "Guardando prospecto…", saveProspect));
     $("saveProspectFollowupBtn")?.addEventListener("click", () => withSaveButton("saveProspectFollowupBtn", "Guardando seguimiento…", saveProspectFollowup));
+    $("nextProspectBtn")?.addEventListener("click", openNextProspect);
     $("saveSalespersonBtn")?.addEventListener("click", saveSalesperson);
     $("saveCommissionSettlementBtn")?.addEventListener("click", saveCommissionSettlement);
     $("clientSource")?.addEventListener("change", toggleClientCommissionFields);
@@ -193,7 +194,7 @@
     $("btnKanbanView").addEventListener("click", () => setJobsViewMode("kanban"));
 
     $("clientSearch").addEventListener("input", renderClients);
-    ["prospectSearch","prospectStatusFilter","prospectDueFilter"].forEach(id => {
+    ["prospectSearch","prospectStatusFilter","prospectDueFilter","prospectContactFilter"].forEach(id => {
       $(id)?.addEventListener("input", renderProspects);
       $(id)?.addEventListener("change", renderProspects);
     });

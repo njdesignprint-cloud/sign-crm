@@ -371,6 +371,8 @@
                 <input id="prospectSearch" class="input" placeholder="Buscar negocio, contacto, teléfono o ciudad" />
                 <select id="prospectStatusFilter" class="select"><option value="">Todas las etapas</option><option value="new">Nuevo</option><option value="contact">Por contactar</option><option value="contacted">Contactado</option><option value="visit">Visita programada</option><option value="followup">Seguimiento</option><option value="quote">Cotización solicitada</option><option value="won">Ganado</option><option value="lost">Perdido</option></select>
                 <select id="prospectDueFilter" class="select"><option value="">Todos los seguimientos</option><option value="today">Para hoy</option><option value="overdue">Atrasados</option><option value="upcoming">Próximos</option></select>
+                <select id="prospectContactFilter" class="select"><option value="">Todos los contactos</option><option value="unattempted">Sin intentar</option><option value="attempted_today">Intentados hoy</option><option value="no_answer">No respondieron</option><option value="callback">Llamar nuevamente</option><option value="visit">Visitas pendientes</option><option value="interested">Interesados</option><option value="verify_phone">Teléfonos por verificar</option></select>
+                <button id="nextProspectBtn" class="btn btn-primary">Siguiente prospecto</button>
               </div>
             </div>
             <div class="table-wrap"><table><thead><tr><th>Negocio / contacto</th><th>Información</th><th>Etapa</th><th>Próximo seguimiento</th><th>Última actividad</th><th>Acciones</th></tr></thead><tbody id="prospectsBody"></tbody></table></div>
@@ -1540,6 +1542,9 @@
           <label class="field-label">Cargo / función<input id="prospectRole" class="input" /></label>
           <label class="field-label">Tipo de negocio<input id="prospectCategory" class="input" placeholder="Restaurante, clínica, taller..." /></label>
           <label class="field-label">Teléfono<input id="prospectPhone" class="input" /></label>
+          <label class="field-label">Tipo de línea<select id="prospectPhoneType" class="select"><option value="unknown">Desconocida</option><option value="mobile">Móvil</option><option value="landline">Fija</option><option value="voip">VoIP</option></select></label>
+          <label class="field-label">Llamadas<select id="prospectCallStatus" class="select"><option value="pending">Por verificar</option><option value="available">Disponible</option><option value="unavailable">No disponible</option></select></label>
+          <label class="field-label">SMS<select id="prospectSmsStatus" class="select"><option value="pending">Por verificar</option><option value="confirmed">Confirmado</option><option value="unavailable">No disponible</option></select></label>
           <label class="field-label">Estado de WhatsApp<select id="prospectWhatsappStatus" class="select"><option value="pending">Por verificar</option><option value="confirmed">Confirmado</option><option value="unavailable">No disponible</option></select></label>
           <label class="field-label">Correo<input id="prospectEmail" class="input" type="email" /></label>
           <label class="field-label">Dirección<input id="prospectAddress" class="input" /></label>
@@ -1563,17 +1568,22 @@
 
   <div class="modal-backdrop" id="prospectFollowupModal">
     <div class="modal modal-small">
-      <div class="modal-head"><h3>Registrar seguimiento</h3><button class="btn btn-secondary btn-small" data-close="prospectFollowupModal">Cerrar</button></div>
+      <div class="modal-head"><h3>Registrar contacto</h3><button class="btn btn-secondary btn-small" data-close="prospectFollowupModal">Cerrar</button></div>
       <div class="modal-body">
         <div class="grid-2">
-          <label class="field-label">Tipo<select id="prospectFollowupType" class="select"><option value="call">Llamada</option><option value="whatsapp">WhatsApp</option><option value="email">Correo</option><option value="visit">Visita</option><option value="note">Nota</option></select></label>
+          <label class="field-label">Medio de contacto<select id="prospectFollowupType" class="select"><option value="call">Llamada</option><option value="sms">SMS</option><option value="whatsapp">WhatsApp</option><option value="email">Correo</option><option value="visit">Visita</option><option value="social">Redes sociales</option><option value="note">Nota</option></select></label>
+          <label class="field-label">Resultado<select id="prospectFollowupResult" class="select"><option value="answered">Respondió</option><option value="no_answer">No respondió</option><option value="message_sent">Mensaje enviado</option><option value="delivered">Mensaje entregado</option><option value="invalid_number">Número incorrecto</option><option value="fixed_line">Número fijo</option><option value="whatsapp_unavailable">WhatsApp no disponible</option><option value="interested">Interesado</option><option value="not_interested">No interesado</option><option value="callback">Llamar después</option></select></label>
           <label class="field-label">Nueva etapa<select id="prospectFollowupStatus" class="select"><option value="contacted">Contactado</option><option value="visit">Visita programada</option><option value="followup">Seguimiento</option><option value="quote">Cotización solicitada</option><option value="won">Ganado</option><option value="lost">Perdido</option></select></label>
           <label class="field-label">Próxima acción<input id="prospectFollowupNextAction" class="input" /></label>
           <label class="field-label">Próxima fecha<input id="prospectFollowupNextDate" class="input" type="date" /></label>
+          <label class="field-label">Tipo de línea<select id="prospectFollowupPhoneType" class="select"><option value="unknown">Desconocida</option><option value="mobile">Móvil</option><option value="landline">Fija</option><option value="voip">VoIP</option></select></label>
+          <label class="field-label">Llamadas<select id="prospectFollowupCallStatus" class="select"><option value="pending">Por verificar</option><option value="available">Disponible</option><option value="unavailable">No disponible</option></select></label>
+          <label class="field-label">SMS<select id="prospectFollowupSmsStatus" class="select"><option value="pending">Por verificar</option><option value="confirmed">Confirmado</option><option value="unavailable">No disponible</option></select></label>
+          <label class="field-label">WhatsApp<select id="prospectFollowupWhatsappStatus" class="select"><option value="pending">Por verificar</option><option value="confirmed">Confirmado</option><option value="unavailable">No disponible</option></select></label>
         </div>
         <label class="field-label mt-12">Resultado / nota<textarea id="prospectFollowupNote" class="textarea"></textarea></label>
       </div>
-      <div class="modal-foot"><button class="btn btn-secondary" data-close="prospectFollowupModal">Cancelar</button><button id="saveProspectFollowupBtn" class="btn btn-primary">Guardar seguimiento</button></div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="prospectFollowupModal">Cancelar</button><button id="saveProspectFollowupBtn" class="btn btn-primary">Guardar contacto</button></div>
     </div>
   </div>
 
@@ -2392,7 +2402,7 @@
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
   <script src="assets/js/01-core.js?v=20260730-19"></script>
   <script src="assets/js/02-clients.js?v=20260728-5"></script>
-  <script src="assets/js/02-prospects.js?v=20260730-7"></script>
+  <script src="assets/js/02-prospects.js?v=20260730-8"></script>
   <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/24-trash.js?v=20260728-1"></script>
@@ -2407,7 +2417,7 @@
   <script src="assets/js/09-users.js?v=20260728-3"></script>
   <script src="assets/js/10-backup-misc.js?v=20260730-8"></script>
   <script src="assets/js/11-auth.js?v=20260730-11"></script>
-  <script src="assets/js/12-init.js?v=20260730-9"></script>
+  <script src="assets/js/12-init.js?v=20260730-10"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
