@@ -107,12 +107,14 @@
     }
     function openProspectSms(id) {
       const item = getProspectById(id); if (!item?.phone) return showToast(prospectText("This prospect has no phone number.", "Este prospecto no tiene teléfono."));
-      const phone = prospectPhone(item.phone), message = prospectDefaultMessage(item), body = encodeURIComponent(message);
+      const digits = prospectPhone(item.phone), phone = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+      const message = prospectDefaultMessage(item), body = encodeURIComponent(message);
       const windows = /Windows/i.test(navigator.userAgent || "");
+      const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent || "") || (/Macintosh/i.test(navigator.userAgent || "") && Number(navigator.maxTouchPoints || 0) > 1);
       if (windows && navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(`${phone}\n\n${message}`).then(() => showToast(prospectText("Phone and message copied. If Phone Link does not open, paste them in Messages.", "Teléfono y mensaje copiados. Si Phone Link no abre, pégalos en Mensajes."))).catch(() => {});
       }
-      window.location.href = `sms:${phone}?body=${body}`;
+      window.location.href = `sms:${phone}${appleMobile ? "&" : "?"}body=${body}`;
     }
     function openProspectEmail(id) {
       const item = getProspectById(id); if (!item?.email) return showToast(prospectText("This prospect has no email address.", "Este prospecto no tiene correo."));

@@ -19,8 +19,10 @@ test("prospects support outreach, follow-up, maps and safe client conversion", (
   const module = read("assets/js/02-prospects.js");
   assert.match(module, /openProspectWhatsapp/);
   assert.match(module, /openProspectSms/);
-  assert.match(module, /sms:\$\{phone\}\?body=/);
+  assert.match(module, /sms:\$\{phone\}\$\{appleMobile \? "&" : "\?"\}body=/);
   assert.match(module, /navigator\.clipboard\?\.writeText/);
+  assert.match(module, /digits\.length === 11 && digits\.startsWith\("1"\)/);
+  assert.match(module, /appleMobile \? "&" : "\?"/);
   assert.match(module, /openProspectEmail/);
   assert.match(module, /openProspectMaps/);
   assert.match(module, /saveProspectFollowup/);

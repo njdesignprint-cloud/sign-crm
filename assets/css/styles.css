@@ -914,6 +914,16 @@
       .grid-3,.row-material,.row-quote-item{grid-template-columns:1fr}
       .calendar-grid{grid-template-columns:repeat(7,minmax(110px,1fr));overflow:auto}
       .jobs-advanced-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      #view-prospectos .table-wrap{overflow:visible}
+      #view-prospectos table{display:block;min-width:0;width:100%}
+      #view-prospectos thead{display:none}
+      #view-prospectos tbody{display:grid;gap:12px;padding:12px}
+      #view-prospectos tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--line);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.015)}
+      #view-prospectos tbody td{display:block;min-width:0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+      #view-prospectos tbody td:nth-child(5),#view-prospectos tbody td:nth-child(6){grid-column:1/-1}
+      #view-prospectos tbody td:nth-child(6){border-bottom:0}
+      #view-prospectos .actions-row{align-items:stretch}
+      #view-prospectos .actions-row .btn{flex:1 1 132px}
     }
 
     @media (max-width:780px){
@@ -954,6 +964,9 @@
       .calendar-grid{display:block}
       .calendar-day-head{display:none}
       .calendar-cell{margin-bottom:10px}
+      #view-prospectos tbody{padding:10px}
+      #view-prospectos tbody tr{grid-template-columns:1fr}
+      #view-prospectos tbody td{grid-column:1/-1}
     }
 
 /* ===== CRM modular upgrade: sidebar agrupado + producción ===== */
