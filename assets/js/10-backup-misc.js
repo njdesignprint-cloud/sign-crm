@@ -6,6 +6,7 @@
         const data = JSON.parse(text);
 
         const clients = Array.isArray(data.clients) ? data.clients : [];
+        const prospects = Array.isArray(data.prospects) ? data.prospects : [];
         const salespeople = Array.isArray(data.salespeople) ? data.salespeople : [];
         const commissionSettlements = Array.isArray(data.commissionSettlements) ? data.commissionSettlements : [];
         const companySettings = data.companySettings && typeof data.companySettings === "object" ? data.companySettings : {};
@@ -16,13 +17,14 @@
         const movements = Array.isArray(data.inventoryMovements) ? data.inventoryMovements : [];
         const weeklySettlements = Array.isArray(data.weeklySettlements) ? data.weeklySettlements : [];
 
-        if (!clients.length && !salespeople.length && !commissionSettlements.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
+        if (!clients.length && !prospects.length && !salespeople.length && !commissionSettlements.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
           return showToast("Ese JSON no tiene datos válidos.");
         }
 
         const ok = confirm(
           `Se van a importar:\n` +
           `Clientes: ${clients.length}\n` +
+          `Prospectos: ${prospects.length}\n` +
           `Vendedores: ${salespeople.length}\n` +
           `Liquidaciones de comisión: ${commissionSettlements.length}\n` +
           `Trabajos: ${jobs.length}\n` +
@@ -74,6 +76,17 @@
           };
           const doc = await clientsRef().add(payload);
           if (item.id) clientMap[item.id] = doc.id;
+        }
+
+        for (const item of prospects) {
+          const payload = {
+            company:item.company || "", name:item.name || "", role:item.role || "", category:item.category || "", phone:item.phone || "", email:item.email || "",
+            address:item.address || "", city:item.city || "", website:item.website || "", mapsUrl:item.mapsUrl || "", source:item.source || "other",
+            status:item.status || "new", priority:item.priority || "medium", owner:item.owner || "", nextAction:item.nextAction || "", nextFollowupDate:item.nextFollowupDate || "",
+            message:item.message || "", notes:item.notes || "", activity:Array.isArray(item.activity) ? item.activity : [], convertedClientId:clientMap[item.convertedClientId] || "",
+            createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await prospectsRef().add(payload);
         }
 
         for (const item of jobs) {

@@ -33,6 +33,8 @@
     });
 
     $("saveClientBtn").addEventListener("click", () => withSaveButton("saveClientBtn", "Guardando cliente…", saveClient));
+    $("saveProspectBtn")?.addEventListener("click", () => withSaveButton("saveProspectBtn", "Guardando prospecto…", saveProspect));
+    $("saveProspectFollowupBtn")?.addEventListener("click", () => withSaveButton("saveProspectFollowupBtn", "Guardando seguimiento…", saveProspectFollowup));
     $("saveSalespersonBtn")?.addEventListener("click", saveSalesperson);
     $("saveCommissionSettlementBtn")?.addEventListener("click", saveCommissionSettlement);
     $("clientSource")?.addEventListener("change", toggleClientCommissionFields);
@@ -90,6 +92,9 @@
       if (state.currentView === "clientes") {
         resetClientForm();
         openModal("clientModal");
+      } else if (state.currentView === "prospectos") {
+        resetProspectForm();
+        openModal("prospectModal");
       } else if (state.currentView === "vendedores") {
         resetSalespersonForm();
         openModal("salespersonModal");
@@ -188,6 +193,10 @@
     $("btnKanbanView").addEventListener("click", () => setJobsViewMode("kanban"));
 
     $("clientSearch").addEventListener("input", renderClients);
+    ["prospectSearch","prospectStatusFilter","prospectDueFilter"].forEach(id => {
+      $(id)?.addEventListener("input", renderProspects);
+      $(id)?.addEventListener("change", renderProspects);
+    });
 
     ["jobSearch","jobStatusFilter","jobPriorityFilter","jobTypeFilter","jobSalespersonFilter","jobCommissionFilter","jobCreatedFrom","jobCreatedTo","jobDueFrom","jobDueTo"].forEach(id => {
       $(id).addEventListener("input", renderJobs);
@@ -329,6 +338,13 @@
       if (target.dataset.clientPdf) exportClientFullPdf(target.dataset.clientPdf);
       if (target.dataset.deleteClient) removeItem("clients", target.dataset.deleteClient, "cliente");
 
+      if (target.dataset.editProspect) editProspect(target.dataset.editProspect);
+      if (target.dataset.prospectFollowup) openProspectFollowup(target.dataset.prospectFollowup);
+      if (target.dataset.prospectWa) openProspectWhatsapp(target.dataset.prospectWa);
+      if (target.dataset.prospectEmail) openProspectEmail(target.dataset.prospectEmail);
+      if (target.dataset.prospectMaps) openProspectMaps(target.dataset.prospectMaps);
+      if (target.dataset.convertProspect) convertProspectToClient(target.dataset.convertProspect);
+
       if (target.dataset.editJob) editJob(target.dataset.editJob);
       if (target.dataset.editProduction && typeof openProductionModal === "function") openProductionModal(target.dataset.editProduction);
       if (target.dataset.productionOpenJob) { setView("trabajos"); editJob(target.dataset.productionOpenJob); }
@@ -368,6 +384,7 @@
     });
 
     resetJobForm();
+    resetProspectForm();
     resetExpenseForm();
     resetRecurringForm();
     resetInventoryForm();

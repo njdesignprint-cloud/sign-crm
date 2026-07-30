@@ -108,6 +108,7 @@
         company: COMPANY,
         user: state.userEmail,
         clients: state.clients,
+        prospects: state.prospects,
         salespeople: state.salespeople,
         commissionSettlements: state.commissionSettlements,
         companySettings: state.companySettings,

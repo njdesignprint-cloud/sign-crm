@@ -79,6 +79,11 @@
         renderReportsModule();
       }, error => console.error(error));
 
+      const unsubProspects = prospectsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        state.prospects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (typeof renderProspects === "function") renderProspects();
+      }, error => console.error(error));
+
       let unsubSalespeople = () => {};
       let unsubCommissionSettlements = () => {};
       let unsubTrash = () => {};
@@ -148,7 +153,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubProspects, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {
@@ -366,6 +371,7 @@
       state.platformUsers = [];
       state.platformWorkspaces = [];
       state.clients = [];
+      state.prospects = [];
       state.jobs = [];
       state.expenses = [];
       state.recurringExpenses = [];

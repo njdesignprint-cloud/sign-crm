@@ -44,6 +44,7 @@
       platformWorkspaces: [],
       currentView: "dashboard",
       clients: [],
+      prospects: [],
       salespeople: [],
       commissionSettlements: [],
       companySettings: {},
@@ -58,6 +59,7 @@
       teamMembers: [],
       weeklySettlements: [],
       editingClientId: null,
+      editingProspectId: null,
       editingSalespersonId: null,
       editingJobId: null,
       editingExpenseId: null,
@@ -100,6 +102,7 @@
     const viewMeta = {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
+      prospectos: ["Prospectos", "Captación, visitas y seguimiento de nuevos negocios."],
       vendedores: ["Salespeople & commissions", "Manage client ownership, commission terms and agreements."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
@@ -335,6 +338,7 @@
       const labels = {
         dashboard: 'PDF dashboard',
         clientes: 'PDF clientes',
+        prospectos: 'PDF prospectos',
         vendedores: 'PDF salespeople',
         trabajos: 'PDF materiales',
         produccion: 'PDF producción',
@@ -365,6 +369,7 @@
       btnNew.classList.remove("hidden");
       if (["dashboard", "produccion", "liquidaciones", "configuracion", "papelera"].includes(view)) btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
+      if (view === "prospectos") btnNew.textContent = "+ Nuevo prospecto";
       if (view === "vendedores") btnNew.textContent = "+ New salesperson";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
@@ -375,7 +380,7 @@
       if (!canEditModule(view) || ["produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
-      $("btnExportPdf")?.classList.toggle("hidden", view === "auditoria");
+      $("btnExportPdf")?.classList.toggle("hidden", ["auditoria", "prospectos"].includes(view));
       if (view === "auditoria" && typeof window.activateAuditLogView === "function") window.activateAuditLogView();
     }
     function setJobsViewMode(mode) {
@@ -387,7 +392,7 @@
       $("btnKanbanView").classList.toggle("btn-info", mode === "kanban");
       $("btnKanbanView").classList.toggle("btn-secondary", mode !== "kanban");
     }
-    const protectedDraftModals = new Set(["clientModal", "jobModal", "paymentModal", "expenseModal"]);
+    const protectedDraftModals = new Set(["clientModal", "prospectModal", "prospectFollowupModal", "jobModal", "paymentModal", "expenseModal"]);
     const modalDraftBaselines = new Map();
     function serializeModalDraft(id) {
       const modal = $(id);
@@ -449,6 +454,7 @@
     function legacyTeamAccessRefByEmail(email) { return db.collection("teamAccess").doc(emailDocId(email)); }
     function workspaceMembersRef() { return userRef().collection("workspaceMembers"); }
     function clientsRef() { return userRef().collection("clients"); }
+    function prospectsRef() { return userRef().collection("prospects"); }
     function salespeopleRef() { return userRef().collection("salespeople"); }
     function commissionSettlementsRef() { return userRef().collection("commissionSettlements"); }
     function companySettingsRef() { return userRef().collection("settings").doc("company"); }
@@ -551,6 +557,7 @@
       return { none: "Sin acceso", view: "Solo ver", edit: "Editar", delete: "Editar y borrar" }[level] || "Sin acceso";
     }
     function resolvePermissionModule(module = "") {
+      if (module === "prospectos") return "clientes";
       return ["produccion", "instalaciones"].includes(module) ? "trabajos" : module;
     }
     function getCurrentModulePermission(module = "") {
@@ -695,6 +702,8 @@
 
       const buttonModuleMap = {
         saveClientBtn: 'clientes',
+        saveProspectBtn: 'prospectos',
+        saveProspectFollowupBtn: 'prospectos',
         saveSalespersonBtn: 'vendedores',
         saveCommissionSettlementBtn: 'vendedores',
         saveCompanySettingsBtn: 'configuracion',

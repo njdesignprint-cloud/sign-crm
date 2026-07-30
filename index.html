@@ -129,6 +129,7 @@
 
   <button id="navDashboardBtn" class="active" data-view="dashboard" data-nav-icon="📊">📊 Dashboard</button>
   <button id="navClientesBtn" data-view="clientes" data-nav-icon="👥">👥 Clientes</button>
+  <button id="navProspectosBtn" data-view="prospectos" data-nav-icon="🎯">🎯 Prospectos</button>
   <button id="navVendedoresBtn" data-view="vendedores" data-nav-icon="🤝">🤝 Salespeople</button>
   <button id="navTrabajosBtn" data-view="trabajos" data-nav-icon="🛠️">🛠️ Trabajos</button>
   <button id="navProduccionBtn" data-view="produccion" data-nav-icon="🏭">🏭 Producción</button>
@@ -239,6 +240,14 @@
               <div class="label">Pendientes confirmar</div>
               <div id="installPendingConfirmCount" class="value info-text">0</div>
             </div>
+            <div class="alert-card alert-cobro">
+              <div class="label">Seguimientos de prospectos hoy</div>
+              <div id="dashboardProspectsToday" class="value warn-text">0</div>
+            </div>
+            <div class="alert-card alert-vencido">
+              <div class="label">Seguimientos de prospectos atrasados</div>
+              <div id="dashboardProspectsOverdue" class="value danger-text">0</div>
+            </div>
           </div>
 
           <div class="mini-stats">
@@ -345,6 +354,27 @@
             </div>
 
             <div id="clientsEmpty" class="empty hidden">No hay clientes guardados.</div>
+          </div>
+        </section>
+
+        <section id="view-prospectos" class="view hidden">
+          <div class="stats">
+            <div class="stat"><div class="label">Prospectos activos</div><div id="prospectsActiveCount" class="value">0</div></div>
+            <div class="stat"><div class="label">Seguimientos para hoy</div><div id="prospectsTodayCount" class="value warn-text">0</div></div>
+            <div class="stat"><div class="label">Seguimientos atrasados</div><div id="prospectsOverdueCount" class="value danger-text">0</div></div>
+            <div class="stat"><div class="label">Convertidos en clientes</div><div id="prospectsWonCount" class="value ok-text">0</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2 id="prospectosTitle">Prospectos</h2><div id="prospectosNote" class="section-note">Negocios nuevos encontrados en Google Maps, visitas y recomendaciones.</div></div>
+              <div class="filters">
+                <input id="prospectSearch" class="input" placeholder="Buscar negocio, contacto, teléfono o ciudad" />
+                <select id="prospectStatusFilter" class="select"><option value="">Todas las etapas</option><option value="new">Nuevo</option><option value="contact">Por contactar</option><option value="contacted">Contactado</option><option value="visit">Visita programada</option><option value="followup">Seguimiento</option><option value="quote">Cotización solicitada</option><option value="won">Ganado</option><option value="lost">Perdido</option></select>
+                <select id="prospectDueFilter" class="select"><option value="">Todos los seguimientos</option><option value="today">Para hoy</option><option value="overdue">Atrasados</option><option value="upcoming">Próximos</option></select>
+              </div>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Negocio / contacto</th><th>Información</th><th>Etapa</th><th>Próximo seguimiento</th><th>Última actividad</th><th>Acciones</th></tr></thead><tbody id="prospectsBody"></tbody></table></div>
+            <div id="prospectsEmpty" class="empty hidden">No hay prospectos guardados.</div>
           </div>
         </section>
 
@@ -1500,6 +1530,52 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="prospectModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="prospectModalTitle">Nuevo prospecto</h3><button class="btn btn-secondary btn-small" data-close="prospectModal">Cerrar</button></div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <label class="field-label">Nombre del negocio *<input id="prospectCompany" class="input" /></label>
+          <label class="field-label">Persona de contacto<input id="prospectName" class="input" /></label>
+          <label class="field-label">Cargo / función<input id="prospectRole" class="input" /></label>
+          <label class="field-label">Tipo de negocio<input id="prospectCategory" class="input" placeholder="Restaurante, clínica, taller..." /></label>
+          <label class="field-label">Teléfono<input id="prospectPhone" class="input" /></label>
+          <label class="field-label">Correo<input id="prospectEmail" class="input" type="email" /></label>
+          <label class="field-label">Dirección<input id="prospectAddress" class="input" /></label>
+          <label class="field-label">Ciudad / Estado<input id="prospectCity" class="input" /></label>
+          <label class="field-label">Sitio web<input id="prospectWebsite" class="input" /></label>
+          <label class="field-label">Enlace de Google Maps<input id="prospectMapsUrl" class="input" /></label>
+          <label class="field-label">Origen<select id="prospectSource" class="select"><option value="google_maps">Google Maps</option><option value="visit">Visita personal</option><option value="referral">Recomendación</option><option value="social">Redes sociales</option><option value="other">Otro</option></select></label>
+          <label class="field-label">Etapa<select id="prospectStatus" class="select"><option value="new">Nuevo</option><option value="contact">Por contactar</option><option value="contacted">Contactado</option><option value="visit">Visita programada</option><option value="followup">Seguimiento</option><option value="quote">Cotización solicitada</option><option value="won">Ganado</option><option value="lost">Perdido</option></select></label>
+          <label class="field-label">Prioridad<select id="prospectPriority" class="select"><option value="high">Alta</option><option value="medium" selected>Media</option><option value="low">Baja</option></select></label>
+          <label class="field-label">Responsable<input id="prospectOwner" class="input" /></label>
+          <label class="field-label">Próxima acción<input id="prospectNextAction" class="input" placeholder="Llamar, visitar, enviar muestra..." /></label>
+          <label class="field-label">Fecha del seguimiento<input id="prospectNextDate" class="input" type="date" /></label>
+        </div>
+        <label class="field-label mt-12">Mensaje principal<textarea id="prospectMessage" class="textarea" placeholder="Mensaje de presentación que usarás por correo o WhatsApp"></textarea></label>
+        <label class="field-label mt-12">Notas internas<textarea id="prospectNotes" class="textarea"></textarea></label>
+        <div id="prospectTimelineBox" class="box hidden"><strong>Historial de seguimiento</strong><div id="prospectTimeline" class="mt-10"></div></div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="prospectModal">Cancelar</button><button id="saveProspectBtn" class="btn btn-primary">Guardar prospecto</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="prospectFollowupModal">
+    <div class="modal modal-small">
+      <div class="modal-head"><h3>Registrar seguimiento</h3><button class="btn btn-secondary btn-small" data-close="prospectFollowupModal">Cerrar</button></div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <label class="field-label">Tipo<select id="prospectFollowupType" class="select"><option value="call">Llamada</option><option value="whatsapp">WhatsApp</option><option value="email">Correo</option><option value="visit">Visita</option><option value="note">Nota</option></select></label>
+          <label class="field-label">Nueva etapa<select id="prospectFollowupStatus" class="select"><option value="contacted">Contactado</option><option value="visit">Visita programada</option><option value="followup">Seguimiento</option><option value="quote">Cotización solicitada</option><option value="won">Ganado</option><option value="lost">Perdido</option></select></label>
+          <label class="field-label">Próxima acción<input id="prospectFollowupNextAction" class="input" /></label>
+          <label class="field-label">Próxima fecha<input id="prospectFollowupNextDate" class="input" type="date" /></label>
+        </div>
+        <label class="field-label mt-12">Resultado / nota<textarea id="prospectFollowupNote" class="textarea"></textarea></label>
+      </div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="prospectFollowupModal">Cancelar</button><button id="saveProspectFollowupBtn" class="btn btn-primary">Guardar seguimiento</button></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="salespersonModal">
     <div class="modal">
       <div class="modal-head"><h3 id="salespersonModalTitle">New salesperson</h3><button class="btn btn-secondary btn-small" data-close="salespersonModal">Close</button></div>
@@ -2313,8 +2389,9 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260730-18"></script>
+  <script src="assets/js/01-core.js?v=20260730-19"></script>
   <script src="assets/js/02-clients.js?v=20260728-5"></script>
+  <script src="assets/js/02-prospects.js?v=20260730-1"></script>
   <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/24-trash.js?v=20260728-1"></script>
@@ -2324,18 +2401,18 @@
   <script src="assets/js/04-expenses.js?v=20260730-4"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260730-4"></script>
-  <script src="assets/js/07-pdf.js?v=20260728-8"></script>
+  <script src="assets/js/07-pdf.js?v=20260730-9"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-3"></script>
-  <script src="assets/js/10-backup-misc.js?v=20260728-7"></script>
-  <script src="assets/js/11-auth.js?v=20260730-10"></script>
-  <script src="assets/js/12-init.js?v=20260728-8"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260730-8"></script>
+  <script src="assets/js/11-auth.js?v=20260730-11"></script>
+  <script src="assets/js/12-init.js?v=20260730-9"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
-  <script src="assets/js/18-i18n.js?v=20260730-11"></script>
-  <script src="assets/js/25-i18n-complete.js?v=20260730-10"></script>
+  <script src="assets/js/18-i18n.js?v=20260730-12"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260730-11"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>

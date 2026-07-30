@@ -33,6 +33,7 @@
       navGroupAdmin: "ADMINISTRACIÓN",
       navDashboardBtn: "📊 Dashboard",
       navClientesBtn: "👥 Clientes",
+      navProspectosBtn: "🎯 Prospectos",
       navVendedoresBtn: "🤝 Vendedores",
       navTrabajosBtn: "🛠️ Trabajos",
       navProduccionBtn: "🏭 Producción",
@@ -129,6 +130,7 @@
       navGroupAdmin: "ADMINISTRATION",
       navDashboardBtn: "📊 Dashboard",
       navClientesBtn: "👥 Clients",
+      navProspectosBtn: "🎯 Prospects",
       navVendedoresBtn: "🤝 Salespeople",
       navTrabajosBtn: "🛠️ Jobs",
       navProduccionBtn: "🏭 Production",
@@ -203,6 +205,7 @@
     es: {
       dashboard: ["Dashboard", "Resumen general del negocio."],
       clientes: ["Clientes", "Base de datos de clientes y empresas."],
+      prospectos: ["Prospectos", "Captación, visitas y seguimiento de nuevos negocios."],
       vendedores: ["Vendedores y comisiones", "Clientes asignados, condiciones de comisión y contratos."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
@@ -222,6 +225,7 @@
     en: {
       dashboard: ["Dashboard", "General business summary."],
       clientes: ["Clients", "Database of clients and companies."],
+      prospectos: ["Prospects", "Lead generation, visits and follow-up for new businesses."],
       vendedores: ["Salespeople & commissions", "Assigned clients, commission terms and agreements."],
       trabajos: ["Jobs", "Table and Kanban view to organize production."],
       produccion: ["Production", "Visual workflow board for jobs, assignees and deliveries."],
@@ -388,6 +392,7 @@
     setText("navGroupAdmin", t("navGroupAdmin"));
     setText("navDashboardBtn", t("navDashboardBtn"));
     setText("navClientesBtn", t("navClientesBtn"));
+    setText("navProspectosBtn", t("navProspectosBtn"));
     setText("navVendedoresBtn", t("navVendedoresBtn"));
     setText("navTrabajosBtn", t("navTrabajosBtn"));
     setText("navProduccionBtn", t("navProduccionBtn"));
@@ -480,6 +485,7 @@
       const map = {
         es: {
           clientes: "+ Nuevo cliente",
+          prospectos: "+ Nuevo prospecto",
           vendedores: "+ Nuevo vendedor",
           trabajos: "+ Nuevo trabajo",
           gastos: "+ Nuevo gasto",
@@ -490,6 +496,7 @@
         },
         en: {
           clientes: "+ New client",
+          prospectos: "+ New prospect",
           vendedores: "+ New salesperson",
           trabajos: "+ New job",
           gastos: "+ New expense",
@@ -533,7 +540,7 @@
     }
     setTimeout(() => {
       const viewRenderers = {
-        clientes: "renderClients", vendedores: "renderSalespeople", trabajos: "renderJobs",
+        clientes: "renderClients", prospectos: "renderProspects", vendedores: "renderSalespeople", trabajos: "renderJobs",
         produccion: "renderProductionBoard", gastos: "renderExpenses", inventario: "renderInventory",
         proveedores: "renderProviders", compras: "renderPurchaseOrders", instalaciones: "renderInstallationModule",
         reportes: "renderReportsModule", usuarios: "renderUsers", cuentascrm: "renderPlatformAccounts"
@@ -618,7 +625,7 @@
     }
 
     const wrapNames = [
-      "renderStats", "renderClients", "renderJobs", "renderExpenses", "renderInventory",
+      "renderStats", "renderClients", "renderProspects", "renderJobs", "renderExpenses", "renderInventory",
       "renderProviders", "renderPurchaseOrders", "renderInstallationModule",
       "renderReportsModule", "renderUsers", "renderPlatformAccounts", "renderProductionBoard"
     ];
