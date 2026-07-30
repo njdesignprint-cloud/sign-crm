@@ -14,7 +14,7 @@
     function prospectComparablePhone(value) { const digits = prospectPhone(value); return digits.length > 10 ? digits.slice(-10) : digits; }
     function prospectPortfolioUrl() { return "https://njdesignprintllc.com/"; }
     function prospectBilingualOutreachMessage() {
-      return `Hi, I'm Noel with NJ Design & Print, a local sign and print company serving Katy and Houston. We help businesses stand out with signs, window graphics, menus, and vehicle graphics. Could I stop by for a quick introduction? See our work and social media: ${prospectPortfolioUrl()}\n\nHola, soy Noel de NJ Design & Print, una empresa local de letreros e impresión que sirve a Katy y Houston. Ayudamos a los negocios a destacar con letreros, gráficos para ventanas, menús y rotulación de vehículos. ¿Podría visitarlos para una breve presentación? Vea nuestros trabajos y redes sociales: ${prospectPortfolioUrl()}`;
+      return `Hi, I'm Noel with NJ Design & Print, a local sign and print company serving Katy and Houston. We help businesses stand out with signs, window graphics, menus, and vehicle graphics. If you're interested, call us or request a free visit to your business. See our work and social media: ${prospectPortfolioUrl()}\n\nHola, soy Noel de NJ Design & Print, una empresa local de letreros e impresión que sirve a Katy y Houston. Ayudamos a los negocios a destacar con letreros, gráficos para ventanas, menús y rotulación de vehículos. Si le interesa, puede llamarnos o solicitar una visita gratuita a su negocio. Vea nuestros trabajos y redes sociales: ${prospectPortfolioUrl()}`;
     }
     function prospectMessageWithPortfolio(message = "") {
       const base = cleanText(message);
