@@ -107,7 +107,9 @@
     }
     function openProspectSms(id) {
       const item = getProspectById(id); if (!item?.phone) return showToast(prospectText("This prospect has no phone number.", "Este prospecto no tiene teléfono."));
-      window.location.href = `sms:${prospectPhone(item.phone)}?body=${encodeURIComponent(prospectDefaultMessage(item))}`;
+      const phone = prospectPhone(item.phone), body = encodeURIComponent(prospectDefaultMessage(item));
+      const windows = /Windows/i.test(navigator.userAgent || "");
+      window.location.href = windows ? `ms-chat:?Addresses=${encodeURIComponent(phone)}&Body=${body}` : `sms:${phone}?body=${body}`;
     }
     function openProspectEmail(id) {
       const item = getProspectById(id); if (!item?.email) return showToast(prospectText("This prospect has no email address.", "Este prospecto no tiene correo."));
