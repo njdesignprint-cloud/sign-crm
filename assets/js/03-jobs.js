@@ -2032,7 +2032,7 @@
       const year = state.calendarDate.getFullYear();
       const month = state.calendarDate.getMonth();
 
-      const label = state.calendarDate.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+      const label = state.calendarDate.toLocaleDateString(state.language === "es" ? "es-ES" : "en-US", { month: "long", year: "numeric" });
       $("calendarLabel").textContent = label.charAt(0).toUpperCase() + label.slice(1);
 
       const firstDay = new Date(year, month, 1);

@@ -101,11 +101,16 @@
     if (!table) return false;
     const headRow = table.querySelector("thead tr");
     if (!headRow) return false;
-    if (headRow.querySelector('[data-col="advance-available"]')) return true;
+    const existing = headRow.querySelector('[data-col="advance-available"]');
+    const english = window.state?.language !== "es";
+    if (existing) {
+      existing.textContent = english ? "Advance available" : "Anticipo disp.";
+      return true;
+    }
 
-    const saldoTh = [...headRow.children].find(th => cleanSafe(th.textContent) === "Saldo");
+    const saldoTh = [...headRow.children].find(th => ["Saldo", "Balance"].includes(cleanSafe(th.textContent)));
     const th = document.createElement("th");
-    th.textContent = "Anticipo disp.";
+    th.textContent = english ? "Advance available" : "Anticipo disp.";
     th.dataset.col = "advance-available";
     th.className = "advance-table-col";
 
@@ -146,6 +151,7 @@
   }
 
   function patchProductionCards() {
+    const english = window.state?.language !== "es";
     document.querySelectorAll(".production-card").forEach(card => {
       const job = findProductionJobFromCard(card);
       if (!job) return;
@@ -161,8 +167,8 @@
       }
 
       line.innerHTML = `
-        <strong>Anticipo disp.: ${moneySafe(advance.available)}</strong>
-        <span class="muted">Usado ${moneySafe(advance.spent)} de ${moneySafe(advance.received)}</span>
+        <strong>${english ? "Advance available" : "Anticipo disp."}: ${moneySafe(advance.available)}</strong>
+        <span class="muted">${english ? "Used" : "Usado"} ${moneySafe(advance.spent)} ${english ? "of" : "de"} ${moneySafe(advance.received)}</span>
       `;
     });
   }

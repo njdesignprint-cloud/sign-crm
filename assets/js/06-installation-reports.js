@@ -57,7 +57,7 @@
 
       const year = state.installationCalendarDate.getFullYear();
       const month = state.installationCalendarDate.getMonth();
-      const label = state.installationCalendarDate.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+      const label = state.installationCalendarDate.toLocaleDateString(state.language === "es" ? "es-ES" : "en-US", { month: "long", year: "numeric" });
       $("installationCalendarLabel").textContent = label.charAt(0).toUpperCase() + label.slice(1);
 
       const firstDay = new Date(year, month, 1);
