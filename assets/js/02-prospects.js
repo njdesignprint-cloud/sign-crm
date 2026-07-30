@@ -13,6 +13,9 @@
     function prospectPhone(value) { return String(value || "").replace(/\D/g, ""); }
     function prospectComparablePhone(value) { const digits = prospectPhone(value); return digits.length > 10 ? digits.slice(-10) : digits; }
     function prospectPortfolioUrl() { return "https://njdesignprintllc.com/"; }
+    function prospectBilingualOutreachMessage() {
+      return `Hi, I'm Noel with NJ Design & Print, a local sign and print company serving Katy and Houston. We help businesses stand out with signs, window graphics, menus, and vehicle graphics. Could I stop by for a quick introduction? See our work and social media: ${prospectPortfolioUrl()}\n\nHola, soy Noel de NJ Design & Print, una empresa local de letreros e impresión que sirve a Katy y Houston. Ayudamos a los negocios a destacar con letreros, gráficos para ventanas, menús y rotulación de vehículos. ¿Podría visitarlos para una breve presentación? Vea nuestros trabajos y redes sociales: ${prospectPortfolioUrl()}`;
+    }
     function prospectMessageWithPortfolio(message = "") {
       const base = cleanText(message);
       const url = prospectPortfolioUrl();
@@ -30,10 +33,7 @@
     }
     function prospectDefaultMessage(item = {}) {
       const saved = cleanText(item.message);
-      const base = saved || prospectText(
-        `Hello, my name is ${state.userEmail || ""} from SignShop HQ. We help businesses with professional signs, graphics and printing. I would like to learn about your upcoming signage needs.`,
-        `Hola, soy ${state.userEmail || ""} de SignShop HQ. Ayudamos a negocios con letreros, gráficos e impresión profesional. Me gustaría conocer sus próximas necesidades de rotulación.`
-      );
+      const base = saved || prospectBilingualOutreachMessage();
       return prospectMessageWithPortfolio(base);
     }
     function resetProspectForm() {

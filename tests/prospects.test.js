@@ -31,6 +31,8 @@ test("prospects support outreach, follow-up, maps and safe client conversion", (
   assert.match(module, /findDuplicateProspect/);
   assert.match(module, /prospectMessageWithPortfolio/);
   assert.match(module, /https:\/\/njdesignprintllc\.com\//);
+  assert.match(module, /Hi, I'm Noel with NJ Design & Print[\s\S]*Hola, soy Noel de NJ Design & Print/);
+  assert.match(module, /See our work and social media:[\s\S]*Vea nuestros trabajos y redes sociales:/);
   assert.match(module, /Already a client/);
   assert.match(module, /whatsappStatus/);
   assert.match(module, /batch\.set\(clientDoc/);
