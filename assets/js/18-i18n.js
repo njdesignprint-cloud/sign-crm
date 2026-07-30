@@ -509,6 +509,12 @@
     setDashboardTexts();
     setSectionTexts();
     updateDynamicLabels();
+    const lang = getLang();
+    [["calendarLabel", window.state?.calendarDate], ["installationCalendarLabel", window.state?.installationCalendarDate]].forEach(([id, date]) => {
+      if (!(date instanceof Date)) return;
+      const label = date.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { month: "long", year: "numeric" });
+      setText(id, label.charAt(0).toUpperCase() + label.slice(1));
+    });
   }
 
   function setLanguage(lang) {
@@ -525,6 +531,7 @@
         reportes: "renderReportsModule", usuarios: "renderUsers", cuentascrm: "renderPlatformAccounts"
       };
       if (typeof window.renderStats === "function") window.renderStats();
+      if (window.state?.currentView === "dashboard" && typeof window.renderDeliveryCalendar === "function") window.renderDeliveryCalendar();
       if (typeof window.renderOperationsAlerts === "function") window.renderOperationsAlerts();
       const renderer = viewRenderers[window.state?.currentView];
       if (renderer && typeof window[renderer] === "function") window[renderer]();
