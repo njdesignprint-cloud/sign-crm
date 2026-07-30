@@ -45,3 +45,8 @@ test("prospects are included in JSON backup and restore", () => {
   assert.match(backup, /data\.prospects/);
   assert.match(backup, /await prospectsRef\(\)\.add/);
 });
+
+test("prospect cards activate across the full iPad landscape range", () => {
+  const css = read("assets/css/styles.css");
+  assert.match(css, /@media \(max-width:1400px\)[\s\S]*#view-prospectos \.table-wrap[\s\S]*#view-prospectos tbody tr\{display:grid/);
+});
