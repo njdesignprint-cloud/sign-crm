@@ -940,8 +940,16 @@
         "Alta": "pr-alta"
       }[priority] || "pr-media";
     }
-    function statusPill(status) { return `<span class="pill ${statusClass(status)}">${safe(status)}</span>`; }
-    function priorityPill(priority) { return `<span class="pill ${priorityClass(priority)}">${safe(priority || "Media")}</span>`; }
+    function localizedStatus(status = "") {
+      if (state.language !== "en") return status;
+      return { "Cotización":"Estimate", "Aprobado":"Approved", "Diseño":"Design", "Producción":"Production", "Instalación":"Installation", "Entregado":"Delivered", "Pagado":"Paid", "Cancelado":"Canceled" }[status] || status;
+    }
+    function localizedPriority(priority = "Media") {
+      if (state.language !== "en") return priority;
+      return { "Baja":"Low", "Media":"Medium", "Alta":"High" }[priority] || priority;
+    }
+    function statusPill(status) { return `<span class="pill ${statusClass(status)}">${safe(localizedStatus(status))}</span>`; }
+    function priorityPill(priority) { return `<span class="pill ${priorityClass(priority)}">${safe(localizedPriority(priority || "Media"))}</span>`; }
     function nextStatus(status) {
       const idx = STATUS_FLOW.indexOf(status);
       if (idx === -1) return "Aprobado";
@@ -949,9 +957,9 @@
       return STATUS_FLOW[idx + 1] || status;
     }
     function nextStatusLabel(status) {
-      if (status === "Pagado") return "Pagado";
-      if (status === "Cancelado") return "Cancelado";
-      return `→ ${nextStatus(status)}`;
+      if (status === "Pagado") return localizedStatus("Pagado");
+      if (status === "Cancelado") return localizedStatus("Cancelado");
+      return `→ ${localizedStatus(nextStatus(status))}`;
     }
     function monthKey(dateStr) {
       return String(dateStr || "").slice(0, 7);

@@ -322,15 +322,16 @@
     }
     function getInventoryStateText(job = {}) {
       const usage = normalizeInventoryUsage(job.materials || []);
-      if (!usage.length) return "Sin vínculo";
-      if (job.inventoryApplied) return "Aplicado";
-      if (shouldAutoApplyInventoryForStatus(job.status || "")) return "Pendiente";
-      return "Aún no aplica";
+      const english = state.language === "en";
+      if (!usage.length) return english ? "Not linked" : "Sin vínculo";
+      if (job.inventoryApplied) return english ? "Applied" : "Aplicado";
+      if (shouldAutoApplyInventoryForStatus(job.status || "")) return english ? "Pending" : "Pendiente";
+      return english ? "Not applicable yet" : "Aún no aplica";
     }
     function inventoryStatePill(job = {}) {
       const stateLabel = getInventoryStateText(job);
-      const cls = stateLabel === "Aplicado" ? "st-pagado" : stateLabel === "Pendiente" ? "st-aprobado" : "st-cotizacion";
-      return `<span class="pill ${cls}">Inventario: ${safe(stateLabel)}</span>`;
+      const cls = ["Aplicado", "Applied"].includes(stateLabel) ? "st-pagado" : ["Pendiente", "Pending"].includes(stateLabel) ? "st-aprobado" : "st-cotizacion";
+      return `<span class="pill ${cls}">${state.language === "en" ? "Inventory" : "Inventario"}: ${safe(stateLabel)}</span>`;
     }
     function materialsSignature(materials = []) {
       return JSON.stringify((materials || []).map(item => ({
@@ -449,6 +450,7 @@
       };
     }
     function getJobNextAction(job = {}) {
+      const english = state.language === "en";
       const status = cleanText(job.status || "Cotización");
       const approval = getJobClientApproval(job);
       const calc = computeJob(job);
@@ -456,30 +458,30 @@
       const production = job.production || {};
       const assignments = job.workflow?.assignments || {};
 
-      if (status === "Cancelado") return { key: "closed", label: "Trabajo cancelado", tone: "muted" };
-      if (status === "Pagado") return { key: "closed", label: "Trabajo cerrado y pagado", tone: "success" };
-      if (approval.estimateStatus === "cambios") return { key: "quote_changes", label: "Revisar cambios solicitados", tone: "danger" };
-      if (approval.estimateStatus === "rechazado") return { key: "quote_rejected", label: "Contactar al cliente", tone: "danger" };
-      if (["", "borrador"].includes(approval.estimateStatus) && status === "Cotización") return { key: "send_quote", label: "Enviar cotización al cliente", tone: "info" };
-      if (approval.estimateStatus === "enviado") return { key: "await_quote", label: "Esperando aprobación del cliente", tone: "warning" };
+      if (status === "Cancelado") return { key: "closed", label: english ? "Canceled job" : "Trabajo cancelado", tone: "muted" };
+      if (status === "Pagado") return { key: "closed", label: english ? "Closed and paid job" : "Trabajo cerrado y pagado", tone: "success" };
+      if (approval.estimateStatus === "cambios") return { key: "quote_changes", label: english ? "Review requested changes" : "Revisar cambios solicitados", tone: "danger" };
+      if (approval.estimateStatus === "rechazado") return { key: "quote_rejected", label: english ? "Contact customer" : "Contactar al cliente", tone: "danger" };
+      if (["", "borrador"].includes(approval.estimateStatus) && status === "Cotización") return { key: "send_quote", label: english ? "Send estimate to customer" : "Enviar cotización al cliente", tone: "info" };
+      if (approval.estimateStatus === "enviado") return { key: "await_quote", label: english ? "Awaiting customer approval" : "Esperando aprobación del cliente", tone: "warning" };
       if (Number(approval.deposit || 0) > 0 && calc.paid < Number(approval.deposit || 0)) {
-        return { key: "collect_deposit", label: `Cobrar depósito (${money(Number(approval.deposit) - calc.paid)})`, tone: "warning" };
+        return { key: "collect_deposit", label: `${english ? "Collect deposit" : "Cobrar depósito"} (${money(Number(approval.deposit) - calc.paid)})`, tone: "warning" };
       }
       if (["Aprobado", "Diseño"].includes(status) && approval.designStatus !== "aprobado") {
         return approval.designStatus === "cambios"
-          ? { key: "design_changes", label: assignments.design ? `Aplicar cambios de diseño · ${assignments.design}` : "Aplicar cambios de diseño", tone: "danger" }
-          : { key: "design_approval", label: assignments.design ? `Obtener aprobación del diseño · ${assignments.design}` : "Obtener aprobación del diseño", tone: "info" };
+          ? { key: "design_changes", label: assignments.design ? `${english ? "Apply design changes" : "Aplicar cambios de diseño"} · ${assignments.design}` : (english ? "Apply design changes" : "Aplicar cambios de diseño"), tone: "danger" }
+          : { key: "design_approval", label: assignments.design ? `${english ? "Obtain design approval" : "Obtener aprobación del diseño"} · ${assignments.design}` : (english ? "Obtain design approval" : "Obtener aprobación del diseño"), tone: "info" };
       }
-      if (production.blocked) return { key: "unblock", label: "Resolver bloqueo de producción", tone: "danger" };
+      if (production.blocked) return { key: "unblock", label: english ? "Resolve production blocker" : "Resolver bloqueo de producción", tone: "danger" };
       if (status === "Producción") {
         const responsible = assignments.production || production.responsible;
-        return { key: "produce", label: responsible ? `Producción · ${responsible}` : "Asignar responsable de producción", tone: "info" };
+        return { key: "produce", label: responsible ? `${english ? "Production" : "Producción"} · ${responsible}` : (english ? "Assign production owner" : "Asignar responsable de producción"), tone: "info" };
       }
-      if (status === "Instalación" && !installation.date) return { key: "schedule_install", label: "Programar instalación", tone: "warning" };
-      if (installation.date && !["Completada", "Cancelada"].includes(installation.status)) return { key: "complete_install", label: `Completar instalación · ${formatDate(installation.date)}`, tone: "info" };
-      if (status === "Entregado" && calc.balance > 0) return { key: "collect_balance", label: `Cobrar saldo (${money(calc.balance)})${assignments.collections ? ` · ${assignments.collections}` : ""}`, tone: "warning" };
-      if (status === "Entregado" && calc.balance <= 0) return { key: "close_paid", label: "Marcar trabajo como pagado", tone: "success" };
-      return { key: "advance", label: `Avanzar a ${nextStatus(status)}`, tone: "info" };
+      if (status === "Instalación" && !installation.date) return { key: "schedule_install", label: english ? "Schedule installation" : "Programar instalación", tone: "warning" };
+      if (installation.date && !["Completada", "Cancelada"].includes(installation.status)) return { key: "complete_install", label: `${english ? "Complete installation" : "Completar instalación"} · ${formatDate(installation.date)}`, tone: "info" };
+      if (status === "Entregado" && calc.balance > 0) return { key: "collect_balance", label: `${english ? "Collect balance" : "Cobrar saldo"} (${money(calc.balance)})${assignments.collections ? ` · ${assignments.collections}` : ""}`, tone: "warning" };
+      if (status === "Entregado" && calc.balance <= 0) return { key: "close_paid", label: english ? "Mark job as paid" : "Marcar trabajo como pagado", tone: "success" };
+      return { key: "advance", label: `${english ? "Advance to" : "Avanzar a"} ${localizedStatus(nextStatus(status))}`, tone: "info" };
     }
     function reconcileJobStatus(job = {}, requestedStatus = "") {
       const current = cleanText(requestedStatus || job.status || "Cotización");
@@ -1708,6 +1710,7 @@
       renderJobsQuickFilters();
       if (typeof renderOperationsAlerts === "function") renderOperationsAlerts();
       const rows = getFilteredJobs();
+      const english = state.language === "en";
       const showCommission = isAdmin() && typeof getJobCommissionBreakdown === "function";
       $("jobCommissionHeader")?.classList.toggle("hidden", !showCommission);
       $("jobSalespersonFilter")?.classList.toggle("hidden", !showCommission);
@@ -1720,7 +1723,7 @@
         const client = getClientById(job.clientId);
         const calc = computeJob(job);
         const overdue = isOverdue(job);
-        const statusText = overdue ? "Vencido" : "En tiempo";
+        const statusText = overdue ? (english ? "Overdue" : "Vencido") : (english ? "On schedule" : "En tiempo");
         const statusCls = overdue ? "st-cancelado" : "st-entregado";
         const commission = showCommission ? getJobCommissionBreakdown(job) : null;
 
@@ -1742,16 +1745,16 @@
               <div><strong>${safe(formatDate(job.dueDate))}</strong></div>
               <div style="margin-top:8px;">${priorityPill(job.priority || "Media")}</div>
               <div style="margin-top:8px;"><span class="pill ${statusCls}">${statusText}</span></div>
-              <div class="section-note" style="margin-top:8px;">Creado: ${safe(formatDate(job.date))}</div>
+              <div class="section-note" style="margin-top:8px;">${english ? "Created" : "Creado"}: ${safe(formatDate(job.date))}</div>
             </td>
             <td>
-              <div><strong>Venta:</strong> ${money(calc.sale)}</div>
-              <div><strong>Costo:</strong> ${money(calc.cost)}</div>
-              <div><strong>Ganancia:</strong> ${money(calc.profit)}</div>
+              <div><strong>${english ? "Sale" : "Venta"}:</strong> ${money(calc.sale)}</div>
+              <div><strong>${english ? "Cost" : "Costo"}:</strong> ${money(calc.cost)}</div>
+              <div><strong>${english ? "Profit" : "Ganancia"}:</strong> ${money(calc.profit)}</div>
             </td>
             <td>
-              <div><strong>Pagado:</strong> ${money(calc.paid)}</div>
-              <div><strong>Saldo:</strong> ${money(calc.balance)}</div>
+              <div><strong>${english ? "Paid" : "Pagado"}:</strong> ${money(calc.paid)}</div>
+              <div><strong>${english ? "Balance" : "Saldo"}:</strong> ${money(calc.balance)}</div>
               <div class="section-note" style="margin-top:8px;">Checklist: ${safe(checklistProgress(job))}</div>
             </td>
             ${showCommission ? `<td><div><strong>${safe(commission.salespersonName || "Not assigned")}</strong> · ${commission.rate.toFixed(2)}%</div><div class="section-note">Projected: ${money(commission.projected)}</div><div class="section-note">Earned: ${money(commission.earned)}</div><div><strong>Outstanding: ${money(commission.available)}</strong></div>${commission.salespersonId && commission.rate <= 0 ? '<div class="pill st-cancelado mt-10">Rate is 0%</div>' : ""}${client?.salesSource === "salesperson" && client?.salespersonId && !commission.salespersonId ? '<div class="pill st-diseno mt-10">Assignment missing</div>' : ""}</td>` : ""}
@@ -1762,14 +1765,14 @@
             <td>
               <div class="actions-row" style="min-width:240px;max-width:280px;">
                 <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="general">WhatsApp</button>
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">Cobro</button>
-                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">Entrega</button>
-                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">Editar</button>` : ""}
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="cobro" data-wa-job="${job.id}">${english ? "Collection" : "Cobro"}</button>
+                <button class="btn btn-info btn-small" data-wa-client="${job.clientId}" data-wa-mode="entrega" data-wa-job="${job.id}">${english ? "Due date" : "Entrega"}</button>
+                ${canWriteData("trabajos") ? `<button class="btn btn-secondary btn-small" data-edit-job="${job.id}">${english ? "Edit" : "Editar"}</button>` : ""}
                 ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
-                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ Pago</button>` : ""}
-                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">Cotización</button>
-                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">Compra</button>
-                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">Eliminar</button>` : ""}
+                ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ ${english ? "Payment" : "Pago"}</button>` : ""}
+                <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">${english ? "Estimate" : "Cotización"}</button>
+                <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">${english ? "Purchase" : "Compra"}</button>
+                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">${english ? "Archive" : "Eliminar"}</button>` : ""}
               </div>
             </td>
           </tr>
