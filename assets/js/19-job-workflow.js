@@ -187,13 +187,13 @@
       <div><span>${workflowCopy("Target date", "Fecha objetivo")}</span><strong>${escapeText(targetDate)}</strong></div>
       <div><span>${workflowCopy("Customer price", "Precio del cliente")}</span><strong>${escapeText(formattedPrice)}</strong></div>
       <div><span>${workflowCopy("Collected / balance", "Cobrado / saldo")}</span><strong>${escapeText(paid)} / ${escapeText(balance)}</strong></div>
-      <div class="job-quick-actions" aria-label="Quick job actions">
-        <span>Quick actions</span>
+      <div class="job-quick-actions" aria-label="${workflowCopy("Quick job actions", "Acciones rápidas del trabajo")}">
+        <span>${workflowCopy("Quick actions", "Acciones rápidas")}</span>
         <div>
-          <button type="button" data-job-quick-tab="cotizacion">Estimate</button>
-          <button type="button" data-job-quick-tab="operacion">Production & installation</button>
-          <button type="button" data-job-quick-payment ${paymentDisabled ? 'disabled title="Save the job before recording a payment"' : ""}>Add payment</button>
-          <button type="button" data-job-quick-tab="historial">Files & history</button>
+          <button type="button" data-job-quick-tab="cotizacion">${workflowCopy("Estimate", "Cotización")}</button>
+          <button type="button" data-job-quick-tab="operacion">${workflowCopy("Production & installation", "Producción e instalación")}</button>
+          <button type="button" data-job-quick-payment ${paymentDisabled ? `disabled title="${workflowCopy("Save the job before recording a payment", "Guarda el trabajo antes de registrar un pago")}"` : ""}>${workflowCopy("Add payment", "Agregar pago")}</button>
+          <button type="button" data-job-quick-tab="historial">${workflowCopy("Files & history", "Archivos e historial")}</button>
         </div>
       </div>`;
   }

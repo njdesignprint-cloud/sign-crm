@@ -20,7 +20,7 @@ test("dashboard net profit subtracts job internal costs and period expenses", ()
     jobs.includes('$("mProfit").textContent = money(periodSales - periodExpenses);'),
     false
   );
-  assert.equal(html.includes('assets/js/03-jobs.js?v=20260730-15'), true);
+  assert.equal(html.includes('assets/js/03-jobs.js?v=20260730-16'), true);
   assert.equal(reports.includes("const netProfit = sales - internalCosts - expenses.reduce"), true);
   assert.equal(reports.includes("computeJob(job).profit, 0) - expenses.reduce"), false);
 });
