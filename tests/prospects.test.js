@@ -19,8 +19,8 @@ test("prospects support outreach, follow-up, maps and safe client conversion", (
   const module = read("assets/js/02-prospects.js");
   assert.match(module, /openProspectWhatsapp/);
   assert.match(module, /openProspectSms/);
-  assert.match(module, /ms-chat:\?Addresses=/);
   assert.match(module, /sms:\$\{phone\}\?body=/);
+  assert.match(module, /navigator\.clipboard\?\.writeText/);
   assert.match(module, /openProspectEmail/);
   assert.match(module, /openProspectMaps/);
   assert.match(module, /saveProspectFollowup/);
