@@ -1558,7 +1558,6 @@
           <label class="field-label">Próxima acción<input id="prospectNextAction" class="input" placeholder="Llamar, visitar, enviar muestra..." /></label>
           <label class="field-label">Fecha del seguimiento<input id="prospectNextDate" class="input" type="date" /></label>
         </div>
-        <label class="field-label mt-12">Mensaje principal<textarea id="prospectMessage" class="textarea" placeholder="Mensaje de presentación que usarás por correo o WhatsApp"></textarea></label>
         <label class="field-label mt-12">Notas internas<textarea id="prospectNotes" class="textarea"></textarea></label>
         <div id="prospectTimelineBox" class="box hidden"><strong>Historial de seguimiento</strong><div id="prospectTimeline" class="mt-10"></div></div>
       </div>
@@ -1584,6 +1583,20 @@
         <label class="field-label mt-12">Resultado / nota<textarea id="prospectFollowupNote" class="textarea"></textarea></label>
       </div>
       <div class="modal-foot"><button class="btn btn-secondary" data-close="prospectFollowupModal">Cancelar</button><button id="saveProspectFollowupBtn" class="btn btn-primary">Guardar contacto</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="prospectOutreachLanguageModal">
+    <div class="modal modal-small">
+      <div class="modal-head"><h3 id="prospectOutreachLanguageTitle">Elige el idioma del mensaje</h3><button class="btn btn-secondary btn-small" data-close="prospectOutreachLanguageModal">Cerrar</button></div>
+      <div class="modal-body">
+        <p class="section-note">El mensaje se abrirá en un solo idioma y siempre incluirá el enlace para ver los trabajos realizados.</p>
+        <div class="grid-2 mt-12">
+          <button class="btn btn-primary" data-prospect-outreach-language="es">Enviar en español</button>
+          <button class="btn btn-info" data-prospect-outreach-language="en">Send in English</button>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="prospectOutreachLanguageModal">Cancelar</button></div>
     </div>
   </div>
 
@@ -2402,7 +2415,7 @@
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
   <script src="assets/js/01-core.js?v=20260730-19"></script>
   <script src="assets/js/02-clients.js?v=20260728-5"></script>
-  <script src="assets/js/02-prospects.js?v=20260730-11"></script>
+  <script src="assets/js/02-prospects.js?v=20260730-12"></script>
   <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/24-trash.js?v=20260728-1"></script>
@@ -2417,7 +2430,7 @@
   <script src="assets/js/09-users.js?v=20260728-3"></script>
   <script src="assets/js/10-backup-misc.js?v=20260730-8"></script>
   <script src="assets/js/11-auth.js?v=20260730-11"></script>
-  <script src="assets/js/12-init.js?v=20260730-10"></script>
+  <script src="assets/js/12-init.js?v=20260730-11"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>

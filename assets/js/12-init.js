@@ -345,6 +345,7 @@
       if (target.dataset.prospectSms) openProspectSms(target.dataset.prospectSms);
       if (target.dataset.prospectEmail) openProspectEmail(target.dataset.prospectEmail);
       if (target.dataset.prospectMaps) openProspectMaps(target.dataset.prospectMaps);
+      if (target.dataset.prospectOutreachLanguage) sendProspectOutreach(target.dataset.prospectOutreachLanguage);
       if (target.dataset.convertProspect) convertProspectToClient(target.dataset.convertProspect);
 
       if (target.dataset.editJob) editJob(target.dataset.editJob);

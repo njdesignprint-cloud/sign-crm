@@ -14,14 +14,9 @@
     function prospectPhone(value) { return String(value || "").replace(/\D/g, ""); }
     function prospectComparablePhone(value) { const digits = prospectPhone(value); return digits.length > 10 ? digits.slice(-10) : digits; }
     function prospectPortfolioUrl() { return "https://njdesignprintllc.com/"; }
-    function prospectBilingualOutreachMessage() {
-      return `Hi, I'm Noel with NJ Design & Print, a local sign and print company serving Katy and Houston. We help businesses stand out with signs, window graphics, menus, and vehicle graphics. If you're interested, call us or request a free visit to your business. See our work and social media: ${prospectPortfolioUrl()}\n\nHola, soy Noel de NJ Design & Print, una empresa local de letreros e impresión que sirve a Katy y Houston. Ayudamos a los negocios a destacar con letreros, gráficos para ventanas, menús y rotulación de vehículos. Si le interesa, puede llamarnos o solicitar una visita gratuita a su negocio. Vea nuestros trabajos y redes sociales: ${prospectPortfolioUrl()}`;
-    }
-    function prospectMessageWithPortfolio(message = "") {
-      const base = cleanText(message);
-      const url = prospectPortfolioUrl();
-      if (base.toLowerCase().includes(url.toLowerCase())) return base;
-      return `${base}${base ? "\n\n" : ""}${prospectText("See photos of our work:", "Puede ver fotos de nuestros trabajos aquí:")} ${url}`;
+    function prospectOutreachMessage(language = "es") {
+      if (language === "en") return `👋 Hi! I’m Noel with NJ Design & Print.\n\nWe’re a local sign and print company proudly serving Katy, Houston, and the surrounding areas.\n\nWe help businesses stand out with:\n\n✅ Commercial Signs\n✅ Window Graphics & Vinyl\n✅ Vehicle Wraps & Lettering\n✅ Menus, ADA Signs & Directories\n✅ Banners, Business Cards, and much more\n\n📍 We’d love the opportunity to visit your business. We offer a free on-site consultation to evaluate your needs and recommend the best signage solutions for your business.\n\n🌐 View our work and request a quote:\n${prospectPortfolioUrl()}\n\nWe look forward to working with you!`;
+      return `👋 ¡Hola! Soy Noel de NJ Design & Print.\n\nSomos una empresa local especializada en letreros comerciales, impresión y rotulación, brindando servicio en Katy, Houston y sus alrededores.\n\nAyudamos a negocios como el suyo con:\n\n✅ Letreros comerciales (interiores y exteriores)\n✅ Vinilos y gráficos para ventanas\n✅ Rotulación de vehículos (Vehicle Wraps & Lettering)\n✅ Menús, señalización ADA y directorios\n✅ Banners, tarjetas de presentación y material publicitario\n\n📍 Nos gustaría conocer su negocio. Ofrecemos una visita gratuita, sin compromiso, para evaluar sus necesidades y recomendarle la mejor solución para su imagen.\n\n🌐 Conozca nuestro trabajo y solicite una cotización:\n${prospectPortfolioUrl()}\n\n¡Será un placer servirle y apoyar el crecimiento de su negocio!`;
     }
     function prospectActivityLabel(type) {
       return ({ call:["Call","Llamada"], sms:["SMS","SMS"], whatsapp:["WhatsApp","WhatsApp"], email:["Email","Correo"], visit:["Visit","Visita"], social:["Social media","Redes sociales"], note:["Note","Nota"], created:["Created","Creado"], converted:["Converted","Convertido"] }[type] || ["Activity","Actividad"])[prospectEnglish() ? 0 : 1];
@@ -39,15 +34,11 @@
       const query = [item.company, item.address, item.city].filter(Boolean).join(" ");
       return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
     }
-    function prospectDefaultMessage(item = {}) {
-      const saved = cleanText(item.message);
-      const base = saved || prospectBilingualOutreachMessage();
-      return prospectMessageWithPortfolio(base);
-    }
+    function prospectDefaultMessage(item = {}, language = "") { return prospectOutreachMessage(language || (prospectEnglish() ? "en" : "es")); }
     function resetProspectForm() {
       state.editingProspectId = null;
       $("prospectModalTitle").textContent = prospectText("New prospect", "Nuevo prospecto");
-      ["prospectCompany","prospectName","prospectRole","prospectCategory","prospectPhone","prospectEmail","prospectAddress","prospectCity","prospectWebsite","prospectMapsUrl","prospectOwner","prospectNextAction","prospectNextDate","prospectMessage","prospectNotes"].forEach(id => $(id).value = "");
+      ["prospectCompany","prospectName","prospectRole","prospectCategory","prospectPhone","prospectEmail","prospectAddress","prospectCity","prospectWebsite","prospectMapsUrl","prospectOwner","prospectNextAction","prospectNextDate","prospectNotes"].forEach(id => $(id).value = "");
       $("prospectSource").value = "google_maps"; $("prospectStatus").value = "new"; $("prospectPriority").value = "medium";
       if ($("prospectWhatsappStatus")) $("prospectWhatsappStatus").value = "pending";
       if ($("prospectPhoneType")) $("prospectPhoneType").value = "unknown";
@@ -61,7 +52,7 @@
         phone: cleanText($("prospectPhone").value), email: cleanText($("prospectEmail").value), address: cleanText($("prospectAddress").value), city: cleanText($("prospectCity").value),
         website: cleanText($("prospectWebsite").value), mapsUrl: cleanText($("prospectMapsUrl").value), source: cleanText($("prospectSource").value) || "google_maps",
         status: cleanText($("prospectStatus").value) || "new", priority: cleanText($("prospectPriority").value) || "medium", owner: cleanText($("prospectOwner").value),
-        nextAction: cleanText($("prospectNextAction").value), nextFollowupDate: cleanText($("prospectNextDate").value), message: prospectMessageWithPortfolio($("prospectMessage").value), notes: cleanText($("prospectNotes").value),
+        nextAction: cleanText($("prospectNextAction").value), nextFollowupDate: cleanText($("prospectNextDate").value), notes: cleanText($("prospectNotes").value),
         whatsappStatus: cleanText($("prospectWhatsappStatus")?.value) || "pending",
         phoneType: cleanText($("prospectPhoneType")?.value) || "unknown", callStatus: cleanText($("prospectCallStatus")?.value) || "pending", smsStatus: cleanText($("prospectSmsStatus")?.value) || "pending",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -94,7 +85,7 @@
       if (!canWriteData("prospectos")) return showToast(prospectText("You cannot edit prospects.", "No tienes permiso para editar prospectos."));
       const item = getProspectById(id); if (!item) return;
       state.editingProspectId = id; $("prospectModalTitle").textContent = prospectText("Edit prospect", "Editar prospecto");
-      const fields = { prospectCompany:"company", prospectName:"name", prospectRole:"role", prospectCategory:"category", prospectPhone:"phone", prospectEmail:"email", prospectAddress:"address", prospectCity:"city", prospectWebsite:"website", prospectMapsUrl:"mapsUrl", prospectSource:"source", prospectStatus:"status", prospectPriority:"priority", prospectOwner:"owner", prospectNextAction:"nextAction", prospectNextDate:"nextFollowupDate", prospectMessage:"message", prospectNotes:"notes", prospectWhatsappStatus:"whatsappStatus", prospectPhoneType:"phoneType", prospectCallStatus:"callStatus", prospectSmsStatus:"smsStatus" };
+      const fields = { prospectCompany:"company", prospectName:"name", prospectRole:"role", prospectCategory:"category", prospectPhone:"phone", prospectEmail:"email", prospectAddress:"address", prospectCity:"city", prospectWebsite:"website", prospectMapsUrl:"mapsUrl", prospectSource:"source", prospectStatus:"status", prospectPriority:"priority", prospectOwner:"owner", prospectNextAction:"nextAction", prospectNextDate:"nextFollowupDate", prospectNotes:"notes", prospectWhatsappStatus:"whatsappStatus", prospectPhoneType:"phoneType", prospectCallStatus:"callStatus", prospectSmsStatus:"smsStatus" };
       Object.entries(fields).forEach(([id,key]) => $(id).value = item[key] || "");
       $("prospectTimelineBox").classList.remove("hidden"); renderProspectTimeline(item); openModal("prospectModal");
     }
@@ -121,14 +112,29 @@
         markModalSaved("prospectFollowupModal"); closeModal("prospectFollowupModal", true); showToast(prospectText("Follow-up saved.", "Seguimiento guardado."));
       } catch (error) { console.error(error); showToast(prospectText("The follow-up could not be saved.", "No se pudo guardar el seguimiento.")); }
     }
-    function openProspectWhatsapp(id) {
+    function requestProspectOutreach(id, channel) {
       const item = getProspectById(id); if (!item?.phone) return showToast(prospectText("This prospect has no phone number.", "Este prospecto no tiene teléfono."));
-      window.open(`https://wa.me/${prospectPhone(item.phone)}?text=${encodeURIComponent(prospectDefaultMessage(item))}`, "_blank", "noopener");
+      state.pendingProspectOutreach = { id, channel };
+      $("prospectOutreachLanguageTitle").textContent = prospectText(`Choose message language · ${item.company || "-"}`, `Elige el idioma del mensaje · ${item.company || "-"}`);
+      openModal("prospectOutreachLanguageModal");
     }
-    function openProspectSms(id) {
+    function sendProspectOutreach(language) {
+      const pending = state.pendingProspectOutreach || {}; state.pendingProspectOutreach = null;
+      closeModal("prospectOutreachLanguageModal", true);
+      if (pending.channel === "whatsapp") openProspectWhatsapp(pending.id, language);
+      if (pending.channel === "sms") openProspectSms(pending.id, language);
+      if (pending.channel === "email") openProspectEmail(pending.id, language);
+    }
+    function openProspectWhatsapp(id, language = "") {
+      if (!language) return requestProspectOutreach(id, "whatsapp");
+      const item = getProspectById(id); if (!item?.phone) return showToast(prospectText("This prospect has no phone number.", "Este prospecto no tiene teléfono."));
+      window.open(`https://wa.me/${prospectPhone(item.phone)}?text=${encodeURIComponent(prospectDefaultMessage(item, language))}`, "_blank", "noopener");
+    }
+    function openProspectSms(id, language = "") {
+      if (!language) return requestProspectOutreach(id, "sms");
       const item = getProspectById(id); if (!item?.phone) return showToast(prospectText("This prospect has no phone number.", "Este prospecto no tiene teléfono."));
       const digits = prospectPhone(item.phone), phone = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
-      const message = prospectDefaultMessage(item), body = encodeURIComponent(message);
+      const message = prospectDefaultMessage(item, language), body = encodeURIComponent(message);
       const windows = /Windows/i.test(navigator.userAgent || "");
       const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent || "") || (/Macintosh/i.test(navigator.userAgent || "") && Number(navigator.maxTouchPoints || 0) > 1);
       if (appleMobile) {
@@ -141,10 +147,16 @@
       }
       window.location.href = `sms:${phone}?body=${body}`;
     }
-    function openProspectEmail(id) {
+    function openProspectEmail(id, language = "") {
+      if (!language) {
+        const item = getProspectById(id); if (!item?.email) return showToast(prospectText("This prospect has no email address.", "Este prospecto no tiene correo."));
+        state.pendingProspectOutreach = { id, channel:"email" };
+        $("prospectOutreachLanguageTitle").textContent = prospectText(`Choose message language · ${item.company || "-"}`, `Elige el idioma del mensaje · ${item.company || "-"}`);
+        return openModal("prospectOutreachLanguageModal");
+      }
       const item = getProspectById(id); if (!item?.email) return showToast(prospectText("This prospect has no email address.", "Este prospecto no tiene correo."));
-      const subject = prospectText(`Sign and graphics solutions for ${item.company}`, `Soluciones de letreros y gráficos para ${item.company}`);
-      window.location.href = `mailto:${encodeURIComponent(item.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(prospectDefaultMessage(item))}`;
+      const subject = language === "en" ? `Sign and graphics solutions for ${item.company}` : `Soluciones de letreros y gráficos para ${item.company}`;
+      window.location.href = `mailto:${encodeURIComponent(item.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(prospectDefaultMessage(item, language))}`;
     }
     function openProspectMaps(id) { const item = getProspectById(id); if (item) window.open(prospectMapsLink(item), "_blank", "noopener"); }
     function findDuplicateClient(item = {}) {
