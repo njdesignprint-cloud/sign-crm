@@ -21,6 +21,8 @@
   };
   Object.assign(translations,{
     "+ Agregar gasto":"+ Add expense","+ Agregar ítem":"+ Add item","+ Agregar material":"+ Add material","+ Agregar pago":"+ Add payment","+ Nueva orden":"+ New order","+ Nuevo":"+ New","+ Nuevo proveedor":"+ New supplier","+ Nuevo recurrente":"+ New recurring expense","+ Nuevo usuario":"+ New user",
+    "+ Pago":"+ Payment","Compra":"Purchase","→ Aprobado":"→ Approved","→ Instalación":"→ Installation","→ Pagado":"→ Paid","Enviar cotización al cliente":"Send estimate to customer","Asignar responsable de producción":"Assign production owner","Sin entregas":"No deliveries","Sin instalaciones":"No installations","Inventario: Sin vínculo":"Inventory: Not linked",
+    "Estimado: borrador · Diseño: pendiente":"Estimate: draft · Design: pending","Estimado: enviado · Diseño: pendiente":"Estimate: sent · Design: pending","Estimado: aprobado · Diseño: pendiente":"Estimate: approved · Design: pending",
     "🏭 Producción":"🏭 Production","💰 Liquidación semanal":"💰 Weekly settlement","🗓️ Instalación":"🗓️ Installation","ADMINISTRACIÓN":"ADMINISTRATION","Acrílico":"Acrylic","Español":"Spanish",
     "Costo":"Cost","Ganancia":"Profit","Material":"Material","Pago":"Payment","Saldo":"Balance","Tipo":"Type","Todo al día":"All caught up","Todos":"All","Tornillería":"Hardware","Trabajo":"Job","Solo lectura":"Read only","Sin descuento":"No discount",
     "Nuevo gasto":"New expense","Nuevo proveedor":"New supplier","Nuevo usuario":"New user","Estado de la cuenta":"Account status","Alertas rápidas":"Quick alerts","Resumen general del negocio.":"General business summary.",

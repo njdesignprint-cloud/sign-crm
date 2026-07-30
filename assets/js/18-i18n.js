@@ -517,6 +517,18 @@
     if (window.state) window.state.language = next;
     applyLanguage();
     window.dispatchEvent(new CustomEvent("crm-language-changed", { detail: { language: next } }));
+    setTimeout(() => {
+      const viewRenderers = {
+        clientes: "renderClients", vendedores: "renderSalespeople", trabajos: "renderJobs",
+        produccion: "renderProductionBoard", gastos: "renderExpenses", inventario: "renderInventory",
+        proveedores: "renderProviders", compras: "renderPurchaseOrders", instalaciones: "renderInstallationModule",
+        reportes: "renderReportsModule", usuarios: "renderUsers", cuentascrm: "renderPlatformAccounts"
+      };
+      if (typeof window.renderStats === "function") window.renderStats();
+      if (typeof window.renderOperationsAlerts === "function") window.renderOperationsAlerts();
+      const renderer = viewRenderers[window.state?.currentView];
+      if (renderer && typeof window[renderer] === "function") window[renderer]();
+    }, 0);
   }
 
   function patchFunctions() {

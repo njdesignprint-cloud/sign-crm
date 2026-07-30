@@ -220,20 +220,32 @@
     }
     function getClientApprovalSummaryText(job = {}) {
       const approval = getJobClientApproval(job);
-      const estimateMap = {
+      const english = state.language === "en";
+      const estimateMap = english ? {
+        borrador: "Estimate: draft",
+        enviado: "Estimate: sent",
+        aprobado: "Estimate: approved",
+        cambios: "Estimate: changes requested",
+        rechazado: "Estimate: rejected"
+      } : {
         borrador: "Estimado: borrador",
         enviado: "Estimado: enviado",
         aprobado: "Estimado: aprobado",
         cambios: "Estimado: cambios",
         rechazado: "Estimado: rechazado"
       };
-      const designMap = {
+      const designMap = english ? {
+        pendiente: "Design: pending",
+        enviado: "Design: sent",
+        aprobado: "Design: approved",
+        cambios: "Design: changes requested"
+      } : {
         pendiente: "Diseño: pendiente",
         enviado: "Diseño: enviado",
         aprobado: "Diseño: aprobado",
         cambios: "Diseño: cambios"
       };
-      return `${estimateMap[approval.estimateStatus] || "Estimado: borrador"} · ${designMap[approval.designStatus] || "Diseño: pendiente"}`;
+      return `${estimateMap[approval.estimateStatus] || (english ? "Estimate: draft" : "Estimado: borrador")} · ${designMap[approval.designStatus] || (english ? "Design: pending" : "Diseño: pendiente")}`;
     }
     function getJobLinkedExpenses(jobId = "") {
       if (!jobId) return [];
@@ -1881,10 +1893,11 @@
     }
 
     function formatDashboardPeriodLabel(period = "last30") {
-      if (period === "thisMonth") return "Este mes";
-      if (period === "lastMonth") return "Mes pasado";
-      if (period === "thisYear") return "Año actual";
-      return "Últimos 30 días";
+      const english = state.language === "en";
+      if (period === "thisMonth") return english ? "This month" : "Este mes";
+      if (period === "lastMonth") return english ? "Last month" : "Mes pasado";
+      if (period === "thisYear") return english ? "Current year" : "Año actual";
+      return english ? "Last 30 days" : "Últimos 30 días";
     }
 
     function getDashboardDateRange() {
@@ -1928,7 +1941,7 @@
       bindDashboardPeriodControl();
       const range = getDashboardDateRange();
       if ($("dashboardPeriod")) $("dashboardPeriod").value = range.period;
-      if ($("dashboardPeriodNote")) $("dashboardPeriodNote").textContent = `Período activo: ${range.label} · ${range.start} → ${range.end}`;
+      if ($("dashboardPeriodNote")) $("dashboardPeriodNote").textContent = `${state.language === "en" ? "Active period" : "Período activo"}: ${range.label} · ${range.start} → ${range.end}`;
       if ($("dashboardPeriodHint")) $("dashboardPeriodHint").textContent = range.period === "last30"
         ? "Recomendado para no ver el dashboard vacío cuando empieza un mes nuevo."
         : "Puedes cambiar el período cuando quieras para comparar tu operación.";
@@ -2072,7 +2085,7 @@
 
         cell.innerHTML = `
           <div class="calendar-date">${cursor.getDate()}</div>
-          ${jobsHtml || '<div class="section-note">Sin entregas</div>'}
+          ${jobsHtml || `<div class="section-note">${state.language === "en" ? "No deliveries" : "Sin entregas"}</div>`}
         `;
 
         grid.appendChild(cell);

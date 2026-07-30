@@ -650,18 +650,18 @@
       const roleEl = $("activeWorkspaceRole");
       if (roleEl) {
         const extra = state.isSuperAdmin ? " · Super Admin" : "";
-        roleEl.textContent = `Rol: ${roleLabel(state.currentUserRole)}${extra}`;
+        roleEl.textContent = `${state.language === "en" ? "Role" : "Rol"}: ${roleLabel(state.currentUserRole)}${extra}`;
       }
       const ownerEl = $("activeWorkspaceOwner");
-      if (ownerEl) ownerEl.textContent = `Espacio: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`;
+      if (ownerEl) ownerEl.textContent = `${state.language === "en" ? "Workspace" : "Espacio"}: ${state.currentWorkspaceOwnerEmail || state.userEmail || "-"}`;
       const statusEl = $("activeWorkspaceStatus");
       if (statusEl) {
         const accountStatus = platformStatusPill(state.currentPlatformStatus || "active");
         const workspaceStatus = platformStatusPill(state.currentWorkspaceStatus || state.currentPlatformStatus || "active");
         const sameStatus = cleanText(state.currentWorkspaceStatus || state.currentPlatformStatus) === cleanText(state.currentPlatformStatus || "active");
         statusEl.innerHTML = sameStatus
-          ? `Cuenta: ${accountStatus}`
-          : `Cuenta: ${accountStatus} · Espacio: ${workspaceStatus}`;
+          ? `${state.language === "en" ? "Account" : "Cuenta"}: ${accountStatus}`
+          : `${state.language === "en" ? "Account" : "Cuenta"}: ${accountStatus} · ${state.language === "en" ? "Workspace" : "Espacio"}: ${workspaceStatus}`;
       }
 
       document.querySelectorAll('.nav button[data-view]').forEach(btn => {
