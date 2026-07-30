@@ -116,12 +116,38 @@
     }
     function resetPaymentForm(jobId = "") {
       state.workingPaymentJobId = jobId || "";
+      state.editingPaymentId = null;
       fillPaymentJobSelect(jobId || "");
+      $("paymentJobId").disabled = false;
       $("paymentAmount").value = "";
       $("paymentType").value = "partial";
       $("paymentDate").value = today();
       $("paymentMethod").value = "Efectivo";
       $("paymentNote").value = "";
+      if ($("paymentModalTitle")) $("paymentModalTitle").textContent = state.language === "en" ? "Add payment" : "Agregar pago";
+      $("savePaymentBtn").textContent = state.language === "en" ? "Save payment" : "Guardar pago";
+    }
+    function editPayment(paymentId = "") {
+      const jobId = state.editingJobId || state.workingPaymentJobId;
+      const job = getJobById(jobId);
+      const payment = getPaymentsList(job || {}).find(item => String(item.id || "") === String(paymentId || ""));
+      if (!job || !payment) return showToast(state.language === "en" ? "Payment not found." : "No se encontró el pago.");
+
+      state.workingPaymentJobId = job.id;
+      state.editingPaymentId = String(payment.id || "").startsWith("legacy-")
+        ? "p-legacy-" + job.id
+        : payment.id;
+      fillPaymentJobSelect(job.id);
+      $("paymentJobId").value = job.id;
+      $("paymentJobId").disabled = true;
+      $("paymentAmount").value = Math.abs(Number(payment.amount || 0)).toFixed(2);
+      $("paymentType").value = PaymentUtils.normalizeType(payment.type);
+      $("paymentDate").value = payment.date || today();
+      $("paymentMethod").value = payment.method || "Efectivo";
+      $("paymentNote").value = payment.note || "";
+      if ($("paymentModalTitle")) $("paymentModalTitle").textContent = state.language === "en" ? "Edit payment" : "Editar pago";
+      $("savePaymentBtn").textContent = state.language === "en" ? "Save changes" : "Guardar cambios";
+      openModal("paymentModal");
     }
     async function saveExpense() {
       if (!guardWrite("guardar gastos", "gastos")) return;
@@ -209,7 +235,14 @@
         const payments = getPaymentsList(job).map(item => String(item.id || "").startsWith("legacy-")
           ? { ...item, id: "p-legacy-" + (job.id || Date.now()), type: "legacy" }
           : { ...item });
-        const currentPaid = PaymentUtils.netPaid(payments);
+        const editingIndex = state.editingPaymentId
+          ? payments.findIndex(item => String(item.id || "") === String(state.editingPaymentId))
+          : -1;
+        if (state.editingPaymentId && editingIndex < 0) {
+          return showToast(state.language === "en" ? "The payment to edit was not found." : "No se encontró el pago que deseas editar.");
+        }
+        const paymentsWithoutEdited = editingIndex >= 0 ? payments.filter((_, index) => index !== editingIndex) : payments;
+        const currentPaid = PaymentUtils.netPaid(paymentsWithoutEdited);
         const sale = Number(job.sale || 0);
         const paymentEffect = PaymentUtils.effect({ amount, type });
 
@@ -220,19 +253,24 @@
           return showToast("Ese pago supera el total del trabajo.");
         }
 
-        payments.push({
-          id: "p-" + Date.now(),
+        const savedPayment = {
+          id: editingIndex >= 0 ? payments[editingIndex].id : "p-" + Date.now(),
           amount,
           type,
           date,
           method,
           note
-        });
+        };
+        if (editingIndex >= 0) payments.splice(editingIndex, 1, savedPayment);
+        else payments.push(savedPayment);
 
         const totalAfter = PaymentUtils.netPaid(payments);
         const newStatus = sale > 0 && totalAfter >= sale ? "Pagado" : (job.status === "Pagado" && type === "refund" ? "Entregado" : job.status);
         const typeLabel = PaymentUtils.typeLabel(type, "es");
-        const logs = [...getJobActivityLog(job), newLogEntry("pago", `${typeLabel} registrado por ${amount.toFixed(2)}.`)];
+        const logMessage = editingIndex >= 0
+          ? `${typeLabel} actualizado por ${amount.toFixed(2)}.`
+          : `${typeLabel} registrado por ${amount.toFixed(2)}.`;
+        const logs = [...getJobActivityLog(job), newLogEntry("pago", logMessage)];
 
         await jobsRef().doc(jobId).update({
           payments,
@@ -241,7 +279,10 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showToast("Pago guardado.");
+        showToast(editingIndex >= 0
+          ? (state.language === "en" ? "Payment updated." : "Pago actualizado.")
+          : (state.language === "en" ? "Payment saved." : "Pago guardado."));
+        state.editingPaymentId = null;
         markModalSaved("paymentModal");
         closeModal("paymentModal", true);
 

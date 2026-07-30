@@ -1244,10 +1244,16 @@
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
         .map(item => `
           <div class="payment-item">
-            <strong>${item.type === "refund" ? "−" : ""}${money(Math.abs(Number(item.amount || 0)))}</strong> · ${safe(PaymentUtils.typeLabel(item.type, state.language))} · ${safe(item.method || "Pago")}
+            <div class="actions-row">
+              <strong>${item.type === "refund" ? "−" : ""}${money(Math.abs(Number(item.amount || 0)))}</strong> · ${safe(PaymentUtils.typeLabel(item.type, state.language))} · ${safe(item.method || "Pago")}
+              <button type="button" class="btn btn-secondary btn-small" data-edit-payment="${safe(item.id || "")}">${state.language === "en" ? "Edit payment" : "Editar pago"}</button>
+            </div>
             <div class="section-note">${safe(item.date || "Sin fecha")}${item.note ? " · " + safe(item.note) : ""}</div>
           </div>
         `).join("");
+      box.querySelectorAll("[data-edit-payment]").forEach(button => {
+        button.addEventListener("click", () => editPayment(button.dataset.editPayment));
+      });
     }
     function renderQuotePreview() {
       renderEstimatorPreview();

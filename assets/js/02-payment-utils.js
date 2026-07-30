@@ -46,5 +46,13 @@
     };
   }
 
-  return { TYPES, normalizeType, effect, netPaid, typeLabel, depositSummary };
+  function replaceById(payments = [], paymentId = "", replacement = {}) {
+    const list = Array.isArray(payments) ? payments.map(payment => ({ ...payment })) : [];
+    const index = list.findIndex(payment => String(payment.id || "") === String(paymentId || ""));
+    if (index < 0) return { found: false, payments: list };
+    list.splice(index, 1, { ...replacement, id: list[index].id });
+    return { found: true, payments: list };
+  }
+
+  return { TYPES, normalizeType, effect, netPaid, typeLabel, depositSummary, replaceById };
 });

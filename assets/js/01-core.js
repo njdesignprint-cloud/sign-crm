@@ -67,6 +67,7 @@
       editingPurchaseOrderId: null,
       editingTeamMemberId: null,
       workingPaymentJobId: null,
+      editingPaymentId: null,
       workingMovementItemId: null,
       galleryIndex: 0,
       galleryJobId: null,

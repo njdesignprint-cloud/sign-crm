@@ -39,6 +39,17 @@ test("jobs without classified deposits keep their manual advance", () => {
   assert.equal(summary.mismatch, false);
 });
 
+test("an existing payment can be reclassified without changing its identity or total", () => {
+  const original = [{ id: "p-1", amount: 1000, type: "partial", method: "Zelle" }];
+  const result = PaymentUtils.replaceById(original, "p-1", { amount: 1000, type: "deposit", method: "Zelle" });
+
+  assert.equal(result.found, true);
+  assert.deepEqual(result.payments, [{ id: "p-1", amount: 1000, type: "deposit", method: "Zelle" }]);
+  assert.equal(PaymentUtils.netPaid(result.payments), 1000);
+  assert.equal(PaymentUtils.depositSummary({}, result.payments).received, 1000);
+  assert.equal(original[0].type, "partial");
+});
+
 test("payment integration is loaded before jobs and preserves legacy paid records", () => {
   const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
   const paymentSource = fs.readFileSync(path.join(__dirname, "../assets/js/04-expenses.js"), "utf8");
@@ -48,5 +59,10 @@ test("payment integration is loaded before jobs and preserves legacy paid record
   assert.equal(html.includes('id="paymentType"'), true);
   assert.equal(paymentSource.includes('id: "p-legacy-"'), true);
   assert.equal(paymentSource.includes("PaymentUtils.netPaid(payments)"), true);
+  assert.equal(paymentSource.includes("state.editingPaymentId"), true);
+  assert.equal(paymentSource.includes("payments.splice(editingIndex, 1, savedPayment)"), true);
+  assert.equal(paymentSource.includes('"p-legacy-" + job.id'), true);
+  assert.equal(paymentSource.includes('$("paymentJobId").disabled = true'), true);
+  assert.equal(html.includes('id="paymentModalTitle"'), true);
   assert.equal(advanceSource.includes("PaymentUtils.depositSummary"), true);
 });
