@@ -99,6 +99,7 @@
     }
     function openProspectFollowup(id) {
       const item = getProspectById(id); if (!item) return;
+      $("prospectFollowupTitle").textContent = prospectText(`Record contact · ${item.company || "-"}`, `Registrar contacto · ${item.company || "-"}`);
       state.editingProspectId = id; $("prospectFollowupType").value = "call"; $("prospectFollowupResult").value = "answered"; $("prospectFollowupStatus").value = ["new","contact"].includes(item.status) ? "contacted" : (item.status || "followup");
       $("prospectFollowupNextAction").value = item.nextAction || ""; $("prospectFollowupNextDate").value = item.nextFollowupDate || ""; $("prospectFollowupNote").value = "";
       $("prospectFollowupPhoneType").value = item.phoneType || "unknown"; $("prospectFollowupCallStatus").value = item.callStatus || "pending"; $("prospectFollowupSmsStatus").value = item.smsStatus || "pending"; $("prospectFollowupWhatsappStatus").value = item.whatsappStatus || "pending"; openModal("prospectFollowupModal");
