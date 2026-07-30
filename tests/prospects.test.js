@@ -34,6 +34,9 @@ test("prospects support outreach, follow-up, maps and safe client conversion", (
   assert.match(module, /!findDuplicateClient\(item\)/);
   assert.match(module, /prospectFollowupTitle/);
   assert.match(module, /prospectContactFilter/);
+  assert.match(module, /function prospectStatusClass/);
+  assert.match(module, /contact:"prospect-status-contact"/);
+  assert.match(module, /contacted:"prospect-status-contacted"/);
   assert.match(module, /result === "fixed_line"/);
   assert.match(module, /findDuplicateClient/);
   assert.match(module, /findDuplicateProspect/);

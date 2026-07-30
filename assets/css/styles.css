@@ -350,6 +350,15 @@
     .st-pagado{background:rgba(34,197,94,.12);color:#bbf7d0;border-color:rgba(34,197,94,.25)}
     .st-cancelado{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
 
+    .prospect-status-new{background:rgba(148,163,184,.14);color:#e2e8f0;border-color:rgba(148,163,184,.32)}
+    .prospect-status-contact{background:rgba(245,158,11,.16);color:#fde68a;border-color:rgba(245,158,11,.42)}
+    .prospect-status-contacted{background:rgba(59,130,246,.18);color:#bfdbfe;border-color:rgba(59,130,246,.45)}
+    .prospect-status-visit{background:rgba(168,85,247,.16);color:#e9d5ff;border-color:rgba(168,85,247,.4)}
+    .prospect-status-followup{background:rgba(20,184,166,.16);color:#99f6e4;border-color:rgba(20,184,166,.4)}
+    .prospect-status-quote{background:rgba(249,115,22,.16);color:#fed7aa;border-color:rgba(249,115,22,.42)}
+    .prospect-status-won{background:rgba(34,197,94,.16);color:#bbf7d0;border-color:rgba(34,197,94,.42)}
+    .prospect-status-lost{background:rgba(239,68,68,.16);color:#fecaca;border-color:rgba(239,68,68,.42)}
+
     .pr-baja{background:rgba(56,189,248,.12);color:#bae6fd;border-color:rgba(56,189,248,.25)}
     .pr-media{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.25)}
     .pr-alta{background:rgba(239,68,68,.12);color:#fecaca;border-color:rgba(239,68,68,.25)}
