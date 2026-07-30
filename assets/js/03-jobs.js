@@ -18,6 +18,12 @@
     function getPaymentsTotal(job = {}) {
       return PaymentUtils.netPaid(getPaymentsList(job));
     }
+    function isEstimateJob(job = {}) {
+      return ["Cotización", "Estimate"].includes(cleanText(job.status));
+    }
+    function isConfirmedSaleJob(job = {}) {
+      return ["Aprobado", "Diseño", "Producción", "Instalación", "Entregado", "Pagado", "Approved", "Design", "Production", "Installation", "Delivered", "Paid"].includes(cleanText(job.status));
+    }
     function getChecklist(job = {}) {
       return {
         designApproved: !!job?.checklist?.designApproved,
@@ -1474,7 +1480,8 @@
           state.pendingJobImages = [];
           showToast("Trabajo guardado correctamente.");
         }
-        closeModal("jobModal");
+        markModalSaved("jobModal");
+        closeModal("jobModal", true);
       } catch (error) {
         console.error(error);
         showToast("No se pudo guardar el trabajo.");
@@ -1687,6 +1694,8 @@
       $("jobCommissionHeader")?.classList.toggle("hidden", !showCommission);
       $("jobSalespersonFilter")?.classList.toggle("hidden", !showCommission);
       $("jobCommissionFilter")?.classList.toggle("hidden", !showCommission);
+      $("jobSalespersonFilter")?.parentElement?.classList.toggle("hidden", !showCommission);
+      $("jobCommissionFilter")?.parentElement?.classList.toggle("hidden", !showCommission);
       if (showCommission && typeof fillJobSalespersonFilter === "function") fillJobSalespersonFilter();
 
       $("jobsBody").innerHTML = rows.map(job => {
@@ -1917,15 +1926,20 @@
       if ($("dashboardPeriodHint")) $("dashboardPeriodHint").textContent = range.period === "last30"
         ? "Recomendado para no ver el dashboard vacío cuando empieza un mes nuevo."
         : "Puedes cambiar el período cuando quieras para comparar tu operación.";
-      if ($("dashSalesLabel")) $("dashSalesLabel").textContent = `Ventas · ${range.label}`;
+      if ($("dashPotentialSalesLabel")) $("dashPotentialSalesLabel").textContent = `Ventas potenciales · ${range.label}`;
+      if ($("dashSalesLabel")) $("dashSalesLabel").textContent = `Ventas confirmadas · ${range.label}`;
       if ($("dashCollectedLabel")) $("dashCollectedLabel").textContent = `Cobrado · ${range.label}`;
       if ($("dashExpensesLabel")) $("dashExpensesLabel").textContent = `Gastos · ${range.label}`;
       if ($("dashProfitLabel")) $("dashProfitLabel").textContent = `Ganancia neta · ${range.label}`;
 
-      const filteredJobs = state.jobs.filter(job => isWithinDashboardRange(job.date, range) && !["Cancelado"].includes(job.status));
+      const filteredJobs = state.jobs.filter(job => isWithinDashboardRange(job.date, range));
+      const confirmedJobs = filteredJobs.filter(job => isConfirmedSaleJob(job));
+      const estimateJobs = filteredJobs.filter(job => isEstimateJob(job));
       const filteredExpenses = state.expenses.filter(expense => isWithinDashboardRange(expense.date, range));
 
-      const periodSales = filteredJobs
+      const periodSales = confirmedJobs
+        .reduce((sum, job) => sum + Number(job.sale || 0), 0);
+      const periodPotentialSales = estimateJobs
         .reduce((sum, job) => sum + Number(job.sale || 0), 0);
 
       const periodCollected = state.jobs.reduce((sum, job) => {
@@ -1937,14 +1951,17 @@
       const periodExpenses = filteredExpenses
         .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
+      const periodInternalCosts = confirmedJobs
+        .reduce((sum, job) => sum + computeJob(job).baseCost, 0);
+
       const overallReceivable = state.jobs
-        .filter(job => !["Pagado", "Cancelado"].includes(job.status))
+        .filter(job => isConfirmedSaleJob(job) && !["Pagado", "Paid"].includes(cleanText(job.status)))
         .reduce((sum, job) => sum + computeJob(job).balance, 0);
 
       const dueToday = getDueTodayJobs().length;
       const overdueJobs = state.jobs.filter(job => isOverdue(job)).length;
       const activeJobs = state.jobs.filter(job => ACTIVE_STATUSES.includes(job.status)).length;
-      const jobsWithBalance = getPendingPaymentJobs().length;
+      const jobsWithBalance = getPendingPaymentJobs().filter(job => isConfirmedSaleJob(job)).length;
       const jobsInProduction = state.jobs.filter(job => cleanText(job.status) === "Producción").length;
 
       const startOfToday = today();
@@ -1969,9 +1986,10 @@
       }).length;
 
       $("mSales").textContent = money(periodSales);
+      if ($("mPotentialSales")) $("mPotentialSales").textContent = money(periodPotentialSales);
       $("mCollected").textContent = money(periodCollected);
       $("mExpenses").textContent = money(periodExpenses);
-      $("mProfit").textContent = money(periodSales - periodExpenses);
+      $("mProfit").textContent = money(periodSales - periodInternalCosts - periodExpenses);
       $("allReceivable").textContent = money(overallReceivable);
       $("dueTodayCount").textContent = String(dueToday);
       $("allOverdueJobs").textContent = String(overdueJobs);

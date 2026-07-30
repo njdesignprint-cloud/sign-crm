@@ -165,7 +165,7 @@
       for (let i = 5; i >= 0; i--) {
         const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const jobs = state.jobs.filter(job => monthKey(job.date) === key && cleanText(job.status) !== "Cancelado");
+        const jobs = state.jobs.filter(job => monthKey(job.date) === key && isConfirmedSaleJob(job));
         const expenses = state.expenses.filter(expense => monthKey(expense.date) === key);
         const sales = jobs.reduce((sum, job) => sum + Number(job.sale || 0), 0);
         const collected = jobs.reduce((sum, job) => {
@@ -174,7 +174,8 @@
             .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
         }, 0);
         const monthExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-        const profit = jobs.reduce((sum, job) => sum + computeJob(job).profit, 0) - monthExpenses;
+        const internalCosts = jobs.reduce((sum, job) => sum + computeJob(job).baseCost, 0);
+        const profit = sales - internalCosts - monthExpenses;
 
         rows.push({
           monthKey: key,
@@ -194,13 +195,18 @@
       const jobs = getFilteredReportJobs();
       const expenses = getFilteredReportExpenses();
       const orders = getFilteredReportPurchaseOrders();
+      const confirmedJobs = jobs.filter(job => isConfirmedSaleJob(job));
+      const estimateJobs = jobs.filter(job => isEstimateJob(job));
 
-      const sales = jobs.filter(job => cleanText(job.status) !== "Cancelado").reduce((sum, job) => sum + Number(job.sale || 0), 0);
+      const sales = confirmedJobs.reduce((sum, job) => sum + Number(job.sale || 0), 0);
+      const potentialSales = estimateJobs.reduce((sum, job) => sum + Number(job.sale || 0), 0);
       const collected = jobs.reduce((sum, job) => sum + getPaymentsTotal(job), 0);
-      const receivable = jobs.filter(job => cleanText(job.status) !== "Cancelado").reduce((sum, job) => sum + computeJob(job).balance, 0);
-      const netProfit = jobs.filter(job => cleanText(job.status) !== "Cancelado").reduce((sum, job) => sum + computeJob(job).profit, 0) - expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+      const receivable = confirmedJobs.reduce((sum, job) => sum + computeJob(job).balance, 0);
+      const internalCosts = confirmedJobs.reduce((sum, job) => sum + computeJob(job).baseCost, 0);
+      const netProfit = sales - internalCosts - expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
       salesEl.textContent = money(sales);
+      if ($("reportPotentialSalesTotal")) $("reportPotentialSalesTotal").textContent = money(potentialSales);
       $("reportCollectedTotal").textContent = money(collected);
       $("reportReceivableTotal").textContent = money(receivable);
       $("reportNetProfitTotal").textContent = money(netProfit);
@@ -217,8 +223,7 @@
       `).join("");
       $("reportsMonthlyEmpty").classList.toggle("hidden", monthlyRows.length > 0);
 
-      const bestJobs = jobs
-        .filter(job => cleanText(job.status) !== "Cancelado")
+      const bestJobs = confirmedJobs
         .map(job => ({ job, calc: computeJob(job), client: getClientById(job.clientId) }))
         .sort((a, b) => b.calc.profit - a.calc.profit)
         .slice(0, 12);
@@ -236,8 +241,7 @@
       `).join("");
       $("reportsBestJobsEmpty").classList.toggle("hidden", bestJobs.length > 0);
 
-      const receivableRows = jobs
-        .filter(job => cleanText(job.status) !== "Cancelado")
+      const receivableRows = confirmedJobs
         .map(job => ({ job, calc: computeJob(job), client: getClientById(job.clientId) }))
         .filter(item => item.calc.balance > 0)
         .sort((a, b) => b.calc.balance - a.calc.balance);

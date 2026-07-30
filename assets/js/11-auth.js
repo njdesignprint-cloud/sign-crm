@@ -184,15 +184,13 @@
       }
 
       if (state.accountOwnerId && state.accountOwnerId !== state.uid) {
-        const teamDocId = emailDocId(state.userEmail);
         const presencePatch = {
           lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
           lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         try {
-          await teamMembersRef().doc(teamDocId).set(presencePatch, { merge: true });
-          await teamAccessRefByEmail(state.userEmail).set(presencePatch, { merge: true });
+          await workspaceMembersRef().doc(state.uid).set(presencePatch, { merge: true });
         } catch (error) {
           console.error(error);
         }

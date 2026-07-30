@@ -151,7 +151,8 @@
           state.pendingExpensePhotos = [];
           showToast("Gasto guardado.");
         }
-        closeModal("expenseModal");
+        markModalSaved("expenseModal");
+        closeModal("expenseModal", true);
       } catch (error) {
         console.error(error);
         showToast("No se pudo guardar el gasto.");
@@ -241,7 +242,8 @@
         });
 
         showToast("Pago guardado.");
-        closeModal("paymentModal");
+        markModalSaved("paymentModal");
+        closeModal("paymentModal", true);
 
         if (state.editingJobId === jobId) {
           setTimeout(() => {

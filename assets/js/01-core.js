@@ -110,6 +110,7 @@
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
       papelera: ["Trash & recovery", "Restore archived business records without changing their original IDs."],
+      auditoria: ["Audit log", "Review protected workspace activity and the user responsible for each change."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     };
 
@@ -150,6 +151,25 @@
       toast.classList.add("show");
       clearTimeout(showToast.timer);
       showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+    async function withSaveButton(buttonId, pendingLabel, action) {
+      const button = $(buttonId);
+      if (!button || button.dataset.saveBusy === "true") return;
+      const originalLabel = button.textContent;
+      const wasDisabled = button.disabled;
+      button.dataset.saveBusy = "true";
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      button.textContent = pendingLabel || "Guardando…";
+      try {
+        return await action();
+      } finally {
+        button.textContent = originalLabel;
+        button.removeAttribute("aria-busy");
+        delete button.dataset.saveBusy;
+        button.disabled = wasDisabled;
+        applyPermissionUi();
+      }
     }
     function newLogEntry(type, text) {
       return {
@@ -352,6 +372,8 @@
       if (!canEditModule(view) || ["produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
+      $("btnExportPdf")?.classList.toggle("hidden", view === "auditoria");
+      if (view === "auditoria" && typeof window.activateAuditLogView === "function") window.activateAuditLogView();
     }
     function setJobsViewMode(mode) {
       state.jobsViewMode = mode;
@@ -362,8 +384,50 @@
       $("btnKanbanView").classList.toggle("btn-info", mode === "kanban");
       $("btnKanbanView").classList.toggle("btn-secondary", mode !== "kanban");
     }
-    function openModal(id) { $(id).classList.add("show"); }
-    function closeModal(id) { $(id).classList.remove("show"); }
+    const protectedDraftModals = new Set(["clientModal", "jobModal", "paymentModal", "expenseModal"]);
+    const modalDraftBaselines = new Map();
+    function serializeModalDraft(id) {
+      const modal = $(id);
+      if (!modal) return "";
+      return JSON.stringify(Array.from(modal.querySelectorAll("input,select,textarea")).filter(field => field.type !== "file").map(field => ({
+        key: field.id || field.name || field.type,
+        value: ["checkbox", "radio"].includes(field.type) ? !!field.checked : field.value
+      })));
+    }
+    function beginModalDraft(id) {
+      if (protectedDraftModals.has(id)) modalDraftBaselines.set(id, serializeModalDraft(id));
+    }
+    function markModalSaved(id) {
+      if (protectedDraftModals.has(id)) modalDraftBaselines.set(id, serializeModalDraft(id));
+    }
+    function isModalDraftDirty(id) {
+      return modalDraftBaselines.has(id) && modalDraftBaselines.get(id) !== serializeModalDraft(id);
+    }
+    function discardDraftMessage() {
+      return document.documentElement.lang === "en"
+        ? "You have unsaved changes. Discard them?"
+        : "Tienes cambios sin guardar. ¿Quieres descartarlos?";
+    }
+    function confirmDiscardAllModalDrafts() {
+      const dirtyIds = Array.from(modalDraftBaselines.keys()).filter(isModalDraftDirty);
+      if (!dirtyIds.length) return true;
+      if (!window.confirm(discardDraftMessage())) return false;
+      dirtyIds.forEach(id => {
+        modalDraftBaselines.delete(id);
+        $(id)?.classList.remove("show");
+      });
+      return true;
+    }
+    function openModal(id) {
+      $(id).classList.add("show");
+      beginModalDraft(id);
+    }
+    function closeModal(id, force = false) {
+      if (!force && isModalDraftDirty(id) && !window.confirm(discardDraftMessage())) return false;
+      modalDraftBaselines.delete(id);
+      $(id).classList.remove("show");
+      return true;
+    }
     function userRef() { return db.collection("users").doc(state.accountOwnerId || state.uid); }
     function ownUserRootRef() { return db.collection("users").doc(state.uid); }
     function platformUsersRef() { return db.collection("platformUsers"); }
@@ -513,6 +577,7 @@
       if (module === "cuentascrm") return isSuperAdmin();
       if (module === "configuracion") return isAdmin();
       if (module === "papelera") return isAdmin();
+      if (module === "auditoria") return isAdmin();
       if (module === "vendedores") return isAdmin();
       if (module === "liquidaciones") return isOwner();
       if (module === "reportes") return isAdmin();
@@ -525,6 +590,7 @@
       if (module === "vendedores") return isAdmin();
       if (module === "configuracion") return isAdmin();
       if (module === "papelera") return isAdmin();
+      if (module === "auditoria") return false;
       if (module === "liquidaciones") return isOwner();
       if (["dashboard", "reportes", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
@@ -612,7 +678,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = ["dashboard", "produccion", "liquidaciones", "configuracion", "papelera", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion", "liquidaciones", "configuracion", "papelera", "auditoria", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 
@@ -650,7 +716,7 @@
       Object.entries(buttonModuleMap).forEach(([id, module]) => {
         const el = $(id);
         if (!el) return;
-        el.disabled = !canEditModule(module);
+        el.disabled = el.dataset.saveBusy === "true" || !canEditModule(module);
       });
 
       const saveTeamBtn = $("saveTeamMemberBtn");
@@ -725,7 +791,11 @@
 
       const storedName = cleanText(sessionStorage.getItem("register_name") || "");
       const storedCompany = cleanText(sessionStorage.getItem("register_company") || "");
-      const baseAccountStatus = cleanText(platformAccount?.status || (state.isSuperAdmin ? "active" : (ownRootExists ? "active" : "pending"))) || "pending";
+      const savedPlatformStatus = cleanText(platformAccount?.status);
+      const hasActiveInvitation = !!(invitedAccess && invitedAccess.active !== false);
+      const baseAccountStatus = savedPlatformStatus === "blocked"
+        ? "blocked"
+        : (state.isSuperAdmin || hasActiveInvitation || ownRootExists ? "active" : (savedPlatformStatus || "pending"));
 
       let workspaceDoc = null;
       try {
@@ -752,7 +822,7 @@
         workspaceRole: state.currentUserRole,
         ownerId: state.accountOwnerId,
         ownerEmail: state.currentWorkspaceOwnerEmail || state.userEmail || "",
-        status: state.currentPlatformStatus || "pending",
+        status: platformAccount ? (savedPlatformStatus || "pending") : (state.currentPlatformStatus || "pending"),
         invited: !!invitedAccess,
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -789,17 +859,13 @@
 
       if (state.accountOwnerId !== state.uid) {
         try {
-          const teamDocId = emailDocId(state.userEmail);
           const loginPayload = {
             lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
             lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastLoginEmail: normalizedEmail(state.userEmail),
             active: true,
             ownerId: state.accountOwnerId,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           };
-          await teamMembersRef().doc(teamDocId).set(loginPayload, { merge: true });
-          await teamAccessRefByEmail(state.userEmail).set(loginPayload, { merge: true });
           await workspaceMembersRef().doc(state.uid).set({ ...invitedAccess, ...loginPayload, uid:state.uid, email:normalizedEmail(state.userEmail), role:state.currentUserRole, active:true }, { merge:true });
         } catch (error) {
           console.error(error);

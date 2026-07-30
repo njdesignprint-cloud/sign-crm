@@ -235,27 +235,24 @@
     const { jsPDF } = window.jspdf;
     const weekStart = mondayFor($("settlementWeekStart").value || new Date());
     const calculation = currentClosedSettlement(weekStart) || getWeekCalculation(weekStart);
-    const pdf = new jsPDF();
-    pdf.setFontSize(18);
-    pdf.text("Liquidación semanal del propietario", 14, 18);
-    pdf.setFontSize(10);
-    pdf.text(`${formatDate(calculation.weekStart)} al ${formatDate(calculation.weekEnd)}`, 14, 25);
+    const pdf = typeof createModulePdf === "function" ? createModulePdf("Owner weekly settlement", `${formatDate(calculation.weekStart)} to ${formatDate(calculation.weekEnd)}`) : new jsPDF();
     pdf.autoTable({
-      startY: 32,
-      head: [["Concepto", "Monto"]],
+      startY: typeof createModulePdf === "function" ? 56 : 32,
+      head: [["Concept", "Amount"]],
       body: [
-        ["Cobros recibidos", money(calculation.grossCollected)],
-        ["Sales tax separado", money(calculation.salesTax)],
-        ["Gastos pagados", money(calculation.expenseTotal)],
-        ["Ganancia neta de caja", money(calculation.netProfit)],
-        [`Reserva de impuestos (${calculation.taxReserveRate || TAX_RESERVE_RATE}%)`, money(calculation.taxReserve)],
-        [`Reserva del negocio (${calculation.businessReserveRate || BUSINESS_RESERVE_RATE}%)`, money(calculation.businessReserve)],
-        ["Pago recomendado", money(calculation.recommendedPay)],
-        ["Pago registrado", money(calculation.actualPay ?? calculation.recommendedPay)]
+        ["Payments collected", money(calculation.grossCollected)],
+        ["Sales tax set aside", money(calculation.salesTax)],
+        ["Expenses paid", money(calculation.expenseTotal)],
+        ["Net cash profit", money(calculation.netProfit)],
+        [`Tax reserve (${calculation.taxReserveRate || TAX_RESERVE_RATE}%)`, money(calculation.taxReserve)],
+        [`Business reserve (${calculation.businessReserveRate || BUSINESS_RESERVE_RATE}%)`, money(calculation.businessReserve)],
+        ["Recommended owner pay", money(calculation.recommendedPay)],
+        ["Recorded owner pay", money(calculation.actualPay ?? calculation.recommendedPay)]
       ],
       headStyles: { fillColor: [30, 34, 42] }
     });
-    pdf.save(`Liquidacion_${calculation.weekStart}.pdf`);
+    if (typeof savePdf === "function") savePdf(pdf, `Owner_Weekly_Settlement_${calculation.weekStart}.pdf`);
+    else pdf.save(`Owner_Weekly_Settlement_${calculation.weekStart}.pdf`);
     showToast("PDF de liquidación exportado.");
   };
 

@@ -4,6 +4,7 @@
     });
 
     document.querySelectorAll(".nav button").forEach(btn => btn.addEventListener("click", () => {
+      if (!confirmDiscardAllModalDrafts()) return;
       setView(btn.dataset.view);
       if (btn.dataset.view === "produccion" && typeof renderProductionBoard === "function") {
         renderProductionBoard();
@@ -14,8 +15,13 @@
     $("btnLogin").addEventListener("click", login);
     $("btnRegister").addEventListener("click", register);
     $("btnReset").addEventListener("click", resetPassword);
-    $("btnLogout").addEventListener("click", logout);
-    $("btnStatusLogout")?.addEventListener("click", logout);
+    $("btnLogout").addEventListener("click", () => { if (confirmDiscardAllModalDrafts()) logout(); });
+    $("btnStatusLogout")?.addEventListener("click", () => { if (confirmDiscardAllModalDrafts()) logout(); });
+    window.addEventListener("beforeunload", event => {
+      if (!Array.from(modalDraftBaselines.keys()).some(isModalDraftDirty)) return;
+      event.preventDefault();
+      event.returnValue = "";
+    });
 
     $("btnExportJson").addEventListener("click", exportJson);
     $("btnExportPdf").addEventListener("click", exportCurrentModulePdf);
@@ -26,18 +32,18 @@
       if (file) await importBackupJson(file);
     });
 
-    $("saveClientBtn").addEventListener("click", saveClient);
+    $("saveClientBtn").addEventListener("click", () => withSaveButton("saveClientBtn", "Guardando cliente…", saveClient));
     $("saveSalespersonBtn")?.addEventListener("click", saveSalesperson);
     $("saveCommissionSettlementBtn")?.addEventListener("click", saveCommissionSettlement);
     $("clientSource")?.addEventListener("change", toggleClientCommissionFields);
     $("clientSalespersonId")?.addEventListener("change", applySelectedSalespersonDefaults);
-    $("saveJobBtn").addEventListener("click", () => saveJob());
-    $("saveExpenseBtn").addEventListener("click", saveExpense);
+    $("saveJobBtn").addEventListener("click", () => withSaveButton("saveJobBtn", "Guardando trabajo…", () => saveJob()));
+    $("saveExpenseBtn").addEventListener("click", () => withSaveButton("saveExpenseBtn", "Guardando gasto…", saveExpense));
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
     $("uploadExpensePhotoBtn").addEventListener("click", openExpenseUploadWidget);
     $("galleryPrevBtn").addEventListener("click", galleryPrev);
     $("galleryNextBtn").addEventListener("click", galleryNext);
-    $("savePaymentBtn").addEventListener("click", savePayment);
+    $("savePaymentBtn").addEventListener("click", () => withSaveButton("savePaymentBtn", "Guardando pago…", savePayment));
     $("saveRecurringBtn").addEventListener("click", saveRecurring);
     $("saveInventoryBtn").addEventListener("click", saveInventoryItem);
     $("saveMovementBtn").addEventListener("click", saveMovement);

@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-8" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260728-15" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -154,6 +154,7 @@
   <button data-view="usuarios" id="navUsuariosBtn" data-nav-icon="🔐">🔐 Usuarios</button>
   <button data-view="configuracion" id="navConfiguracionBtn" data-nav-icon="⚙️">⚙️ Company settings</button>
   <button data-view="papelera" id="navPapeleraBtn" data-nav-icon="♻️">♻️ Trash & recovery</button>
+  <button data-view="auditoria" id="navAuditoriaBtn" data-nav-icon="🛡️">🛡️ Audit log</button>
   <button data-view="cuentascrm" id="navCuentasCrmBtn" data-nav-icon="🧩">🧩 Cuentas CRM</button>
 </div>
 
@@ -213,7 +214,8 @@
           </div>
 
           <div class="stats">
-            <div class="stat"><div id="dashSalesLabel" class="label">Ventas del período</div><div id="mSales" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div id="dashPotentialSalesLabel" class="label">Ventas potenciales</div><div id="mPotentialSales" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div id="dashSalesLabel" class="label">Ventas confirmadas</div><div id="mSales" class="value brand-text">$0.00</div></div>
             <div class="stat"><div id="dashCollectedLabel" class="label">Cobrado del período</div><div id="mCollected" class="value info-text">$0.00</div></div>
             <div class="stat"><div id="dashExpensesLabel" class="label">Gastos del período</div><div id="mExpenses" class="value danger-text">$0.00</div></div>
             <div class="stat"><div id="dashProfitLabel" class="label">Ganancia neta</div><div id="mProfit" class="value ok-text">$0.00</div></div>
@@ -372,8 +374,8 @@
           <div class="panel">
             <div class="panel-head">
               <div>
-                <h2 id="trabajosTitle">Trabajos</h2>
-                <div id="trabajosNote" class="section-note">Vista tabla y Kanban para organizar producción.</div>
+                <h2 id="trabajosTitle">Centro de trabajos</h2>
+                <div id="trabajosNote" class="section-note">Encuentra lo urgente, abre un trabajo y continúa desde donde lo dejaste.</div>
               </div>
               <div class="view-switch">
                 <button id="btnTableView" class="btn btn-info btn-small">Vista tabla</button>
@@ -381,7 +383,8 @@
               </div>
             </div>
 
-            <div style="padding:16px 18px 0;">
+            <div class="jobs-workspace-tools">
+              <div class="jobs-tools-heading"><div><strong>¿Qué necesitas atender?</strong><span>Usa un atajo o busca directamente por cliente o trabajo.</span></div></div>
               <div id="jobsQuickFilters" class="jobs-quick-filters" aria-label="Filtros operativos de trabajos">
                 <button class="jobs-quick-filter active" type="button" data-job-quick-filter="all">Todos <span data-job-quick-count="all">0</span></button>
                 <button class="jobs-quick-filter" type="button" data-job-quick-filter="mine">Mis trabajos <span data-job-quick-count="mine">0</span></button>
@@ -394,7 +397,7 @@
                 <button class="jobs-quick-filter" type="button" data-job-quick-filter="balance">Entregados con saldo <span data-job-quick-count="balance">0</span></button>
               </div>
 
-              <div class="grid-4">
+              <div class="jobs-main-filters">
                 <input id="jobSearch" class="input" placeholder="Buscar por cliente o trabajo" />
                 <select id="jobStatusFilter" class="select">
                   <option value="">Todos los estados</option>
@@ -407,40 +410,22 @@
                   <option value="Pagado">Pagado</option>
                   <option value="Cancelado">Cancelado</option>
                 </select>
-                <select id="jobPriorityFilter" class="select">
-                  <option value="">Todas las prioridades</option>
-                  <option value="Baja">Baja</option>
-                  <option value="Media">Media</option>
-                  <option value="Alta">Alta</option>
-                </select>
-                <select id="jobTypeFilter" class="select">
-                  <option value="">Todos los tipos</option>
-                  <option value="Decals">Decals</option>
-                  <option value="Printing">Printing</option>
-                  <option value="Window Perf">Window Perf</option>
-                  <option value="Commercial Tint">Commercial Tint</option>
-                  <option value="Banner">Banner</option>
-                  <option value="Wrap de Autos">Wrap de Autos</option>
-                  <option value="ADA Signs">ADA Signs</option>
-                  <option value="Channel Letters">Channel Letters</option>
-                  <option value="Pylon Faces">Pylon Faces</option>
-                  <option value="Light Box Graphics">Light Box Graphics</option>
-                  <option value="Personalizado">Personalizado</option>
-                </select>
-              </div>
-
-              <div class="grid-4 mt-12">
-                <select id="jobSalespersonFilter" class="select hidden"><option value="">All salespeople</option></select>
-                <select id="jobCommissionFilter" class="select hidden"><option value="">All commission states</option><option value="with_salesperson">With salesperson</option><option value="outstanding">Commission outstanding</option><option value="zero_rate">Salesperson with 0% rate</option><option value="missing_assignment">Client salesperson not assigned to job</option></select>
-                <input id="jobCreatedFrom" type="date" class="input" />
-                <input id="jobCreatedTo" type="date" class="input" />
-                <input id="jobDueFrom" type="date" class="input" />
-                <input id="jobDueTo" type="date" class="input" />
-              </div>
-
-              <div class="actions-row mt-12" style="justify-content:flex-end;">
                 <button id="btnClearJobFilters" class="btn btn-secondary btn-small">Limpiar filtros</button>
               </div>
+
+              <details class="jobs-advanced-filters">
+                <summary>Más filtros <span>prioridad, tipo, vendedor y fechas</span></summary>
+                <div class="jobs-advanced-grid">
+                  <label>Prioridad<select id="jobPriorityFilter" class="select"><option value="">Todas las prioridades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
+                  <label>Tipo de trabajo<select id="jobTypeFilter" class="select"><option value="">Todos los tipos</option><option value="Decals">Decals</option><option value="Printing">Printing</option><option value="Window Perf">Window Perf</option><option value="Commercial Tint">Commercial Tint</option><option value="Banner">Banner</option><option value="Wrap de Autos">Wrap de Autos</option><option value="ADA Signs">ADA Signs</option><option value="Channel Letters">Channel Letters</option><option value="Pylon Faces">Pylon Faces</option><option value="Light Box Graphics">Light Box Graphics</option><option value="Personalizado">Personalizado</option></select></label>
+                  <label class="hidden">Vendedor<select id="jobSalespersonFilter" class="select hidden"><option value="">All salespeople</option></select></label>
+                  <label class="hidden">Comisión<select id="jobCommissionFilter" class="select hidden"><option value="">All commission states</option><option value="with_salesperson">With salesperson</option><option value="outstanding">Commission outstanding</option><option value="zero_rate">Salesperson with 0% rate</option><option value="missing_assignment">Client salesperson not assigned to job</option></select></label>
+                  <label>Creado desde<input id="jobCreatedFrom" type="date" class="input" /></label>
+                  <label>Creado hasta<input id="jobCreatedTo" type="date" class="input" /></label>
+                  <label>Entrega desde<input id="jobDueFrom" type="date" class="input" /></label>
+                  <label>Entrega hasta<input id="jobDueTo" type="date" class="input" /></label>
+                </div>
+              </details>
             </div>
 
             <div id="jobsTableView">
@@ -1067,7 +1052,8 @@
           </div>
 
           <div class="stats">
-            <div class="stat"><div class="label">Ventas filtradas</div><div id="reportSalesTotal" class="value brand-text">$0.00</div></div>
+            <div class="stat"><div class="label">Ventas potenciales</div><div id="reportPotentialSalesTotal" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div class="label">Ventas confirmadas</div><div id="reportSalesTotal" class="value brand-text">$0.00</div></div>
             <div class="stat"><div class="label">Cobrado filtrado</div><div id="reportCollectedTotal" class="value info-text">$0.00</div></div>
             <div class="stat"><div class="label">Por cobrar</div><div id="reportReceivableTotal" class="value warn-text">$0.00</div></div>
             <div class="stat"><div class="label">Utilidad neta</div><div id="reportNetProfitTotal" class="value ok-text">$0.00</div></div>
@@ -1383,6 +1369,44 @@
           </div>
         </section>
 
+        <section id="view-auditoria" class="view hidden">
+          <div class="stats audit-stats">
+            <div class="stat"><div id="auditVisibleLabel" class="label">Events on this page</div><div id="auditVisibleCount" class="value">0</div></div>
+            <div class="stat"><div id="auditCreatesLabel" class="label">Created</div><div id="auditCreatesCount" class="value ok-text">0</div></div>
+            <div class="stat"><div id="auditUpdatesLabel" class="label">Updated</div><div id="auditUpdatesCount" class="value info-text">0</div></div>
+            <div class="stat"><div id="auditDeletesLabel" class="label">Deleted</div><div id="auditDeletesCount" class="value danger-text">0</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head audit-panel-head">
+              <div>
+                <h2 id="auditTitle">Protected audit log</h2>
+                <div id="auditNote" class="section-note">Only owners and administrators can view these immutable events.</div>
+              </div>
+              <button id="btnAuditRefresh" class="btn btn-secondary btn-small" type="button">Refresh</button>
+            </div>
+            <div class="audit-filters">
+              <input id="auditSearch" class="input" type="search" placeholder="Search user, record ID or changed field" />
+              <select id="auditModuleFilter" class="select"><option value="">All modules</option></select>
+              <select id="auditOperationFilter" class="select"><option value="">All actions</option><option value="create">Created</option><option value="update">Updated</option><option value="delete">Deleted</option></select>
+              <input id="auditFrom" class="input" type="date" aria-label="From date" />
+              <input id="auditTo" class="input" type="date" aria-label="To date" />
+              <button id="btnAuditClear" class="btn btn-secondary btn-small" type="button">Clear filters</button>
+            </div>
+            <div id="auditLoading" class="empty hidden">Loading audit events…</div>
+            <div class="table-wrap">
+              <table class="audit-table">
+                <thead><tr><th id="auditTimeHead">Date and time</th><th id="auditUserHead">User</th><th id="auditActionHead">Action</th><th id="auditModuleHead">Module</th><th id="auditRecordHead">Record</th><th id="auditFieldsHead">Changed fields</th></tr></thead>
+                <tbody id="auditBody"></tbody>
+              </table>
+            </div>
+            <div id="auditEmpty" class="empty hidden">No events match these filters.</div>
+            <div class="audit-pagination">
+              <span id="auditPageLabel">Page 1</span>
+              <div class="actions-row"><button id="btnAuditPrev" class="btn btn-secondary btn-small" type="button" disabled>Previous</button><button id="btnAuditNext" class="btn btn-secondary btn-small" type="button" disabled>Next</button></div>
+            </div>
+          </div>
+        </section>
+
         <section id="view-cuentascrm" class="view hidden">
           <div class="stats">
             <div class="stat"><div class="label">Cuentas totales</div><div id="platformAccountsTotalCount" class="value">0</div></div>
@@ -1527,29 +1551,32 @@
       </div>
 
       <div class="modal-body">
-        <div class="grid-3">
-          <select id="jobClientId" class="select"></select>
-          <input id="jobTitle" class="input" placeholder="Trabajo / proyecto" />
-          <select id="jobStatus" class="select">
-            <option>Cotización</option>
-            <option>Aprobado</option>
-            <option>Diseño</option>
-            <option>Producción</option>
-            <option>Instalación</option>
-            <option>Entregado</option>
-            <option>Pagado</option>
-            <option>Cancelado</option>
-          </select>
+        <div class="box job-basics-box">
+          <div class="job-basics-head"><div><strong>Información principal</strong><div class="section-note mt-10">Empieza con estos datos. Los demás detalles están organizados en las pestañas siguientes.</div></div><span class="module-badge">Paso 1</span></div>
+          <div class="grid-3 mt-12">
+          <label class="field-label">Cliente<select id="jobClientId" class="select"></select></label>
+          <label class="field-label">Trabajo / proyecto<input id="jobTitle" class="input" placeholder="Ej. Letrero exterior para fachada" /></label>
+          <label class="field-label">Estado<select id="jobStatus" class="select">
+            <option value="Cotización">Cotización</option>
+            <option value="Aprobado">Aprobado</option>
+            <option value="Diseño">Diseño</option>
+            <option value="Producción">Producción</option>
+            <option value="Instalación">Instalación</option>
+            <option value="Entregado">Entregado</option>
+            <option value="Pagado">Pagado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select></label>
 
-          <input id="jobDate" type="date" class="input" />
-          <input id="jobDueDate" type="date" class="input" />
-          <select id="jobPriority" class="select">
-            <option>Baja</option>
-            <option selected>Media</option>
-            <option>Alta</option>
-          </select>
+          <label class="field-label">Fecha de creación<input id="jobDate" type="date" class="input" /></label>
+          <label class="field-label">Fecha de entrega<input id="jobDueDate" type="date" class="input" /></label>
+          <label class="field-label">Prioridad<select id="jobPriority" class="select">
+            <option value="Baja">Baja</option>
+            <option value="Media" selected>Media</option>
+            <option value="Alta">Alta</option>
+          </select></label>
 
-          <input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="Precio final al cliente" />
+          <label class="field-label">Precio total que paga el cliente<input id="jobSale" type="number" min="0" step="0.01" class="input" placeholder="0.00" /><span class="field-help">Importe total que tu empresa cobrará al cliente por este trabajo.</span></label>
+          </div>
         </div>
 
         <div id="jobCommissionBox" class="box">
@@ -1600,8 +1627,10 @@
           <datalist id="installAssigneeList"></datalist>
         </div>
 
-        <textarea id="jobDescription" class="textarea mt-12" placeholder="Descripción del trabajo / cotización"></textarea>
-        <textarea id="jobNotes" class="textarea mt-12" placeholder="Notas generales internas"></textarea>
+        <div class="grid-2 job-basic-notes">
+          <label class="field-label">Descripción para la cotización<textarea id="jobDescription" class="textarea" placeholder="Qué se fabricará, medidas, acabado e instalación"></textarea></label>
+          <label class="field-label">Notas internas<textarea id="jobNotes" class="textarea" placeholder="Información que solo verá tu equipo"></textarea></label>
+        </div>
 
         <div class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -1612,7 +1641,7 @@
           <div id="materialsContainer"></div>
         </div>
 
-        <div class="box">
+        <div id="jobQuoteBox" class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <strong>Cotización</strong>
             <button id="addQuoteItemBtn" class="btn btn-secondary btn-small" type="button">+ Agregar ítem</button>
@@ -1638,7 +1667,7 @@
           </div>
         </div>
 
-        <div class="box">
+        <div id="jobApprovalBox" class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <strong>Estimado / aprobación cliente</strong>
             <div class="actions-row">
@@ -1686,7 +1715,7 @@
           </div>
         </div>
 
-        <div class="box">
+        <div id="jobPricingBox" class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <strong>Precio final y rentabilidad</strong>
             <button id="applySuggestedSaleBtn" class="btn btn-secondary btn-small" type="button">Usar precio sugerido</button>
@@ -1713,7 +1742,7 @@
           </div>
         </div>
 
-        <div class="box">
+        <div id="jobEstimatorBox" class="box">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <strong>Estimador rápido de trabajos</strong>
             <div class="actions-row">
@@ -2284,29 +2313,30 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260728-8"></script>
-  <script src="assets/js/02-clients.js?v=20260728-3"></script>
+  <script src="assets/js/01-core.js?v=20260728-13"></script>
+  <script src="assets/js/02-clients.js?v=20260728-5"></script>
   <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/24-trash.js?v=20260728-1"></script>
+  <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
   <script src="assets/js/02-payment-utils.js?v=20260728-2"></script>
-  <script src="assets/js/03-jobs.js?v=20260728-4"></script>
-  <script src="assets/js/04-expenses.js?v=20260728-2"></script>
+  <script src="assets/js/03-jobs.js?v=20260728-9"></script>
+  <script src="assets/js/04-expenses.js?v=20260728-3"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
-  <script src="assets/js/06-installation-reports.js?v=20260728-2"></script>
-  <script src="assets/js/07-pdf.js?v=20260728-7"></script>
+  <script src="assets/js/06-installation-reports.js?v=20260728-3"></script>
+  <script src="assets/js/07-pdf.js?v=20260728-8"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-3"></script>
   <script src="assets/js/10-backup-misc.js?v=20260728-7"></script>
-  <script src="assets/js/11-auth.js?v=20260728-8"></script>
-  <script src="assets/js/12-init.js?v=20260728-6"></script>
+  <script src="assets/js/11-auth.js?v=20260728-9"></script>
+  <script src="assets/js/12-init.js?v=20260728-8"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
   <script src="assets/js/17-advance-visual.js?v=20260728-2"></script>
-  <script src="assets/js/18-i18n.js?v=20260728-5"></script>
-  <script src="assets/js/25-i18n-complete.js?v=20260728-1"></script>
-  <script src="assets/js/19-job-workflow.js?v=20260728-2"></script>
+  <script src="assets/js/18-i18n.js?v=20260728-7"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260728-6"></script>
+  <script src="assets/js/19-job-workflow.js?v=20260728-7"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>
 </body>

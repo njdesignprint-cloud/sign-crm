@@ -38,7 +38,8 @@
           await clientsRef().add(payload);
           showToast("Cliente guardado.");
         }
-        closeModal("clientModal");
+        markModalSaved("clientModal");
+        closeModal("clientModal", true);
       } catch (error) {
         console.error(error);
         showToast("No se pudo guardar el cliente.");
@@ -91,7 +92,8 @@
       `).join("");
 
       $("clientsEmpty").classList.toggle("hidden", rows.length > 0);
-      $("allClients").textContent = String(state.clients.length);
+      const allClients = $("allClients");
+      if (allClients) allClients.textContent = String(state.clients.length);
       fillClientSelect($("jobClientId").value);
       if ($("expenseJobId")) fillExpenseJobSelect($("expenseJobId").value);
       renderFrequentClients();

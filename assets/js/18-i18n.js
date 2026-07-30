@@ -46,6 +46,7 @@
       navUsuariosBtn: "🔐 Usuarios",
       navConfiguracionBtn: "⚙️ Configuración de empresa",
       navPapeleraBtn: "♻️ Papelera y recuperación",
+      navAuditoriaBtn: "🛡️ Auditoría",
       navCuentasCrmBtn: "🧩 Cuentas CRM",
       activeUserLabel: "Usuario activo:",
       btnLogout: "Cerrar sesión",
@@ -63,8 +64,8 @@
       btnNextMonth: "Mes siguiente →",
       clientesTitle: "Clientes",
       clientesNote: "Base de datos de clientes y empresas.",
-      trabajosTitle: "Trabajos",
-      trabajosNote: "Vista tabla y Kanban para organizar producción.",
+      trabajosTitle: "Centro de trabajos",
+      trabajosNote: "Encuentra lo urgente, abre un trabajo y continúa desde donde lo dejaste.",
       btnTableView: "Vista tabla",
       btnKanbanView: "Vista Kanban",
       btnClearJobFilters: "Limpiar filtros",
@@ -78,7 +79,8 @@
       dashboardPeriodThisMonth: "Este mes",
       dashboardPeriodLastMonth: "Mes pasado",
       dashboardPeriodThisYear: "Año actual",
-      dashSalesLabel: "Ventas del período",
+      dashPotentialSalesLabel: "Ventas potenciales",
+      dashSalesLabel: "Ventas confirmadas",
       dashCollectedLabel: "Cobrado del período",
       dashExpensesLabel: "Gastos del período",
       dashProfitLabel: "Ganancia neta",
@@ -140,6 +142,7 @@
       navUsuariosBtn: "🔐 Users",
       navConfiguracionBtn: "⚙️ Company settings",
       navPapeleraBtn: "♻️ Trash & recovery",
+      navAuditoriaBtn: "🛡️ Audit log",
       navCuentasCrmBtn: "🧩 CRM Accounts",
       activeUserLabel: "Active user:",
       btnLogout: "Sign out",
@@ -157,8 +160,8 @@
       btnNextMonth: "Next month →",
       clientesTitle: "Clients",
       clientesNote: "Client and company database.",
-      trabajosTitle: "Jobs",
-      trabajosNote: "Table and Kanban view to organize production.",
+      trabajosTitle: "Jobs workspace",
+      trabajosNote: "Find what is urgent, open a job and continue where you left off.",
       btnTableView: "Table view",
       btnKanbanView: "Kanban view",
       btnClearJobFilters: "Clear filters",
@@ -172,7 +175,8 @@
       dashboardPeriodThisMonth: "This month",
       dashboardPeriodLastMonth: "Last month",
       dashboardPeriodThisYear: "Current year",
-      dashSalesLabel: "Period sales",
+      dashPotentialSalesLabel: "Potential sales",
+      dashSalesLabel: "Confirmed sales",
       dashCollectedLabel: "Collected",
       dashExpensesLabel: "Period expenses",
       dashProfitLabel: "Net profit",
@@ -212,6 +216,7 @@
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Configuración de empresa", "Identidad, preferencias regionales y marca de documentos."],
       papelera: ["Papelera y recuperación", "Restaura registros archivados conservando sus identificadores."],
+      auditoria: ["Auditoría", "Consulta la actividad protegida del espacio y quién realizó cada cambio."],
       cuentascrm: ["Cuentas CRM", "Control global de registros, empresas y estado de acceso."]
     },
     en: {
@@ -230,6 +235,7 @@
       usuarios: ["Users", "Team access, roles and permissions."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
       papelera: ["Trash & recovery", "Restore archived records while preserving their original IDs."],
+      auditoria: ["Audit log", "Review protected workspace activity and the user responsible for each change."],
       cuentascrm: ["CRM Accounts", "Global control of registrations, companies and access status."]
     }
   };
@@ -395,6 +401,7 @@
     setText("navUsuariosBtn", t("navUsuariosBtn"));
     setText("navConfiguracionBtn", t("navConfiguracionBtn"));
     setText("navPapeleraBtn", t("navPapeleraBtn"));
+    setText("navAuditoriaBtn", t("navAuditoriaBtn"));
     setText("navCuentasCrmBtn", t("navCuentasCrmBtn"));
     setText("activeUserLabel", t("activeUserLabel"));
     setText("btnLogout", t("btnLogout"));
@@ -417,6 +424,7 @@
     setOptionText("dashboardPeriod", "thisMonth", t("dashboardPeriodThisMonth"));
     setOptionText("dashboardPeriod", "lastMonth", t("dashboardPeriodLastMonth"));
     setOptionText("dashboardPeriod", "thisYear", t("dashboardPeriodThisYear"));
+    setText("dashPotentialSalesLabel", t("dashPotentialSalesLabel"));
     setText("dashSalesLabel", t("dashSalesLabel"));
     setText("dashCollectedLabel", t("dashCollectedLabel"));
     setText("dashExpensesLabel", t("dashExpensesLabel"));
