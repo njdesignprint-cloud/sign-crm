@@ -79,6 +79,7 @@
       jobsViewMode: "table",
       jobsQuickFilter: "all"
     };
+    window.state = state;
 
     const $ = (id) => document.getElementById(id);
     const today = () => new Date().toISOString().slice(0, 10);
