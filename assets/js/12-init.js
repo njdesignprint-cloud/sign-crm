@@ -45,6 +45,8 @@
       if (!state.editingJobId) return showToast(state.language === "es" ? "Guarda primero el trabajo para generar el PDF financiero." : "Save the job before generating the financial PDF.");
       exportJobFinancialSummaryPdf(state.editingJobId);
     });
+    $("reviewJobCloseBtn")?.addEventListener("click", () => openJobCloseReview(state.editingJobId));
+    $("confirmJobCloseBtn")?.addEventListener("click", confirmJobClose);
     $("saveExpenseBtn").addEventListener("click", () => withSaveButton("saveExpenseBtn", "Guardando gasto…", saveExpense));
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
     $("uploadExpensePhotoBtn").addEventListener("click", openExpenseUploadWidget);
@@ -365,6 +367,7 @@
       if (target.dataset.statusJob && target.dataset.next) updateJobStatus(target.dataset.statusJob, target.dataset.next);
       if (target.dataset.quoteJob) exportQuotePdf(target.dataset.quoteJob);
       if (target.dataset.jobFinancialPdf) exportJobFinancialSummaryPdf(target.dataset.jobFinancialPdf);
+      if (target.dataset.closeJobReview) openJobCloseReview(target.dataset.closeJobReview);
       if (target.dataset.buyPdf) exportPurchaseMaterialsPdf(target.dataset.buyPdf);
       if (target.dataset.payJob) { resetPaymentForm(target.dataset.payJob); openModal("paymentModal"); }
 

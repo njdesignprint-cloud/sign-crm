@@ -1365,6 +1365,7 @@
       state.galleryJobId = null;
       state.galleryIndex = 0;
       $("jobModalTitle").textContent = "Nuevo trabajo";
+      if ($("reviewJobCloseBtn")) $("reviewJobCloseBtn").disabled = true;
       fillClientSelect();
       if (typeof resetJobCommissionForm === "function") resetJobCommissionForm();
       $("jobTitle").value = "";
@@ -1539,6 +1540,71 @@
         showToast("No se pudo guardar el trabajo.");
       }
     }
+    let jobClosingId = "";
+    function getJobCloseReview(job = {}) {
+      const calc = computeJob(job);
+      const invoices = (Array.isArray(state.salesDocuments) ? state.salesDocuments : []).filter(item => item.type === "invoice" && item.status !== "void" && cleanText(item.jobId) === cleanText(job.id));
+      const invoiceTotal = invoices.reduce((sum, item) => sum + Number(item.total || 0), 0);
+      const commission = typeof getJobCommissionBreakdown === "function" ? getJobCommissionBreakdown(job) : { salespersonId:"", available:0, previouslyPaid:0, earned:0 };
+      const operationalCost = calc.materialsCost + calc.laborCost + calc.extraCost + calc.linkedExpenses;
+      const blockers = [];
+      if (calc.sale <= 0.005) blockers.push("sale");
+      if (calc.balance > 0.005) blockers.push("balance");
+      if (!invoices.length) blockers.push("invoice");
+      else if (invoiceTotal + 0.005 < calc.sale) blockers.push("invoice_coverage");
+      if (commission.salespersonId && commission.available > 0.005) blockers.push("commission");
+      return { calc, invoices, invoiceTotal, commission, operationalCost, blockers, canClose:blockers.length === 0 && cleanText(job.status) !== "Pagado" };
+    }
+    function openJobCloseReview(id = "") {
+      if (!isAdmin()) return showToast(state.language === "es" ? "Solo propietarios y administradores pueden cerrar trabajos." : "Only owners and administrators can close jobs.");
+      const job = getJobById(id || state.editingJobId || "");
+      if (!job) return showToast(state.language === "es" ? "No se encontró el trabajo." : "Job not found.");
+      const english = state.language === "en";
+      const review = getJobCloseReview(job);
+      const row = (label, detail, ok, warning = false) => `<div class="log-item"><div><strong>${ok ? "✓" : warning ? "!" : "✕"} ${safe(label)}</strong><div class="section-note">${safe(detail)}</div></div><span class="pill ${ok ? "st-aprobado" : warning ? "st-diseno" : "st-cancelado"}">${ok ? (english ? "Ready" : "Listo") : warning ? (english ? "Review" : "Revisar") : (english ? "Required" : "Requerido")}</span></div>`;
+      const hasOperationalCosts = review.operationalCost > 0.005;
+      const hasWorkerPayments = review.calc.workerPayments > 0.005;
+      $("jobCloseModalTitle").textContent = `${english ? "Close job review" : "Revisión para cerrar trabajo"} · ${job.title || "-"}`;
+      $("jobCloseReviewBody").innerHTML = [
+        row(english ? "Customer payment" : "Pago del cliente", `${english ? "Collected" : "Cobrado"}: ${money(review.calc.paid)} · ${english ? "Balance" : "Saldo"}: ${money(review.calc.balance)}`, review.calc.balance <= 0.005 && review.calc.sale > 0.005),
+        row(english ? "Invoice" : "Factura", review.invoices.length ? `${review.invoices.map(item => item.number || "-").join(", ")} · ${money(review.invoiceTotal)}` : (english ? "No active invoice is linked to this job." : "No hay una factura activa ligada a este trabajo."), review.invoices.length > 0 && review.invoiceTotal + 0.005 >= review.calc.sale),
+        row(english ? "Materials and internal costs" : "Materiales y costos internos", `${english ? "Recorded operating costs" : "Costos operativos registrados"}: ${money(review.operationalCost)}`, hasOperationalCosts, !hasOperationalCosts),
+        row(english ? "Worker payments" : "Pagos a trabajadores", hasWorkerPayments ? money(review.calc.workerPayments) : (english ? "None recorded; confirm that no outside labor was required." : "Ninguno registrado; confirma que no se necesitó mano de obra externa."), hasWorkerPayments, !hasWorkerPayments),
+        row(english ? "Sales commission" : "Comisión del vendedor", review.commission.salespersonId ? `${english ? "Earned" : "Ganada"}: ${money(review.commission.earned)} · ${english ? "Outstanding" : "Pendiente"}: ${money(review.commission.available)}` : (english ? "No salesperson assigned." : "Sin vendedor asignado."), !review.commission.salespersonId || review.commission.available <= 0.005)
+      ].join("");
+      const blockerLabels = {
+        sale: english ? "Enter a sale amount greater than zero." : "Registra una venta mayor que cero.",
+        balance: english ? "Collect the remaining customer balance." : "Cobra el saldo pendiente del cliente.",
+        invoice: english ? "Create and link an invoice." : "Crea y vincula una factura.",
+        invoice_coverage: english ? "The linked invoice total must cover the job sale." : "El total facturado debe cubrir la venta del trabajo.",
+        commission: english ? "Settle the outstanding sales commission." : "Liquida la comisión pendiente del vendedor."
+      };
+      $("jobCloseBlockers").innerHTML = review.blockers.length
+        ? `<strong>${english ? "Required before closing" : "Obligatorio antes de cerrar"}</strong><ul>${review.blockers.map(key => `<li>${safe(blockerLabels[key])}</li>`).join("")}</ul>`
+        : `<strong>✓ ${english ? "Financial requirements completed." : "Requisitos financieros completados."}</strong><div class="section-note mt-10">${english ? "Optional cost warnings were shown for your review and do not block closing." : "Los avisos de costos opcionales se muestran para revisión y no impiden el cierre."}</div>`;
+      jobClosingId = job.id;
+      $("confirmJobCloseBtn").disabled = !review.canClose;
+      $("confirmJobCloseBtn").textContent = cleanText(job.status) === "Pagado" ? (english ? "Job already closed" : "Trabajo ya cerrado") : (english ? "Close job permanently" : "Cerrar trabajo definitivamente");
+      openModal("jobCloseModal");
+    }
+    async function confirmJobClose() {
+      if (!jobClosingId || !isAdmin()) return;
+      const job = getJobById(jobClosingId);
+      if (!job) return;
+      const review = getJobCloseReview(job);
+      if (!review.canClose) return openJobCloseReview(job.id);
+      try {
+        const logs = [...getJobActivityLog(job), newLogEntry("cierre", state.language === "en" ? "Job closed after financial review." : "Trabajo cerrado después de la revisión financiera.")];
+        await jobsRef().doc(job.id).update({ status:"Pagado", closedAt:firebase.firestore.FieldValue.serverTimestamp(), closedBy:state.userEmail || "", activityLog:logs, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+        jobClosingId = "";
+        closeModal("jobCloseModal", true);
+        closeModal("jobModal", true);
+        showToast(state.language === "en" ? "Job closed successfully." : "Trabajo cerrado correctamente.");
+      } catch (error) {
+        console.error(error);
+        showToast(state.language === "en" ? "The job could not be closed." : "No se pudo cerrar el trabajo.");
+      }
+    }
     async function updateJobStatus(id, status) {
       if (!guardWrite("cambiar estados", "trabajos")) return;
       try {
@@ -1574,6 +1640,7 @@
       state.galleryJobId = id;
       state.galleryIndex = 0;
       $("jobModalTitle").textContent = "Editar trabajo";
+      if ($("reviewJobCloseBtn")) $("reviewJobCloseBtn").disabled = false;
       fillClientSelect(item.clientId || "");
       if (typeof setJobCommissionForm === "function") setJobCommissionForm(item);
       $("jobTitle").value = item.title || "";
@@ -1805,6 +1872,7 @@
                 <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">${english ? "Estimate" : "Cotización"}</button>
                 <button class="btn btn-secondary btn-small" data-job-financial-pdf="${job.id}">${english ? "Financial PDF" : "PDF financiero"}</button>
                 <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">${english ? "Purchase" : "Compra"}</button>
+                ${isAdmin() && !["Pagado","Cancelado"].includes(cleanText(job.status)) ? `<button class="btn btn-primary btn-small" data-close-job-review="${job.id}">${english ? "Close job" : "Cerrar trabajo"}</button>` : ""}
                 ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">${english ? "Archive" : "Archivar"}</button>` : ""}
               </div>
             </td>
