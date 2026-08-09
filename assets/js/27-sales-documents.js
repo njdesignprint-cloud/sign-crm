@@ -12,6 +12,14 @@
     function salesDocLabel(key, language = salesDocLanguage()) { return SALES_DOCUMENT_LABELS[language]?.[key] || key; }
     function salesDocClient(document = {}) { return state.clients.find(client => client.id === document.clientId) || {}; }
     function salesDocPaid(document = {}) { return Math.max(0, Number(document.paidAmount || 0)); }
+    function availableJobCollectedForInvoice(jobId = "", excludeDocumentId = "") {
+      const job = state.jobs.find(item => item.id === jobId);
+      if (!job) return 0;
+      const alreadyAllocated = state.salesDocuments
+        .filter(item => item.type === "invoice" && item.status !== "void" && item.jobId === jobId && item.id !== excludeDocumentId)
+        .reduce((sum, item) => sum + salesDocPaid(item), 0);
+      return Math.max(0, Number(getPaymentsTotal(job) || 0) - alreadyAllocated);
+    }
     function salesDocBalance(document = {}) { return SalesDocumentUtils.balance(document); }
     function salesDocEffectiveStatus(document = {}) {
       return SalesDocumentUtils.effectiveStatus(document, today());
@@ -168,7 +176,9 @@
           }
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           payload.createdBy = state.userEmail || "";
-          payload.paidAmount = 0;
+          payload.paidAmount = type === "invoice" && payload.jobId
+            ? Math.min(totals.total, availableJobCollectedForInvoice(payload.jobId))
+            : 0;
           transaction.set(ref, payload);
         });
         markModalSaved("salesDocumentModal"); closeModal("salesDocumentModal", true);
@@ -193,7 +203,7 @@
           } else {
             transaction.update(jobsRef().doc(jobId), { status:"Aprobado", sale:Number(estimate.total || 0), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
           }
-          const invoice = { ...estimate, type:"invoice", number, jobId, sourceEstimateId:estimate.id, status:"draft", paidAmount:0, createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp(), createdBy:state.userEmail || "" };
+          const invoice = { ...estimate, type:"invoice", number, jobId, sourceEstimateId:estimate.id, status:"draft", paidAmount:Math.min(Number(estimate.total || 0), availableJobCollectedForInvoice(jobId)), createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp(), createdBy:state.userEmail || "" };
           delete invoice.id;
           transaction.set(invoiceRef, invoice);
           transaction.update(salesDocumentsRef().doc(estimate.id), { status:"converted", convertedInvoiceId:invoiceRef.id, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });

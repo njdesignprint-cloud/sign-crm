@@ -39,3 +39,11 @@ test("an estimate never becomes collected and invoice status follows payments", 
   assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:1000, status:"open" }, "2026-08-08"), "paid");
   assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:0, status:"open", dueDate:"2026-08-01" }, "2026-08-08"), "overdue");
 });
+
+test("a linked invoice recognizes unallocated payments already collected on the job", () => {
+  const moduleSource = fs.readFileSync(path.join(__dirname, "../assets/js/27-sales-documents.js"), "utf8");
+  assert.equal(moduleSource.includes("function availableJobCollectedForInvoice"), true);
+  assert.equal(moduleSource.includes("getPaymentsTotal(job)"), true);
+  assert.equal(moduleSource.includes('item.type === "invoice" && item.status !== "void"'), true);
+  assert.equal(moduleSource.includes("Math.min(Number(estimate.total || 0), availableJobCollectedForInvoice(jobId))"), true);
+});
