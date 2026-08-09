@@ -32,4 +32,9 @@ test("worker payment receipts use the active company PDF and include signatures"
   assert.match(pdf, /The worker acknowledges receipt/);
   assert.match(pdf, /Company representative/);
   assert.match(pdf, /Signature/);
+  assert.match(html, /id="workerPaymentLines"/);
+  assert.match(expenses, /workerPaymentItems: getWorkerPaymentLines\(\)/);
+  assert.match(expenses, /quantity \* item\.rate/);
+  assert.match(pdf, /Work description/);
+  assert.match(pdf, /TOTAL PAID/);
 });

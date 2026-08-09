@@ -106,6 +106,7 @@
       $("expensePeriodTo").value = "";
       $("expensePaymentMethod").value = "Efectivo";
       $("expenseApplyToAdvance").checked = true;
+      setWorkerPaymentLines([]);
       toggleWorkerPaymentFields();
       fillExpenseJobSelect(jobId || "");
       $("expenseJobId").value = jobId || "";
@@ -139,7 +140,52 @@
     function toggleWorkerPaymentFields() {
       const isWorkerPayment = $("expenseRecordType")?.value === "worker_payment";
       $("workerPaymentFields")?.classList.toggle("hidden", !isWorkerPayment);
+      if ($("expenseAmount")) $("expenseAmount").readOnly = isWorkerPayment && getWorkerPaymentLines().length > 0;
       if (isWorkerPayment && $("expenseCategory")) $("expenseCategory").value = "Nómina";
+    }
+    function createWorkerPaymentLine(item = {}) {
+      const row = document.createElement("div");
+      row.className = "grid-2 worker-payment-line";
+      row.innerHTML = `
+        <input class="input" data-worker-line="description" placeholder="Descripción de la labor" value="${safe(item.description || "")}" />
+        <select class="select" data-worker-line="unit"><option value="job">Trabajo</option><option value="hour">Horas</option><option value="day">Días</option><option value="unit">Unidades</option><option value="other">Otro</option></select>
+        <input class="input" data-worker-line="quantity" type="number" min="0" step="0.01" placeholder="Cantidad / horas" value="${Number(item.quantity || 1)}" />
+        <input class="input" data-worker-line="rate" type="number" min="0" step="0.01" placeholder="Tarifa" value="${Number(item.rate || 0)}" />
+        <div class="section-note">Subtotal: <strong data-worker-line-total>${money(Number(item.quantity || 1) * Number(item.rate || 0))}</strong></div>
+        <button type="button" class="btn btn-danger btn-small" data-remove-worker-line>Eliminar concepto</button>`;
+      row.querySelector('[data-worker-line="unit"]').value = item.unit || "job";
+      return row;
+    }
+    function getWorkerPaymentLines() {
+      return [...document.querySelectorAll(".worker-payment-line")].map(row => ({
+        description: cleanText(row.querySelector('[data-worker-line="description"]')?.value),
+        unit: cleanText(row.querySelector('[data-worker-line="unit"]')?.value) || "job",
+        quantity: Number(row.querySelector('[data-worker-line="quantity"]')?.value || 0),
+        rate: Number(row.querySelector('[data-worker-line="rate"]')?.value || 0)
+      })).map(item => ({ ...item, amount: Number((item.quantity * item.rate).toFixed(2)) }))
+        .filter(item => item.description || item.amount > 0);
+    }
+    function recalcWorkerPaymentLines() {
+      document.querySelectorAll(".worker-payment-line").forEach(row => {
+        const quantity = Number(row.querySelector('[data-worker-line="quantity"]')?.value || 0);
+        const rate = Number(row.querySelector('[data-worker-line="rate"]')?.value || 0);
+        const total = row.querySelector("[data-worker-line-total]");
+        if (total) total.textContent = money(quantity * rate);
+      });
+      const lines = getWorkerPaymentLines();
+      const total = lines.reduce((sum, item) => sum + item.amount, 0);
+      if ($("workerPaymentLinesTotal")) $("workerPaymentLinesTotal").textContent = money(total);
+      if ($("expenseRecordType")?.value === "worker_payment" && lines.length) {
+        $("expenseAmount").value = total.toFixed(2);
+        $("expenseAmount").readOnly = true;
+      } else if ($("expenseAmount")) $("expenseAmount").readOnly = false;
+    }
+    function setWorkerPaymentLines(lines = []) {
+      const container = $("workerPaymentLines");
+      if (!container) return;
+      container.innerHTML = "";
+      (Array.isArray(lines) && lines.length ? lines : [{}]).forEach(item => container.appendChild(createWorkerPaymentLine(item)));
+      recalcWorkerPaymentLines();
     }
     function editPayment(paymentId = "") {
       const jobId = state.editingJobId || state.workingPaymentJobId;
@@ -179,6 +225,7 @@
         periodFrom: cleanText($("expensePeriodFrom").value),
         periodTo: cleanText($("expensePeriodTo").value),
         paymentMethod: cleanText($("expensePaymentMethod").value),
+        workerPaymentItems: getWorkerPaymentLines(),
         applyToAdvance: $("expenseRecordType").value === "worker_payment" && !!$("expenseApplyToAdvance").checked,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
@@ -387,6 +434,7 @@
       $("expensePeriodTo").value = item.periodTo || "";
       $("expensePaymentMethod").value = item.paymentMethod || "Efectivo";
       $("expenseApplyToAdvance").checked = item.recordType === "worker_payment" && item.applyToAdvance !== false;
+      setWorkerPaymentLines(item.workerPaymentItems || []);
       toggleWorkerPaymentFields();
       state.pendingExpensePhotos = [];
       renderExpensePhotos();
@@ -434,6 +482,19 @@
       renderStats();
     }
     $("expenseRecordType")?.addEventListener("change", toggleWorkerPaymentFields);
+    $("addWorkerPaymentLineBtn")?.addEventListener("click", () => {
+      $("workerPaymentLines")?.appendChild(createWorkerPaymentLine({}));
+      recalcWorkerPaymentLines();
+    });
+    $("workerPaymentLines")?.addEventListener("input", recalcWorkerPaymentLines);
+    $("workerPaymentLines")?.addEventListener("change", recalcWorkerPaymentLines);
+    $("workerPaymentLines")?.addEventListener("click", event => {
+      const button = event.target.closest("[data-remove-worker-line]");
+      if (!button) return;
+      button.closest(".worker-payment-line")?.remove();
+      if (!$("workerPaymentLines").children.length) $("workerPaymentLines").appendChild(createWorkerPaymentLine({}));
+      recalcWorkerPaymentLines();
+    });
     function renderRecurringExpenses() {
       $("recurringBody").innerHTML = state.recurringExpenses.map(item => `
         <tr>

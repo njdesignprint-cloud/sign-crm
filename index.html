@@ -2070,6 +2070,14 @@
           </select>
           <label class="advance-check"><input id="expenseApplyToAdvance" type="checkbox" checked /> Descontar del anticipo disponible</label>
           <div class="section-note">Este pago reduce la ganancia del trabajo y, si está marcado, el anticipo disponible; nunca cambia lo cobrado ni el saldo del cliente.</div>
+          <div style="grid-column:1/-1" class="box">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <div><strong>Desglose del pago</strong><div class="section-note">Describe cada labor, horas o cantidad y tarifa.</div></div>
+              <button id="addWorkerPaymentLineBtn" type="button" class="btn btn-info btn-small">+ Agregar concepto</button>
+            </div>
+            <div id="workerPaymentLines" class="stack mt-12"></div>
+            <div class="section-note mt-12">Total desglosado: <strong id="workerPaymentLinesTotal">$0.00</strong></div>
+          </div>
         </div>
         <textarea id="expenseNotes" class="textarea mt-12" placeholder="Notas del gasto"></textarea>
 
@@ -2489,15 +2497,15 @@
   <script src="assets/js/27-sales-documents.js?v=20260808-4"></script>
   <script src="assets/js/02-payment-utils.js?v=20260730-3"></script>
   <script src="assets/js/03-jobs.js?v=20260809-1"></script>
-  <script src="assets/js/04-expenses.js?v=20260809-1"></script>
+  <script src="assets/js/04-expenses.js?v=20260809-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260809-1"></script>
-  <script src="assets/js/07-pdf.js?v=20260809-1"></script>
+  <script src="assets/js/07-pdf.js?v=20260809-2"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-3"></script>
   <script src="assets/js/10-backup-misc.js?v=20260808-2"></script>
   <script src="assets/js/11-auth.js?v=20260808-2"></script>
-  <script src="assets/js/12-init.js?v=20260809-1"></script>
+  <script src="assets/js/12-init.js?v=20260809-2"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260809-1"></script>
   <script src="assets/js/16-advance-control.js?v=20260809-1"></script>

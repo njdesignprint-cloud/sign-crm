@@ -455,6 +455,17 @@
         ],
         headStyles:{fillColor:companyPdfColor()}, styles:{fontSize:9}
       });
+      const paymentItems = Array.isArray(expense.workerPaymentItems) ? expense.workerPaymentItems : [];
+      if (paymentItems.length) {
+        const unitLabels = { job: pdfText("Job", "Trabajo"), hour: pdfText("Hours", "Horas"), day: pdfText("Days", "Días"), unit: pdfText("Units", "Unidades"), other: pdfText("Other", "Otro") };
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 8,
+          head: [[pdfText("Work description", "Descripción de la labor"), pdfText("Unit", "Unidad"), pdfText("Quantity", "Cantidad"), pdfText("Rate", "Tarifa"), pdfText("Subtotal", "Subtotal")]],
+          body: paymentItems.map(item => [item.description || "-", unitLabels[item.unit] || item.unit || "-", Number(item.quantity || 0).toFixed(2), money(item.rate), money(item.amount)]),
+          foot: [[pdfText("TOTAL PAID", "TOTAL PAGADO"), "", "", "", money(expense.amount)]],
+          headStyles:{fillColor:companyPdfColor()}, footStyles:{fillColor:companyPdfColor()}, styles:{fontSize:8}
+        });
+      }
       let y = pdf.lastAutoTable.finalY + 14;
       pdf.setFontSize(9);
       pdf.text(pdfText("The worker acknowledges receipt of the payment described above.", "El trabajador confirma haber recibido el pago descrito anteriormente."), 14, y);
