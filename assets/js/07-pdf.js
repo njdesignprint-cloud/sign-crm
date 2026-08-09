@@ -175,8 +175,8 @@
       if (COMPANY.logoUrl && logo?.complete && Number(logo.naturalWidth || 0) > 0) {
         try {
           pdf.setFillColor(255, 255, 255);
-          pdf.roundedRect(14, 7, 20, 20, 3, 3, "F");
-          pdf.addImage(logo, undefined, 15, 8, 18, 18, undefined, "FAST");
+          pdf.roundedRect(14, 5, 25, 25, 3, 3, "F");
+          pdf.addImage(logo, undefined, 15, 6, 23, 23, undefined, "FAST");
           return pageWidth;
         } catch (error) {
           console.warn("The configured company logo could not be embedded in the PDF; using initials instead.", error);
@@ -204,13 +204,18 @@
       pdf.rect(0, 0, 210, 34, "F");
       addPdfBrandMark(pdf);
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(20);
-      pdf.text(pdfCompanyName(), 38, 16);
+      pdf.setFontSize(18);
+      pdf.text(pdfCompanyName(), 43, 15);
       pdf.setTextColor(240, 240, 240);
-      pdf.setFontSize(10);
+      pdf.setFontSize(7.5);
       const contact = [COMPANY.phone, COMPANY.email, COMPANY.website].filter(Boolean).join(" · ");
-      pdf.text(contact || pdfText("Company contact not configured", "Contacto de la empresa sin configurar"), 38, 24);
-      pdf.text(`${pdfText("Generated", "Generado")}: ${new Date().toLocaleString(pdfLanguage() === "es" ? "es-US" : "en-US")}`, 196, 24, { align: "right" });
+      const contactLines = pdf.splitTextToSize(
+        contact || pdfText("Company contact not configured", "Contacto de la empresa sin configurar"),
+        118
+      ).slice(0, 2);
+      pdf.text(contactLines, 43, 22.5);
+      pdf.setFontSize(7);
+      pdf.text(`${pdfText("Generated", "Generado")}: ${new Date().toLocaleString(pdfLanguage() === "es" ? "es-US" : "en-US")}`, 196, 29, { align: "right" });
       pdf.setTextColor(20, 20, 20);
       pdf.setFontSize(15);
       pdf.text(title, 14, 44);
