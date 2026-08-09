@@ -4,7 +4,7 @@
     }
     function assertTrashDependencies(type, id) {
       if (type === "clients" && state.jobs.some(job => job.clientId === id)) throw new Error("This client has jobs. Archive or reassign those jobs first.");
-      if (type === "jobs" && (state.expenses.some(item => item.jobId === id) || state.commissionSettlements.some(item => (item.lineItems || []).some(line => line.jobId === id)))) throw new Error("This job has linked expenses or commission settlements and cannot be archived yet.");
+      if (type === "jobs" && (state.expenses.some(item => item.jobId === id) || state.commissionSettlements.some(item => item.status !== "void" && (item.lineItems || []).some(line => line.jobId === id)))) throw new Error("This job has linked expenses or commission settlements and cannot be archived yet.");
       if (type === "inventory" && (state.inventoryMovements.some(item => item.itemId === id) || state.jobs.some(job => (job.materials || []).some(item => item.inventoryId === id)))) throw new Error("This inventory item has linked movements or jobs.");
       if (type === "providers" && state.purchaseOrders.some(item => item.providerId === id)) throw new Error("This supplier has purchase orders. Archive those orders first.");
       if (type === "salespeople" && (state.clients.some(item => item.salespersonId === id) || state.jobs.some(item => item.commission?.salespersonId === id) || state.commissionSettlements.some(item => item.salespersonId === id))) throw new Error("This salesperson has business history. Set them inactive instead.");
