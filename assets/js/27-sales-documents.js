@@ -230,7 +230,9 @@
       $("salesDocumentsTableBody").innerHTML = rows.map(item => {
         const effective = salesDocEffectiveStatus(item);
         const balance = item.type === "invoice" ? salesDocBalance(item) : 0;
-        const editable = item.status !== "converted" && item.status !== "void" && !(item.type === "invoice" && salesDocPaid(item) > 0);
+        // Keep paid and partially paid invoices editable so an incorrect document
+        // can still be voided without deleting its payment history.
+        const editable = item.status !== "converted" && item.status !== "void";
         return `<tr><td><strong>${safe(item.number || "-")}</strong><br><small>${safe(salesDocLabel(item.type))}</small></td><td>${safe(item.clientSnapshot?.company || item.clientSnapshot?.name || "-")}</td><td>${safe(item.issueDate || "-")}<br><small>${safe(item.dueDate || "-")}</small></td><td><span class="pill ${salesDocStatusTone(effective)}">${safe(salesDocLabel(effective))}</span></td><td>${money(item.total)}</td><td>${item.type === "invoice" ? money(balance) : "-"}</td><td><div class="actions-row"><button class="btn btn-secondary btn-small" data-sales-doc-pdf="${item.id}">PDF</button>${canWriteData("trabajos") && editable ? `<button class="btn btn-info btn-small" data-sales-doc-edit="${item.id}">${language === "es" ? "Editar" : "Edit"}</button>` : ""}${canWriteData("trabajos") && item.type === "estimate" && item.status === "accepted" ? `<button class="btn btn-primary btn-small" data-sales-doc-convert="${item.id}">${language === "es" ? "Facturar" : "Invoice"}</button>` : ""}${canWriteData("trabajos") && item.type === "invoice" && item.jobId && balance > 0 && item.status !== "void" ? `<button class="btn btn-primary btn-small" data-sales-doc-payment="${item.id}">${language === "es" ? "Pago" : "Payment"}</button>` : ""}</div></td></tr>`;
       }).join("");
       $("salesDocumentsEmpty").classList.toggle("hidden", rows.length > 0);
