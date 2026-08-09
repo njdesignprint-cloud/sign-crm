@@ -435,6 +435,11 @@
               </div>
             </div>
 
+            <div class="box mt-12 job-workflow-guide">
+              <strong>Flujo recomendado</strong>
+              <div class="section-note mt-10">Cliente → Trabajo → Anticipo → Producción → Gastos y trabajadores → Factura → Cobro final</div>
+            </div>
+
             <div class="jobs-workspace-tools">
               <div class="jobs-tools-heading"><div><strong>¿Qué necesitas atender?</strong><span>Usa un atajo o busca directamente por cliente o trabajo.</span></div></div>
               <div id="jobsQuickFilters" class="jobs-quick-filters" aria-label="Filtros operativos de trabajos">
@@ -470,8 +475,8 @@
                 <div class="jobs-advanced-grid">
                   <label>Prioridad<select id="jobPriorityFilter" class="select"><option value="">Todas las prioridades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
                   <label>Tipo de trabajo<select id="jobTypeFilter" class="select"><option value="">Todos los tipos</option><option value="Decals">Decals</option><option value="Printing">Printing</option><option value="Window Perf">Window Perf</option><option value="Commercial Tint">Commercial Tint</option><option value="Banner">Banner</option><option value="Wrap de Autos">Wrap de Autos</option><option value="ADA Signs">ADA Signs</option><option value="Channel Letters">Channel Letters</option><option value="Pylon Faces">Pylon Faces</option><option value="Light Box Graphics">Light Box Graphics</option><option value="Personalizado">Personalizado</option></select></label>
-                  <label class="hidden">Vendedor<select id="jobSalespersonFilter" class="select hidden"><option value="">All salespeople</option></select></label>
-                  <label class="hidden">Comisión<select id="jobCommissionFilter" class="select hidden"><option value="">All commission states</option><option value="with_salesperson">With salesperson</option><option value="outstanding">Commission outstanding</option><option value="zero_rate">Salesperson with 0% rate</option><option value="missing_assignment">Client salesperson not assigned to job</option></select></label>
+                  <label class="hidden">Vendedor<select id="jobSalespersonFilter" class="select hidden"><option value="">Todos los vendedores</option></select></label>
+                  <label class="hidden">Comisión<select id="jobCommissionFilter" class="select hidden"><option value="">Todos los estados de comisión</option><option value="with_salesperson">Con vendedor</option><option value="outstanding">Comisión pendiente</option><option value="zero_rate">Vendedor con tasa de 0%</option><option value="missing_assignment">Falta asignar el vendedor del cliente</option></select></label>
                   <label>Creado desde<input id="jobCreatedFrom" type="date" class="input" /></label>
                   <label>Creado hasta<input id="jobCreatedTo" type="date" class="input" /></label>
                   <label>Entrega desde<input id="jobDueFrom" type="date" class="input" /></label>
@@ -490,7 +495,7 @@
                       <th>Entrega / prioridad</th>
                       <th>Finanzas</th>
                       <th>Cobro / avance</th>
-                      <th id="jobCommissionHeader" class="hidden">Salesperson / commission</th>
+                      <th id="jobCommissionHeader" class="hidden">Vendedor / comisión</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -1991,6 +1996,15 @@
           <div><span>Margen</span><strong id="sumMargin">0.00%</strong></div>
           <div><span>Inventario</span><strong id="sumInventoryStatus">Pendiente</strong></div>
         </div>
+        <div class="box mt-12">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <strong>Resumen financiero interno</strong>
+              <div class="section-note mt-10">Genera un PDF confidencial con cobros, costos, trabajadores, comisiones y ganancia final.</div>
+            </div>
+            <button id="exportJobFinancialSummaryBtn" class="btn btn-secondary" type="button">PDF financiero</button>
+          </div>
+        </div>
       </div>
 
       <div class="modal-foot">
@@ -2492,28 +2506,28 @@
   <script src="assets/js/01-core.js?v=20260808-2"></script>
   <script src="assets/js/02-clients.js?v=20260808-2"></script>
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
-  <script src="assets/js/22-salespeople.js?v=20260809-1"></script>
+  <script src="assets/js/22-salespeople.js?v=20260809-2"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/24-trash.js?v=20260809-2"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
   <script src="assets/js/27-sales-documents.js?v=20260809-3"></script>
   <script src="assets/js/02-payment-utils.js?v=20260730-3"></script>
-  <script src="assets/js/03-jobs.js?v=20260809-2"></script>
+  <script src="assets/js/03-jobs.js?v=20260809-3"></script>
   <script src="assets/js/04-expenses.js?v=20260809-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260809-1"></script>
-  <script src="assets/js/07-pdf.js?v=20260809-2"></script>
+  <script src="assets/js/07-pdf.js?v=20260809-3"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-3"></script>
   <script src="assets/js/10-backup-misc.js?v=20260808-2"></script>
   <script src="assets/js/11-auth.js?v=20260808-2"></script>
-  <script src="assets/js/12-init.js?v=20260809-2"></script>
+  <script src="assets/js/12-init.js?v=20260809-3"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260809-1"></script>
   <script src="assets/js/16-advance-control.js?v=20260809-1"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
   <script src="assets/js/18-i18n.js?v=20260808-2"></script>
-  <script src="assets/js/25-i18n-complete.js?v=20260809-3"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260809-4"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>

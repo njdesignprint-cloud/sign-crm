@@ -1803,8 +1803,9 @@
                 ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-status-job="${job.id}" data-next="${safe(nextStatus(job.status))}">${safe(nextStatusLabel(job.status))}</button>` : ""}
                 ${canWriteData("trabajos") ? `<button class="btn btn-info btn-small" data-pay-job="${job.id}">+ ${english ? "Payment" : "Pago"}</button>` : ""}
                 <button class="btn btn-secondary btn-small" data-quote-job="${job.id}">${english ? "Estimate" : "Cotización"}</button>
+                <button class="btn btn-secondary btn-small" data-job-financial-pdf="${job.id}">${english ? "Financial PDF" : "PDF financiero"}</button>
                 <button class="btn btn-secondary btn-small" data-buy-pdf="${job.id}">${english ? "Purchase" : "Compra"}</button>
-                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">${english ? "Archive" : "Eliminar"}</button>` : ""}
+                ${canDeleteData("trabajos") ? `<button class="btn btn-danger btn-small" data-delete-job="${job.id}">${english ? "Archive" : "Archivar"}</button>` : ""}
               </div>
             </td>
           </tr>

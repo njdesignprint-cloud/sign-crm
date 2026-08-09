@@ -481,6 +481,114 @@
       savePdf(pdf, `Worker_Payment_${expense.workerName || expense.date || today()}.pdf`, "internal");
       showToast(pdfText("Worker payment receipt exported.", "Comprobante de pago exportado."));
     }
+    function exportJobFinancialSummaryPdf(jobId) {
+      const job = getJobById(jobId || "");
+      if (!job) return showToast(pdfText("Job not found.", "No se encontró el trabajo."));
+      if (!isAdmin()) return showToast(pdfText("Only owners and administrators can export this internal report.", "Solo propietarios y administradores pueden exportar este reporte interno."));
+
+      const client = getClientById(job.clientId);
+      const calc = computeJob(job);
+      const payments = getPaymentsList(job).slice().sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+      const expenses = getJobLinkedExpenses(job.id).slice().sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+      const materials = Array.isArray(job.materials) ? job.materials : [];
+      const commissionRows = (Array.isArray(state.commissionSettlements) ? state.commissionSettlements : [])
+        .filter(settlement => settlement.status !== "void")
+        .flatMap(settlement => (Array.isArray(settlement.lineItems) ? settlement.lineItems : [])
+          .filter(line => cleanText(line.jobId) === cleanText(job.id))
+          .map(line => ({
+            date: settlement.paymentDate || settlement.date || "-",
+            salesperson: getSalespersonName(settlement.salespersonId, settlement.salespersonName || "-"),
+            reference: settlement.reference || settlement.paymentMethod || "-",
+            amount: Number(line.amount || 0)
+          })));
+      const pdf = createModulePdf(
+        pdfText("JOB FINANCIAL SUMMARY", "RESUMEN FINANCIERO DEL TRABAJO"),
+        `${clientLabel(client) || "-"} · ${job.title || "-"}`
+      );
+
+      pdf.autoTable({
+        startY: 56,
+        head: [[pdfText("Field", "Campo"), pdfText("Details", "Detalles")]],
+        body: [
+          [pdfText("Customer", "Cliente"), clientLabel(client) || "-"],
+          [pdfText("Job", "Trabajo"), job.title || "-"],
+          [pdfText("Status", "Estado"), job.status || "-"],
+          [pdfText("Created", "Creado"), job.date || "-"],
+          [pdfText("Due date", "Fecha de entrega"), job.dueDate || "-"],
+          [pdfText("Job type", "Tipo de trabajo"), getJobTypeLabel(job) || "-"],
+          [pdfText("Salesperson", "Vendedor"), job.commission?.salespersonId ? getSalespersonName(job.commission.salespersonId, "-") : pdfText("Not assigned", "Sin asignar")]
+        ],
+        headStyles: { fillColor: companyPdfColor() },
+        styles: { fontSize: 8.5 }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 8,
+        head: [[pdfText("Financial summary", "Resumen financiero"), pdfText("Amount", "Monto")]],
+        body: [
+          [pdfText("Total sale", "Venta total"), money(calc.sale)],
+          [pdfText("Collected from customer", "Cobrado al cliente"), money(calc.paid)],
+          [pdfText("Customer balance", "Saldo del cliente"), money(calc.balance)],
+          [pdfText("Materials", "Materiales"), money(calc.materialsCost)],
+          [pdfText("Internal labor", "Mano de obra interna"), money(calc.laborCost)],
+          [pdfText("Extra internal costs", "Gastos extra internos"), money(calc.extraCost)],
+          [pdfText("Other linked expenses", "Otros gastos ligados"), money(calc.otherLinkedExpenses)],
+          [pdfText("Worker payments", "Pagos a trabajadores"), money(calc.workerPayments)],
+          [pdfText("Paid commissions", "Comisiones pagadas"), money(calc.paidCommission)],
+          [pdfText("TOTAL COSTS AND EXPENSES", "COSTOS Y GASTOS TOTALES"), money(calc.cost)],
+          [pdfText("FINAL PROFIT", "GANANCIA FINAL"), money(calc.profit)],
+          [pdfText("Profit margin", "Margen de ganancia"), `${Number(calc.margin || 0).toFixed(2)}%`]
+        ],
+        headStyles: { fillColor: companyPdfColor() },
+        columnStyles: { 1: { halign: "right" } },
+        styles: { fontSize: 9 }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 8,
+        head: [[pdfText("Payment date", "Fecha del cobro"), pdfText("Type", "Tipo"), pdfText("Method", "Método"), pdfText("Note", "Nota"), pdfText("Amount", "Monto")]],
+        body: payments.length ? payments.map(payment => [payment.date || "-", payment.type || "-", payment.method || "-", payment.note || "-", money(payment.amount)]) : pdfEmptyRow(5),
+        foot: [[pdfText("TOTAL COLLECTED", "TOTAL COBRADO"), "", "", "", money(calc.paid)]],
+        headStyles: { fillColor: [20,22,27] }, footStyles: { fillColor: companyPdfColor() },
+        styles: { fontSize: 7.5 }, columnStyles: { 4: { halign: "right" } }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 8,
+        head: [[pdfText("Material", "Material"), pdfText("Quantity", "Cantidad"), pdfText("Unit cost", "Costo unitario"), pdfText("Total", "Total")]],
+        body: materials.length ? materials.map(item => [item.name || "-", Number(item.qty || 0).toFixed(2), money(item.price), money(Number(item.qty || 0) * Number(item.price || 0))]) : pdfEmptyRow(4),
+        foot: [[pdfText("MATERIALS TOTAL", "TOTAL MATERIALES"), "", "", money(calc.materialsCost)]],
+        headStyles: { fillColor: [20,22,27] }, footStyles: { fillColor: companyPdfColor() },
+        styles: { fontSize: 8 }, columnStyles: { 2: { halign: "right" }, 3: { halign: "right" } }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 8,
+        head: [[pdfText("Date", "Fecha"), pdfText("Expense type", "Tipo de gasto"), pdfText("Description", "Concepto"), pdfText("Worker / detail", "Trabajador / detalle"), pdfText("Amount", "Monto")]],
+        body: expenses.length ? expenses.map(expense => [
+          expense.date || "-",
+          expense.recordType === "worker_payment" ? pdfText("Worker payment", "Pago a trabajador") : (expense.category || pdfText("General expense", "Gasto general")),
+          expense.concept || "-",
+          expense.workerName || expense.workerRole || expense.notes || "-",
+          money(expense.amount)
+        ]) : pdfEmptyRow(5),
+        foot: [[pdfText("LINKED EXPENSES TOTAL", "TOTAL GASTOS LIGADOS"), "", "", "", money(calc.linkedExpenses)]],
+        headStyles: { fillColor: [20,22,27] }, footStyles: { fillColor: companyPdfColor() },
+        styles: { fontSize: 7.5 }, columnStyles: { 4: { halign: "right" } }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 8,
+        head: [[pdfText("Date", "Fecha"), pdfText("Salesperson", "Vendedor"), pdfText("Reference", "Referencia"), pdfText("Amount", "Monto")]],
+        body: commissionRows.length ? commissionRows.map(row => [row.date, row.salesperson, row.reference, money(row.amount)]) : pdfEmptyRow(4),
+        foot: [[pdfText("PAID COMMISSIONS TOTAL", "TOTAL COMISIONES PAGADAS"), "", "", money(calc.paidCommission)]],
+        headStyles: { fillColor: [20,22,27] }, footStyles: { fillColor: companyPdfColor() },
+        styles: { fontSize: 8 }, columnStyles: { 3: { halign: "right" } }
+      });
+
+      savePdf(pdf, `Job_Financial_Summary_${pdfSafeFileName(clientLabel(client))}_${pdfSafeFileName(job.title)}_${today()}.pdf`, "internal");
+      showToast(pdfText("Job financial summary exported.", "Resumen financiero del trabajo exportado."));
+    }
     function exportInventoryPdf() {
       const rows = getFilteredInventory();
       const pdf = createModulePdf(pdfText('Inventory', 'Inventario'), pdfText('Current stock and recent movements', 'Stock actual y movimientos recientes'));

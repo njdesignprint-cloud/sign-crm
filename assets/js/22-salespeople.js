@@ -127,7 +127,7 @@
       const select = $("jobSalespersonFilter"); if (!select) return;
       const current = select.value;
       const options = state.salespeople.map(item => `<option value="${safe(item.id)}">${safe(item.name)}</option>`).join("");
-      const html = `<option value="">All salespeople</option>${options}`;
+      const html = `<option value="">${state.language === "es" ? "Todos los vendedores" : "All salespeople"}</option>${options}`;
       if (select.innerHTML !== html) select.innerHTML = html;
       select.value = state.salespeople.some(item => item.id === current) ? current : "";
     }
