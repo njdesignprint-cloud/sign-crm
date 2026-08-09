@@ -174,9 +174,16 @@
       const logo = $("companyLogoPreview");
       if (COMPANY.logoUrl && logo?.complete && Number(logo.naturalWidth || 0) > 0) {
         try {
+          const maxLogoWidth = 23;
+          const maxLogoHeight = 23;
+          const logoRatio = Number(logo.naturalWidth) / Math.max(1, Number(logo.naturalHeight));
+          const logoWidth = logoRatio >= 1 ? maxLogoWidth : maxLogoHeight * logoRatio;
+          const logoHeight = logoRatio >= 1 ? maxLogoWidth / logoRatio : maxLogoHeight;
+          const logoX = 15 + (maxLogoWidth - logoWidth) / 2;
+          const logoY = 6 + (maxLogoHeight - logoHeight) / 2;
           pdf.setFillColor(255, 255, 255);
           pdf.roundedRect(14, 5, 25, 25, 3, 3, "F");
-          pdf.addImage(logo, undefined, 15, 6, 23, 23, undefined, "FAST");
+          pdf.addImage(logo, undefined, logoX, logoY, logoWidth, logoHeight, undefined, "FAST");
           return pageWidth;
         } catch (error) {
           console.warn("The configured company logo could not be embedded in the PDF; using initials instead.", error);
