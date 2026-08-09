@@ -27,6 +27,7 @@
 
   function effectiveStatus(document = {}, currentDate = "") {
     const remaining = balance(document);
+    if (document.status === "void") return "void";
     if (document.type === "invoice" && !["paid", "void"].includes(document.status) && document.dueDate && currentDate && document.dueDate < currentDate && remaining > 0) return "overdue";
     if (document.type === "invoice" && Number(document.paidAmount || 0) > 0 && remaining > 0) return "partially_paid";
     if (document.type === "invoice" && Number(document.total || 0) > 0 && remaining <= 0) return "paid";

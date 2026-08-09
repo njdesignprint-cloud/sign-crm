@@ -37,6 +37,7 @@ test("an estimate never becomes collected and invoice status follows payments", 
   assert.equal(SalesDocumentUtils.effectiveStatus({ type:"estimate", total:1000, paidAmount:1000, status:"accepted" }, "2026-08-08"), "accepted");
   assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:400, status:"open", dueDate:"2026-08-20" }, "2026-08-08"), "partially_paid");
   assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:1000, status:"open" }, "2026-08-08"), "paid");
+  assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:500, status:"void" }, "2026-08-08"), "void");
   assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:0, status:"open", dueDate:"2026-08-01" }, "2026-08-08"), "overdue");
 });
 
