@@ -113,7 +113,7 @@
     function editSalesDocument(id) {
       const item = state.salesDocuments.find(document => document.id === id);
       if (!item || !guardWrite("edit sales documents", "trabajos")) return;
-      if (item.status === "converted" || item.status === "void" || (item.type === "invoice" && salesDocPaid(item) > 0)) return showToast(salesDocLanguage() === "es" ? "Este documento financiero ya no se puede editar." : "This financial document can no longer be edited.");
+      if (item.status === "converted" || item.status === "void") return showToast(salesDocLanguage() === "es" ? "Este documento financiero ya no se puede editar." : "This financial document can no longer be edited.");
       state.editingSalesDocumentId = id;
       $("salesDocType").value = item.type || "estimate";
       $("salesDocType").disabled = true;
