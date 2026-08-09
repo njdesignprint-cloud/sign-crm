@@ -258,6 +258,16 @@
       const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
       return getJobLinkedExpenses(jobId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
     }
+    function getJobLinkedExpenseBreakdown(jobOrId = "") {
+      const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
+      return getJobLinkedExpenses(jobId).reduce((totals, expense) => {
+        const amount = Number(expense.amount || 0);
+        if (expense.recordType === "worker_payment") totals.workerPayments += amount;
+        else totals.otherExpenses += amount;
+        totals.total += amount;
+        return totals;
+      }, { workerPayments: 0, otherExpenses: 0, total: 0 });
+    }
     function getJobPaidCommissionTotal(jobOrId = "") {
       const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
       if (!jobId || !Array.isArray(state.commissionSettlements)) return 0;
@@ -436,7 +446,8 @@
       const materialsCost = getMaterialsCost(job.materials || []);
       const pricing = getJobPricing(job);
       const pricingCalc = computePricing(materialsCost, pricing, sale);
-      const linkedExpenses = getJobLinkedExpensesTotal(job.id);
+      const expenseBreakdown = getJobLinkedExpenseBreakdown(job.id);
+      const linkedExpenses = expenseBreakdown.total;
       const paidCommission = getJobPaidCommissionTotal(job.id);
       const profitBeforeCommission = sale - pricingCalc.totalCost - linkedExpenses;
       const cost = pricingCalc.totalCost + linkedExpenses + paidCommission;
@@ -450,6 +461,8 @@
         laborCost: pricingCalc.laborCost,
         extraCost: pricingCalc.extraCost,
         linkedExpenses,
+        workerPayments: expenseBreakdown.workerPayments,
+        otherLinkedExpenses: expenseBreakdown.otherExpenses,
         paidCommission,
         profitBeforeCommission,
         desiredMargin: pricingCalc.desiredMargin,
@@ -1308,8 +1321,10 @@
       const materialsCost = getMaterialsCost(getCurrentFormMaterials());
       const pricing = getCurrentPricingForm();
       const pricingCalc = computePricing(materialsCost, pricing, sale);
-      const linkedExpenses = state.editingJobId ? getJobLinkedExpensesTotal(state.editingJobId) : 0;
+      const expenseBreakdown = state.editingJobId ? getJobLinkedExpenseBreakdown(state.editingJobId) : { workerPayments: 0, otherExpenses: 0, total: 0 };
+      const linkedExpenses = expenseBreakdown.total;
       const paidCommission = state.editingJobId ? getJobPaidCommissionTotal(state.editingJobId) : 0;
+      const profitBeforeCommission = sale - pricingCalc.totalCost - linkedExpenses;
       const totalCost = pricingCalc.totalCost + linkedExpenses + paidCommission;
       const realProfit = sale - totalCost;
       const realMargin = sale > 0 ? (realProfit / sale) * 100 : 0;
@@ -1327,15 +1342,17 @@
       $("sumMaterials").textContent = money(pricingCalc.materialsCost);
       $("sumLabor").textContent = money(pricingCalc.laborCost);
       $("sumExtras").textContent = money(pricingCalc.extraCost);
+      if ($("sumSale")) $("sumSale").textContent = money(sale);
+      if ($("sumWorkerPayments")) $("sumWorkerPayments").textContent = money(expenseBreakdown.workerPayments);
+      if ($("sumOtherLinkedExpenses")) $("sumOtherLinkedExpenses").textContent = money(expenseBreakdown.otherExpenses);
       if ($("sumPaidCommission")) $("sumPaidCommission").textContent = money(paidCommission);
       $("sumCost").textContent = money(totalCost);
       $("sumProfit").textContent = money(realProfit);
       $("sumMargin").textContent = realMargin.toFixed(2) + "%";
       $("sumPaid").textContent = money(paid);
       $("sumBalance").textContent = money(balance);
-      if ($("sumLinkedExpenses")) $("sumLinkedExpenses").textContent = money(linkedExpenses);
       if ($("sumInventoryStatus")) $("sumInventoryStatus").textContent = inventoryText;
-      if (typeof renderJobCommissionPreview === "function") renderJobCommissionPreview({ sale, realProfit, paid });
+      if (typeof renderJobCommissionPreview === "function") renderJobCommissionPreview({ sale, realProfit: profitBeforeCommission, paid });
 
       renderJobPaymentsPreview();
       renderJobInventoryAndPurchase();

@@ -20,7 +20,7 @@ test("dashboard net profit subtracts job internal costs and period expenses", ()
     jobs.includes('$("mProfit").textContent = money(periodSales - periodExpenses);'),
     false
   );
-  assert.equal(html.includes('assets/js/03-jobs.js?v=20260809-1'), true);
+  assert.equal(html.includes('assets/js/03-jobs.js?v=20260809-2'), true);
   assert.equal(reports.includes("const netProfit = sales - internalCosts - expenses.reduce"), true);
   assert.equal(reports.includes("computeJob(job).profit, 0) - expenses.reduce"), false);
 });
@@ -36,6 +36,17 @@ test("paid sales commissions reduce real job profit and cash reports without cha
   assert.equal(salespeople.includes("computeJob(job).profitBeforeCommission"), true);
   assert.equal(weekly.includes('type: "Comisión"'), true);
   assert.equal(jobs.includes("periodExpenses + periodCommissions"), true);
+});
+
+test("each job exposes an owner-focused financial breakdown", () => {
+  const jobs = fs.readFileSync(path.join(__dirname, "../assets/js/03-jobs.js"), "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
+  for (const id of ["sumSale", "sumPaid", "sumBalance", "sumOtherLinkedExpenses", "sumWorkerPayments", "sumPaidCommission", "sumProfit"]) {
+    assert.equal(html.includes(`id="${id}"`), true);
+  }
+  assert.equal(jobs.includes("function getJobLinkedExpenseBreakdown"), true);
+  assert.equal(jobs.includes('expense.recordType === "worker_payment"'), true);
+  assert.equal(jobs.includes("realProfit: profitBeforeCommission"), true);
 });
 
 test("estimates stay potential until the job becomes an approved sale", () => {
