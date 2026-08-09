@@ -1,6 +1,8 @@
     const COMPANY_FALLBACK = { ...COMPANY };
     const COMPANY_SETTING_IDS = ["companyLegalName","companyTradeName","companyPublicEmail","companyPhone","companyWebsite","companyAddress","companyCity","companyState","companyZip","companyCountry","companyRepresentativeName","companyRepresentativeTitle","companyGoverningState","companyCurrency","companyTimeZone","companyLanguage","companyDateFormat","companyBrandColor","companyLogoUrl"];
 
+    function companySettingsText(en, es) { return state.language === "es" ? es : en; }
+
     function getCompanyDisplayName(settings = state.companySettings || {}) {
       return cleanText(settings.tradeName) || cleanText(settings.legalName) || "SignShop HQ";
     }
@@ -51,22 +53,22 @@
       $("companyRepresentativeName").value = s.representativeName || ""; $("companyRepresentativeTitle").value = s.representativeTitle || ""; $("companyGoverningState").value = s.governingState || "Texas";
       $("companyCurrency").value = s.currency || "USD"; $("companyTimeZone").value = s.timeZone || "America/Chicago"; $("companyLanguage").value = s.language || "en"; $("companyDateFormat").value = s.dateFormat || "MM/DD/YYYY";
       $("companyBrandColor").value = s.brandColor || "#3b82f6"; $("companyLogoUrl").value = s.logoUrl || "";
-      renderCompanySettingsPreview(); $("companySettingsStatus").textContent = Object.keys(s).length ? "Saved" : "Not configured";
+      renderCompanySettingsPreview(); $("companySettingsStatus").textContent = Object.keys(s).length ? companySettingsText("Saved", "Guardado") : companySettingsText("Not configured", "Sin configurar");
     }
     async function saveCompanySettings() {
-      if (!isAdmin()) return showToast("Only owners and administrators can update company settings.");
-      const payload = currentCompanySettingsForm(); if (!payload.legalName) return showToast("Enter the legal business name.");
-      const button = $("saveCompanySettingsBtn"); button.disabled = true; $("companySettingsStatus").textContent = "Saving...";
-      try { await companySettingsRef().set({ ...payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: state.userEmail || "" }, { merge: true }); showToast("Company settings saved."); }
-      catch (error) { console.error(error); showToast("Company settings could not be saved."); $("companySettingsStatus").textContent = "Save failed"; }
+      if (!isAdmin()) return showToast(companySettingsText("Only owners and administrators can update company settings.", "Solo propietarios y administradores pueden actualizar la configuración de la empresa."));
+      const payload = currentCompanySettingsForm(); if (!payload.legalName) return showToast(companySettingsText("Enter the legal business name.", "Escribe el nombre legal de la empresa."));
+      const button = $("saveCompanySettingsBtn"); button.disabled = true; $("companySettingsStatus").textContent = companySettingsText("Saving...", "Guardando...");
+      try { await companySettingsRef().set({ ...payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy:state.userEmail || "" }, { merge: true }); showToast(companySettingsText("Company settings saved.", "Configuración de empresa guardada.")); }
+      catch (error) { console.error(error); showToast(companySettingsText("Company settings could not be saved.", "No se pudo guardar la configuración de empresa.")); $("companySettingsStatus").textContent = companySettingsText("Save failed", "Error al guardar"); }
       finally { button.disabled = false; }
     }
     function openCompanyLogoUpload() {
-      if (!isAdmin()) return showToast("Only owners and administrators can upload the company logo.");
-      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) return showToast("The image uploader is not available.");
+      if (!isAdmin()) return showToast(companySettingsText("Only owners and administrators can upload the company logo.", "Solo propietarios y administradores pueden subir el logo de la empresa."));
+      if (typeof cloudinary === "undefined" || !cloudinary.createUploadWidget) return showToast(companySettingsText("The image uploader is not available.", "El cargador de imágenes no está disponible."));
       const widget = cloudinary.createUploadWidget({ cloudName: CLOUDINARY_CONFIG.cloudName, uploadPreset: CLOUDINARY_CONFIG.uploadPreset, multiple: false, maxFiles: 1, resourceType: "image", clientAllowedFormats: ["png","jpg","jpeg","webp","svg"], folder: `signshophq/company-logos/${state.accountOwnerId || state.uid}` }, (error, result) => {
-        if (error) { console.error(error); return showToast("The logo could not be uploaded."); }
-        if (result?.event === "success") { $("companyLogoUrl").value = result.info.secure_url || ""; renderCompanySettingsPreview(); showToast("Logo uploaded. Save company settings to apply it."); }
+        if (error) { console.error(error); return showToast(companySettingsText("The logo could not be uploaded.", "No se pudo subir el logo.")); }
+        if (result?.event === "success") { $("companyLogoUrl").value = result.info.secure_url || ""; renderCompanySettingsPreview(); showToast(companySettingsText("Logo uploaded. Save company settings to apply it.", "Logo subido. Guarda la configuración de empresa para aplicarlo.")); }
       });
       widget.open();
     }
@@ -74,3 +76,4 @@
     $("uploadCompanyLogoBtn")?.addEventListener("click", openCompanyLogoUpload);
     COMPANY_SETTING_IDS.forEach(id => $(id)?.addEventListener("input", renderCompanySettingsPreview));
     document.querySelectorAll("[data-company-color]").forEach(button => button.addEventListener("click", () => { $("companyBrandColor").value = button.dataset.companyColor; renderCompanySettingsPreview(); }));
+    window.addEventListener("crm-language-changed", renderCompanySettingsForm);

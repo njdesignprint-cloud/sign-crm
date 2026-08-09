@@ -4,6 +4,16 @@
       gross_profit: "gross profit (sale subtotal less documented direct job costs)"
     };
 
+    function salespersonText(en, es) { return state.language === "es" ? es : en; }
+    function commissionBaseLabel(key = "collected") {
+      const labels = {
+        collected: salespersonText("customer payments actually collected", "pagos del cliente realmente cobrados"),
+        subtotal: salespersonText("sale subtotal before sales tax", "subtotal de la venta antes de impuestos"),
+        gross_profit: salespersonText("gross profit (sale subtotal less documented direct job costs)", "ganancia bruta (subtotal menos costos directos documentados)")
+      };
+      return labels[key] || labels.collected;
+    }
+
     function getSalespersonName(id = "", fallback = "") {
       return state.salespeople.find(item => item.id === id)?.name || fallback || "Unknown salesperson";
     }
@@ -39,7 +49,7 @@
     function fillJobSalespersonSelect(selected = "") {
       const select = $("jobSalespersonId"); if (!select) return;
       const current = selected || select.value;
-      select.innerHTML = '<option value="">No salesperson</option>' + state.salespeople
+      select.innerHTML = `<option value="">${salespersonText("No salesperson", "Sin vendedor")}</option>` + state.salespeople
         .filter(item => item.status !== "inactive" || item.id === current)
         .map(item => `<option value="${safe(item.id)}">${safe(item.name)}${item.company ? ` · ${safe(item.company)}` : ""}</option>`).join("");
       select.value = current;
@@ -140,7 +150,7 @@
     function openCommissionSettlement(id) {
       const person = state.salespeople.find(item => item.id === id); if (!person) return;
       $("commissionSettlementSalespersonId").value = id;
-      $("commissionSettlementTitle").textContent = `Commission settlement · ${person.name}`;
+      $("commissionSettlementTitle").textContent = `${salespersonText("Commission settlement", "Liquidación de comisión")} · ${person.name}`;
       $("commissionSettlementDate").value = today();
       const monthStart = `${today().slice(0, 7)}-01`;
       $("commissionSettlementFrom").value = monthStart; $("commissionSettlementTo").value = today();
@@ -152,7 +162,7 @@
       const lines = state.jobs.map(job => ({ job, calc: getJobCommissionBreakdown(job) })).filter(item => item.calc.salespersonId === salespersonId && item.calc.available > 0.005);
       $("commissionSettlementLines").innerHTML = lines.map(({ job, calc }) => {
         const client = getClientById(job.clientId);
-        return `<tr><td><input type="checkbox" data-commission-line="${safe(job.id)}" data-commission-amount="${calc.available.toFixed(2)}" checked /></td><td><strong>${safe(job.title || "Job")}</strong><br><small>${safe(clientLabel(client))}</small></td><td>${calc.rate.toFixed(2)}%<br><small>${safe(COMMISSION_BASE_LABELS[calc.baseType] || calc.baseType)}</small></td><td>${money(calc.earned)}</td><td>${money(calc.previouslyPaid)}</td><td><strong>${money(calc.available)}</strong>${calc.overpaid ? `<br><small class="danger-text">Overpaid ${money(calc.overpaid)}</small>` : ""}</td></tr>`;
+        return `<tr><td><input type="checkbox" data-commission-line="${safe(job.id)}" data-commission-amount="${calc.available.toFixed(2)}" checked /></td><td><strong>${safe(job.title || salespersonText("Job", "Trabajo"))}</strong><br><small>${safe(clientLabel(client))}</small></td><td>${calc.rate.toFixed(2)}%<br><small>${safe(commissionBaseLabel(calc.baseType))}</small></td><td>${money(calc.earned)}</td><td>${money(calc.previouslyPaid)}</td><td><strong>${money(calc.available)}</strong>${calc.overpaid ? `<br><small class="danger-text">${salespersonText("Overpaid", "Pagado de más")} ${money(calc.overpaid)}</small>` : ""}</td></tr>`;
       }).join("");
       $("commissionSettlementNoLines").classList.toggle("hidden", lines.length > 0);
       document.querySelectorAll("[data-commission-line]").forEach(input => input.addEventListener("change", updateCommissionSettlementTotal));
@@ -214,7 +224,7 @@
     }
     function resetSalespersonForm() {
       state.editingSalespersonId = null;
-      $("salespersonModalTitle").textContent = "New salesperson";
+      $("salespersonModalTitle").textContent = salespersonText("New salesperson", "Nuevo vendedor");
       ["salespersonName", "salespersonCompany", "salespersonEmail", "salespersonPhone", "salespersonAddress", "salespersonCommissionPercent", "salespersonNotes"].forEach(id => $(id).value = "");
       $("salespersonCommissionBase").value = "collected";
       $("salespersonPaymentSchedule").value = "monthly";
@@ -241,7 +251,7 @@
     }
     function editSalesperson(id) {
       const item = state.salespeople.find(row => row.id === id); if (!item) return;
-      state.editingSalespersonId = id; $("salespersonModalTitle").textContent = "Edit salesperson";
+      state.editingSalespersonId = id; $("salespersonModalTitle").textContent = salespersonText("Edit salesperson", "Editar vendedor");
       $("salespersonName").value = item.name || ""; $("salespersonCompany").value = item.company || "";
       $("salespersonEmail").value = item.email || ""; $("salespersonPhone").value = item.phone || "";
       $("salespersonAddress").value = item.address || ""; $("salespersonCommissionPercent").value = Number(item.commissionPercent || 0);
@@ -263,7 +273,7 @@
       const rows = state.salespeople.filter(item => `${item.name || ""} ${item.company || ""} ${item.email || ""} ${item.phone || ""}`.toLowerCase().includes(q));
       body.innerHTML = rows.map(item => {
         const clients = state.clients.filter(client => client.salespersonId === item.id).length;
-        return `<tr><td><strong>${safe(item.name)}</strong><br><small>${safe(item.company || "-")}</small></td><td>${safe(item.email || "-")}<br><small>${safe(item.phone || "-")}</small></td><td>${Number(item.commissionPercent || 0).toFixed(2)}%<br><small>${safe(COMMISSION_BASE_LABELS[item.commissionBase] || COMMISSION_BASE_LABELS.collected)}</small></td><td>${clients}</td><td><strong>${money(getSalespersonOutstanding(item.id))}</strong><br><small>Earned and not settled</small></td><td><span class="pill ${item.status === "inactive" ? "state-disabled" : "state-active"}">${item.status === "inactive" ? "Inactive" : "Active"}</span></td><td><div class="actions-row"><button class="btn btn-primary btn-small" data-new-commission-settlement="${item.id}">Pay commission</button><button class="btn btn-info btn-small" data-salesperson-agreement="${item.id}">Agreement PDF</button><button class="btn btn-secondary btn-small" data-edit-salesperson="${item.id}">Edit</button><button class="btn btn-danger btn-small" data-delete-salesperson="${item.id}">Delete</button></div></td></tr>`;
+        return `<tr><td><strong>${safe(item.name)}</strong><br><small>${safe(item.company || "-")}</small></td><td>${safe(item.email || "-")}<br><small>${safe(item.phone || "-")}</small></td><td>${Number(item.commissionPercent || 0).toFixed(2)}%<br><small>${safe(commissionBaseLabel(item.commissionBase))}</small></td><td>${clients}</td><td><strong>${money(getSalespersonOutstanding(item.id))}</strong><br><small>${salespersonText("Earned and not settled", "Ganada y pendiente de liquidar")}</small></td><td><span class="pill ${item.status === "inactive" ? "state-disabled" : "state-active"}">${item.status === "inactive" ? salespersonText("Inactive", "Inactivo") : salespersonText("Active", "Activo")}</span></td><td><div class="actions-row"><button class="btn btn-primary btn-small" data-new-commission-settlement="${item.id}">${salespersonText("Pay commission", "Pagar comisión")}</button><button class="btn btn-info btn-small" data-salesperson-agreement="${item.id}">${salespersonText("Agreement PDF", "PDF acuerdo")}</button><button class="btn btn-secondary btn-small" data-edit-salesperson="${item.id}">${salespersonText("Edit", "Editar")}</button><button class="btn btn-danger btn-small" data-delete-salesperson="${item.id}">${salespersonText("Delete", "Eliminar")}</button></div></td></tr>`;
       }).join("");
       $("salespeopleEmpty").classList.toggle("hidden", rows.length > 0);
       $("activeSalespeopleCount").textContent = state.salespeople.filter(item => item.status !== "inactive").length;
@@ -273,7 +283,7 @@
     }
     function renderCommissionSettlements() {
       const body = $("commissionSettlementsBody"); if (!body) return;
-      body.innerHTML = state.commissionSettlements.map(item => `<tr class="${item.status === "void" ? "commission-settlement-void" : ""}"><td>${safe(item.paymentDate || "-")}</td><td>${safe(item.salespersonName || getSalespersonName(item.salespersonId, "-"))}</td><td>${Array.isArray(item.lineItems) ? item.lineItems.length : 0}</td><td>${safe(item.method || "-")}<br><small>${safe(item.reference || "-")}</small></td><td><strong>${money(item.total)}</strong></td><td><span class="pill ${item.status === "void" ? "state-disabled" : "state-active"}">${item.status === "void" ? "Voided" : "Paid"}</span></td><td><div class="actions-row"><button class="btn btn-info btn-small" data-commission-settlement-pdf="${item.id}">Statement PDF</button>${item.status !== "void" ? `<button class="btn btn-danger btn-small" data-void-commission-settlement="${item.id}">Void</button>` : ""}</div></td></tr>`).join("");
+      body.innerHTML = state.commissionSettlements.map(item => `<tr class="${item.status === "void" ? "commission-settlement-void" : ""}"><td>${safe(item.paymentDate || "-")}</td><td>${safe(item.salespersonName || getSalespersonName(item.salespersonId, "-"))}</td><td>${Array.isArray(item.lineItems) ? item.lineItems.length : 0}</td><td>${safe(item.method || "-")}<br><small>${safe(item.reference || "-")}</small></td><td><strong>${money(item.total)}</strong></td><td><span class="pill ${item.status === "void" ? "state-disabled" : "state-active"}">${item.status === "void" ? salespersonText("Voided", "Anulada") : salespersonText("Paid", "Pagada")}</span></td><td><div class="actions-row"><button class="btn btn-info btn-small" data-commission-settlement-pdf="${item.id}">${salespersonText("Statement PDF", "PDF liquidación")}</button>${item.status !== "void" ? `<button class="btn btn-danger btn-small" data-void-commission-settlement="${item.id}">${salespersonText("Void", "Anular")}</button>` : ""}</div></td></tr>`).join("");
       $("commissionSettlementsEmpty").classList.toggle("hidden", state.commissionSettlements.length > 0);
     }
     function pdfWrappedText(pdf, text, x, y, width, lineHeight = 5) {
@@ -340,3 +350,9 @@
       const voidButton = event.target.closest("[data-void-commission-settlement]"); if (voidButton) voidCommissionSettlement(voidButton.dataset.voidCommissionSettlement);
     });
     $("salespersonSearch")?.addEventListener("input", renderSalespeople);
+    window.addEventListener("crm-language-changed", () => {
+      fillJobSalespersonSelect(cleanText($("jobSalespersonId")?.value));
+      fillClientSalespersonSelect(cleanText($("clientSalespersonId")?.value));
+      renderSalespeople();
+      renderCommissionSettlements();
+    });
