@@ -2,6 +2,7 @@
       state.editingClientId = null;
       $("clientModalTitle").textContent = "Nuevo cliente";
       ["clientName","clientCompany","clientPhone","clientEmail","clientAddress","clientCity","clientNotes"].forEach(id => $(id).value = "");
+      $("clientLanguage").value = state.language === "es" ? "es" : "en";
       $("clientCommissionBox")?.classList.toggle("hidden", !isAdmin());
       if (isAdmin()) { $("clientSource").value = "company"; fillClientSalespersonSelect(); toggleClientCommissionFields(); }
     }
@@ -15,6 +16,7 @@
         address: cleanText($("clientAddress").value),
         city: cleanText($("clientCity").value),
         notes: cleanText($("clientNotes").value),
+        language: $("clientLanguage").value === "es" ? "es" : "en",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -58,6 +60,7 @@
       $("clientAddress").value = item.address || "";
       $("clientCity").value = item.city || "";
       $("clientNotes").value = item.notes || "";
+      $("clientLanguage").value = item.language === "es" ? "es" : "en";
       $("clientCommissionBox")?.classList.toggle("hidden", !isAdmin());
       if (isAdmin()) {
         $("clientSource").value = item.salesSource === "salesperson" ? "salesperson" : "company";

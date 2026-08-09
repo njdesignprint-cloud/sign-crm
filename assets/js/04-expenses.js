@@ -116,6 +116,7 @@
     }
     function resetPaymentForm(jobId = "") {
       state.workingPaymentJobId = jobId || "";
+      state.workingPaymentInvoiceId = null;
       state.editingPaymentId = null;
       fillPaymentJobSelect(jobId || "");
       $("paymentJobId").disabled = false;
@@ -134,6 +135,7 @@
       if (!job || !payment) return showToast(state.language === "en" ? "Payment not found." : "No se encontró el pago.");
 
       state.workingPaymentJobId = job.id;
+      state.workingPaymentInvoiceId = payment.invoiceId || null;
       state.editingPaymentId = String(payment.id || "").startsWith("legacy-")
         ? "p-legacy-" + job.id
         : payment.id;
@@ -259,7 +261,8 @@
           type,
           date,
           method,
-          note
+          note,
+          invoiceId: state.workingPaymentInvoiceId || (editingIndex >= 0 ? payments[editingIndex].invoiceId || "" : "")
         };
         if (editingIndex >= 0) payments.splice(editingIndex, 1, savedPayment);
         else payments.push(savedPayment);
@@ -272,17 +275,31 @@
           : `${typeLabel} registrado por ${amount.toFixed(2)}.`;
         const logs = [...getJobActivityLog(job), newLogEntry("pago", logMessage)];
 
-        await jobsRef().doc(jobId).update({
+        const jobPatch = {
           payments,
           status: newStatus,
           activityLog: logs,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        };
+        if (savedPayment.invoiceId) {
+          const invoice = state.salesDocuments.find(item => item.id === savedPayment.invoiceId && item.type === "invoice");
+          if (!invoice) return showToast(state.language === "en" ? "The linked invoice was not found." : "No se encontró la factura vinculada.");
+          const invoicePaid = PaymentUtils.netPaid(payments.filter(item => item.invoiceId === savedPayment.invoiceId));
+          if (invoicePaid < 0) return showToast(state.language === "en" ? "The refund exceeds payments applied to this invoice." : "El reembolso supera los pagos aplicados a esta factura.");
+          if (invoicePaid > Number(invoice.total || 0)) return showToast(state.language === "en" ? "That payment exceeds the invoice balance." : "Ese pago supera el saldo de la factura.");
+          const batch = db.batch();
+          batch.update(jobsRef().doc(jobId), jobPatch);
+          batch.update(salesDocumentsRef().doc(savedPayment.invoiceId), { paidAmount:invoicePaid, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+          await batch.commit();
+        } else {
+          await jobsRef().doc(jobId).update(jobPatch);
+        }
 
         showToast(editingIndex >= 0
           ? (state.language === "en" ? "Payment updated." : "Pago actualizado.")
           : (state.language === "en" ? "Payment saved." : "Pago guardado."));
         state.editingPaymentId = null;
+        state.workingPaymentInvoiceId = null;
         markModalSaved("paymentModal");
         closeModal("paymentModal", true);
 

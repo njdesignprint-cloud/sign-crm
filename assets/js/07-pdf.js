@@ -113,6 +113,7 @@
         commissionSettlements: state.commissionSettlements,
         companySettings: state.companySettings,
         jobs: state.jobs,
+        salesDocuments: state.salesDocuments,
         expenses: state.expenses,
         recurringExpenses: state.recurringExpenses,
         inventoryItems: state.inventoryItems,

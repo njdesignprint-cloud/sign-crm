@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260730-18" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260808-2" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -132,6 +132,7 @@
   <button id="navProspectosBtn" data-view="prospectos" data-nav-icon="🎯">🎯 Prospectos</button>
   <button id="navVendedoresBtn" data-view="vendedores" data-nav-icon="🤝">🤝 Salespeople</button>
   <button id="navTrabajosBtn" data-view="trabajos" data-nav-icon="🛠️">🛠️ Trabajos</button>
+  <button id="navDocumentosBtn" data-view="documentos" data-nav-icon="📄">📄 Estimates & invoices</button>
   <button id="navProduccionBtn" data-view="produccion" data-nav-icon="🏭">🏭 Producción</button>
   <button id="navInstalacionesBtn" data-view="instalaciones" data-nav-icon="🗓️">🗓️ Instalación</button>
 
@@ -399,6 +400,25 @@
             <div class="panel-head"><div><h2>Commission settlements</h2><div class="section-note">Permanent payment statements. Incorrect entries are voided, never silently deleted.</div></div></div>
             <div class="table-wrap"><table><thead><tr><th>Date</th><th>Salesperson</th><th>Jobs</th><th>Method / reference</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="commissionSettlementsBody"></tbody></table></div>
             <div id="commissionSettlementsEmpty" class="empty hidden">No commission settlements recorded yet.</div>
+          </div>
+        </section>
+
+        <section id="view-documentos" class="view hidden">
+          <div class="stats sales-doc-stats">
+            <div class="stat"><div id="salesDocsDraftLabel" class="label">Draft estimates</div><div id="salesDocsDraftTotal" class="value">$0.00</div></div>
+            <div class="stat"><div id="salesDocsOpenLabel" class="label">Open invoices</div><div id="salesDocsOpenTotal" class="value">$0.00</div></div>
+            <div class="stat"><div id="salesDocsOverdueLabel" class="label">Overdue</div><div id="salesDocsOverdueTotal" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div id="salesDocsPaidLabel" class="label">Paid invoices</div><div id="salesDocsPaidTotal" class="value ok-text">$0.00</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2 id="salesDocsHeading">Estimates & invoices</h2><div id="salesDocsNote" class="section-note">Estimates do not count as collected money. Only recorded payments affect collected totals.</div></div></div>
+            <div class="filters">
+              <input id="salesDocumentSearch" class="input" placeholder="Search customer or document number" />
+              <select id="salesDocumentTypeFilter" class="select"><option value="">All documents</option><option value="estimate">Estimates</option><option value="invoice">Invoices</option></select>
+              <select id="salesDocumentStatusFilter" class="select"><option value="">All statuses</option></select>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th id="salesDocsDocumentTh">Document</th><th id="salesDocsCustomerTh">Customer</th><th id="salesDocsDateTh">Date</th><th id="salesDocsStatusTh">Status</th><th id="salesDocsTotalTh">Total</th><th id="salesDocsBalanceTh">Balance</th><th id="salesDocsActionsTh">Actions</th></tr></thead><tbody id="salesDocumentsTableBody"></tbody></table></div>
+            <div id="salesDocumentsEmpty" class="empty hidden">No estimates or invoices yet.</div>
           </div>
         </section>
 
@@ -1512,6 +1532,7 @@
           <input id="clientEmail" class="input" placeholder="Correo electrónico" />
           <input id="clientAddress" class="input" placeholder="Dirección" />
           <input id="clientCity" class="input" placeholder="Ciudad / Estado" />
+          <label class="field-label"><span>Preferred language / Idioma preferido</span><select id="clientLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select></label>
         </div>
         <textarea id="clientNotes" class="textarea mt-12" placeholder="Notas del cliente"></textarea>
         <div id="clientCommissionBox" class="box">
@@ -2409,34 +2430,64 @@
 
   <datalist id="productionResponsibleList"></datalist>
 
+  <div class="modal-backdrop" id="salesDocumentModal">
+    <div class="modal modal-wide">
+      <div class="modal-head"><h3 id="salesDocumentModalTitle">New estimate</h3><button id="salesDocCloseBtn" class="btn btn-secondary btn-small" data-close="salesDocumentModal">Close</button></div>
+      <div class="modal-body">
+        <div class="grid-4">
+          <label class="field-label"><span id="salesDocTypeLabel">Document type</span><select id="salesDocType" class="select"><option value="estimate">Estimate</option><option value="invoice">Invoice</option></select></label>
+          <label class="field-label"><span id="salesDocClientLabel">Customer</span><select id="salesDocClientId" class="select"></select></label>
+          <label class="field-label"><span id="salesDocJobLabel">Related job</span><select id="salesDocJobId" class="select"><option value="">Not linked</option></select></label>
+          <label class="field-label"><span id="salesDocLanguageLabel">Customer language</span><select id="salesDocLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select></label>
+          <label class="field-label"><span id="salesDocIssueDateLabel">Issue date</span><input id="salesDocIssueDate" type="date" class="input" /></label>
+          <label class="field-label"><span id="salesDocDueDateLabel">Expiration / due date</span><input id="salesDocDueDate" type="date" class="input" /></label>
+          <label class="field-label"><span id="salesDocStatusLabel">Status</span><select id="salesDocStatus" class="select"></select></label>
+          <label class="field-label"><span id="salesDocDepositLabel">Required deposit %</span><input id="salesDocDepositPercent" type="number" min="0" max="100" step="0.01" class="input" value="50" /></label>
+        </div>
+        <div class="panel-head mt-16"><div><h3 id="salesDocItemsHeading">Products and services</h3><div id="salesDocInternalHelp" class="section-note">Internal cost and profit are never shown on the customer PDF.</div></div><button id="addSalesDocLineBtn" type="button" class="btn btn-info btn-small">+ Add line</button></div>
+        <div class="table-wrap"><table class="sales-doc-lines"><thead><tr><th id="salesDocDescriptionTh">Description</th><th id="salesDocQtyTh">Qty</th><th id="salesDocRateTh">Rate</th><th id="salesDocCostTh">Internal cost</th><th id="salesDocTaxableTh">Taxable</th><th id="salesDocAmountTh">Amount</th><th></th></tr></thead><tbody id="salesDocLines"></tbody></table></div>
+        <div class="grid-3 mt-16">
+          <label class="field-label"><span id="salesDocDiscountLabel">Discount</span><input id="salesDocDiscount" type="number" min="0" step="0.01" class="input" value="0" /></label>
+          <label class="field-label"><span id="salesDocTaxLabel">Sales tax %</span><input id="salesDocTaxPercent" type="number" min="0" step="0.001" class="input" value="0" /></label>
+          <div class="box sales-doc-totals"><div><span id="salesDocSubtotalLabel">Subtotal</span><strong id="salesDocSubtotal">$0.00</strong></div><div><span id="salesDocTaxTotalLabel">Tax</span><strong id="salesDocTax">$0.00</strong></div><div><span id="salesDocTotalLabel">Total</span><strong id="salesDocTotal">$0.00</strong></div><div class="internal-total"><span id="salesDocProfitLabel">Internal profit</span><strong id="salesDocProfit">$0.00</strong></div></div>
+        </div>
+        <label class="field-label mt-12"><span id="salesDocCustomerMessageLabel">Customer message</span><textarea id="salesDocCustomerMessage" class="textarea" placeholder="Message shown on the document"></textarea></label>
+        <label class="field-label mt-12"><span id="salesDocInternalNotesLabel">Internal notes</span><textarea id="salesDocInternalNotes" class="textarea" placeholder="Only your team can see this"></textarea></label>
+      </div>
+      <div class="modal-foot"><button id="salesDocCancelBtn" class="btn btn-secondary" data-close="salesDocumentModal">Cancel</button><button id="saveSalesDocumentBtn" class="btn btn-primary">Save document</button></div>
+    </div>
+  </div>
+
 <div id="toast" class="toast"></div>
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
+  <script src="assets/js/00-sales-document-utils.js?v=20260808-1"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260730-19"></script>
-  <script src="assets/js/02-clients.js?v=20260728-5"></script>
+  <script src="assets/js/01-core.js?v=20260808-2"></script>
+  <script src="assets/js/02-clients.js?v=20260808-2"></script>
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
   <script src="assets/js/22-salespeople.js?v=20260728-5"></script>
   <script src="assets/js/23-company-settings.js?v=20260728-1"></script>
   <script src="assets/js/24-trash.js?v=20260728-1"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
+  <script src="assets/js/27-sales-documents.js?v=20260808-4"></script>
   <script src="assets/js/02-payment-utils.js?v=20260730-3"></script>
   <script src="assets/js/03-jobs.js?v=20260730-16"></script>
-  <script src="assets/js/04-expenses.js?v=20260730-4"></script>
+  <script src="assets/js/04-expenses.js?v=20260808-2"></script>
   <script src="assets/js/05-inventory.js?v=20260728-2"></script>
   <script src="assets/js/06-installation-reports.js?v=20260730-4"></script>
-  <script src="assets/js/07-pdf.js?v=20260730-9"></script>
+  <script src="assets/js/07-pdf.js?v=20260808-2"></script>
   <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
   <script src="assets/js/09-users.js?v=20260728-3"></script>
-  <script src="assets/js/10-backup-misc.js?v=20260730-8"></script>
-  <script src="assets/js/11-auth.js?v=20260730-11"></script>
-  <script src="assets/js/12-init.js?v=20260730-11"></script>
+  <script src="assets/js/10-backup-misc.js?v=20260808-2"></script>
+  <script src="assets/js/11-auth.js?v=20260808-2"></script>
+  <script src="assets/js/12-init.js?v=20260808-2"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260728-2"></script>
   <script src="assets/js/16-advance-control.js?v=20260728-2"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
-  <script src="assets/js/18-i18n.js?v=20260730-12"></script>
-  <script src="assets/js/25-i18n-complete.js?v=20260730-11"></script>
+  <script src="assets/js/18-i18n.js?v=20260808-2"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260808-1"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>

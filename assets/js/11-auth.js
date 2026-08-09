@@ -79,6 +79,11 @@
         renderReportsModule();
       }, error => console.error(error));
 
+      const unsubSalesDocuments = salesDocumentsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        state.salesDocuments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (typeof renderSalesDocuments === "function") renderSalesDocuments();
+      }, error => console.error(error));
+
       const unsubProspects = prospectsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
         state.prospects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (typeof renderProspects === "function") renderProspects();
@@ -153,7 +158,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubProspects, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJobs, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubProspects, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJobs, unsubSalesDocuments, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {

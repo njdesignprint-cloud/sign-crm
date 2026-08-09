@@ -11,13 +11,14 @@
         const commissionSettlements = Array.isArray(data.commissionSettlements) ? data.commissionSettlements : [];
         const companySettings = data.companySettings && typeof data.companySettings === "object" ? data.companySettings : {};
         const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+        const salesDocuments = Array.isArray(data.salesDocuments) ? data.salesDocuments : [];
         const expenses = Array.isArray(data.expenses) ? data.expenses : [];
         const recurring = Array.isArray(data.recurringExpenses) ? data.recurringExpenses : [];
         const inventory = Array.isArray(data.inventoryItems) ? data.inventoryItems : [];
         const movements = Array.isArray(data.inventoryMovements) ? data.inventoryMovements : [];
         const weeklySettlements = Array.isArray(data.weeklySettlements) ? data.weeklySettlements : [];
 
-        if (!clients.length && !prospects.length && !salespeople.length && !commissionSettlements.length && !jobs.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
+        if (!clients.length && !prospects.length && !salespeople.length && !commissionSettlements.length && !jobs.length && !salesDocuments.length && !expenses.length && !recurring.length && !inventory.length && !movements.length) {
           return showToast("Ese JSON no tiene datos válidos.");
         }
 
@@ -28,6 +29,7 @@
           `Vendedores: ${salespeople.length}\n` +
           `Liquidaciones de comisión: ${commissionSettlements.length}\n` +
           `Trabajos: ${jobs.length}\n` +
+          `Estimados y facturas: ${salesDocuments.length}\n` +
           `Gastos: ${expenses.length}\n` +
           `Recurrentes: ${recurring.length}\n\n` +
           `Esto puede duplicar datos si ya los importaste antes.\n¿Quieres continuar?`
@@ -66,6 +68,7 @@
             address: item.address || "",
             city: item.city || "",
             notes: item.notes || "",
+            language: item.language === "es" ? "es" : "en",
             salesSource: item.salesSource === "salesperson" ? "salesperson" : "company",
             salespersonId: salespersonMap[item.salespersonId] || item.salespersonId || "",
             salespersonNameSnapshot: item.salespersonNameSnapshot || "",
@@ -89,6 +92,17 @@
           await prospectsRef().add(payload);
         }
 
+        const salesDocumentMap = {};
+        const importedSalesDocuments = [];
+        for (const item of salesDocuments) {
+          const ref = salesDocumentsRef().doc();
+          const payload = { ...item, clientId:clientMap[item.clientId] || item.clientId || "", jobId:"", sourceJobId:item.jobId || "", createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp(), importedAt:firebase.firestore.FieldValue.serverTimestamp() };
+          delete payload.id;
+          await ref.set(payload);
+          if (item.id) salesDocumentMap[item.id] = ref.id;
+          importedSalesDocuments.push({ ref, sourceJobId:item.jobId || "" });
+        }
+
         for (const item of jobs) {
           const payload = {
             clientId: clientMap[item.clientId] || item.clientId || "",
@@ -104,7 +118,7 @@
             quote: item.quote || { items: [], discountType: "none", discountValue: 0, taxPercent: 0 },
             checklist: item.checklist || {},
             commission: item.commission ? { ...item.commission, salespersonId: salespersonMap[item.commission.salespersonId] || item.commission.salespersonId || "" } : {},
-            payments: Array.isArray(item.payments) ? item.payments : [],
+            payments: Array.isArray(item.payments) ? item.payments.map(payment => ({ ...payment, invoiceId:salesDocumentMap[payment.invoiceId] || payment.invoiceId || "" })) : [],
             internalNotesLog: Array.isArray(item.internalNotesLog) ? item.internalNotesLog : [],
             activityLog: Array.isArray(item.activityLog) ? item.activityLog : [newLogEntry("importación", "Trabajo importado desde respaldo JSON.")],
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -112,6 +126,9 @@
           };
           const doc = await jobsRef().add(payload);
           if (item.id) jobMap[item.id] = doc.id;
+        }
+        for (const item of importedSalesDocuments) {
+          await item.ref.update({ jobId:jobMap[item.sourceJobId] || "", sourceJobId:firebase.firestore.FieldValue.delete(), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
         }
 
         for (const item of commissionSettlements) {

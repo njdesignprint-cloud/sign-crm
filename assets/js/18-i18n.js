@@ -208,6 +208,7 @@
       prospectos: ["Prospectos", "Captación, visitas y seguimiento de nuevos negocios."],
       vendedores: ["Vendedores y comisiones", "Clientes asignados, condiciones de comisión y contratos."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
+      documentos: ["Estimados y facturas", "Crea, envía y controla los documentos de venta de cada cliente."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
       inventario: ["Inventario", "Control profesional de materiales, stock y movimientos."],
@@ -228,6 +229,7 @@
       prospectos: ["Prospects", "Lead generation, visits and follow-up for new businesses."],
       vendedores: ["Salespeople & commissions", "Assigned clients, commission terms and agreements."],
       trabajos: ["Jobs", "Table and Kanban view to organize production."],
+      documentos: ["Estimates & invoices", "Create, send and track each customer's sales documents."],
       produccion: ["Production", "Visual workflow board for jobs, assignees and deliveries."],
       gastos: ["Expenses", "Regular and recurring expense control."],
       inventario: ["Inventory", "Professional control of materials, stock and movements."],
@@ -488,6 +490,7 @@
           prospectos: "+ Nuevo prospecto",
           vendedores: "+ Nuevo vendedor",
           trabajos: "+ Nuevo trabajo",
+          documentos: "+ Nuevo documento",
           gastos: "+ Nuevo gasto",
           inventario: "+ Nuevo ítem",
           proveedores: "+ Nuevo proveedor",
@@ -499,6 +502,7 @@
           prospectos: "+ New prospect",
           vendedores: "+ New salesperson",
           trabajos: "+ New job",
+          documentos: "+ New document",
           gastos: "+ New expense",
           inventario: "+ New item",
           proveedores: "+ New supplier",
@@ -540,7 +544,7 @@
     }
     setTimeout(() => {
       const viewRenderers = {
-        clientes: "renderClients", prospectos: "renderProspects", vendedores: "renderSalespeople", trabajos: "renderJobs",
+        clientes: "renderClients", prospectos: "renderProspects", vendedores: "renderSalespeople", trabajos: "renderJobs", documentos: "renderSalesDocuments",
         produccion: "renderProductionBoard", gastos: "renderExpenses", inventario: "renderInventory",
         proveedores: "renderProviders", compras: "renderPurchaseOrders", instalaciones: "renderInstallationModule",
         reportes: "renderReportsModule", usuarios: "renderUsers", cuentascrm: "renderPlatformAccounts"

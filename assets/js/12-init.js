@@ -103,6 +103,10 @@
         if (!state.clients.length) return showToast("Primero crea un cliente.");
         resetJobForm();
         openModal("jobModal");
+      } else if (state.currentView === "documentos") {
+        if (!state.clients.length) return showToast(state.language === "en" ? "Create a client first." : "Primero crea un cliente.");
+        resetSalesDocumentForm("estimate");
+        openModal("salesDocumentModal");
       } else if (state.currentView === "gastos") {
         resetExpenseForm();
         openModal("expenseModal");

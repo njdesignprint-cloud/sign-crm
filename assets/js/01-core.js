@@ -50,6 +50,7 @@
       companySettings: {},
       trashItems: [],
       jobs: [],
+      salesDocuments: [],
       expenses: [],
       recurringExpenses: [],
       inventoryItems: [],
@@ -62,6 +63,7 @@
       editingProspectId: null,
       editingSalespersonId: null,
       editingJobId: null,
+      editingSalesDocumentId: null,
       editingExpenseId: null,
       editingRecurringId: null,
       editingInventoryId: null,
@@ -69,6 +71,7 @@
       editingPurchaseOrderId: null,
       editingTeamMemberId: null,
       workingPaymentJobId: null,
+      workingPaymentInvoiceId: null,
       editingPaymentId: null,
       workingMovementItemId: null,
       galleryIndex: 0,
@@ -105,6 +108,7 @@
       prospectos: ["Prospectos", "Captación, visitas y seguimiento de nuevos negocios."],
       vendedores: ["Salespeople & commissions", "Manage client ownership, commission terms and agreements."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
+      documentos: ["Estimates & invoices", "Create, send and track customer sales documents."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
       inventario: ["Inventario", "Control profesional de materiales, stock y movimientos."],
@@ -372,6 +376,7 @@
       if (view === "prospectos") btnNew.textContent = "+ Nuevo prospecto";
       if (view === "vendedores") btnNew.textContent = "+ New salesperson";
       if (view === "trabajos") btnNew.textContent = "+ Nuevo trabajo";
+      if (view === "documentos") btnNew.textContent = state.language === "en" ? "+ New document" : "+ Nuevo documento";
       if (view === "gastos") btnNew.textContent = "+ Nuevo gasto";
       if (view === "inventario") btnNew.textContent = "+ Nuevo ítem";
       if (view === "proveedores") btnNew.textContent = "+ Nuevo proveedor";
@@ -380,7 +385,7 @@
       if (!canEditModule(view) || ["produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
-      $("btnExportPdf")?.classList.toggle("hidden", ["auditoria", "prospectos"].includes(view));
+      $("btnExportPdf")?.classList.toggle("hidden", ["auditoria", "prospectos", "documentos"].includes(view));
       if (view === "auditoria" && typeof window.activateAuditLogView === "function") window.activateAuditLogView();
     }
     function setJobsViewMode(mode) {
@@ -392,7 +397,7 @@
       $("btnKanbanView").classList.toggle("btn-info", mode === "kanban");
       $("btnKanbanView").classList.toggle("btn-secondary", mode !== "kanban");
     }
-    const protectedDraftModals = new Set(["clientModal", "prospectModal", "prospectFollowupModal", "jobModal", "paymentModal", "expenseModal"]);
+    const protectedDraftModals = new Set(["clientModal", "prospectModal", "prospectFollowupModal", "jobModal", "paymentModal", "expenseModal", "salesDocumentModal"]);
     const modalDraftBaselines = new Map();
     function serializeModalDraft(id) {
       const modal = $(id);
@@ -460,6 +465,7 @@
     function companySettingsRef() { return userRef().collection("settings").doc("company"); }
     function trashRef() { return userRef().collection("trash"); }
     function jobsRef() { return userRef().collection("jobs"); }
+    function salesDocumentsRef() { return userRef().collection("salesDocuments"); }
     function expensesRef() { return userRef().collection("expenses"); }
     function recurringRef() { return userRef().collection("recurringExpenses"); }
     function inventoryRef() { return userRef().collection("inventoryItems"); }
@@ -558,6 +564,7 @@
     }
     function resolvePermissionModule(module = "") {
       if (module === "prospectos") return "clientes";
+      if (module === "documentos") return "trabajos";
       return ["produccion", "instalaciones"].includes(module) ? "trabajos" : module;
     }
     function getCurrentModulePermission(module = "") {

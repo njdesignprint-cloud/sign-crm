@@ -127,6 +127,13 @@
     .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .sales-doc-lines .input{min-width:88px}
+    .sales-doc-lines .sales-line-description{min-width:240px}
+    .sales-doc-lines th:nth-child(5),.sales-doc-lines td:nth-child(5){text-align:center}
+    .sales-doc-totals{display:grid;gap:7px;margin:0}
+    .sales-doc-totals>div{display:flex;justify-content:space-between;gap:16px}
+    .sales-doc-totals .internal-total{padding-top:7px;border-top:1px solid var(--border);color:var(--success)}
+    #view-documentos .filters{margin-bottom:14px}
     .mt-10{margin-top:10px}
     .mt-12{margin-top:12px}
     .mt-16{margin-top:16px}

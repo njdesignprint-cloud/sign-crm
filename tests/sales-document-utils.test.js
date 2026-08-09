@@ -1,0 +1,41 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const SalesDocumentUtils = require("../assets/js/00-sales-document-utils.js");
+const fs = require("node:fs");
+const path = require("node:path");
+
+test("calculates discount, taxable lines, tax and internal profit", () => {
+  const result = SalesDocumentUtils.calculate([
+    { quantity:2, rate:100, internalCost:60, taxable:true },
+    { quantity:1, rate:50, internalCost:10, taxable:false }
+  ], 25, 8.25);
+  assert.equal(result.subtotal, 250);
+  assert.equal(result.discount, 25);
+  assert.equal(result.taxableSubtotal, 180);
+  assert.equal(result.tax, 14.85);
+  assert.equal(result.total, 239.85);
+  assert.equal(result.internalCost, 70);
+  assert.equal(result.profit, 155);
+});
+
+test("invoice module keeps bilingual terms, backups and job-linked payments", () => {
+  const moduleSource = fs.readFileSync(path.join(__dirname, "../assets/js/27-sales-documents.js"), "utf8");
+  const backupSource = fs.readFileSync(path.join(__dirname, "../assets/js/07-pdf.js"), "utf8");
+  const paymentSource = fs.readFileSync(path.join(__dirname, "../assets/js/04-expenses.js"), "utf8");
+  assert.match(moduleSource, /PAYMENT OPTIONS: Zelle \$\{paymentPhone\}/);
+  assert.match(moduleSource, /OPCIONES DE PAGO: Zelle \$\{paymentPhone\}/);
+  assert.match(moduleSource, /const issuerName = typeof pdfCompanyName/);
+  assert.doesNotMatch(moduleSource, /NJ Design & Print no se hace responsable/);
+  assert.match(moduleSource, /Customer Signature/);
+  assert.match(moduleSource, /Firma del cliente/);
+  assert.match(backupSource, /salesDocuments: state\.salesDocuments/);
+  assert.match(paymentSource, /invoiceId: state\.workingPaymentInvoiceId/);
+  assert.match(paymentSource, /paidAmount:invoicePaid/);
+});
+
+test("an estimate never becomes collected and invoice status follows payments", () => {
+  assert.equal(SalesDocumentUtils.effectiveStatus({ type:"estimate", total:1000, paidAmount:1000, status:"accepted" }, "2026-08-08"), "accepted");
+  assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:400, status:"open", dueDate:"2026-08-20" }, "2026-08-08"), "partially_paid");
+  assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:1000, status:"open" }, "2026-08-08"), "paid");
+  assert.equal(SalesDocumentUtils.effectiveStatus({ type:"invoice", total:1000, paidAmount:0, status:"open", dueDate:"2026-08-01" }, "2026-08-08"), "overdue");
+});
