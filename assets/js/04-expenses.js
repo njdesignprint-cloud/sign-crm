@@ -99,6 +99,14 @@
       $("expenseAmount").value = "";
       $("expenseDate").value = today();
       $("expenseNotes").value = "";
+      $("expenseRecordType").value = "expense";
+      $("expenseWorkerName").value = "";
+      $("expenseWorkerRole").value = "";
+      $("expensePeriodFrom").value = "";
+      $("expensePeriodTo").value = "";
+      $("expensePaymentMethod").value = "Efectivo";
+      $("expenseApplyToAdvance").checked = true;
+      toggleWorkerPaymentFields();
       fillExpenseJobSelect(jobId || "");
       $("expenseJobId").value = jobId || "";
       state.pendingExpensePhotos = [];
@@ -127,6 +135,11 @@
       $("paymentNote").value = "";
       if ($("paymentModalTitle")) $("paymentModalTitle").textContent = state.language === "en" ? "Add payment" : "Agregar pago";
       $("savePaymentBtn").textContent = state.language === "en" ? "Save payment" : "Guardar pago";
+    }
+    function toggleWorkerPaymentFields() {
+      const isWorkerPayment = $("expenseRecordType")?.value === "worker_payment";
+      $("workerPaymentFields")?.classList.toggle("hidden", !isWorkerPayment);
+      if (isWorkerPayment && $("expenseCategory")) $("expenseCategory").value = "Nómina";
     }
     function editPayment(paymentId = "") {
       const jobId = state.editingJobId || state.workingPaymentJobId;
@@ -160,9 +173,19 @@
         date: cleanText($("expenseDate").value) || today(),
         jobId: cleanText($("expenseJobId").value),
         notes: cleanText($("expenseNotes").value),
+        recordType: $("expenseRecordType").value === "worker_payment" ? "worker_payment" : "expense",
+        workerName: cleanText($("expenseWorkerName").value),
+        workerRole: cleanText($("expenseWorkerRole").value),
+        periodFrom: cleanText($("expensePeriodFrom").value),
+        periodTo: cleanText($("expensePeriodTo").value),
+        paymentMethod: cleanText($("expensePaymentMethod").value),
+        applyToAdvance: $("expenseRecordType").value === "worker_payment" && !!$("expenseApplyToAdvance").checked,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
+      if (payload.recordType === "worker_payment" && !payload.workerName) return showToast("Escribe el nombre del trabajador.");
+      if (payload.recordType === "worker_payment" && !payload.jobId) return showToast("Selecciona el trabajo relacionado para descontar correctamente este pago.");
+      if (payload.recordType === "worker_payment" && !payload.concept) payload.concept = `Pago a ${payload.workerName}`;
       if (!payload.concept) return showToast("Escribe el concepto del gasto.");
       if (payload.amount <= 0) return showToast("El monto debe ser mayor que 0.");
 
@@ -357,6 +380,14 @@
       fillExpenseJobSelect(item.jobId || "");
       $("expenseJobId").value = item.jobId || "";
       $("expenseNotes").value = item.notes || "";
+      $("expenseRecordType").value = item.recordType === "worker_payment" ? "worker_payment" : "expense";
+      $("expenseWorkerName").value = item.workerName || "";
+      $("expenseWorkerRole").value = item.workerRole || "";
+      $("expensePeriodFrom").value = item.periodFrom || "";
+      $("expensePeriodTo").value = item.periodTo || "";
+      $("expensePaymentMethod").value = item.paymentMethod || "Efectivo";
+      $("expenseApplyToAdvance").checked = item.recordType === "worker_payment" && item.applyToAdvance !== false;
+      toggleWorkerPaymentFields();
       state.pendingExpensePhotos = [];
       renderExpensePhotos();
       openModal("expenseModal");
@@ -391,6 +422,7 @@
           <td><small>${safe(expense.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
+              ${expense.recordType === "worker_payment" ? `<button class="btn btn-info btn-small" data-worker-payment-receipt="${expense.id}">PDF pago</button>` : ""}
               ${canWriteData("gastos") ? `<button class="btn btn-secondary btn-small" data-edit-expense="${expense.id}">Editar</button>` : ""}
               ${canDeleteData("gastos") ? `<button class="btn btn-danger btn-small" data-delete-expense="${expense.id}">Eliminar</button>` : ""}
             </div>
@@ -401,6 +433,7 @@
       $("expensesEmpty").classList.toggle("hidden", rows.length > 0);
       renderStats();
     }
+    $("expenseRecordType")?.addEventListener("change", toggleWorkerPaymentFields);
     function renderRecurringExpenses() {
       $("recurringBody").innerHTML = state.recurringExpenses.map(item => `
         <tr>

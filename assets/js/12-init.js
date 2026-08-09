@@ -364,6 +364,7 @@
       if (target.dataset.payJob) { resetPaymentForm(target.dataset.payJob); openModal("paymentModal"); }
 
       if (target.dataset.editExpense) editExpense(target.dataset.editExpense);
+      if (target.dataset.workerPaymentReceipt) exportWorkerPaymentReceiptPdf(target.dataset.workerPaymentReceipt);
       if (target.dataset.deleteExpense) removeItem("expenses", target.dataset.deleteExpense, "gasto");
 
       if (target.dataset.editRecurring) editRecurring(target.dataset.editRecurring);

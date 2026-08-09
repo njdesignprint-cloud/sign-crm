@@ -118,9 +118,9 @@
       .filter(expense => typeof monthKey === "function" ? monthKey(expense.date) === month : true)
       .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
-    const monthProfitBase = state.jobs
+    const monthInternalCosts = state.jobs
       .filter(job => typeof monthKey === "function" ? monthKey(job.date) === month && !["Cancelado"].includes(job.status) : true)
-      .reduce((sum, job) => sum + (typeof computeJob === "function" ? computeJob(job).profit : 0), 0);
+      .reduce((sum, job) => sum + (typeof computeJob === "function" ? computeJob(job).baseCost : 0), 0);
 
     const overallReceivable = state.jobs
       .filter(job => !["Pagado", "Cancelado"].includes(job.status))
@@ -139,7 +139,7 @@
     setIfExists("mSales", moneyFormatter(monthSales));
     setIfExists("mCollected", moneyFormatter(monthCollected));
     setIfExists("mExpenses", moneyFormatter(monthExpenses));
-    setIfExists("mProfit", moneyFormatter(monthProfitBase - monthExpenses));
+    setIfExists("mProfit", moneyFormatter(monthSales - monthInternalCosts - monthExpenses));
 
     setIfExists("dueTodayCount", String(dueToday));
     setIfExists("allOverdueJobs", String(overdueJobs));

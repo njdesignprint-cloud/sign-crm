@@ -223,7 +223,19 @@
 
   window.getJobAdvanceSummary = function (job = {}) {
     const deposit = getPaymentDepositSummary(job);
-    return computeAdvance({ ...(job.advance || {}), received: deposit.received });
+    const summary = computeAdvance({ ...(job.advance || {}), received: deposit.received });
+    const workerPayments = Array.isArray(window.state?.expenses)
+      ? state.expenses.filter(expense => expense.recordType === "worker_payment"
+        && String(expense.jobId || "") === String(job.id || "")
+        && expense.applyToAdvance !== false)
+      : [];
+    const workerPaymentsSpent = workerPayments.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+    return {
+      ...summary,
+      spent: summary.spent + workerPaymentsSpent,
+      available: summary.available - workerPaymentsSpent,
+      workerPaymentsSpent
+    };
   };
 
   function getPaymentDepositSummary(job = {}) {

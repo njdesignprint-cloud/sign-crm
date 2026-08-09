@@ -433,6 +433,43 @@
       savePdf(pdf, `Expenses_${today()}.pdf`);
       showToast('PDF de gastos exportado.');
     }
+    function exportWorkerPaymentReceiptPdf(expenseId) {
+      const expense = state.expenses.find(item => item.id === expenseId && item.recordType === "worker_payment");
+      if (!expense) return showToast(pdfText("Worker payment not found.", "No se encontró el pago al trabajador."));
+      const job = getJobById(expense.jobId || "");
+      const client = job ? getClientById(job.clientId) : null;
+      const pdf = createModulePdf(pdfText("WORKER PAYMENT RECEIPT", "COMPROBANTE DE PAGO AL TRABAJADOR"), pdfText("Payment record and acknowledgment", "Registro y confirmación del pago"));
+      pdf.autoTable({
+        startY: 56,
+        head: [[pdfText("Field", "Campo"), pdfText("Details", "Detalles")]],
+        body: [
+          [pdfText("Worker", "Trabajador"), expense.workerName || "-"],
+          [pdfText("Work performed", "Labor realizada"), expense.workerRole || expense.concept || "-"],
+          [pdfText("Related job", "Trabajo relacionado"), job ? getJobDisplayLabel(job) : "-"],
+          [pdfText("Customer", "Cliente"), client ? (client.company || client.name || "-") : "-"],
+          [pdfText("Payment date", "Fecha del pago"), expense.date || "-"],
+          [pdfText("Work period", "Período trabajado"), `${expense.periodFrom || "-"} ${pdfText("to", "a")} ${expense.periodTo || "-"}`],
+          [pdfText("Payment method", "Método de pago"), expense.paymentMethod || "-"],
+          [pdfText("Amount paid", "Monto pagado"), money(expense.amount)],
+          [pdfText("Notes", "Notas"), expense.notes || "-"]
+        ],
+        headStyles:{fillColor:companyPdfColor()}, styles:{fontSize:9}
+      });
+      let y = pdf.lastAutoTable.finalY + 14;
+      pdf.setFontSize(9);
+      pdf.text(pdfText("The worker acknowledges receipt of the payment described above.", "El trabajador confirma haber recibido el pago descrito anteriormente."), 14, y);
+      y += 18;
+      pdf.text(`${pdfText("Company representative", "Representante de la empresa")}: ______________________________`, 14, y);
+      pdf.text(`${pdfText("Worker", "Trabajador")}: ______________________________`, 112, y);
+      y += 13;
+      pdf.text(`${pdfText("Signature", "Firma")}: ______________________________`, 14, y);
+      pdf.text(`${pdfText("Signature", "Firma")}: ______________________________`, 112, y);
+      y += 13;
+      pdf.text(`${pdfText("Date", "Fecha")}: ______________________________`, 14, y);
+      pdf.text(`${pdfText("Date", "Fecha")}: ______________________________`, 112, y);
+      savePdf(pdf, `Worker_Payment_${expense.workerName || expense.date || today()}.pdf`, "internal");
+      showToast(pdfText("Worker payment receipt exported.", "Comprobante de pago exportado."));
+    }
     function exportInventoryPdf() {
       const rows = getFilteredInventory();
       const pdf = createModulePdf(pdfText('Inventory', 'Inventario'), pdfText('Current stock and recent movements', 'Stock actual y movimientos recientes'));
