@@ -238,11 +238,12 @@
       $("platformAccountsEmpty").classList.toggle("hidden", rows.length > 0);
 
       tbody.innerHTML = rows.map(item => {
+        const english = state.language === "en";
         const workspace = getWorkspaceByOwnerId(item.ownerId || item.uid || item.id);
         const isSuper = cleanText(item.appRole) === "superadmin";
         const workspaceStatus = cleanText(workspace?.status || item.status || "pending") || "pending";
         const companyLabel = item.companyName || workspace?.companyName || item.email || "-";
-        const workspaceLabel = cleanText(item.invited) ? "Miembro invitado" : safe(workspace?.plan || "starter");
+        const workspaceLabel = cleanText(item.invited) ? (english ? "Invited member" : "Miembro invitado") : safe(workspace?.plan || "starter");
         return `
           <tr>
             <td><strong>${safe(companyLabel)}</strong><br><small>${safe(item.uid || item.id || "-")}</small></td>
@@ -256,9 +257,9 @@
             <td>${safe(formatDateTime(item.createdAt))}</td>
             <td>
               <div class="actions-row">
-                ${!isSuper ? `<button class="btn btn-info btn-small" data-platform-status="${item.uid || item.id}" data-next-status="active">Activar</button>` : ""}
-                ${!isSuper ? `<button class="btn btn-secondary btn-small" data-platform-status="${item.uid || item.id}" data-next-status="pending">Pendiente</button>` : ""}
-                ${!isSuper ? `<button class="btn btn-danger btn-small" data-platform-status="${item.uid || item.id}" data-next-status="blocked">Bloquear</button>` : ""}
+                ${!isSuper ? `<button class="btn btn-info btn-small" data-platform-status="${item.uid || item.id}" data-next-status="active">${english ? "Activate" : "Activar"}</button>` : ""}
+                ${!isSuper ? `<button class="btn btn-secondary btn-small" data-platform-status="${item.uid || item.id}" data-next-status="pending">${english ? "Pending" : "Pendiente"}</button>` : ""}
+                ${!isSuper ? `<button class="btn btn-danger btn-small" data-platform-status="${item.uid || item.id}" data-next-status="blocked">${english ? "Block" : "Bloquear"}</button>` : ""}
               </div>
             </td>
           </tr>
