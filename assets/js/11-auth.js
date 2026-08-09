@@ -121,7 +121,7 @@
         unsubWeeklySettlements = weeklySettlementsRef().orderBy("weekStart", "desc").onSnapshot(snapshot => {
           state.weeklySettlements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
-        }, error => console.error(error));
+        }, error => console.error("Realtime weekly settlements:", error));
       } else {
         state.weeklySettlements = [];
       }
@@ -133,7 +133,7 @@
           renderUsers();
           renderInstallationModule();
           renderReportsModule();
-        }, error => console.error(error));
+        }, error => console.error("Realtime team members:", error));
       } else {
         state.teamMembers = [];
         renderUsers();
@@ -147,11 +147,11 @@
         unsubPlatformUsers = platformUsersRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
           state.platformUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
-        }, error => console.error(error));
+        }, error => console.error("Realtime platform users:", error));
         unsubPlatformWorkspaces = platformWorkspacesRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
           state.platformWorkspaces = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
-        }, error => console.error(error));
+        }, error => console.error("Realtime platform workspaces:", error));
       } else {
         state.platformUsers = [];
         state.platformWorkspaces = [];
