@@ -112,7 +112,7 @@
       const rate = Math.max(0, Math.min(100, Number(terms.percent || 0)));
       const baseType = terms.base || "collected";
       const subtotal = Math.max(0, Number(computeQuote(getQuote(job)).subtotal || sale));
-      const profit = Math.max(0, Number(computeJob(job).profit || 0));
+      const profit = Math.max(0, Number(computeJob(job).profitBeforeCommission || 0));
       const projectedBase = baseType === "gross_profit" ? profit : baseType === "subtotal" ? subtotal : sale;
       const earnedBase = baseType === "collected" ? paid : projectedBase * (sale > 0 ? Math.min(paid / sale, 1) : 0);
       const earned = cleanText(job.status) === "Cancelado" ? 0 : earnedBase * rate / 100;

@@ -258,6 +258,15 @@
       const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
       return getJobLinkedExpenses(jobId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
     }
+    function getJobPaidCommissionTotal(jobOrId = "") {
+      const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
+      if (!jobId || !Array.isArray(state.commissionSettlements)) return 0;
+      return state.commissionSettlements
+        .filter(settlement => settlement.status !== "void")
+        .flatMap(settlement => Array.isArray(settlement.lineItems) ? settlement.lineItems : [])
+        .filter(line => cleanText(line.jobId) === cleanText(jobId))
+        .reduce((sum, line) => sum + Number(line.amount || 0), 0);
+    }
     function shouldAutoApplyInventoryForStatus(status = "") {
       return INVENTORY_AUTO_APPLY_STATUSES.includes(status);
     }
@@ -428,7 +437,9 @@
       const pricing = getJobPricing(job);
       const pricingCalc = computePricing(materialsCost, pricing, sale);
       const linkedExpenses = getJobLinkedExpensesTotal(job.id);
-      const cost = pricingCalc.totalCost + linkedExpenses;
+      const paidCommission = getJobPaidCommissionTotal(job.id);
+      const profitBeforeCommission = sale - pricingCalc.totalCost - linkedExpenses;
+      const cost = pricingCalc.totalCost + linkedExpenses + paidCommission;
       const paid = getPaymentsTotal(job);
       const profit = sale - cost;
       const balance = Math.max(sale - paid, 0);
@@ -439,6 +450,8 @@
         laborCost: pricingCalc.laborCost,
         extraCost: pricingCalc.extraCost,
         linkedExpenses,
+        paidCommission,
+        profitBeforeCommission,
         desiredMargin: pricingCalc.desiredMargin,
         suggestedSale: pricingCalc.suggestedSale,
         baseCost: pricingCalc.totalCost,
@@ -1296,7 +1309,8 @@
       const pricing = getCurrentPricingForm();
       const pricingCalc = computePricing(materialsCost, pricing, sale);
       const linkedExpenses = state.editingJobId ? getJobLinkedExpensesTotal(state.editingJobId) : 0;
-      const totalCost = pricingCalc.totalCost + linkedExpenses;
+      const paidCommission = state.editingJobId ? getJobPaidCommissionTotal(state.editingJobId) : 0;
+      const totalCost = pricingCalc.totalCost + linkedExpenses + paidCommission;
       const realProfit = sale - totalCost;
       const realMargin = sale > 0 ? (realProfit / sale) * 100 : 0;
       const payments = getCurrentJobPaymentsPreviewData();
@@ -1313,6 +1327,7 @@
       $("sumMaterials").textContent = money(pricingCalc.materialsCost);
       $("sumLabor").textContent = money(pricingCalc.laborCost);
       $("sumExtras").textContent = money(pricingCalc.extraCost);
+      if ($("sumPaidCommission")) $("sumPaidCommission").textContent = money(paidCommission);
       $("sumCost").textContent = money(totalCost);
       $("sumProfit").textContent = money(realProfit);
       $("sumMargin").textContent = realMargin.toFixed(2) + "%";
@@ -1972,6 +1987,9 @@
 
       const periodExpenses = filteredExpenses
         .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+      const periodCommissions = (state.commissionSettlements || [])
+        .filter(settlement => settlement.status !== "void" && isWithinDashboardRange(settlement.paymentDate, range))
+        .reduce((sum, settlement) => sum + Number(settlement.total || 0), 0);
 
       const periodInternalCosts = confirmedJobs
         .reduce((sum, job) => sum + computeJob(job).baseCost, 0);
@@ -2010,8 +2028,8 @@
       $("mSales").textContent = money(periodSales);
       if ($("mPotentialSales")) $("mPotentialSales").textContent = money(periodPotentialSales);
       $("mCollected").textContent = money(periodCollected);
-      $("mExpenses").textContent = money(periodExpenses);
-      $("mProfit").textContent = money(periodSales - periodInternalCosts - periodExpenses);
+      $("mExpenses").textContent = money(periodExpenses + periodCommissions);
+      $("mProfit").textContent = money(periodSales - periodInternalCosts - periodExpenses - periodCommissions);
       $("allReceivable").textContent = money(overallReceivable);
       $("dueTodayCount").textContent = String(dueToday);
       $("allOverdueJobs").textContent = String(overdueJobs);

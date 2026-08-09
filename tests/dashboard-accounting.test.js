@@ -13,16 +13,29 @@ test("dashboard net profit subtracts job internal costs and period expenses", ()
     true
   );
   assert.equal(
-    jobs.includes('$("mProfit").textContent = money(periodSales - periodInternalCosts - periodExpenses);'),
+    jobs.includes('$("mProfit").textContent = money(periodSales - periodInternalCosts - periodExpenses - periodCommissions);'),
     true
   );
   assert.equal(
     jobs.includes('$("mProfit").textContent = money(periodSales - periodExpenses);'),
     false
   );
-  assert.equal(html.includes('assets/js/03-jobs.js?v=20260730-16'), true);
+  assert.equal(html.includes('assets/js/03-jobs.js?v=20260809-1'), true);
   assert.equal(reports.includes("const netProfit = sales - internalCosts - expenses.reduce"), true);
   assert.equal(reports.includes("computeJob(job).profit, 0) - expenses.reduce"), false);
+});
+
+test("paid sales commissions reduce real job profit and cash reports without changing collections", () => {
+  const jobs = fs.readFileSync(path.join(__dirname, "../assets/js/03-jobs.js"), "utf8");
+  const salespeople = fs.readFileSync(path.join(__dirname, "../assets/js/22-salespeople.js"), "utf8");
+  const weekly = fs.readFileSync(path.join(__dirname, "../assets/js/15-weekly-settlements.js"), "utf8");
+
+  assert.equal(jobs.includes("function getJobPaidCommissionTotal"), true);
+  assert.equal(jobs.includes("pricingCalc.totalCost + linkedExpenses + paidCommission"), true);
+  assert.equal(jobs.includes("profitBeforeCommission"), true);
+  assert.equal(salespeople.includes("computeJob(job).profitBeforeCommission"), true);
+  assert.equal(weekly.includes('type: "Comisión"'), true);
+  assert.equal(jobs.includes("periodExpenses + periodCommissions"), true);
 });
 
 test("estimates stay potential until the job becomes an approved sale", () => {

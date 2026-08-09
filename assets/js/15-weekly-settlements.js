@@ -77,6 +77,16 @@
         amount: Math.max(Number(expense.amount || 0), 0)
       }));
 
+    const commissions = (state.commissionSettlements || [])
+      .filter(settlement => settlement.status !== "void" && settlement.paymentDate >= weekStart && settlement.paymentDate <= weekEnd)
+      .map(settlement => ({
+        date: settlement.paymentDate,
+        type: "Comisión",
+        concept: `Comisión pagada · ${settlement.salespersonName || "Vendedor"}`,
+        amount: Math.max(Number(settlement.total || 0), 0)
+      }));
+    expenses.push(...commissions);
+
     const grossCollected = payments.reduce((sum, item) => sum + item.effect, 0);
     const salesTax = payments.reduce((sum, item) => sum + item.salesTax, 0);
     const expenseTotal = expenses.reduce((sum, item) => sum + item.amount, 0);

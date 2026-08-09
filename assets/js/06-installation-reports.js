@@ -174,8 +174,9 @@
             .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
         }, 0);
         const monthExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+        const monthCommissions = (state.commissionSettlements || []).filter(item => item.status !== "void" && monthKey(item.paymentDate) === key).reduce((sum, item) => sum + Number(item.total || 0), 0);
         const internalCosts = jobs.reduce((sum, job) => sum + computeJob(job).baseCost, 0);
-        const profit = sales - internalCosts - monthExpenses;
+        const profit = sales - internalCosts - monthExpenses - monthCommissions;
 
         rows.push({
           monthKey: key,
@@ -203,7 +204,11 @@
       const collected = jobs.reduce((sum, job) => sum + getPaymentsTotal(job), 0);
       const receivable = confirmedJobs.reduce((sum, job) => sum + computeJob(job).balance, 0);
       const internalCosts = confirmedJobs.reduce((sum, job) => sum + computeJob(job).baseCost, 0);
-      const netProfit = sales - internalCosts - expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+      const commissions = (state.commissionSettlements || []).filter(item => {
+        const { from, to } = getReportDateRange();
+        return item.status !== "void" && (!from || cleanText(item.paymentDate) >= from) && (!to || cleanText(item.paymentDate) <= to);
+      }).reduce((sum, item) => sum + Number(item.total || 0), 0);
+      const netProfit = sales - internalCosts - expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0) - commissions;
 
       salesEl.textContent = money(sales);
       if ($("reportPotentialSalesTotal")) $("reportPotentialSalesTotal").textContent = money(potentialSales);
