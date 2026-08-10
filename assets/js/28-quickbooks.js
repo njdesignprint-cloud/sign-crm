@@ -21,6 +21,11 @@
       $("inspectQuickBooksBtn").textContent = quickBooksText("Read sandbox data", "Consultar datos");
       $("runQuickBooksTestBtn").textContent = quickBooksText("Run full sandbox test", "Ejecutar prueba completa");
       $("previewQuickBooksSyncBtn").textContent = quickBooksText("Prepare synchronization", "Preparar sincronización");
+      $("loadQuickBooksConfigurationBtn").textContent = quickBooksText("Load QuickBooks accounts", "Cargar cuentas de QuickBooks");
+      $("saveQuickBooksConfigurationBtn").textContent = quickBooksText("Save mapping", "Guardar asignación");
+      $("quickBooksServiceItemLabel").textContent = quickBooksText("Product/service for invoices", "Producto/servicio para facturas");
+      $("quickBooksExpenseAccountLabel").textContent = quickBooksText("Account for expenses", "Cuenta para gastos");
+      $("quickBooksConfigurationNote").textContent = quickBooksText("These selections control how invoices and expenses will be prepared. They do not modify QuickBooks.", "Estas selecciones controlan cómo se prepararán las facturas y los gastos. No modifican QuickBooks.");
       if ($("quickBooksSupportNote")) $("quickBooksSupportNote").textContent = quickBooksText("Support: nidesignprint@gmail.com · 346-213-5545", "Soporte: nidesignprint@gmail.com · 346-213-5545");
     }
     async function refreshQuickBooksStatus() {
@@ -118,10 +123,64 @@
         button.textContent = quickBooksText("Prepare synchronization", "Preparar sincronización");
       }
     }
+    function fillQuickBooksSelect(id, rows, selected, placeholderEn, placeholderEs) {
+      const select = $(id);
+      if (!select) return;
+      select.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = quickBooksText(placeholderEn, placeholderEs);
+      select.appendChild(placeholder);
+      (rows || []).forEach(row => {
+        const option = document.createElement("option");
+        option.value = String(row.id || "");
+        option.textContent = `${row.name || row.id} · ${row.type || ""}`;
+        select.appendChild(option);
+      });
+      select.value = selected || "";
+    }
+    async function loadQuickBooksConfiguration() {
+      const button = $("loadQuickBooksConfigurationBtn");
+      button.disabled = true;
+      button.textContent = quickBooksText("Loading...", "Cargando...");
+      try {
+        const data = await callQuickBooksFunction("quickBooksConfigurationOptions", { ownerId:state.accountOwnerId || state.uid });
+        fillQuickBooksSelect("quickBooksServiceItem", data.items, data.selected?.serviceItemId, "Choose a product or service", "Escoge un producto o servicio");
+        fillQuickBooksSelect("quickBooksExpenseAccount", data.accounts, data.selected?.expenseAccountId, "Choose an expense account", "Escoge una cuenta de gastos");
+        showToast(quickBooksText("QuickBooks options loaded.", "Opciones de QuickBooks cargadas."));
+      } catch (error) {
+        console.error("QuickBooks configuration:", error);
+        showToast(quickBooksText("The QuickBooks accounts could not be loaded. Confirm the sandbox connection.", "No se pudieron cargar las cuentas. Confirma la conexión de prueba."));
+      } finally {
+        button.disabled = false;
+        button.textContent = quickBooksText("Load QuickBooks accounts", "Cargar cuentas de QuickBooks");
+      }
+    }
+    async function saveQuickBooksConfiguration() {
+      const serviceItemId = $("quickBooksServiceItem").value;
+      const expenseAccountId = $("quickBooksExpenseAccount").value;
+      if (!serviceItemId || !expenseAccountId) return showToast(quickBooksText("Choose both QuickBooks mappings.", "Escoge las dos asignaciones de QuickBooks."));
+      const button = $("saveQuickBooksConfigurationBtn");
+      button.disabled = true;
+      button.textContent = quickBooksText("Saving...", "Guardando...");
+      try {
+        await callQuickBooksFunction("quickBooksSaveConfiguration", { ownerId:state.accountOwnerId || state.uid, serviceItemId, expenseAccountId });
+        showToast(quickBooksText("QuickBooks mapping saved.", "Asignación de QuickBooks guardada."));
+        await previewQuickBooksSynchronization();
+      } catch (error) {
+        console.error("QuickBooks save configuration:", error);
+        showToast(quickBooksText("The QuickBooks mapping could not be saved.", "No se pudo guardar la asignación de QuickBooks."));
+      } finally {
+        button.disabled = false;
+        button.textContent = quickBooksText("Save mapping", "Guardar asignación");
+      }
+    }
     $("connectQuickBooksBtn")?.addEventListener("click", connectQuickBooks);
     $("refreshQuickBooksStatusBtn")?.addEventListener("click", refreshQuickBooksStatus);
     $("inspectQuickBooksBtn")?.addEventListener("click", inspectQuickBooks);
     $("runQuickBooksTestBtn")?.addEventListener("click", runQuickBooksSandboxTest);
     $("previewQuickBooksSyncBtn")?.addEventListener("click", previewQuickBooksSynchronization);
+    $("loadQuickBooksConfigurationBtn")?.addEventListener("click", loadQuickBooksConfiguration);
+    $("saveQuickBooksConfigurationBtn")?.addEventListener("click", saveQuickBooksConfiguration);
     window.addEventListener("crm-language-changed", () => { renderQuickBooksLanguage(); refreshQuickBooksStatus(); });
     firebase.auth().onAuthStateChanged(user => { renderQuickBooksLanguage(); if (user) refreshQuickBooksStatus(); });
