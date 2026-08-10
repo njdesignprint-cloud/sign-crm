@@ -1,4 +1,17 @@
     function quickBooksText(en, es) { return state.language === "es" ? es : en; }
+    async function callQuickBooksFunction(name) {
+      const user = firebase.auth().currentUser;
+      if (!user) throw new Error("Authentication required.");
+      const token = await user.getIdToken();
+      const response = await fetch(`https://us-central1-sign-crm-a7bda.cloudfunctions.net/${name}`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
+        body:JSON.stringify({ data:{} })
+      });
+      const payload = await response.json();
+      if (!response.ok || payload.error) throw new Error(payload.error?.message || `QuickBooks request failed (${response.status}).`);
+      return payload.result || {};
+    }
     function renderQuickBooksLanguage() {
       if (!$("quickBooksSettingsTitle")) return;
       $("quickBooksSettingsTitle").textContent = "QuickBooks";
@@ -12,8 +25,7 @@
       const pill = $("quickBooksStatusPill"), detail = $("quickBooksConnectionDetail");
       pill.textContent = quickBooksText("Checking...", "Comprobando...");
       try {
-        const result = await firebase.app().functions("us-central1").httpsCallable("quickBooksStatus")({});
-        const data = result.data || {};
+        const data = await callQuickBooksFunction("quickBooksStatus");
         pill.className = `pill ${data.connected ? "st-aprobado" : "st-pendiente"}`;
         pill.textContent = data.connected ? quickBooksText("Connected", "Conectado") : quickBooksText("Not connected", "No conectado");
         detail.textContent = data.connected
@@ -29,8 +41,8 @@
       if (!firebase.auth().currentUser) return showToast(quickBooksText("Sign in first.", "Primero inicia sesión."));
       const button = $("connectQuickBooksBtn"); button.disabled = true;
       try {
-        const result = await firebase.app().functions("us-central1").httpsCallable("quickBooksConnect")({});
-        const url = result.data?.url;
+        const result = await callQuickBooksFunction("quickBooksConnect");
+        const url = result.url;
         if (!url) throw new Error("QuickBooks authorization URL missing.");
         window.open(url, "_blank", "noopener,noreferrer");
         showToast(quickBooksText("Authorize the sandbox company in the new tab, then refresh the status.", "Autoriza la compañía de prueba en la nueva pestaña y después actualiza el estado."));
