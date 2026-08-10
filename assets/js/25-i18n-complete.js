@@ -23,6 +23,7 @@
     "Conecta primero una compañía de prueba. No se crean ni modifican datos contables durante la verificación.":"Connect a sandbox company first. Accounting records are not created or changed during verification.",
     "La conexión usa autorización oficial de Intuit y guarda las credenciales únicamente en el servidor.":"The connection uses Intuit's official authorization and stores credentials only on the server.",
     "Conectar compañía de prueba":"Connect sandbox company",
+    "Consultar datos":"Read sandbox data",
     "+ Agregar gasto":"+ Add expense","+ Agregar ítem":"+ Add item","+ Agregar material":"+ Add material","+ Agregar pago":"+ Add payment","+ Nueva orden":"+ New order","+ Nuevo":"+ New","+ Nuevo proveedor":"+ New supplier","+ Nuevo recurrente":"+ New recurring expense","+ Nuevo usuario":"+ New user",
     "+ Pago":"+ Payment","Compra":"Purchase","→ Aprobado":"→ Approved","→ Instalación":"→ Installation","→ Pagado":"→ Paid","Enviar cotización al cliente":"Send estimate to customer","Asignar responsable de producción":"Assign production owner","Sin entregas":"No deliveries","Sin instalaciones":"No installations","Inventario: Sin vínculo":"Inventory: Not linked",
     "Estimado: borrador · Diseño: pendiente":"Estimate: draft · Design: pending","Estimado: enviado · Diseño: pendiente":"Estimate: sent · Design: pending","Estimado: aprobado · Diseño: pendiente":"Estimate: approved · Design: pending",

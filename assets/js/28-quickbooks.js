@@ -18,6 +18,7 @@
       $("quickBooksSettingsNote").textContent = quickBooksText("Connect a sandbox company first. Accounting records are not created or changed during verification.", "Conecta primero una compañía de prueba. No se crean ni modifican datos contables durante la verificación.");
       $("connectQuickBooksBtn").textContent = quickBooksText("Connect sandbox company", "Conectar compañía de prueba");
       $("refreshQuickBooksStatusBtn").textContent = quickBooksText("Refresh status", "Actualizar estado");
+      $("inspectQuickBooksBtn").textContent = quickBooksText("Read sandbox data", "Consultar datos");
     }
     async function refreshQuickBooksStatus() {
       if (!firebase.auth().currentUser || !$("quickBooksStatusPill")) return;
@@ -51,7 +52,27 @@
         showToast(quickBooksText("QuickBooks connection could not be started.", "No se pudo iniciar la conexión con QuickBooks."));
       } finally { button.disabled = false; }
     }
+    function renderQuickBooksSummary(data) {
+      const company = data.company || {}, counts = data.counts || {}, samples = data.samples || {};
+      const sampleNames = type => (samples[type] || []).map(item => item.name).filter(Boolean).join(", ") || "-";
+      const output = $("quickBooksSummaryOutput");
+      output.classList.remove("hidden");
+      output.innerHTML = `<strong>${safe(company.name || company.legalName || "QuickBooks")}</strong><br>${safe(company.address || "-")}<br><br>`+
+        `${safe(quickBooksText("Customers", "Clientes"))}: <strong>${Number(counts.Customer || 0)}</strong> · ${safe(sampleNames("Customer"))}<br>`+
+        `${safe(quickBooksText("Vendors", "Proveedores"))}: <strong>${Number(counts.Vendor || 0)}</strong> · ${safe(sampleNames("Vendor"))}<br>`+
+        `${safe(quickBooksText("Estimates", "Estimados"))}: <strong>${Number(counts.Estimate || 0)}</strong> · ${safe(sampleNames("Estimate"))}<br>`+
+        `${safe(quickBooksText("Invoices", "Facturas"))}: <strong>${Number(counts.Invoice || 0)}</strong> · ${safe(sampleNames("Invoice"))}<br>`+
+        `${safe(quickBooksText("Payments", "Pagos"))}: <strong>${Number(counts.Payment || 0)}</strong><br>`+
+        `${safe(quickBooksText("Purchases / expenses", "Compras / gastos"))}: <strong>${Number(counts.Purchase || 0)}</strong>`;
+    }
+    async function inspectQuickBooks() {
+      const button = $("inspectQuickBooksBtn"); button.disabled = true; button.textContent = quickBooksText("Reading...", "Consultando...");
+      try { renderQuickBooksSummary(await callQuickBooksFunction("quickBooksSummary")); }
+      catch (error) { console.error("QuickBooks summary:", error); showToast(quickBooksText("QuickBooks data could not be read.", "No se pudieron consultar los datos de QuickBooks.")); }
+      finally { button.disabled = false; button.textContent = quickBooksText("Read sandbox data", "Consultar datos"); }
+    }
     $("connectQuickBooksBtn")?.addEventListener("click", connectQuickBooks);
     $("refreshQuickBooksStatusBtn")?.addEventListener("click", refreshQuickBooksStatus);
+    $("inspectQuickBooksBtn")?.addEventListener("click", inspectQuickBooks);
     window.addEventListener("crm-language-changed", () => { renderQuickBooksLanguage(); refreshQuickBooksStatus(); });
     firebase.auth().onAuthStateChanged(user => { renderQuickBooksLanguage(); if (user) refreshQuickBooksStatus(); });
