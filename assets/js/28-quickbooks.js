@@ -1,12 +1,12 @@
     function quickBooksText(en, es) { return state.language === "es" ? es : en; }
-    async function callQuickBooksFunction(name) {
+    async function callQuickBooksFunction(name, data = {}) {
       const user = firebase.auth().currentUser;
       if (!user) throw new Error("Authentication required.");
       const token = await user.getIdToken();
       const response = await fetch(`https://us-central1-sign-crm-a7bda.cloudfunctions.net/${name}`, {
         method:"POST",
         headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
-        body:JSON.stringify({ data:{} })
+        body:JSON.stringify({ data })
       });
       const payload = await response.json();
       if (!response.ok || payload.error) throw new Error(payload.error?.message || `QuickBooks request failed (${response.status}).`);
@@ -20,6 +20,8 @@
       $("refreshQuickBooksStatusBtn").textContent = quickBooksText("Refresh status", "Actualizar estado");
       $("inspectQuickBooksBtn").textContent = quickBooksText("Read sandbox data", "Consultar datos");
       $("runQuickBooksTestBtn").textContent = quickBooksText("Run full sandbox test", "Ejecutar prueba completa");
+      $("previewQuickBooksSyncBtn").textContent = quickBooksText("Prepare synchronization", "Preparar sincronización");
+      if ($("quickBooksSupportNote")) $("quickBooksSupportNote").textContent = quickBooksText("Support: nidesignprint@gmail.com · 346-213-5545", "Soporte: nidesignprint@gmail.com · 346-213-5545");
     }
     async function refreshQuickBooksStatus() {
       if (!firebase.auth().currentUser || !$("quickBooksStatusPill")) return;
@@ -87,9 +89,36 @@
       } catch (error) { console.error("QuickBooks sandbox test:", error); showToast(quickBooksText("The sandbox test could not be completed.", "No se pudo completar la prueba de sandbox.")); }
       finally { button.disabled = false; button.textContent = quickBooksText("Run full sandbox test", "Ejecutar prueba completa"); }
     }
+    async function previewQuickBooksSynchronization() {
+      const button = $("previewQuickBooksSyncBtn");
+      button.disabled = true;
+      button.textContent = quickBooksText("Preparing...", "Preparando...");
+      try {
+        const data = await callQuickBooksFunction("quickBooksSyncPreview", { ownerId:state.accountOwnerId || state.uid });
+        const entities = data.entities || {};
+        const row = (key, en, es) => {
+          const item = entities[key] || {};
+          return `${safe(quickBooksText(en, es))}: <strong>${Number(item.ready || 0)}</strong> ${safe(quickBooksText("ready", "listos"))} · ${Number(item.linked || 0)} ${safe(quickBooksText("already linked", "ya vinculados"))}`;
+        };
+        const output = $("quickBooksSummaryOutput");
+        output.classList.remove("hidden");
+        output.innerHTML = `<strong>${safe(quickBooksText("Safe synchronization preview", "Vista previa segura de sincronización"))}</strong><br>`+
+          `${safe(quickBooksText("No QuickBooks data was created or changed.", "No se creó ni modificó ningún dato en QuickBooks."))}<br><br>`+
+          `${row("clients", "Customers", "Clientes")}<br>${row("estimates", "Estimates", "Estimados")}<br>${row("invoices", "Invoices", "Facturas")}<br>${row("expenses", "Expenses", "Gastos")}<br><br>`+
+          `${safe(quickBooksText("Duplicate protection: records with a QuickBooks ID will not be created again.", "Protección contra duplicados: los registros con ID de QuickBooks no se crearán otra vez."))}`;
+        showToast(quickBooksText("Synchronization preview is ready.", "La vista previa de sincronización está lista."));
+      } catch (error) {
+        console.error("QuickBooks synchronization preview:", error);
+        showToast(quickBooksText("The synchronization preview could not be prepared.", "No se pudo preparar la vista previa de sincronización."));
+      } finally {
+        button.disabled = false;
+        button.textContent = quickBooksText("Prepare synchronization", "Preparar sincronización");
+      }
+    }
     $("connectQuickBooksBtn")?.addEventListener("click", connectQuickBooks);
     $("refreshQuickBooksStatusBtn")?.addEventListener("click", refreshQuickBooksStatus);
     $("inspectQuickBooksBtn")?.addEventListener("click", inspectQuickBooks);
     $("runQuickBooksTestBtn")?.addEventListener("click", runQuickBooksSandboxTest);
+    $("previewQuickBooksSyncBtn")?.addEventListener("click", previewQuickBooksSynchronization);
     window.addEventListener("crm-language-changed", () => { renderQuickBooksLanguage(); refreshQuickBooksStatus(); });
     firebase.auth().onAuthStateChanged(user => { renderQuickBooksLanguage(); if (user) refreshQuickBooksStatus(); });
