@@ -19,6 +19,7 @@
       $("connectQuickBooksBtn").textContent = quickBooksText("Connect sandbox company", "Conectar compañía de prueba");
       $("refreshQuickBooksStatusBtn").textContent = quickBooksText("Refresh status", "Actualizar estado");
       $("inspectQuickBooksBtn").textContent = quickBooksText("Read sandbox data", "Consultar datos");
+      $("runQuickBooksTestBtn").textContent = quickBooksText("Run full sandbox test", "Ejecutar prueba completa");
     }
     async function refreshQuickBooksStatus() {
       if (!firebase.auth().currentUser || !$("quickBooksStatusPill")) return;
@@ -71,8 +72,24 @@
       catch (error) { console.error("QuickBooks summary:", error); showToast(quickBooksText("QuickBooks data could not be read.", "No se pudieron consultar los datos de QuickBooks.")); }
       finally { button.disabled = false; button.textContent = quickBooksText("Read sandbox data", "Consultar datos"); }
     }
+    async function runQuickBooksSandboxTest() {
+      const button = $("runQuickBooksTestBtn"); button.disabled = true; button.textContent = quickBooksText("Running test...", "Ejecutando prueba...");
+      try {
+        const data = await callQuickBooksFunction("quickBooksRunSandboxTest");
+        const output = $("quickBooksSummaryOutput"); output.classList.remove("hidden");
+        output.innerHTML = `<strong>${safe(quickBooksText("Sandbox test completed", "Prueba de sandbox completada"))}</strong><br>`+
+          `${safe(quickBooksText("Customer", "Cliente"))}: ${safe(data.customer?.name || "-")} · ID ${safe(data.customer?.id || "-")}<br>`+
+          `${safe(quickBooksText("Estimate", "Estimado"))}: #${safe(data.estimate?.number || data.estimate?.id || "-")} · ${money(Number(data.estimate?.total || 0))}<br>`+
+          `${safe(quickBooksText("Invoice", "Factura"))}: #${safe(data.invoice?.number || data.invoice?.id || "-")} · ${money(Number(data.invoice?.total || 0))} · ${safe(quickBooksText("Balance", "Saldo"))}: ${money(Number(data.invoice?.balance || 0))}<br>`+
+          `${safe(quickBooksText("Payment", "Pago"))}: ${money(Number(data.payment?.total || 0))} · ID ${safe(data.payment?.id || "-")}<br>`+
+          `${safe(data.reused ? quickBooksText("Existing test reused; no duplicates created.", "Se reutilizó la prueba existente; no se crearon duplicados.") : quickBooksText("New test records created in the sandbox only.", "Registros nuevos creados únicamente en el sandbox."))}`;
+        showToast(quickBooksText("QuickBooks sandbox test completed.", "Prueba de QuickBooks completada."));
+      } catch (error) { console.error("QuickBooks sandbox test:", error); showToast(quickBooksText("The sandbox test could not be completed.", "No se pudo completar la prueba de sandbox.")); }
+      finally { button.disabled = false; button.textContent = quickBooksText("Run full sandbox test", "Ejecutar prueba completa"); }
+    }
     $("connectQuickBooksBtn")?.addEventListener("click", connectQuickBooks);
     $("refreshQuickBooksStatusBtn")?.addEventListener("click", refreshQuickBooksStatus);
     $("inspectQuickBooksBtn")?.addEventListener("click", inspectQuickBooks);
+    $("runQuickBooksTestBtn")?.addEventListener("click", runQuickBooksSandboxTest);
     window.addEventListener("crm-language-changed", () => { renderQuickBooksLanguage(); refreshQuickBooksStatus(); });
     firebase.auth().onAuthStateChanged(user => { renderQuickBooksLanguage(); if (user) refreshQuickBooksStatus(); });
