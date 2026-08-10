@@ -98,13 +98,16 @@
         const entities = data.entities || {};
         const row = (key, en, es) => {
           const item = entities[key] || {};
-          return `${safe(quickBooksText(en, es))}: <strong>${Number(item.ready || 0)}</strong> ${safe(quickBooksText("ready", "listos"))} · ${Number(item.linked || 0)} ${safe(quickBooksText("already linked", "ya vinculados"))}`;
+          return `${safe(quickBooksText(en, es))}: <strong>${Number(item.ready || 0)}</strong> ${safe(quickBooksText("ready", "listos"))} · ${Number(item.linked || 0)} ${safe(quickBooksText("already linked", "ya vinculados"))} · ${Number(item.blocked || 0)} ${safe(quickBooksText("need configuration", "requieren configuración"))}`;
         };
+        const configuration = data.configuration || {};
         const output = $("quickBooksSummaryOutput");
         output.classList.remove("hidden");
         output.innerHTML = `<strong>${safe(quickBooksText("Safe synchronization preview", "Vista previa segura de sincronización"))}</strong><br>`+
           `${safe(quickBooksText("No QuickBooks data was created or changed.", "No se creó ni modificó ningún dato en QuickBooks."))}<br><br>`+
-          `${row("clients", "Customers", "Clientes")}<br>${row("estimates", "Estimates", "Estimados")}<br>${row("invoices", "Invoices", "Facturas")}<br>${row("expenses", "Expenses", "Gastos")}<br><br>`+
+          `${row("clients", "Customers", "Clientes")}<br>${row("estimates", "Estimates", "Estimados")}<br>${row("invoices", "Invoices", "Facturas")}<br>${row("payments", "Payments", "Pagos")}<br>${row("expenses", "Expenses", "Gastos")}<br><br>`+
+          `${safe(quickBooksText("Product/service mapping", "Asignación de producto/servicio"))}: <strong>${safe(configuration.serviceItemConfigured ? quickBooksText("configured", "configurada") : quickBooksText("pending", "pendiente"))}</strong><br>`+
+          `${safe(quickBooksText("Expense account mapping", "Asignación de cuenta de gastos"))}: <strong>${safe(configuration.expenseAccountConfigured ? quickBooksText("configured", "configurada") : quickBooksText("pending", "pendiente"))}</strong><br><br>`+
           `${safe(quickBooksText("Duplicate protection: records with a QuickBooks ID will not be created again.", "Protección contra duplicados: los registros con ID de QuickBooks no se crearán otra vez."))}`;
         showToast(quickBooksText("Synchronization preview is ready.", "La vista previa de sincronización está lista."));
       } catch (error) {
