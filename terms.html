@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Terms of Use | SignShop HQ</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07101f;--card:#101a2b;--text:#eef4ff;--muted:#aebbd0;--brand:#3b82f6;--line:#26344c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}main{width:min(920px,calc(100% - 32px));margin:48px auto;padding:36px;background:var(--card);border:1px solid var(--line);border-radius:18px}h1,h2{line-height:1.2}h2{margin-top:30px}a{color:#7db2ff}.muted{color:var(--muted)}.lang{display:flex;gap:10px;margin-bottom:28px}.lang button{border:1px solid var(--line);border-radius:10px;padding:8px 14px;background:#162238;color:var(--text);cursor:pointer}.lang button.active{background:var(--brand);border-color:var(--brand)}[data-lang]{display:none}[data-lang].active{display:block}@media(max-width:600px){main{margin:16px auto;padding:22px}}
+  </style>
+</head>
+<body><main>
+  <div class="lang"><button id="enBtn" type="button">English</button><button id="esBtn" type="button">Español</button></div>
+  <article data-lang="en">
+    <h1>Terms of Use</h1><p class="muted">Effective August 9, 2026</p>
+    <p>These Terms govern use of SignShop HQ, a business-management application operated by NJ Design & Print LLC. By using the service, you confirm that you are authorized to act for the business account.</p>
+    <h2>Permitted use</h2><p>You may use the service for lawful business operations. You are responsible for user access, the accuracy of information entered, backups exported by your business, and compliance with applicable tax, accounting, employment, privacy, and communications laws.</p>
+    <h2>Accounting features</h2><p>SignShop HQ may create or read accounting records only after an authorized user connects a QuickBooks Online company and initiates the relevant action. You are responsible for reviewing customers, estimates, invoices, payments, expenses, taxes, accounts, and mappings before and after synchronization. The service is not a substitute for a qualified accountant, tax professional, or legal adviser.</p>
+    <h2>Authorization and security</h2><p>Keep account access secure and promptly remove access for users who no longer require it. Do not attempt to disrupt the service, bypass access controls, or access another business’s data.</p>
+    <h2>Availability and changes</h2><p>We may maintain, update, or modify the service and may temporarily limit access for security or operational reasons. Third-party services, including Intuit QuickBooks, are governed by their own terms and availability.</p>
+    <h2>Disclaimer and limitation</h2><p>The service is provided on an “as available” basis. To the maximum extent allowed by law, NJ Design & Print LLC is not liable for indirect, incidental, special, or consequential loss, or for errors caused by incorrect user data, unauthorized access, third-party services, or failure to review synchronized records.</p>
+    <h2>Termination</h2><p>Access may be discontinued for misuse, security risk, legal requirements, or termination of the business relationship. Provisions concerning ownership, responsibility, disclaimers, and legal compliance survive termination.</p>
+    <h2>Governing law and contact</h2><p>Texas law governs these Terms, without regard to conflict-of-law principles. Questions may be sent to <a href="mailto:njdesignprint@gmail.com">njdesignprint@gmail.com</a> or NJ Design & Print LLC, Houston, Texas 77084.</p>
+  </article>
+  <article data-lang="es">
+    <h1>Términos de uso</h1><p class="muted">Vigentes desde el 9 de agosto de 2026</p>
+    <p>Estos Términos regulan el uso de SignShop HQ, una aplicación de gestión empresarial operada por NJ Design & Print LLC. Al utilizar el servicio, confirma que está autorizado para actuar en nombre de la cuenta empresarial.</p>
+    <h2>Uso permitido</h2><p>Puede usar el servicio para operaciones comerciales legales. Usted es responsable del acceso de usuarios, la exactitud de la información ingresada, las copias exportadas por su empresa y el cumplimiento de las leyes aplicables de impuestos, contabilidad, empleo, privacidad y comunicaciones.</p>
+    <h2>Funciones contables</h2><p>SignShop HQ puede crear o consultar registros contables únicamente después de que un usuario autorizado conecte una compañía de QuickBooks Online e inicie la acción correspondiente. Usted debe revisar clientes, estimados, facturas, pagos, gastos, impuestos, cuentas y correspondencias antes y después de sincronizar. El servicio no sustituye a un contador, profesional tributario o asesor legal calificado.</p>
+    <h2>Autorización y seguridad</h2><p>Mantenga seguro el acceso y elimine rápidamente a los usuarios que ya no lo necesiten. No intente interrumpir el servicio, evadir controles de acceso ni acceder a datos de otra empresa.</p>
+    <h2>Disponibilidad y cambios</h2><p>Podemos mantener, actualizar o modificar el servicio y limitar temporalmente el acceso por seguridad u operación. Los servicios de terceros, incluido Intuit QuickBooks, se rigen por sus propios términos y disponibilidad.</p>
+    <h2>Exención y limitación</h2><p>El servicio se ofrece “según disponibilidad”. Hasta el máximo permitido por la ley, NJ Design & Print LLC no responde por pérdidas indirectas, incidentales, especiales o consecuentes, ni por errores causados por datos incorrectos, acceso no autorizado, servicios de terceros o falta de revisión de registros sincronizados.</p>
+    <h2>Terminación</h2><p>El acceso puede terminar por uso indebido, riesgo de seguridad, requisitos legales o finalización de la relación comercial. Las disposiciones sobre propiedad, responsabilidad, exenciones y cumplimiento legal continuarán vigentes.</p>
+    <h2>Ley aplicable y contacto</h2><p>Las leyes de Texas rigen estos Términos. Envíe preguntas a <a href="mailto:njdesignprint@gmail.com">njdesignprint@gmail.com</a> o a NJ Design & Print LLC, Houston, Texas 77084.</p>
+  </article>
+</main><script>
+  const setLang=lang=>{localStorage.setItem('crm_language',lang);document.documentElement.lang=lang;document.querySelectorAll('[data-lang]').forEach(x=>x.classList.toggle('active',x.dataset.lang===lang));enBtn.classList.toggle('active',lang==='en');esBtn.classList.toggle('active',lang==='es')};
+  enBtn.onclick=()=>setLang('en');esBtn.onclick=()=>setLang('es');setLang(localStorage.getItem('crm_language')==='es'?'es':'en');
+</script></body></html>

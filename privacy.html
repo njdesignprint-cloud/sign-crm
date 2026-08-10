@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Privacy Policy | SignShop HQ</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07101f;--card:#101a2b;--text:#eef4ff;--muted:#aebbd0;--brand:#3b82f6;--line:#26344c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}main{width:min(920px,calc(100% - 32px));margin:48px auto;padding:36px;background:var(--card);border:1px solid var(--line);border-radius:18px}h1,h2{line-height:1.2}h2{margin-top:30px}a{color:#7db2ff}.muted{color:var(--muted)}.lang{display:flex;gap:10px;margin-bottom:28px}.lang button{border:1px solid var(--line);border-radius:10px;padding:8px 14px;background:#162238;color:var(--text);cursor:pointer}.lang button.active{background:var(--brand);border-color:var(--brand)}[data-lang]{display:none}[data-lang].active{display:block}@media(max-width:600px){main{margin:16px auto;padding:22px}}
+  </style>
+</head>
+<body><main>
+  <div class="lang"><button id="enBtn" type="button">English</button><button id="esBtn" type="button">Español</button></div>
+  <article data-lang="en">
+    <h1>Privacy Policy</h1><p class="muted">Effective August 9, 2026</p>
+    <p>SignShop HQ is operated by NJ Design & Print LLC (“we,” “us,” or “our”). This policy explains how information is handled when authorized users use our business-management application.</p>
+    <h2>Information we collect</h2><p>We process account and company information, customer and prospect contact details, job and production records, estimates, invoices, payments, expenses, commissions, uploaded business files, and technical information needed to secure and operate the service.</p>
+    <h2>QuickBooks information</h2><p>When an authorized user connects QuickBooks Online, we use Intuit’s OAuth authorization process. We may access company information and accounting records that the user expressly authorizes, including customers, vendors, items, estimates, invoices, payments, and expenses. QuickBooks credentials are stored server-side and are never displayed to other application users. We do not sell QuickBooks data or use it for advertising.</p>
+    <h2>How information is used</h2><p>Information is used to provide the requested CRM, job-management, reporting, document-generation, and accounting-integration functions; maintain security and audit records; troubleshoot problems; and comply with legal obligations.</p>
+    <h2>Sharing and retention</h2><p>We share information only with service providers needed to operate the application, when an authorized user directs us to do so, or when legally required. Information is retained while the business account is active and as reasonably necessary for accounting, security, backup, and legal requirements.</p>
+    <h2>Security</h2><p>We use access controls, authenticated connections, encrypted transport, and server-side credential storage. No system can guarantee absolute security.</p>
+    <h2>Your choices</h2><p>Authorized users may disconnect QuickBooks, request correction of account information, or request deletion subject to accounting and legal retention requirements. Disconnecting stops future QuickBooks access but does not automatically delete records already created by the user.</p>
+    <h2>Contact</h2><p>NJ Design & Print LLC, Houston, Texas 77084<br>Email: <a href="mailto:njdesignprint@gmail.com">njdesignprint@gmail.com</a><br>Phone: <a href="tel:+13462135545">346-213-5545</a></p>
+  </article>
+  <article data-lang="es">
+    <h1>Política de privacidad</h1><p class="muted">Vigente desde el 9 de agosto de 2026</p>
+    <p>SignShop HQ es operado por NJ Design & Print LLC (“nosotros”). Esta política explica cómo se maneja la información cuando usuarios autorizados utilizan nuestra aplicación de gestión empresarial.</p>
+    <h2>Información que recopilamos</h2><p>Procesamos información de la cuenta y la empresa, datos de contacto de clientes y prospectos, trabajos y producción, estimados, facturas, pagos, gastos, comisiones, archivos empresariales cargados e información técnica necesaria para proteger y operar el servicio.</p>
+    <h2>Información de QuickBooks</h2><p>Cuando un usuario autorizado conecta QuickBooks Online, usamos la autorización OAuth de Intuit. Podemos acceder a la información de la compañía y los registros contables autorizados expresamente por el usuario, incluidos clientes, proveedores, artículos, estimados, facturas, pagos y gastos. Las credenciales se guardan en el servidor y nunca se muestran a otros usuarios. No vendemos datos de QuickBooks ni los usamos para publicidad.</p>
+    <h2>Cómo usamos la información</h2><p>La información se usa para brindar las funciones solicitadas de CRM, gestión de trabajos, informes, documentos e integración contable; mantener la seguridad y auditoría; resolver problemas y cumplir obligaciones legales.</p>
+    <h2>Divulgación y conservación</h2><p>Solo compartimos información con proveedores necesarios para operar la aplicación, cuando lo indique un usuario autorizado o cuando la ley lo requiera. Conservamos la información mientras la cuenta esté activa y según sea razonablemente necesario para fines contables, seguridad, copias de respaldo y obligaciones legales.</p>
+    <h2>Seguridad</h2><p>Usamos controles de acceso, conexiones autenticadas, transporte cifrado y almacenamiento de credenciales en el servidor. Ningún sistema puede garantizar seguridad absoluta.</p>
+    <h2>Sus opciones</h2><p>Los usuarios autorizados pueden desconectar QuickBooks, solicitar la corrección de datos o pedir su eliminación, sujeta a los requisitos legales y contables. Desconectar impide el acceso futuro a QuickBooks, pero no elimina automáticamente registros creados anteriormente.</p>
+    <h2>Contacto</h2><p>NJ Design & Print LLC, Houston, Texas 77084<br>Correo: <a href="mailto:njdesignprint@gmail.com">njdesignprint@gmail.com</a><br>Teléfono: <a href="tel:+13462135545">346-213-5545</a></p>
+  </article>
+</main><script>
+  const setLang=lang=>{localStorage.setItem('crm_language',lang);document.documentElement.lang=lang;document.querySelectorAll('[data-lang]').forEach(x=>x.classList.toggle('active',x.dataset.lang===lang));enBtn.classList.toggle('active',lang==='en');esBtn.classList.toggle('active',lang==='es')};
+  enBtn.onclick=()=>setLang('en');esBtn.onclick=()=>setLang('es');setLang(localStorage.getItem('crm_language')==='es'?'es':'en');
+</script></body></html>
