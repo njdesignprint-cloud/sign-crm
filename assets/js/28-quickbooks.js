@@ -26,6 +26,14 @@
       $("quickBooksServiceItemLabel").textContent = quickBooksText("Product/service for invoices", "Producto/servicio para facturas");
       $("quickBooksExpenseAccountLabel").textContent = quickBooksText("Account for expenses", "Cuenta para gastos");
       $("quickBooksConfigurationNote").textContent = quickBooksText("These selections control how invoices and expenses will be prepared. They do not modify QuickBooks.", "Estas selecciones controlan cómo se prepararán las facturas y los gastos. No modifican QuickBooks.");
+      $("quickBooksConnectionTitle").textContent = quickBooksText("Connection", "Conexión");
+      $("quickBooksConnectionHelp").textContent = quickBooksText("Authorize and verify the connected company.", "Autoriza y comprueba la compañía conectada.");
+      $("quickBooksMappingTitle").textContent = quickBooksText("Accounting mapping", "Asignación contable");
+      $("quickBooksMappingHelp").textContent = quickBooksText("Choose how QuickBooks classifies sales and expenses.", "Decide dónde clasificará QuickBooks las ventas y los gastos.");
+      $("quickBooksServiceItemHelp").textContent = quickBooksText("Sales category used on estimates and invoices.", "Categoría de venta usada en estimados y facturas.");
+      $("quickBooksExpenseAccountHelp").textContent = quickBooksText("Accounting account where expenses will be recorded.", "Cuenta contable donde se registrarán los gastos.");
+      $("quickBooksPreviewTitle").textContent = quickBooksText("Safe review", "Revisión segura");
+      $("quickBooksPreviewHelp").textContent = quickBooksText("Check which records are ready before syncing.", "Comprueba qué registros están listos antes de sincronizar.");
       if ($("quickBooksSupportNote")) $("quickBooksSupportNote").textContent = quickBooksText("Support: nidesignprint@gmail.com · 346-213-5545", "Soporte: nidesignprint@gmail.com · 346-213-5545");
     }
     async function refreshQuickBooksStatus() {

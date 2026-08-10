@@ -1565,6 +1565,19 @@
 .settings-form-stack{display:grid;gap:18px}
 .settings-panel{padding-bottom:20px}
 .settings-fields{padding:0 18px}
+.quickbooks-settings{display:grid;gap:14px}
+.quickbooks-step{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.018)}
+.quickbooks-step-head{display:flex;align-items:flex-start;gap:11px}
+.quickbooks-step-head>span{display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px;border-radius:9px;background:rgba(59,130,246,.16);border:1px solid rgba(59,130,246,.35);color:#bfdbfe;font-size:12px;font-weight:900}
+.quickbooks-step-head strong,.quickbooks-step-head small{display:block}
+.quickbooks-step-head strong{font-size:14px}
+.quickbooks-step-head small{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.4}
+.quickbooks-mapping-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.quickbooks-mapping-grid .field-label{min-width:0;color:var(--text)}
+.quickbooks-mapping-grid .field-label>small{min-height:30px;color:var(--muted);font-size:11px;font-weight:500;line-height:1.35}
+.quickbooks-mapping-grid .select{width:100%;min-width:0}
+.quickbooks-actions{align-items:center}
+.quickbooks-step>.permission-note{margin:0}
 .grid-span-2{grid-column:1/-1}
 .settings-logo-row{display:flex;align-items:center;gap:16px;padding:0 18px 20px}
 .settings-logo-placeholder{width:92px;height:72px;display:grid;place-items:center;flex:0 0 92px;border:1px dashed rgba(59,130,246,.42);border-radius:14px;background:rgba(59,130,246,.08);color:#93c5fd;text-align:center;font-size:11px;font-weight:900;letter-spacing:.08em}
@@ -1595,6 +1608,8 @@
   .settings-fields{grid-template-columns:1fr}
   .grid-span-2{grid-column:auto}
   .settings-logo-row{align-items:flex-start}
+  .quickbooks-mapping-grid{grid-template-columns:1fr}
+  .quickbooks-mapping-grid .field-label>small{min-height:0}
 }
 
 /* ===== Responsive navigation shell ===== */

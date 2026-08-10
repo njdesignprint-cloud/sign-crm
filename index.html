@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260808-2" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260809-3" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -1332,25 +1332,34 @@
                   </div>
                   <span id="quickBooksStatusPill" class="pill st-pendiente">No conectado</span>
                 </div>
-                <div class="settings-fields">
-                  <div id="quickBooksConnectionDetail" class="permission-note">La conexión usa autorización oficial de Intuit y guarda las credenciales únicamente en el servidor.</div>
-                  <div class="actions-row">
+                <div class="settings-fields quickbooks-settings">
+                  <section class="quickbooks-step">
+                    <div class="quickbooks-step-head"><span>1</span><div><strong id="quickBooksConnectionTitle">Conexión</strong><small id="quickBooksConnectionHelp">Autoriza y comprueba la compañía conectada.</small></div></div>
+                    <div id="quickBooksConnectionDetail" class="permission-note">La conexión usa autorización oficial de Intuit y guarda las credenciales únicamente en el servidor.</div>
+                    <div class="actions-row quickbooks-actions">
                     <button id="connectQuickBooksBtn" class="btn btn-primary" type="button">Conectar compañía de prueba</button>
                     <button id="refreshQuickBooksStatusBtn" class="btn btn-secondary" type="button">Actualizar estado</button>
                     <button id="inspectQuickBooksBtn" class="btn btn-info" type="button">Consultar datos</button>
                     <button id="runQuickBooksTestBtn" class="btn btn-info" type="button">Ejecutar prueba completa</button>
-                    <button id="previewQuickBooksSyncBtn" class="btn btn-secondary" type="button">Preparar sincronización</button>
-                  </div>
-                  <div class="form-grid two-col">
-                    <label class="field"><span id="quickBooksServiceItemLabel">Producto/servicio para facturas</span><select id="quickBooksServiceItem"><option value="">Cargar opciones de QuickBooks</option></select></label>
-                    <label class="field"><span id="quickBooksExpenseAccountLabel">Cuenta para gastos</span><select id="quickBooksExpenseAccount"><option value="">Cargar opciones de QuickBooks</option></select></label>
-                  </div>
-                  <div class="actions-row">
-                    <button id="loadQuickBooksConfigurationBtn" class="btn btn-secondary" type="button">Cargar cuentas</button>
-                    <button id="saveQuickBooksConfigurationBtn" class="btn btn-primary" type="button">Guardar asignación</button>
-                  </div>
-                  <div id="quickBooksConfigurationNote" class="permission-note">Estas selecciones controlan cómo se prepararán las facturas y los gastos. No modifican QuickBooks.</div>
-                  <div id="quickBooksSummaryOutput" class="permission-note hidden"></div>
+                    </div>
+                  </section>
+                  <section class="quickbooks-step">
+                    <div class="quickbooks-step-head"><span>2</span><div><strong id="quickBooksMappingTitle">Asignación contable</strong><small id="quickBooksMappingHelp">Decide dónde clasificará QuickBooks las ventas y los gastos.</small></div></div>
+                    <div class="quickbooks-mapping-grid">
+                      <label class="field-label"><span id="quickBooksServiceItemLabel">Producto/servicio para facturas</span><small id="quickBooksServiceItemHelp">Categoría de venta usada en estimados y facturas.</small><select id="quickBooksServiceItem" class="select"><option value="">Cargar opciones de QuickBooks</option></select></label>
+                      <label class="field-label"><span id="quickBooksExpenseAccountLabel">Cuenta para gastos</span><small id="quickBooksExpenseAccountHelp">Cuenta contable donde se registrarán los gastos.</small><select id="quickBooksExpenseAccount" class="select"><option value="">Cargar opciones de QuickBooks</option></select></label>
+                    </div>
+                    <div class="actions-row quickbooks-actions">
+                      <button id="loadQuickBooksConfigurationBtn" class="btn btn-secondary" type="button">Cargar cuentas</button>
+                      <button id="saveQuickBooksConfigurationBtn" class="btn btn-primary" type="button">Guardar asignación</button>
+                    </div>
+                    <div id="quickBooksConfigurationNote" class="permission-note">Estas selecciones controlan cómo se prepararán las facturas y los gastos. No modifican QuickBooks.</div>
+                  </section>
+                  <section class="quickbooks-step">
+                    <div class="quickbooks-step-head"><span>3</span><div><strong id="quickBooksPreviewTitle">Revisión segura</strong><small id="quickBooksPreviewHelp">Comprueba qué registros están listos antes de sincronizar.</small></div></div>
+                    <div class="actions-row quickbooks-actions"><button id="previewQuickBooksSyncBtn" class="btn btn-secondary" type="button">Preparar sincronización</button></div>
+                    <div id="quickBooksSummaryOutput" class="permission-note hidden"></div>
+                  </section>
                   <div id="quickBooksSupportNote" class="permission-note">Soporte: nidesignprint@gmail.com · 346-213-5545</div>
                 </div>
               </section>
@@ -2558,7 +2567,7 @@
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
   <script src="assets/js/22-salespeople.js?v=20260809-3"></script>
   <script src="assets/js/23-company-settings.js?v=20260809-1"></script>
-  <script src="assets/js/28-quickbooks.js?v=20260809-7"></script>
+  <script src="assets/js/28-quickbooks.js?v=20260809-8"></script>
   <script src="assets/js/24-trash.js?v=20260809-2"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
   <script src="assets/js/27-sales-documents.js?v=20260809-3"></script>
