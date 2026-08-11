@@ -166,9 +166,10 @@
         const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         const jobs = state.jobs.filter(job => monthKey(job.date) === key && isConfirmedSaleJob(job));
+        const confirmedJobs = state.jobs.filter(job => isConfirmedSaleJob(job));
         const expenses = state.expenses.filter(expense => monthKey(expense.date) === key);
         const sales = jobs.reduce((sum, job) => sum + Number(job.sale || 0), 0);
-        const collected = jobs.reduce((sum, job) => {
+        const collected = confirmedJobs.reduce((sum, job) => {
           return sum + getPaymentsList(job)
             .filter(payment => monthKey(payment.date) === key)
             .reduce((sub, payment) => sub + PaymentUtils.effect(payment), 0);

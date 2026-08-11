@@ -2052,6 +2052,9 @@
       if ($("dashPotentialSalesLabel")) $("dashPotentialSalesLabel").textContent = `Ventas potenciales · ${range.label}`;
       if ($("dashSalesLabel")) $("dashSalesLabel").textContent = `Ventas confirmadas · ${range.label}`;
       if ($("dashCollectedLabel")) $("dashCollectedLabel").textContent = `Cobrado · ${range.label}`;
+      if ($("dashCollectedHelp")) $("dashCollectedHelp").textContent = state.language === "en"
+        ? "Payments received during these dates, even when the job was created earlier."
+        : "Pagos recibidos en estas fechas, aunque el trabajo sea de un período anterior.";
       if ($("dashExpensesLabel")) $("dashExpensesLabel").textContent = `Gastos · ${range.label}`;
       if ($("dashProfitLabel")) $("dashProfitLabel").textContent = `Ganancia neta · ${range.label}`;
 
