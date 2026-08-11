@@ -2065,10 +2065,10 @@
       const periodPotentialSales = estimateJobs
         .reduce((sum, job) => sum + Number(job.sale || 0), 0);
 
-      const periodCollected = state.jobs.reduce((sum, job) => {
+      const periodCollected = state.jobs.filter(job => isConfirmedSaleJob(job)).reduce((sum, job) => {
         return sum + getPaymentsList(job)
           .filter(payment => isWithinDashboardRange(payment.date, range))
-          .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
+          .reduce((sub, payment) => sub + PaymentUtils.effect(payment), 0);
       }, 0);
 
       const periodExpenses = filteredExpenses

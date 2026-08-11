@@ -171,7 +171,7 @@
         const collected = jobs.reduce((sum, job) => {
           return sum + getPaymentsList(job)
             .filter(payment => monthKey(payment.date) === key)
-            .reduce((sub, payment) => sub + Number(payment.amount || 0), 0);
+            .reduce((sub, payment) => sub + PaymentUtils.effect(payment), 0);
         }, 0);
         const monthExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
         const monthCommissions = (state.commissionSettlements || []).filter(item => item.status !== "void" && monthKey(item.paymentDate) === key).reduce((sum, item) => sum + Number(item.total || 0), 0);
@@ -201,7 +201,7 @@
 
       const sales = confirmedJobs.reduce((sum, job) => sum + Number(job.sale || 0), 0);
       const potentialSales = estimateJobs.reduce((sum, job) => sum + Number(job.sale || 0), 0);
-      const collected = jobs.reduce((sum, job) => sum + getPaymentsTotal(job), 0);
+      const collected = confirmedJobs.reduce((sum, job) => sum + getPaymentsTotal(job), 0);
       const receivable = confirmedJobs.reduce((sum, job) => sum + computeJob(job).balance, 0);
       const internalCosts = confirmedJobs.reduce((sum, job) => sum + computeJob(job).baseCost, 0);
       const commissions = (state.commissionSettlements || []).filter(item => {
