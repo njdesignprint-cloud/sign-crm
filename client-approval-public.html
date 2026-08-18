@@ -1,108 +1,12 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aprobación de estimado | SignShop HQ</title>
-  <link rel="icon" type="image/png" href="assets/images/signshophq-icon-contrast.png" />
-  <link rel="apple-touch-icon" href="assets/images/signshophq-icon-contrast.png" />
-  <link rel="stylesheet" href="client-approval-public.css" />
-</head>
-<body>
-  <main class="approval-shell">
-    <section class="approval-card">
-      <header class="approval-header">
-        <div class="brand">SignShop <span>HQ</span></div>
-        <p class="muted">Estimado y aprobación de diseño</p>
-      </header>
-
-      <div id="approvalLoading" class="state-box">Cargando información…</div>
-      <div id="approvalError" class="state-box error hidden"></div>
-
-      <div id="approvalContent" class="hidden">
-        <div class="hero-row">
-          <div>
-            <h1 id="approvalJobTitle">Trabajo</h1>
-            <p id="approvalClientName" class="muted">Cliente</p>
-          </div>
-          <div class="total-box">
-            <span>Total</span>
-            <strong id="approvalTotal">$0.00</strong>
-          </div>
-        </div>
-
-        <div class="info-grid">
-          <div class="info-item">
-            <span>Estado estimado</span>
-            <strong id="approvalEstimateStatus">-</strong>
-          </div>
-          <div class="info-item">
-            <span>Estado diseño</span>
-            <strong id="approvalDesignStatus">-</strong>
-          </div>
-          <div class="info-item">
-            <span>Depósito</span>
-            <strong id="approvalDeposit">$0.00</strong>
-          </div>
-          <div class="info-item">
-            <span>Entrega</span>
-            <strong id="approvalDueDate">-</strong>
-          </div>
-        </div>
-
-        <section class="box hidden" id="approvalItemsBox">
-          <div class="box-title">Detalle del estimado</div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th>Cantidad</th>
-                  <th>Precio</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="approvalItemsBody"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="box hidden" id="approvalNotesBox">
-          <div class="box-title">Notas visibles</div>
-          <div id="approvalVisibleNotes" class="notes"></div>
-        </section>
-
-        <section class="box hidden" id="approvalImagesBox">
-          <div class="box-title">Diseño / referencia</div>
-          <div id="approvalImagesGrid" class="image-grid"></div>
-        </section>
-
-        <section class="box">
-          <div class="box-title">Tu respuesta</div>
-          <div class="action-grid">
-            <button class="action-btn" data-action="approve_estimate">Aprobar estimado</button>
-            <button class="action-btn" data-action="approve_design">Aprobar diseño</button>
-            <button class="action-btn warn" data-action="request_changes">Solicitar cambios</button>
-            <button class="action-btn danger" data-action="reject_estimate">Rechazar estimado</button>
-          </div>
-
-          <div id="selectedActionBox" class="selected-action hidden"></div>
-
-          <div class="form-grid">
-            <input id="approvalSignerName" class="input" placeholder="Tu nombre" />
-            <input id="approvalSignerEmail" class="input" placeholder="Tu correo (opcional)" />
-          </div>
-          <textarea id="approvalComment" class="textarea" placeholder="Comentario o cambios solicitados"></textarea>
-
-          <div class="footer-actions">
-            <button id="approvalSubmitBtn" class="submit-btn" disabled>Enviar respuesta</button>
-          </div>
-          <div id="approvalResult" class="state-box success hidden"></div>
-        </section>
-      </div>
-    </section>
-  </main>
-
-  <script src="15-client-approval-public.js"></script>
-</body>
-</html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Estimado | SignShop HQ</title><link rel="icon" href="assets/images/signshophq-icon-contrast.png"><link rel="stylesheet" href="client-approval-public.css?v=20260816-2"></head><body>
+<main class="approval-shell"><section class="approval-card"><header class="approval-header"><div class="brand">SignShop <span>HQ</span></div><p id="approvalSubtitle" class="muted">Revisión segura del estimado</p></header>
+<div id="approvalLoading" class="state-box">Cargando información…</div><div id="approvalError" class="state-box error hidden"></div>
+<div id="approvalContent" class="hidden"><div class="hero-row"><div><h1 id="approvalNumber">Estimado</h1><p id="approvalIssuer" class="muted"></p><p id="approvalClientName" class="muted"></p></div><div class="total-box"><span>Total</span><strong id="approvalTotal">$0.00</strong></div></div>
+<div class="info-grid"><div class="info-item"><span id="issueLabel">Fecha</span><strong id="approvalIssueDate">-</strong></div><div class="info-item"><span id="dueLabel">Vencimiento</span><strong id="approvalDueDate">-</strong></div><div class="info-item"><span id="depositLabel">Anticipo</span><strong id="approvalDeposit">-</strong></div></div>
+<section class="box"><div id="detailLabel" class="box-title">Detalle del estimado</div><div class="table-wrap"><table><thead><tr><th id="descLabel">Descripción</th><th id="qtyLabel">Cantidad</th><th id="priceLabel">Precio</th><th>Total</th></tr></thead><tbody id="approvalItemsBody"></tbody></table></div></section>
+<section id="approvalNotesBox" class="box hidden"><div id="notesLabel" class="box-title">Mensaje</div><div id="approvalVisibleNotes" class="notes"></div></section>
+<section id="responseBox" class="box"><div id="responseLabel" class="box-title">Tu respuesta</div><div class="action-grid"><button class="action-btn" data-action="accept">Aceptar estimado</button><button class="action-btn warn" data-action="request_changes">Solicitar cambios</button><button class="action-btn danger" data-action="reject">Rechazar</button></div><div id="selectedActionBox" class="selected-action hidden"></div>
+<div class="form-grid"><input id="approvalSignerName" class="input" placeholder="Nombre completo (firma)"><input id="approvalSignerEmail" class="input" type="email" placeholder="Correo (opcional)"></div><textarea id="approvalComment" class="textarea" placeholder="Comentario o cambios solicitados"></textarea>
+<label id="approvalConsentRow" class="consent hidden"><input id="approvalConsent" type="checkbox"><span id="consentLabel">Confirmo que estoy autorizado para aceptar este estimado y que mi nombre funciona como firma electrónica.</span></label>
+<div class="footer-actions"><button id="approvalSubmitBtn" class="submit-btn" disabled>Enviar respuesta</button></div></section><section id="approvalResult" class="thank-you hidden"><div class="thank-you-icon">✓</div><h2 id="thankYouTitle">¡Gracias!</h2><p id="thankYouMessage">Tu respuesta fue registrada y la empresa recibió una notificación.</p><p id="closeHint" class="muted">Puedes dejar esta página abierta o cerrarla cuando quieras.</p><button id="approvalCloseBtn" class="submit-btn">Cerrar esta página</button></section></div></section></main>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script><script src="runtime-config.js?v=20260728-1"></script><script src="15-client-approval-public.js?v=20260816-thanks-open-1"></script></body></html>

@@ -237,6 +237,7 @@
       if (payload.amount <= 0) return showToast("El monto debe ser mayor que 0.");
 
       try {
+        let savedExpenseId = state.editingExpenseId || "";
         if (state.editingExpenseId) {
           const existing = state.expenses.find(item => item.id === state.editingExpenseId) || {};
           payload.photos = getExpensePhotos(existing);
@@ -245,10 +246,12 @@
         } else {
           payload.photos = [...state.pendingExpensePhotos];
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await expensesRef().add(payload);
+          const savedExpense = await expensesRef().add(payload);
+          savedExpenseId = savedExpense.id;
           state.pendingExpensePhotos = [];
           showToast("Gasto guardado.");
         }
+        await postAccountingSource("expense", savedExpenseId);
         markModalSaved("expenseModal");
         closeModal("expenseModal", true);
       } catch (error) {
@@ -364,6 +367,8 @@
         } else {
           await jobsRef().doc(jobId).update(jobPatch);
         }
+
+        await postAccountingSource("job_payment", jobId, savedPayment.id);
 
         showToast(editingIndex >= 0
           ? (state.language === "en" ? "Payment updated." : "Pago actualizado.")

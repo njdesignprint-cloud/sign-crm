@@ -14,6 +14,7 @@
         renderJobs();
         renderInstallationModule();
         renderReportsModule();
+        if (typeof renderAccounting === "function") renderAccounting();
         if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
       }, error => console.error(error));
 
@@ -23,6 +24,7 @@
         renderJobs();
         renderInstallationModule();
         renderReportsModule();
+        if (typeof renderAccounting === "function") renderAccounting();
         if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
         if (state.editingJobId) {
           const currentJob = getJobById(state.editingJobId);
@@ -35,6 +37,7 @@
         renderExpenses();
         renderInstallationModule();
         renderReportsModule();
+        if (typeof renderAccounting === "function") renderAccounting();
         if (typeof renderWeeklySettlements === "function") renderWeeklySettlements();
         if (state.editingJobId) renderJobPreview();
       }, error => console.error(error));
@@ -81,7 +84,29 @@
 
       const unsubSalesDocuments = salesDocumentsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
         state.salesDocuments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        window.__salesResponseNotified = window.__salesResponseNotified || new Set();
+        const unreadResponse = state.salesDocuments.find(item => item.type === "estimate" && item.customerResponseUnread && !window.__salesResponseNotified.has(item.id));
+        if (unreadResponse) {
+          window.__salesResponseNotified.add(unreadResponse.id);
+          const response = unreadResponse.approvalResponse || {};
+          const responseLabel = response.action === "accept" ? "aceptó" : response.action === "request_changes" ? "solicitó cambios en" : "rechazó";
+          showToast(`${response.signerName || "El cliente"} ${responseLabel} el estimado ${unreadResponse.number || ""}.`);
+        }
         if (typeof renderSalesDocuments === "function") renderSalesDocuments();
+        if (typeof renderAccounting === "function") renderAccounting();
+      }, error => console.error(error));
+
+      const unsubPlaidAccounts = userRef().collection("plaidAccounts").onSnapshot(snapshot => {
+        state.plaidAccounts = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+        if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
+      }, error => console.error(error));
+      const unsubPlaidItems = userRef().collection("plaidItems").onSnapshot(snapshot => {
+        state.plaidItems = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+        if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
+      }, error => console.error(error));
+      const unsubPlaidTransactions = userRef().collection("plaidTransactions").limit(500).onSnapshot(snapshot => {
+        state.plaidTransactions = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+        if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
       }, error => console.error(error));
 
       const unsubProspects = prospectsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
@@ -92,6 +117,8 @@
       let unsubSalespeople = () => {};
       let unsubCommissionSettlements = () => {};
       let unsubTrash = () => {};
+      let unsubJournalEntries = () => {};
+      let unsubAccountingPostingStates = () => {};
       if (isAdmin()) {
         unsubSalespeople = salespeopleRef().orderBy("name", "asc").onSnapshot(snapshot => {
           state.salespeople = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -105,15 +132,32 @@
           if (typeof renderCommissionSettlements === "function") renderCommissionSettlements();
           if (typeof renderSalespeople === "function") renderSalespeople();
           renderJobs();
+          if (typeof renderAccounting === "function") renderAccounting();
         }, error => console.error(error));
         unsubTrash = trashRef().orderBy("archivedAt", "desc").onSnapshot(snapshot => {
           state.trashItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           if (typeof renderTrash === "function") renderTrash();
         }, error => console.error(error));
+        if (APP_ENVIRONMENT === "development" || APP_ENVIRONMENT === "production") {
+          unsubJournalEntries = journalEntriesRef().limit(500).onSnapshot(snapshot => {
+            state.journalEntries = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+            if (typeof renderPurchaseOrders === "function") renderPurchaseOrders();
+            if (typeof renderAccounting === "function") renderAccounting();
+          }, error => console.error("Realtime accounting entries:", error));
+          unsubAccountingPostingStates = accountingPostingStatesRef().limit(500).onSnapshot(snapshot => {
+            state.accountingPostingStates = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+            if (typeof renderPurchaseOrders === "function") renderPurchaseOrders();
+          }, error => console.error("Realtime accounting posting states:", error));
+        } else {
+          state.journalEntries = [];
+          state.accountingPostingStates = [];
+        }
       } else {
         state.salespeople = [];
         state.commissionSettlements = [];
         state.trashItems = [];
+        state.journalEntries = [];
+        state.accountingPostingStates = [];
       }
 
       let unsubWeeklySettlements = () => {};
@@ -158,7 +202,7 @@
         if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
       }
 
-      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubProspects, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJobs, unsubSalesDocuments, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
+      state.unsubscribers.push(unsubCompanySettings, unsubClients, unsubProspects, unsubSalespeople, unsubCommissionSettlements, unsubTrash, unsubJournalEntries, unsubAccountingPostingStates, unsubJobs, unsubSalesDocuments, unsubPlaidAccounts, unsubPlaidItems, unsubPlaidTransactions, unsubExpenses, unsubRecurring, unsubInventory, unsubMovements, unsubProviders, unsubPurchaseOrders, unsubWeeklySettlements, unsubTeamMembers, unsubPlatformUsers, unsubPlatformWorkspaces);
     }
 
     function showAccessStatus(title, text) {
@@ -384,6 +428,8 @@
       state.inventoryMovements = [];
       state.providers = [];
       state.purchaseOrders = [];
+      state.journalEntries = [];
+      state.accountingPostingStates = [];
       state.teamMembers = [];
       state.galleryIndex = 0;
       state.galleryJobId = null;

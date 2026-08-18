@@ -20,6 +20,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const cloudFunctions = firebase.app().functions("us-central1");
 
     if (APP_ENVIRONMENT !== "production") {
       document.addEventListener("DOMContentLoaded", () => {
@@ -51,12 +52,17 @@
       trashItems: [],
       jobs: [],
       salesDocuments: [],
+      plaidAccounts: [],
+      plaidItems: [],
+      plaidTransactions: [],
       expenses: [],
       recurringExpenses: [],
       inventoryItems: [],
       inventoryMovements: [],
       providers: [],
       purchaseOrders: [],
+      journalEntries: [],
+      accountingPostingStates: [],
       teamMembers: [],
       weeklySettlements: [],
       editingClientId: null,
@@ -108,7 +114,7 @@
       prospectos: ["Prospectos", "Captación, visitas y seguimiento de nuevos negocios."],
       vendedores: ["Salespeople & commissions", "Manage client ownership, commission terms and agreements."],
       trabajos: ["Trabajos", "Vista tabla y Kanban para organizar producción."],
-      documentos: ["Estimates & invoices", "Create, send and track customer sales documents."],
+      documentos: ["Contabilidad · Estimados y facturas", "Crea, envía y controla los documentos de venta desde el centro contable."],
       produccion: ["Producción", "Tablero visual del flujo de trabajos, responsables y entregas."],
       gastos: ["Gastos", "Control de gastos normales y recurrentes."],
       inventario: ["Inventario", "Control profesional de materiales, stock y movimientos."],
@@ -116,6 +122,7 @@
       compras: ["Compras", "Órdenes de compra y recepción de materiales."],
       instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
+      contabilidad: ["Accounting · Beta", "Provisional double-entry ledger and trial balance."],
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
@@ -385,7 +392,7 @@
       if (!canEditModule(view) || ["produccion", "liquidaciones", "configuracion", "cuentascrm"].includes(view)) btnNew.classList.add("hidden");
       updateModulePdfButton();
       applyPermissionUi();
-      $("btnExportPdf")?.classList.toggle("hidden", ["auditoria", "prospectos", "documentos"].includes(view));
+      $("btnExportPdf")?.classList.toggle("hidden", ["auditoria", "prospectos", "documentos", "contabilidad"].includes(view));
       if (view === "auditoria" && typeof window.activateAuditLogView === "function") window.activateAuditLogView();
     }
     function setJobsViewMode(mode) {
@@ -472,6 +479,8 @@
     function inventoryMovementsRef() { return userRef().collection("inventoryMovements"); }
     function providersRef() { return userRef().collection("providers"); }
     function purchaseOrdersRef() { return userRef().collection("purchaseOrders"); }
+    function journalEntriesRef() { return userRef().collection("journalEntries"); }
+    function accountingPostingStatesRef() { return userRef().collection("accountingPostingStates"); }
     function teamMembersRef() { return userRef().collection("teamMembers"); }
     function weeklySettlementsRef() { return userRef().collection("weeklySettlements"); }
 
@@ -605,7 +614,7 @@
       if (module === "auditoria") return isAdmin();
       if (module === "vendedores") return isAdmin();
       if (module === "liquidaciones") return isOwner();
-      if (module === "reportes") return isAdmin();
+      if (["reportes", "contabilidad"].includes(module)) return isAdmin();
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
         ? ["view", "manage"].includes(level)
@@ -617,7 +626,7 @@
       if (module === "papelera") return isAdmin();
       if (module === "auditoria") return false;
       if (module === "liquidaciones") return isOwner();
-      if (["dashboard", "reportes", "configuracion", "cuentascrm"].includes(module)) return false;
+      if (["dashboard", "reportes", "contabilidad", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
         ? level === "manage"
@@ -690,7 +699,8 @@
 
       document.querySelectorAll('.nav button[data-view]').forEach(btn => {
         const view = btn.dataset.view;
-        btn.classList.toggle('hidden', view !== 'dashboard' && !canViewModule(view));
+        const accountingChild = btn.dataset.accountingChild === "true";
+        btn.classList.toggle('hidden', accountingChild || (view !== 'dashboard' && !canViewModule(view)));
       });
 
       if (state.currentView !== "dashboard" && !canViewModule(state.currentView)) {
@@ -721,6 +731,7 @@
         saveMovementBtn: 'inventario',
         saveProviderBtn: 'proveedores',
         savePurchaseOrderBtn: 'compras',
+        saveVendorPaymentBtn: 'compras',
         savePaymentBtn: 'trabajos',
         saveInternalNoteBtn: 'trabajos',
         addMaterialBtn: 'trabajos',

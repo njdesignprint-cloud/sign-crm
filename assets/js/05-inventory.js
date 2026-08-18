@@ -115,7 +115,7 @@
       };
 
       try {
-        await inventoryMovementsRef().add(movement);
+        const movementRef=await inventoryMovementsRef().add(movement);
         const updatePayload = {
           stock: newStock,
           lastMovementAt: date,
@@ -123,6 +123,7 @@
         };
         if (unitCost > 0) updatePayload.unitCost = unitCost;
         await inventoryRef().doc(itemId).update(updatePayload);
+        if(type==="salida") await postAccountingSource("inventory_movement",movementRef.id);
         showToast("Movimiento guardado.");
         closeModal("movementModal");
       } catch (error) {

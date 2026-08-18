@@ -10,12 +10,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
   <script src="runtime-config.js?v=20260728-1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260810-4" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260816-sales-center-1" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -132,7 +133,7 @@
   <button id="navProspectosBtn" data-view="prospectos" data-nav-icon="🎯">🎯 Prospectos</button>
   <button id="navVendedoresBtn" data-view="vendedores" data-nav-icon="🤝">🤝 Salespeople</button>
   <button id="navTrabajosBtn" data-view="trabajos" data-nav-icon="🛠️">🛠️ Trabajos</button>
-  <button id="navDocumentosBtn" data-view="documentos" data-nav-icon="📄">📄 Estimates & invoices</button>
+  <button id="navDocumentosBtn" class="hidden" data-accounting-child="true" data-view="documentos" data-nav-icon="📄" aria-hidden="true" tabindex="-1">📄 Estimates & invoices</button>
   <button id="navProduccionBtn" data-view="produccion" data-nav-icon="🏭">🏭 Producción</button>
   <button id="navInstalacionesBtn" data-view="instalaciones" data-nav-icon="🗓️">🗓️ Instalación</button>
 
@@ -149,6 +150,7 @@
   <button id="navGastosBtn" data-view="gastos" data-nav-icon="💸">💸 Gastos</button>
   <button id="navLiquidacionesBtn" data-view="liquidaciones" data-nav-icon="💰">💰 Liquidación semanal</button>
   <button id="navReportesBtn" data-view="reportes" data-nav-icon="📈">📈 Reportes</button>
+  <button id="navContabilidadBtn" data-view="contabilidad" data-nav-icon="📚">📚 Contabilidad beta</button>
 
   <div class="layout-sidebar-divider"></div>
   <div id="navGroupAdmin" class="layout-sidebar-group-title">ADMINISTRACIÓN</div>
@@ -364,6 +366,10 @@
             <div class="stat"><div class="label">Seguimientos para hoy</div><div id="prospectsTodayCount" class="value warn-text">0</div></div>
             <div class="stat"><div class="label">Seguimientos atrasados</div><div id="prospectsOverdueCount" class="value danger-text">0</div></div>
             <div class="stat"><div class="label">Convertidos en clientes</div><div id="prospectsWonCount" class="value ok-text">0</div></div>
+          </div>
+          <div id="dashboardBankCard" class="panel dashboard-bank-card hidden">
+            <div><div id="dashboardBankName" class="label">Cuenta bancaria</div><div id="dashboardBankBalance" class="value brand-text">$0.00</div><div id="dashboardBankUpdated" class="stat-help">Saldo disponible</div></div>
+            <div class="dashboard-bank-side"><span id="dashboardBankStatus" class="pill st-aprobado">Conectada</span><div id="dashboardBankReview" class="stat-help">0 movimientos por revisar</div><button id="dashboardBankSyncBtn" class="btn btn-secondary btn-small" type="button">Actualizar</button></div>
           </div>
           <div class="panel">
             <div class="panel-head">
@@ -844,6 +850,12 @@
 
         <section id="view-compras" class="view hidden">
           <div class="stats">
+            <div class="stat"><div class="label">Accounts payable</div><div id="apOutstandingTotal" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div class="label">Overdue payables</div><div id="apOverdueTotal" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div class="label">Vendor payments</div><div id="apPaidTotal" class="value ok-text">$0.00</div></div>
+            <div class="stat"><div class="label">Open bills</div><div id="apOpenCount" class="value info-text">0</div></div>
+          </div>
+          <div class="stats">
             <div class="stat"><div class="label">OC abiertas</div><div id="poOpenCount" class="value warn-text">0</div></div>
             <div class="stat"><div class="label">Pendientes de recibir</div><div id="poPendingReceiveCount" class="value danger-text">0</div></div>
             <div class="stat"><div class="label">Total ordenado</div><div id="poOrderedTotal" class="value brand-text">$0.00</div></div>
@@ -890,6 +902,12 @@
                     <th>Entrega esperada</th>
                     <th>Items</th>
                     <th>Total</th>
+                    <th>Supplier invoice</th>
+                    <th>Due date</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Payable status</th>
+                    <th>Accounting</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                   </tr>
@@ -1079,6 +1097,182 @@
               </table>
             </div>
             <div id="settlementHistoryEmpty" class="empty hidden">Todavía no hay semanas cerradas.</div>
+          </div>
+        </section>
+
+        <section id="view-contabilidad" class="view hidden">
+          <div class="panel accounting-home-panel">
+            <div class="panel-head">
+              <div><h2>Accounting center</h2><div class="section-note">Your business finances in one place: money in, money out, bank review and tax preparation.</div></div>
+              <span id="accountingHomeStatus" class="pill state-active">Preview</span>
+            </div>
+            <div class="stats">
+              <div class="stat"><div class="label">Cash movement</div><div id="accountingHomeCash" class="value info-text">$0.00</div></div>
+              <div class="stat"><div class="label">To collect</div><div id="accountingHomeReceivable" class="value warn-text">$0.00</div></div>
+              <div class="stat"><div class="label">Sales tax payable</div><div id="accountingHomeTax" class="value danger-text">$0.00</div></div>
+              <div class="stat"><div class="label">Net income</div><div id="accountingHomeProfit" class="value ok-text">$0.00</div></div>
+            </div>
+            <div class="actions-row mt-12">
+              <button id="accountingQuickEstimateBtn" class="btn btn-primary" type="button">+ New estimate</button>
+              <button id="accountingQuickInvoiceBtn" class="btn btn-secondary" type="button">+ New invoice</button>
+              <button id="accountingQuickExpenseBtn" class="btn btn-secondary" type="button">+ Record expense</button>
+              <button id="accountingQuickReportBtn" class="btn btn-info" type="button">Monthly report</button>
+            </div>
+            <div class="accounting-sales-center mt-12">
+              <div class="panel-head"><div><h3 id="accountingSalesCenterTitle">Sales documents</h3><div id="accountingSalesCenterNote" class="section-note">Open and review estimates or invoices without creating a new document.</div></div></div>
+              <div class="accounting-sales-grid">
+                <button id="accountingViewAllDocumentsBtn" class="accounting-sales-card accounting-sales-all" type="button"><span id="accountingAllDocumentsLabel">All documents</span><strong id="accountingAllDocumentsCount">0</strong><small id="accountingAllDocumentsTotal">$0.00</small></button>
+                <button id="accountingViewEstimatesBtn" class="accounting-sales-card accounting-sales-estimate" type="button"><span id="accountingEstimatesLabel">Estimates</span><strong id="accountingEstimatesCount">0</strong><small id="accountingEstimatesTotal">$0.00</small></button>
+                <button id="accountingViewInvoicesBtn" class="accounting-sales-card accounting-sales-invoice" type="button"><span id="accountingInvoicesLabel">Invoices</span><strong id="accountingInvoicesCount">0</strong><small id="accountingInvoicesTotal">$0.00</small></button>
+              </div>
+            </div>
+            <div class="grid-3 mt-12">
+              <div class="box"><strong>Bank review</strong><div id="accountingHomeBankNote" class="section-note mt-10">Connect Plaid to review and classify transactions.</div></div>
+              <div class="box"><strong>Receivables</strong><div id="accountingHomeAgingNote" class="section-note mt-10">Review overdue customer balances.</div></div>
+              <div class="box"><strong>Tax package</strong><div id="accountingHomeTaxNote" class="section-note mt-10">Generate a monthly package for your accountant.</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Accounting foundation · Beta</h2><div class="section-note">Read-only provisional ledger generated from existing invoices, jobs, customer payments, expenses and paid commissions. It does not modify your records.</div></div>
+              <span id="accountingBalanced" class="pill state-active">Balanced</span>
+            </div>
+            <div class="filters">
+              <input id="accountingFrom" type="date" class="input" aria-label="Accounting from date" />
+              <input id="accountingTo" type="date" class="input" aria-label="Accounting to date" />
+              <button id="btnClearAccountingFilters" class="btn btn-secondary" type="button">Clear filters</button>
+            </div>
+            <div class="permission-note mt-10"><strong>Safety:</strong> these are calculated preview entries. Posting, bank reconciliation and period closing will be enabled only after validation against your current books.</div>
+          </div>
+          <div id="accountingPeriodClosePanel" class="panel hidden">
+            <div class="panel-head">
+              <div><h2>Monthly close · Development</h2><div class="section-note">Permanently locks a month only after the journal balances and active bank or credit-card accounts are reconciled through month end.</div></div>
+              <span id="accountingPeriodCloseStatus" class="pill">Open</span>
+            </div>
+            <div class="filters">
+              <input id="accountingCloseMonth" type="month" class="input" aria-label="Accounting month to close" />
+              <button id="accountingClosePeriodBtn" class="btn btn-danger" type="button">Close month permanently</button>
+              <button id="accountingDownloadClosePdfBtn" class="btn btn-info hidden" type="button">Download close package PDF</button>
+            </div>
+            <div id="accountingPeriodCloseMessage" class="permission-note mt-10">Choose a completed and reconciled month. Closing cannot be undone from the browser.</div>
+          </div>
+          <div id="accountingMigrationReadinessPanel" class="panel">
+            <div class="panel-head">
+              <div><h2>Accounting go-live readiness</h2><div class="section-note">Every control must pass before permanent accounting can be considered for Production. Passing this list still requires explicit approval.</div></div>
+              <div class="actions-row"><button id="accountingMigrationReadinessPdfBtn" class="btn btn-info btn-small" type="button">Download readiness PDF</button><span id="accountingMigrationReadinessStatus" class="pill st-cancelado">Not ready</span></div>
+            </div>
+            <div id="accountingMigrationReadinessList" class="alerts-grid"></div>
+          </div>
+          <div id="accountingActivationPanel" class="panel">
+            <div class="panel-head">
+              <div><h2>Clean accounting start</h2><div class="section-note">Start SignShop HQ as the official accounting system from one date. Earlier CRM records will remain visible but will not be posted.</div></div>
+              <span id="accountingActivationStatus" class="pill st-pendiente">Not activated</span>
+            </div>
+            <div class="filters">
+              <input id="accountingCutoverDate" class="input" type="date" aria-label="Official accounting start date" value="2026-09-01" />
+              <input id="accountingActivationConfirmation" class="input" type="text" maxlength="8" placeholder="Type ACTIVATE" autocomplete="off" />
+              <button id="accountingActivateBtn" class="btn btn-danger" type="button">Activate permanent accounting</button>
+            </div>
+            <div id="accountingActivationMessage" class="permission-note mt-10">Creates Chase, cash, Zelle, Stripe clearing and credit-card accounts, Texas sales-tax settings, and 50/50 owner records for Noel and Jenniffer.</div>
+          </div>
+          <div id="openingBalancePanel" class="panel hidden">
+            <div class="panel-head">
+              <div><h2>Opening balances</h2><div class="section-note">Enter balances from actual bank, card and business records. QuickBooks is not required.</div></div>
+              <span class="pill st-diseno">Controlled import</span>
+            </div>
+            <div class="filters">
+              <input id="openingBalanceDate" class="input" type="date" aria-label="Opening balance effective date" />
+              <input id="openingBalanceReference" class="input" type="text" maxlength="200" placeholder="Source, for example bank and card statements 2026-08-31" />
+              <input id="openingBalanceKey" class="input" type="text" maxlength="120" placeholder="Unique import key, for example clean-start-2026" />
+              <label class="btn btn-secondary" for="openingBalanceCsvFile">Preview balances CSV</label>
+              <input id="openingBalanceCsvFile" class="hidden" type="file" accept=".csv,text/csv" />
+            </div>
+            <div id="openingBalanceCsvSummary" class="permission-note mt-10">The CSV stays in this browser and only fills the preview below. Nothing is saved automatically.</div>
+            <div id="openingBalanceCsvIssues" class="table-wrap mt-10 hidden"><table><thead><tr><th>CSV row</th><th>QuickBooks account</th><th>Debit</th><th>Credit</th><th>Map to SignShop HQ</th></tr></thead><tbody id="openingBalanceCsvIssuesBody"></tbody></table></div>
+            <div id="openingBalanceComparison" class="panel mt-10 hidden">
+              <div class="panel-head"><div><h3>Opening balance review</h3><div id="openingBalanceComparisonSummary" class="section-note">Review imported balances before starting the permanent ledger.</div></div><span class="pill st-diseno">Local preview</span></div>
+              <div class="table-wrap"><table><thead><tr><th>Account</th><th>Name</th><th>QuickBooks</th><th>SignShop HQ</th><th>Difference</th><th>Result</th></tr></thead><tbody id="openingBalanceComparisonBody"></tbody></table></div>
+            </div>
+            <div class="table-wrap mt-10"><table><thead><tr><th>Account</th><th>Name</th><th>Debit</th><th>Credit</th><th>Memo</th></tr></thead><tbody id="openingBalanceLines"></tbody></table></div>
+            <div class="filters mt-10">
+              <input id="openingBalanceConfirmation" class="input" type="text" maxlength="6" placeholder="Type IMPORT" autocomplete="off" />
+              <button id="importOpeningBalanceBtn" class="btn btn-danger" type="button">Import permanent opening balances</button>
+            </div>
+            <div id="openingBalanceMessage" class="permission-note mt-10">Use only figures from a verified closing trial balance. Total debits must equal total credits.</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="label">Cash movement</div><div id="accountingCash" class="value info-text">$0.00</div></div>
+            <div class="stat"><div class="label">Accounts receivable</div><div id="accountingReceivable" class="value warn-text">$0.00</div></div>
+            <div class="stat"><div class="label">Sales tax payable</div><div id="accountingSalesTax" class="value danger-text">$0.00</div></div>
+            <div class="stat"><div class="label">Provisional net income</div><div id="accountingNetIncome" class="value ok-text">$0.00</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Trial balance</h2><div class="section-note">Every provisional journal entry must have equal debits and credits.</div></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Account</th><th>Name</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody id="accountingTrialBalanceBody"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Provisional journal</h2><div id="accountingEntryCount" class="section-note">0 provisional entries</div></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Source</th><th>Debit</th><th>Credit</th></tr></thead><tbody id="accountingEntriesBody"></tbody></table></div>
+            <div id="accountingEmpty" class="empty hidden">No provisional entries in this period.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Profit &amp; Loss · Provisional</h2><div class="section-note">Income and expenses for the selected period.</div></div><strong id="profitLossNet">$0.00</strong></div>
+            <div class="table-wrap"><table><thead><tr><th>Section</th><th>Account</th><th>Amount</th></tr></thead><tbody id="profitLossBody"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Balance Sheet · Provisional</h2><div class="section-note">Cumulative balances through the selected end date.</div></div><span id="balanceSheetStatus" class="pill state-active">Balanced</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Section</th><th>Account</th><th>Amount</th></tr></thead><tbody id="balanceSheetBody"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Cash Flow · Provisional</h2><div class="section-note">Cash received and paid during the selected period.</div></div><strong id="cashFlowNet">$0.00</strong></div>
+            <div class="stats"><div class="stat"><div class="label">Cash inflows</div><div id="cashFlowInflows" class="value ok-text">$0.00</div></div><div class="stat"><div class="label">Cash outflows</div><div id="cashFlowOutflows" class="value danger-text">$0.00</div></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Accounts Receivable Aging</h2><div class="section-note">Outstanding invoices grouped by days past due as of the selected end date.</div></div><strong id="receivableAgingTotal">$0.00</strong></div>
+            <div class="stats"><div class="stat"><div class="label">Current</div><div id="agingCurrent" class="value">$0.00</div></div><div class="stat"><div class="label">1–30 days</div><div id="aging30" class="value warn-text">$0.00</div></div><div class="stat"><div class="label">31–60 days</div><div id="aging60" class="value warn-text">$0.00</div></div><div class="stat"><div class="label">61–90 days</div><div id="aging90" class="value danger-text">$0.00</div></div><div class="stat"><div class="label">Over 90 days</div><div id="agingOver90" class="value danger-text">$0.00</div></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Due date</th><th>Days past due</th><th>Balance</th></tr></thead><tbody id="receivableAgingBody"></tbody></table></div>
+            <div id="receivableAgingEmpty" class="empty hidden">No outstanding invoices as of this date.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Financial accounts</h2><div id="bankAccountsModeNote" class="section-note">Preview accounts. Permanent management is available only in Development.</div></div></div>
+            <div id="developmentAccountControls" class="filters hidden">
+              <input id="financialAccountName" class="input" type="text" maxlength="100" placeholder="Account name" />
+              <select id="financialAccountType" class="select"><option value="bank">Bank</option><option value="cash">Cash</option><option value="credit_card">Credit card</option><option value="clearing">Clearing</option></select>
+              <input id="financialAccountInstitution" class="input" type="text" maxlength="100" placeholder="Financial institution" />
+              <input id="financialAccountLastFour" class="input" type="text" inputmode="numeric" maxlength="4" placeholder="Last 4 digits" />
+              <input id="financialAccountOpeningBalance" class="input" type="number" step="0.01" value="0" aria-label="Opening balance" />
+              <input id="financialAccountOpeningDate" class="input" type="date" aria-label="Opening balance date" />
+              <button id="createFinancialAccount" class="btn btn-primary" type="button">Create account</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Account</th><th>Type</th><th>Ledger</th><th>Status</th></tr></thead><tbody id="bankAccountsBody"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Bank reconciliation · Local preview</h2><div class="section-note">Choose an account and a CSV statement. The file is analyzed in your browser and is not uploaded or saved.</div></div></div>
+            <div class="filters">
+              <select id="bankStatementAccount" class="select" aria-label="Financial account"></select>
+              <label class="btn btn-secondary" for="bankStatementFile">Select bank CSV</label>
+              <input id="bankStatementFile" class="hidden" type="file" accept=".csv,text/csv" />
+              <button id="clearBankStatementPreview" class="btn btn-secondary" type="button">Clear preview</button>
+              <button id="saveBankStatement" class="btn btn-primary hidden" type="button">Import statement</button>
+            </div>
+            <div id="bankDuplicateNote" class="permission-note mt-10">The CSV remains only in this browser session and is never uploaded.</div>
+            <div id="developmentReconciliationControls" class="filters hidden mt-10">
+              <input id="reconciliationStart" class="input" type="date" aria-label="Statement start date" />
+              <input id="reconciliationEnd" class="input" type="date" aria-label="Statement end date" />
+              <input id="reconciliationBeginning" class="input" type="number" step="0.01" placeholder="Beginning balance" />
+              <input id="reconciliationEnding" class="input" type="number" step="0.01" placeholder="Ending balance" />
+              <button id="closeBankReconciliation" class="btn btn-primary" type="button" disabled>Close reconciliation</button>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="label">Imported</div><div id="bankImportedCount" class="value">0</div></div>
+            <div class="stat"><div class="label">Matched</div><div id="bankMatchedCount" class="value ok-text">0</div></div>
+            <div class="stat"><div class="label">Needs review</div><div id="bankUnmatchedCount" class="value warn-text">0</div></div>
+            <div class="stat"><div class="label">Net bank movement</div><div id="bankNetMovement" class="value info-text">$0.00</div></div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap"><table><thead><tr><th>Date</th><th>Bank description</th><th>Amount</th><th>Status</th><th>Possible CRM match</th></tr></thead><tbody id="bankReconciliationBody"></tbody></table></div>
+            <div id="bankReconciliationEmpty" class="empty hidden">Select a CSV statement to preview reconciliation.</div>
           </div>
         </section>
 
@@ -1325,6 +1519,14 @@
           <div class="settings-layout">
             <div class="settings-form-stack">
               <section class="panel settings-panel">
+                <div class="panel-head"><div><h2>Stripe Connect · Pagos</h2><div class="section-note">Cada negocio conecta su propia cuenta y recibe directamente los pagos de sus clientes.</div></div><span id="stripeStatus" class="pill st-pendiente">No conectado</span></div>
+                <div class="settings-fields">
+                  <div class="permission-note" id="stripeEnvironmentNote">Test environment: no real money moves. Stripe collects and protects banking and tax information; SignShop HQ does not store it.</div>
+                  <div class="actions-row quickbooks-actions"><button id="stripeConnectBtn" class="btn btn-primary" type="button">Conectar Stripe</button><button id="stripeRefreshBtn" class="btn btn-secondary" type="button">Actualizar estado</button></div>
+                  <div id="stripeStatusNote" class="section-note">Conecta Stripe para habilitar pagos por tarjeta y cuenta bancaria en las facturas.</div>
+                </div>
+              </section>
+              <section class="panel settings-panel">
                 <div class="panel-head">
                   <div>
                     <h2 id="quickBooksSettingsTitle">QuickBooks</h2>
@@ -1333,6 +1535,11 @@
                   <span id="quickBooksStatusPill" class="pill st-pendiente">No conectado</span>
                 </div>
                 <div class="settings-fields quickbooks-settings">
+                  <section class="quickbooks-step" id="plaidSettingsStep">
+                    <div class="quickbooks-step-head"><span>0</span><div><strong>Bank connection</strong><small id="plaidHelp">Conecta el banco de tu negocio de forma segura con Plaid.</small></div></div>
+                    <div class="actions-row quickbooks-actions"><select id="plaidItemSelect" class="input hidden" aria-label="Cuenta bancaria conectada"></select><button id="plaidConnectBtn" class="btn btn-primary" type="button">Conectar cuenta bancaria</button><button id="plaidUpdateBtn" class="btn btn-secondary hidden" type="button">Reparar conexión</button><button id="plaidSyncBtn" class="btn btn-secondary" type="button" disabled>Sincronizar movimientos bancarios</button><button id="plaidDisconnectBtn" class="btn btn-danger hidden" type="button">Desconectar banco</button><span id="plaidStatus" class="pill st-pendiente">No conectada</span></div>
+                    <div id="plaidSyncNote" class="permission-note">Plaid está aprobado para Production. Conecta una cuenta para importar sus movimientos.</div>
+                  </section>
                   <section class="quickbooks-step">
                     <div class="quickbooks-step-head"><span>1</span><div><strong id="quickBooksConnectionTitle">Conexión</strong><small id="quickBooksConnectionHelp">Autoriza y comprueba la compañía conectada.</small></div></div>
                     <div id="quickBooksConnectionDetail" class="permission-note">La conexión usa autorización oficial de Intuit y guarda las credenciales únicamente en el servidor.</div>
@@ -1460,7 +1667,7 @@
         <section id="view-papelera" class="view hidden">
           <div class="stats"><div class="stat"><div class="label">Archived records</div><div id="trashTotalCount" class="value">0</div></div></div>
           <div class="panel">
-            <div class="panel-head"><div><h2>Trash & recovery</h2><div class="section-note">Records remain recoverable with their original IDs. Restoring does not overwrite an existing record.</div></div><div class="filters"><select id="trashTypeFilter" class="select"><option value="">All record types</option><option value="clients">Clients</option><option value="jobs">Jobs</option><option value="expenses">Expenses</option><option value="recurring">Recurring expenses</option><option value="inventory">Inventory</option><option value="providers">Suppliers</option><option value="purchaseOrders">Purchase orders</option><option value="salespeople">Salespeople</option></select></div></div>
+              <div class="panel-head"><div><h2>Trash & recovery</h2><div class="section-note">Records remain recoverable with their original IDs. Restoring does not overwrite an existing record.</div></div><div class="filters"><select id="trashTypeFilter" class="select"><option value="">All record types</option><option value="clients">Clients</option><option value="jobs">Jobs</option><option value="expenses">Expenses</option><option value="recurring">Recurring expenses</option><option value="inventory">Inventory</option><option value="providers">Suppliers</option><option value="purchaseOrders">Purchase orders</option><option value="salespeople">Salespeople</option><option value="salesDocuments">Estimates / invoices</option></select></div></div>
             <div class="table-wrap"><table><thead><tr><th>Archived</th><th>Type</th><th>Record</th><th>Archived by</th><th>Original ID</th><th>Actions</th></tr></thead><tbody id="trashBody"></tbody></table></div>
             <div id="trashEmpty" class="empty hidden">The trash is empty.</div>
           </div>
@@ -2330,6 +2537,9 @@
           <select id="purchaseOrderJobId" class="select"></select>
           <input id="purchaseOrderDate" type="date" class="input" />
           <input id="purchaseOrderExpectedDate" type="date" class="input" />
+          <input id="purchaseOrderSupplierInvoice" class="input" maxlength="100" placeholder="Supplier invoice number" />
+          <input id="purchaseOrderBillDate" type="date" class="input" aria-label="Supplier bill date" />
+          <input id="purchaseOrderDueDate" type="date" class="input" aria-label="Supplier bill due date" />
           <select id="purchaseOrderStatus" class="select">
             <option>Borrador</option>
             <option>Enviada</option>
@@ -2536,24 +2746,43 @@
         <div class="grid-4">
           <label class="field-label"><span id="salesDocTypeLabel">Document type</span><select id="salesDocType" class="select"><option value="estimate">Estimate</option><option value="invoice">Invoice</option></select></label>
           <label class="field-label"><span id="salesDocClientLabel">Customer</span><select id="salesDocClientId" class="select"></select></label>
+          <label class="field-label grid-span-2"><span id="salesDocAddressLabel">Job / billing address</span><input id="salesDocAddress" class="input" placeholder="Address shown on this document" /></label>
           <label class="field-label"><span id="salesDocJobLabel">Related job</span><select id="salesDocJobId" class="select"><option value="">Not linked</option></select></label>
           <label class="field-label"><span id="salesDocLanguageLabel">Customer language</span><select id="salesDocLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select></label>
           <label class="field-label"><span id="salesDocIssueDateLabel">Issue date</span><input id="salesDocIssueDate" type="date" class="input" /></label>
           <label class="field-label"><span id="salesDocDueDateLabel">Expiration / due date</span><input id="salesDocDueDate" type="date" class="input" /></label>
           <label class="field-label"><span id="salesDocStatusLabel">Status</span><select id="salesDocStatus" class="select"></select></label>
-          <label class="field-label"><span id="salesDocDepositLabel">Required deposit %</span><input id="salesDocDepositPercent" type="number" min="0" max="100" step="0.01" class="input" value="50" /></label>
+          <label class="field-label"><span id="salesDocTermsLabel">Payment terms</span><select id="salesDocTerms" class="select"><option value="due_on_receipt">Due on receipt</option><option value="net_15">Net 15</option><option value="net_30">Net 30</option><option value="net_60">Net 60</option><option value="custom">Custom date</option></select></label>
+          <label class="field-label"><span id="salesDocDepositLabel">Deposit request</span><div class="inline-field"><select id="salesDocDepositMode" class="select"><option value="percent">%</option><option value="fixed">$</option></select><input id="salesDocDepositValue" type="number" min="0" step="0.01" class="input" value="50" /></div></label>
         </div>
+        <div id="salesDocAcceptanceSummary" class="permission-note hidden"></div>
         <div class="panel-head mt-16"><div><h3 id="salesDocItemsHeading">Products and services</h3><div id="salesDocInternalHelp" class="section-note">Internal cost and profit are never shown on the customer PDF.</div></div><button id="addSalesDocLineBtn" type="button" class="btn btn-info btn-small">+ Add line</button></div>
-        <div class="table-wrap"><table class="sales-doc-lines"><thead><tr><th id="salesDocDescriptionTh">Description</th><th id="salesDocQtyTh">Qty</th><th id="salesDocRateTh">Rate</th><th id="salesDocCostTh">Internal cost</th><th id="salesDocTaxableTh">Taxable</th><th id="salesDocAmountTh">Amount</th><th></th></tr></thead><tbody id="salesDocLines"></tbody></table></div>
+        <div class="table-wrap"><table class="sales-doc-lines"><thead><tr><th id="salesDocProductTh">Product / service</th><th id="salesDocDescriptionTh">Description</th><th id="salesDocQtyTh">Qty</th><th id="salesDocRateTh">Rate</th><th id="salesDocCostTh">Internal cost</th><th id="salesDocTaxableTh">Taxable</th><th id="salesDocAmountTh">Amount</th><th></th></tr></thead><tbody id="salesDocLines"></tbody></table></div>
         <div class="grid-3 mt-16">
           <label class="field-label"><span id="salesDocDiscountLabel">Discount</span><input id="salesDocDiscount" type="number" min="0" step="0.01" class="input" value="0" /></label>
-          <label class="field-label"><span id="salesDocTaxLabel">Sales tax %</span><input id="salesDocTaxPercent" type="number" min="0" step="0.001" class="input" value="0" /></label>
+          <label class="field-label"><span id="salesDocTaxLabel">Sales tax %</span><div class="inline-field"><label><input id="salesDocTaxEnabled" type="checkbox" /> Charge tax</label><input id="salesDocTaxPercent" type="number" min="0" step="0.001" class="input" value="0" /></div></label>
           <div class="box sales-doc-totals"><div><span id="salesDocSubtotalLabel">Subtotal</span><strong id="salesDocSubtotal">$0.00</strong></div><div><span id="salesDocTaxTotalLabel">Tax</span><strong id="salesDocTax">$0.00</strong></div><div><span id="salesDocTotalLabel">Total</span><strong id="salesDocTotal">$0.00</strong></div><div class="internal-total"><span id="salesDocProfitLabel">Internal profit</span><strong id="salesDocProfit">$0.00</strong></div></div>
         </div>
         <label class="field-label mt-12"><span id="salesDocCustomerMessageLabel">Customer message</span><textarea id="salesDocCustomerMessage" class="textarea" placeholder="Message shown on the document"></textarea></label>
+        <label class="field-label mt-12"><span id="salesDocPaymentInstructionsLabel">Payment instructions</span><textarea id="salesDocPaymentInstructions" class="textarea" placeholder="How the customer can pay"></textarea></label>
         <label class="field-label mt-12"><span id="salesDocInternalNotesLabel">Internal notes</span><textarea id="salesDocInternalNotes" class="textarea" placeholder="Only your team can see this"></textarea></label>
       </div>
-      <div class="modal-foot"><button id="salesDocCancelBtn" class="btn btn-secondary" data-close="salesDocumentModal">Cancel</button><button id="saveSalesDocumentBtn" class="btn btn-primary">Save document</button></div>
+      <div class="modal-foot"><button id="salesDocCancelBtn" class="btn btn-secondary" data-close="salesDocumentModal">Cancel</button><button id="previewSalesDocumentBtn" class="btn btn-info" type="button">Full-page preview</button><button id="saveSalesDocumentBtn" class="btn btn-primary">Save document</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="vendorPaymentModal">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Record vendor payment</h3><button class="btn btn-secondary btn-small" data-close="vendorPaymentModal">Close</button></div>
+      <div id="vendorPaymentSummary" class="permission-note">Choose an active purchase order.</div>
+      <div class="grid-2 mt-12">
+        <input id="vendorPaymentDate" type="date" class="input" aria-label="Vendor payment date" />
+        <input id="vendorPaymentAmount" type="number" min="0.01" step="0.01" class="input" placeholder="Payment amount" />
+        <select id="vendorPaymentMethod" class="select" aria-label="Vendor payment method"><option value="Bank">Bank</option><option value="Credit card">Credit card</option><option value="Cash">Cash</option><option value="Check">Check</option><option value="Other">Other</option></select>
+        <input id="vendorPaymentReference" class="input" maxlength="100" placeholder="Reference or check number" />
+      </div>
+      <textarea id="vendorPaymentNote" class="textarea mt-12" maxlength="300" placeholder="Payment note"></textarea>
+      <div class="modal-actions"><button class="btn btn-secondary" data-close="vendorPaymentModal">Cancel</button><button id="saveVendorPaymentBtn" class="btn btn-primary">Save vendor payment</button></div>
     </div>
   </div>
 
@@ -2561,33 +2790,43 @@
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
   <script src="assets/js/00-sales-document-utils.js?v=20260809-2"></script>
+  <script src="assets/js/00-accounting-core.js?v=20260816-sales-doc-trash-1"></script>
+  <script src="assets/js/00-accounting-posting.js?v=20260817-production-1"></script>
+  <script src="assets/js/00-bank-reconciliation-core.js?v=20260814-1"></script>
+  <script src="assets/js/00-opening-balance-csv.js?v=20260815-4"></script>
+  <script src="assets/js/00-accounts-payable-core.js?v=20260815-1"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260808-2"></script>
+  <script src="assets/js/01-core.js?v=20260816-accounting-nav-2"></script>
   <script src="assets/js/02-clients.js?v=20260808-2"></script>
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
   <script src="assets/js/22-salespeople.js?v=20260809-3"></script>
   <script src="assets/js/23-company-settings.js?v=20260809-1"></script>
-  <script src="assets/js/28-quickbooks.js?v=20260809-8"></script>
-  <script src="assets/js/24-trash.js?v=20260809-2"></script>
+    <script src="assets/js/28-quickbooks.js?v=20260815-2"></script>
+    <script src="assets/js/29-accounting.js?v=20260817-clean-start-2"></script>
+    <script src="assets/js/30-bank-reconciliation.js?v=20260817-production-1"></script>
+    <script async src="https://cdn.plaid.com/link/v2/stable/link-initialize.js" onload="window.dispatchEvent(new Event('plaid-sdk-ready'))"></script>
+    <script src="assets/js/31-plaid.js?v=20260817-production-2"></script>
+    <script src="assets/js/32-stripe.js?v=20260817-live-2"></script>
+  <script src="assets/js/24-trash.js?v=20260816-sales-doc-trash-1"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
-  <script src="assets/js/27-sales-documents.js?v=20260809-3"></script>
+<script src="assets/js/27-sales-documents.js?v=20260817-large-aligned-pdf-header-2"></script>
   <script src="assets/js/02-payment-utils.js?v=20260730-3"></script>
   <script src="assets/js/03-jobs.js?v=20260810-2"></script>
   <script src="assets/js/04-expenses.js?v=20260809-2"></script>
-  <script src="assets/js/05-inventory.js?v=20260728-2"></script>
+  <script src="assets/js/05-inventory.js?v=20260817-accounting-1"></script>
   <script src="assets/js/06-installation-reports.js?v=20260810-2"></script>
   <script src="assets/js/07-pdf.js?v=20260809-3"></script>
-  <script src="assets/js/08-providers-compras.js?v=20260728-2"></script>
+    <script src="assets/js/08-providers-compras.js?v=20260815-4"></script>
   <script src="assets/js/09-users.js?v=20260809-2"></script>
   <script src="assets/js/10-backup-misc.js?v=20260808-2"></script>
-  <script src="assets/js/11-auth.js?v=20260809-1"></script>
-  <script src="assets/js/12-init.js?v=20260809-4"></script>
+  <script src="assets/js/11-auth.js?v=20260817-production-accounting-2"></script>
+    <script src="assets/js/12-init.js?v=20260815-2"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260809-1"></script>
   <script src="assets/js/16-advance-control.js?v=20260809-1"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
-  <script src="assets/js/18-i18n.js?v=20260808-2"></script>
-  <script src="assets/js/25-i18n-complete.js?v=20260809-10"></script>
+  <script src="assets/js/18-i18n.js?v=20260816-accounting-nav-2"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260816-bank-1"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>

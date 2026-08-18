@@ -9,6 +9,7 @@
       if (btn.dataset.view === "produccion" && typeof renderProductionBoard === "function") {
         renderProductionBoard();
       }
+      if (btn.dataset.view === "contabilidad" && typeof renderAccounting === "function") renderAccounting();
     }));
     document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.dataset.close)));
 
@@ -58,6 +59,7 @@
     $("saveMovementBtn").addEventListener("click", saveMovement);
     $("saveProviderBtn").addEventListener("click", saveProvider);
     $("savePurchaseOrderBtn").addEventListener("click", savePurchaseOrder);
+    $("saveVendorPaymentBtn")?.addEventListener("click", () => withSaveButton("saveVendorPaymentBtn", "Saving payment…", saveVendorPayment));
     $("saveProductionBtn")?.addEventListener("click", () => {
       if (typeof saveProductionChanges === "function") saveProductionChanges();
     });
@@ -392,6 +394,8 @@
       if (target.dataset.deletePo) removeItem("purchaseOrders", target.dataset.deletePo, "orden de compra");
       if (target.dataset.poPdf) exportSinglePurchaseOrderPdf(target.dataset.poPdf);
       if (target.dataset.receivePo) receivePurchaseOrderIntoInventory(target.dataset.receivePo);
+      if (target.dataset.payVendor) openVendorPayment(target.dataset.payVendor);
+      if (target.dataset.postMissingPo) postMissingPurchaseOrderAccounting(target.dataset.postMissingPo);
 
       if (target.dataset.editTeamMember) editTeamMember(target.dataset.editTeamMember);
       if (target.dataset.toggleTeamMember) toggleTeamMemberActive(target.dataset.toggleTeamMember);

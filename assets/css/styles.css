@@ -794,6 +794,34 @@
       flex-wrap:wrap;
     }
 
+    /* Sales documents use a dedicated, full-page workspace like QuickBooks. */
+    #salesDocumentModal{
+      align-items:stretch;
+      justify-content:stretch;
+      padding:0;
+      background:var(--bg);
+      backdrop-filter:none;
+    }
+    #salesDocumentModal .modal-wide{
+      width:100%;
+      max-width:none;
+      max-height:none;
+      min-height:100vh;
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+      background:var(--bg);
+    }
+    #salesDocumentModal .modal-head{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:color-mix(in srgb,var(--panel) 94%,transparent);
+      backdrop-filter:blur(12px);
+    }
+    #salesDocumentModal .modal-body{max-width:1280px;margin:0 auto;width:100%;}
+    #salesDocumentModal .modal-foot{position:sticky;bottom:0;z-index:2;background:var(--panel);}
+
     .toast{
       position:fixed;
       right:18px;
@@ -1708,3 +1736,5 @@ body.sidebar-collapsed .nav button.active::before{top:8px;bottom:8px;left:-4px}
   letter-spacing:.06em;
   box-shadow:0 8px 24px rgba(0,0,0,.35);
 }
+.dashboard-bank-card{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:16px 0;padding:18px 20px}.dashboard-bank-card .value{font-size:28px;font-weight:800;margin-top:4px}.dashboard-bank-side{text-align:right;display:grid;justify-items:end;gap:6px}@media(max-width:700px){.dashboard-bank-card{align-items:flex-start}.dashboard-bank-side{text-align:left;justify-items:start}}
+.accounting-sales-center{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02);padding:4px 14px 14px}.accounting-sales-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.accounting-sales-card{display:grid;gap:5px;text-align:left;padding:15px;border:1px solid var(--line);border-radius:14px;color:var(--text);background:var(--panel-2);cursor:pointer}.accounting-sales-card strong{font-size:25px}.accounting-sales-card small{color:var(--muted)}.accounting-sales-estimate{border-left:5px solid #f59e0b;background:rgba(245,158,11,.07)}.accounting-sales-invoice{border-left:5px solid #3b82f6;background:rgba(59,130,246,.07)}.accounting-sales-all{border-left:5px solid #8b5cf6}.sales-document-row.estimate{background:linear-gradient(90deg,rgba(245,158,11,.09),transparent 28%)}.sales-document-row.invoice{background:linear-gradient(90deg,rgba(59,130,246,.09),transparent 28%)}.sales-document-row.estimate td:first-child{border-left:4px solid #f59e0b}.sales-document-row.invoice td:first-child{border-left:4px solid #3b82f6}.sales-document-type-badge{display:inline-block;margin-top:5px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.sales-document-type-badge.estimate{color:#fbbf24;background:rgba(245,158,11,.16)}.sales-document-type-badge.invoice{color:#60a5fa;background:rgba(59,130,246,.16)}@media(max-width:700px){.accounting-sales-grid{grid-template-columns:1fr}}

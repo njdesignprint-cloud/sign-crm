@@ -48,3 +48,30 @@ test("a linked invoice recognizes unallocated payments already collected on the 
   assert.equal(moduleSource.includes('item.type === "invoice" && item.status !== "void"'), true);
   assert.equal(moduleSource.includes("Math.min(Number(estimate.total || 0), availableJobCollectedForInvoice(jobId))"), true);
 });
+
+test("sales documents can be deleted recoverably and update accounting", () => {
+  const moduleSource = fs.readFileSync(path.join(__dirname, "../assets/js/27-sales-documents.js"), "utf8");
+  const trashSource = fs.readFileSync(path.join(__dirname, "../assets/js/24-trash.js"), "utf8");
+  assert.match(moduleSource, /data-sales-doc-delete/);
+  assert.match(moduleSource, /moveRecordToTrash\("salesDocuments"/);
+  assert.match(trashSource, /salesDocuments:salesDocumentsRef/);
+  assert.match(trashSource, /linkedPayments/);
+});
+
+test("the public approval thank-you page stays open until the customer closes it", () => {
+  const approvalSource = fs.readFileSync(path.join(__dirname, "../15-client-approval-public.js"), "utf8");
+  assert.doesNotMatch(approvalSource, /setTimeout\(closePage/);
+  assert.match(approvalSource, /Puedes dejar esta página abierta o cerrarla cuando quieras/);
+  assert.match(approvalSource, /approvalCloseBtn/);
+});
+
+test("sales documents preserve a per-document address and provide a full-page preview", () => {
+  const moduleSource = fs.readFileSync(path.join(__dirname, "../assets/js/27-sales-documents.js"), "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
+  assert.match(moduleSource, /serviceAddress:cleanText\(\$\("salesDocAddress"\)\.value\)/);
+  assert.match(moduleSource, /item\.serviceAddress \|\| customer\.address/);
+  assert.match(moduleSource, /data-sales-doc-preview/);
+  assert.match(moduleSource, /pdf\.output\("bloburl"\)/);
+  assert.match(html, /id="salesDocAddress"/);
+  assert.match(html, /id="previewSalesDocumentBtn"/);
+});

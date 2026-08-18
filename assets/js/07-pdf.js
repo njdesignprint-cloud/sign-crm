@@ -182,9 +182,10 @@
           const logoHeight = logoRatio >= 1 ? maxLogoWidth / logoRatio : maxLogoHeight;
           const logoX = 15 + (maxLogoWidth - logoWidth) / 2;
           const logoY = 6 + (maxLogoHeight - logoHeight) / 2;
-          pdf.setFillColor(255, 255, 255);
-          pdf.roundedRect(14, 5, 25, 25, 3, 3, "F");
-          pdf.addImage(logo, undefined, logoX, logoY, logoWidth, logoHeight, undefined, "FAST");
+          // The PDF header keeps the company color; render the mark itself in white
+          // so a green source logo remains readable on that header.
+          const whiteLogo = pdfWhiteLogoDataUrl(logo);
+          pdf.addImage(whiteLogo || logo, undefined, logoX, logoY, logoWidth, logoHeight, undefined, "FAST");
           return pageWidth;
         } catch (error) {
           console.warn("The configured company logo could not be embedded in the PDF; using initials instead.", error);
@@ -199,6 +200,39 @@
       pdf.text(initials, 23, 19.5, { align: "center" });
       pdf.setFont(undefined, "normal");
       return pageWidth;
+    }
+    function pdfWhiteLogoDataUrl(image) {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth || image.width;
+        canvas.height = image.naturalHeight || image.height;
+        if (!canvas.width || !canvas.height) return "";
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(image, 0, 0);
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < pixels.data.length; i += 4) {
+          const r = pixels.data[i];
+          const g = pixels.data[i + 1];
+          const b = pixels.data[i + 2];
+          const a = pixels.data[i + 3];
+          if (!a) continue;
+          // Remove the green/colored backing and turn the dark symbol into white.
+          const max = Math.max(r, g, b); const min = Math.min(r, g, b);
+          const saturation = max ? (max - min) / max : 0;
+          const isColoredBacking = saturation > 0.22;
+          if (isColoredBacking) pixels.data[i + 3] = 0;
+          else {
+            pixels.data[i] = 255;
+            pixels.data[i + 1] = 255;
+            pixels.data[i + 2] = 255;
+          }
+        }
+        ctx.putImageData(pixels, 0, 0);
+        return canvas.toDataURL("image/png");
+      } catch (error) {
+        console.warn("Could not create the white PDF logo variant.", error);
+        return "";
+      }
     }
     function companyPdfColor() {
       const hex = /^#[0-9a-f]{6}$/i.test(COMPANY.brandColor || "") ? COMPANY.brandColor : "#0f172a";

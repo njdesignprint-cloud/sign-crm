@@ -190,7 +190,8 @@
       if (total <= 0) return showToast("There is no outstanding commission to pay.");
       const button = $("saveCommissionSettlementBtn"); button.disabled = true;
       try {
-        await commissionSettlementsRef().add({ salespersonId, salespersonName: person.name, paymentDate: $("commissionSettlementDate").value || today(), periodFrom, periodTo, method: $("commissionSettlementMethod").value || "other", reference: cleanText($("commissionSettlementReference").value), notes: cleanText($("commissionSettlementNotes").value), status: "paid", lineItems, total: Number(total.toFixed(2)), recordedBy: state.userEmail || "", createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        const settlement = await commissionSettlementsRef().add({ salespersonId, salespersonName: person.name, paymentDate: $("commissionSettlementDate").value || today(), periodFrom, periodTo, method: $("commissionSettlementMethod").value || "other", reference: cleanText($("commissionSettlementReference").value), notes: cleanText($("commissionSettlementNotes").value), status: "paid", lineItems, total: Number(total.toFixed(2)), recordedBy: state.userEmail || "", createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        await postAccountingSource("commission", settlement.id);
         closeModal("commissionSettlementModal"); showToast("Commission payment recorded.");
       } catch (error) { console.error(error); showToast("The commission payment could not be recorded."); }
       finally { button.disabled = false; }
@@ -199,7 +200,7 @@
       if (!guardWrite("void commission settlements", "vendedores")) return;
       const item = state.commissionSettlements.find(row => row.id === id); if (!item || item.status === "void") return;
       if (!confirm("Void this commission settlement? The record will remain in the audit history.")) return;
-      try { await commissionSettlementsRef().doc(id).update({ status: "void", voidedAt: firebase.firestore.FieldValue.serverTimestamp(), voidedBy: state.userEmail || "", updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); showToast("Commission settlement voided."); }
+      try { await commissionSettlementsRef().doc(id).update({ status: "void", voidedAt: firebase.firestore.FieldValue.serverTimestamp(), voidedBy: state.userEmail || "", updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); await postAccountingSource("commission", id); showToast("Commission settlement voided."); }
       catch (error) { console.error(error); showToast("The settlement could not be voided."); }
     }
     function fillClientSalespersonSelect(selected = "") {

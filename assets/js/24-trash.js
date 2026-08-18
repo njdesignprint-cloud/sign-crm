@@ -1,6 +1,6 @@
-    const TRASH_TYPE_LABELS = { clients:"Client", jobs:"Job", expenses:"Expense", recurring:"Recurring expense", inventory:"Inventory item", providers:"Supplier", purchaseOrders:"Purchase order", salespeople:"Salesperson" };
+    const TRASH_TYPE_LABELS = { clients:"Client", jobs:"Job", expenses:"Expense", recurring:"Recurring expense", inventory:"Inventory item", providers:"Supplier", purchaseOrders:"Purchase order", salespeople:"Salesperson", salesDocuments:"Estimate / invoice" };
     function refForTrashType(type = "") {
-      return { clients:clientsRef, jobs:jobsRef, expenses:expensesRef, recurring:recurringRef, inventory:inventoryRef, providers:providersRef, purchaseOrders:purchaseOrdersRef, salespeople:salespeopleRef }[type]?.() || null;
+      return { clients:clientsRef, jobs:jobsRef, expenses:expensesRef, recurring:recurringRef, inventory:inventoryRef, providers:providersRef, purchaseOrders:purchaseOrdersRef, salespeople:salespeopleRef, salesDocuments:salesDocumentsRef }[type]?.() || null;
     }
     function assertTrashDependencies(type, id) {
       if (type === "clients" && state.jobs.some(job => job.clientId === id)) throw new Error("This client has jobs. Archive or reassign those jobs first.");
@@ -8,6 +8,11 @@
       if (type === "inventory" && (state.inventoryMovements.some(item => item.itemId === id) || state.jobs.some(job => (job.materials || []).some(item => item.inventoryId === id)))) throw new Error("This inventory item has linked movements or jobs.");
       if (type === "providers" && state.purchaseOrders.some(item => item.providerId === id)) throw new Error("This supplier has purchase orders. Archive those orders first.");
       if (type === "salespeople" && (state.clients.some(item => item.salespersonId === id) || state.jobs.some(item => item.commission?.salespersonId === id) || state.commissionSettlements.some(item => item.salespersonId === id))) throw new Error("This salesperson has business history. Set them inactive instead.");
+      if (type === "salesDocuments") {
+        const document = state.salesDocuments.find(item => item.id === id);
+        const linkedPayments = state.jobs.some(job => (job.payments || []).some(payment => payment.invoiceId === id && payment.status !== "void"));
+        if (document?.type === "invoice" && (Number(document.paidAmount || 0) > 0.005 || linkedPayments)) throw new Error(state.language === "es" ? "Esta factura tiene pagos aplicados. Anula o reasigna esos pagos antes de borrarla." : "This invoice has applied payments. Void or reassign those payments before deleting it.");
+      }
     }
     async function moveRecordToTrash(type, id, label = "record") {
       assertTrashDependencies(type, id);

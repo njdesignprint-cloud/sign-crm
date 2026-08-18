@@ -1,9 +1,17 @@
     function quickBooksText(en, es) { return state.language === "es" ? es : en; }
+    function quickBooksEnvironmentAvailable() {
+      return (APP_ENVIRONMENT === "production" && firebaseConfig.projectId === "sign-crm-a7bda")
+        || (APP_ENVIRONMENT === "development" && firebaseConfig.projectId === "signshophq-dev");
+    }
+    function quickBooksFunctionsProject() {
+      return firebaseConfig.projectId === "signshophq-dev" ? "signshophq-dev" : "sign-crm-a7bda";
+    }
     async function callQuickBooksFunction(name, data = {}) {
+      if (!quickBooksEnvironmentAvailable()) throw new Error("QuickBooks is disabled outside Production.");
       const user = firebase.auth().currentUser;
       if (!user) throw new Error("Authentication required.");
       const token = await user.getIdToken();
-      const response = await fetch(`https://us-central1-sign-crm-a7bda.cloudfunctions.net/${name}`, {
+      const response = await fetch(`https://us-central1-${quickBooksFunctionsProject()}.cloudfunctions.net/${name}`, {
         method:"POST",
         headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
         body:JSON.stringify({ data })
@@ -40,6 +48,12 @@
       if (!firebase.auth().currentUser || !$("quickBooksStatusPill")) return;
       renderQuickBooksLanguage();
       const pill = $("quickBooksStatusPill"), detail = $("quickBooksConnectionDetail");
+      if (!quickBooksEnvironmentAvailable()) {
+        pill.className = "pill st-pendiente";
+        pill.textContent = quickBooksText("Production only", "Solo en Producción");
+        detail.textContent = quickBooksText("Development never sends its test identity or data to the Production QuickBooks backend.", "Desarrollo nunca envía su identidad ni sus datos de prueba al servidor de QuickBooks de Producción.");
+        return;
+      }
       pill.textContent = quickBooksText("Checking...", "Comprobando...");
       try {
         const data = await callQuickBooksFunction("quickBooksStatus");

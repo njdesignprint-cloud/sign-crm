@@ -11,6 +11,9 @@
     function getPurchaseOrderTotal(po = {}) {
       return getPurchaseOrderItems(po).reduce((sum, item) => sum + Number(item.total || (Number(item.qty || 0) * Number(item.unitCost || 0))), 0);
     }
+    function payableStatusLabel(po) {
+      return { paid:"Paid", partial:"Partially paid", overdue:"Overdue", open:"Open", not_payable:"Not payable" }[AccountsPayableCore.status(po, today())] || "Open";
+    }
     function getProviderInventoryItems(provider = {}) {
       const providerName = providerDisplayName(provider);
       const key = normalizeMatchText(providerName);
@@ -309,6 +312,9 @@
       $("purchaseOrderJobId").value = jobId || "";
       $("purchaseOrderDate").value = today();
       $("purchaseOrderExpectedDate").value = "";
+      $("purchaseOrderSupplierInvoice").value = "";
+      $("purchaseOrderBillDate").value = today();
+      $("purchaseOrderDueDate").value = "";
       $("purchaseOrderStatus").value = "Borrador";
       $("purchaseOrderNotes").value = "";
       $("purchaseOrderItemsContainer").innerHTML = "";
@@ -328,6 +334,9 @@
       $("purchaseOrderJobId").value = po.jobId || "";
       $("purchaseOrderDate").value = po.date || today();
       $("purchaseOrderExpectedDate").value = po.expectedDate || "";
+      $("purchaseOrderSupplierInvoice").value = po.supplierInvoiceNumber || "";
+      $("purchaseOrderBillDate").value = po.billDate || po.date || today();
+      $("purchaseOrderDueDate").value = po.dueDate || "";
       $("purchaseOrderStatus").value = po.status || "Borrador";
       $("purchaseOrderNotes").value = po.notes || "";
       $("purchaseOrderItemsContainer").innerHTML = "";
@@ -360,24 +369,31 @@
         clientName: job ? clientLabel(getClientById(job.clientId)) : "",
         date: cleanText($("purchaseOrderDate").value) || today(),
         expectedDate: cleanText($("purchaseOrderExpectedDate").value),
+        supplierInvoiceNumber: cleanText($("purchaseOrderSupplierInvoice").value),
+        billDate: cleanText($("purchaseOrderBillDate").value),
+        dueDate: cleanText($("purchaseOrderDueDate").value),
         status: cleanText($("purchaseOrderStatus").value) || "Borrador",
         notes: cleanText($("purchaseOrderNotes").value),
         items: items.map(item => ({ ...item, total: Number(item.qty || 0) * Number(item.unitCost || 0) })),
         total: items.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.unitCost || 0)), 0),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         receivedMovementsApplied: existing?.receivedMovementsApplied || false,
-        receivedAt: existing?.receivedAt || null
+        receivedAt: existing?.receivedAt || null,
+        vendorPayments: Array.isArray(existing?.vendorPayments) ? existing.vendorPayments : []
       };
 
       try {
+        let savedPurchaseOrderId = state.editingPurchaseOrderId || "";
         if (state.editingPurchaseOrderId) {
           await purchaseOrdersRef().doc(state.editingPurchaseOrderId).update(payload);
           showToast("Orden de compra actualizada.");
         } else {
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await purchaseOrdersRef().add(payload);
+          const savedPurchaseOrder = await purchaseOrdersRef().add(payload);
+          savedPurchaseOrderId = savedPurchaseOrder.id;
           showToast("Orden de compra guardada.");
         }
+        await postAccountingSource("vendor_bill", savedPurchaseOrderId);
         closeModal("purchaseOrderModal");
         resetPurchaseOrderForm();
       } catch (error) {
@@ -413,6 +429,52 @@
     function purchaseOrderStatusPill(status = "") {
       return `<span class="pill ${purchaseOrderStatusClass(status)}">${safe(status || "Borrador")}</span>`;
     }
+    function purchaseOrderAccountingStatus(po) {
+      if (!["development","production"].includes(APP_ENVIRONMENT)) return `<span class="pill st-cotizacion">Preview only</span>`;
+      if (!isAdmin()) return `<span class="pill">Admin only</span>`;
+      const activeEntryIds = new Set(state.accountingPostingStates.map(item => cleanText(item.activeEntryId)).filter(Boolean));
+      const activeEntries = state.journalEntries.filter(item => activeEntryIds.has(item.id) && cleanText(item.sourceId) === po.id);
+      const billPosted = activeEntries.some(item => item.sourceType === "vendor_bill");
+      const postedPaymentIds = new Set(activeEntries.filter(item => item.sourceType === "vendor_payment").map(item => cleanText(item.sourceEventId)).filter(Boolean));
+      const payablePaymentIds = new Set(AccountsPayableCore.payments(po).map(item => cleanText(item.id)).filter(Boolean));
+      const postedPayments = [...payablePaymentIds].filter(id => postedPaymentIds.has(id)).length;
+      const paymentSummary = payablePaymentIds.size ? ` · ${postedPayments}/${payablePaymentIds.size} payments` : "";
+      return billPosted
+        ? `<span class="pill state-active">Posted${safe(paymentSummary)}</span>`
+        : `<span class="pill st-cotizacion">Pending</span>`;
+    }
+    function purchaseOrderMissingAccountingSources(po) {
+      if (!["development","production"].includes(APP_ENVIRONMENT) || !isAdmin()) return [];
+      const activeEntryIds = new Set(state.accountingPostingStates.map(item => cleanText(item.activeEntryId)).filter(Boolean));
+      const activeEntries = state.journalEntries.filter(item => activeEntryIds.has(item.id) && cleanText(item.sourceId) === po.id);
+      const missing = [];
+      if (!activeEntries.some(item => item.sourceType === "vendor_bill")) missing.push({ sourceType:"vendor_bill", sourceEventId:"" });
+      const postedPaymentIds = new Set(activeEntries.filter(item => item.sourceType === "vendor_payment").map(item => cleanText(item.sourceEventId)).filter(Boolean));
+      AccountsPayableCore.payments(po).forEach(payment => {
+        const paymentId = cleanText(payment.id);
+        if (paymentId && !postedPaymentIds.has(paymentId)) missing.push({ sourceType:"vendor_payment", sourceEventId:paymentId });
+      });
+      return missing;
+    }
+    async function postMissingPurchaseOrderAccounting(poId) {
+      if (!((APP_ENVIRONMENT === "development" && firebaseConfig.projectId === "signshophq-dev") || (APP_ENVIRONMENT === "production" && firebaseConfig.projectId === "sign-crm-a7bda"))) return showToast("Accounting posting is not available in this environment.");
+      if (!isAdmin()) return showToast("Only an administrator can post accounting records.");
+      const po = getPurchaseOrderById(poId);
+      if (!po) return showToast("Purchase order not found.");
+      const missing = purchaseOrderMissingAccountingSources(po);
+      if (!missing.length) return showToast("This purchase order is already fully posted.");
+      if (!confirm(`Post ${missing.length} missing accounting record(s) for ${po.number || po.providerName || "this purchase order"}? This does not change the bill or its payments.`)) return;
+      let posted = 0;
+      let reused = 0;
+      let deferred = 0;
+      for (const item of missing) {
+        const result = await postAccountingSource(item.sourceType, po.id, item.sourceEventId);
+        if (result?.deferred || result?.skipped) deferred += 1;
+        else if (result?.reused) reused += 1;
+        else posted += 1;
+      }
+      showToast(`Accounting complete: ${posted} posted, ${reused} already posted${deferred ? `, ${deferred} deferred` : ""}.`);
+    }
     function renderPurchaseOrders() {
       const rows = getFilteredPurchaseOrders();
       const tbody = $("purchaseOrdersBody");
@@ -426,6 +488,11 @@
       $("poPendingReceiveCount").textContent = String(pendingReceive.length);
       $("poOrderedTotal").textContent = money(state.purchaseOrders.reduce((sum, po) => sum + getPurchaseOrderTotal(po), 0));
       $("poReceivedCount").textContent = String(state.purchaseOrders.filter(po => po.status === "Recibida").length);
+      const payableSummary = AccountsPayableCore.summarize(state.purchaseOrders, today());
+      $("apOutstandingTotal").textContent = money(payableSummary.outstanding);
+      $("apOverdueTotal").textContent = money(payableSummary.overdue);
+      $("apPaidTotal").textContent = money(payableSummary.paid);
+      $("apOpenCount").textContent = String(payableSummary.openCount);
 
       $("purchaseOrdersEmpty").classList.toggle("hidden", rows.length > 0);
 
@@ -434,6 +501,7 @@
         const receiveBtn = po.receivedMovementsApplied || po.status === "Cancelada"
           ? ""
           : `<button class="btn btn-info btn-small" data-receive-po="${po.id}">Recibir stock</button>`;
+        const missingAccounting = purchaseOrderMissingAccountingSources(po);
         return `
           <tr>
             <td><strong>${safe(po.number || "-")}</strong></td>
@@ -443,18 +511,64 @@
             <td>${safe(po.expectedDate || "-")}</td>
             <td>${items.length}</td>
             <td>${money(getPurchaseOrderTotal(po))}</td>
+            <td>${safe(po.supplierInvoiceNumber || "-")}</td>
+            <td>${safe(po.dueDate || "-")}</td>
+            <td>${money(AccountsPayableCore.paid(po))}</td>
+            <td>${money(AccountsPayableCore.balance(po))}</td>
+            <td><span class="pill ${AccountsPayableCore.status(po, today()) === "overdue" ? "st-cancelado" : AccountsPayableCore.status(po, today()) === "paid" ? "state-active" : "st-cotizacion"}">${payableStatusLabel(po)}</span></td>
+            <td>${purchaseOrderAccountingStatus(po)}</td>
             <td>${purchaseOrderStatusPill(po.status || "Borrador")}</td>
             <td>
               <div class="actions-row">
                 ${canWriteData("compras") ? `<button class="btn btn-secondary btn-small" data-edit-po="${po.id}">Editar</button>` : ""}
                 <button class="btn btn-secondary btn-small" data-po-pdf="${po.id}">PDF</button>
                 ${canWriteData("compras") ? receiveBtn : ""}
+                ${canWriteData("compras") && AccountsPayableCore.isPayable(po) && AccountsPayableCore.balance(po) > 0 ? `<button class="btn btn-primary btn-small" data-pay-vendor="${po.id}">Pay vendor</button>` : ""}
+                ${missingAccounting.length ? `<button class="btn btn-info btn-small" data-post-missing-po="${po.id}">Post missing (${missingAccounting.length})</button>` : ""}
                 ${canDeleteData("compras") ? `<button class="btn btn-danger btn-small" data-delete-po="${po.id}">Eliminar</button>` : ""}
               </div>
             </td>
           </tr>
         `;
       }).join("");
+    }
+    function openVendorPayment(poId) {
+      const po = getPurchaseOrderById(poId);
+      if (!po || !AccountsPayableCore.isPayable(po)) return showToast("This purchase order is not an active payable.");
+      state.editingPayablePurchaseOrderId = poId;
+      $("vendorPaymentDate").value = today();
+      $("vendorPaymentAmount").value = AccountsPayableCore.balance(po).toFixed(2);
+      $("vendorPaymentMethod").value = "Bank";
+      $("vendorPaymentReference").value = "";
+      $("vendorPaymentNote").value = "";
+      $("vendorPaymentSummary").textContent = `${po.providerName || "Supplier"} · ${po.supplierInvoiceNumber || po.number || "Purchase order"} · Balance ${money(AccountsPayableCore.balance(po))}`;
+      openModal("vendorPaymentModal");
+    }
+    async function saveVendorPayment() {
+      if (!guardWrite("record vendor payments", "compras")) return;
+      const po = getPurchaseOrderById(state.editingPayablePurchaseOrderId);
+      if (!po) return showToast("Purchase order not found.");
+      let amount;
+      try { amount = AccountsPayableCore.validatePayment(po, Number($("vendorPaymentAmount").value || 0)); }
+      catch (error) { return showToast(error.message); }
+      const payment = {
+        id:`vp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        date:cleanText($("vendorPaymentDate").value) || today(),
+        amount,
+        method:cleanText($("vendorPaymentMethod").value),
+        reference:cleanText($("vendorPaymentReference").value),
+        note:cleanText($("vendorPaymentNote").value),
+        status:"posted",
+        createdBy:state.uid,
+        createdAt:new Date().toISOString()
+      };
+      try {
+        await purchaseOrdersRef().doc(po.id).update({ vendorPayments:firebase.firestore.FieldValue.arrayUnion(payment), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+        await postAccountingSource("vendor_payment", po.id, payment.id);
+        closeModal("vendorPaymentModal");
+        state.editingPayablePurchaseOrderId = null;
+        showToast("Vendor payment recorded.");
+      } catch (error) { console.error(error); showToast("Vendor payment could not be recorded."); }
     }
     function openPurchaseOrderFromCurrentJob() {
       if (!state.editingJobId) return showToast("Primero guarda el trabajo.");
