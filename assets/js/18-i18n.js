@@ -43,6 +43,15 @@
       navComprasBtn: "🧾 Compras",
       navGastosBtn: "💸 Gastos",
       navLiquidacionesBtn: "💰 Liquidación semanal",
+      navBancoBtn: "🏦 Centro bancario",
+      bankAllAccounts: "Todas las cuentas",
+      bankDescriptionHeading: "Banco / descripción",
+      bankClassificationHeading: "Clasificación",
+      bankActionHeading: "Acción",
+      bankRuleSafetyNote: "Crean sugerencias para movimientos futuros; nunca registran automáticamente en la contabilidad.",
+      bankRuleContains: "Descripción contiene",
+      bankRuleEquals: "Descripción exacta",
+      bankRuleSave: "Guardar regla",
       navReportesBtn: "📈 Reportes",
       navUsuariosBtn: "🔐 Usuarios",
       navConfiguracionBtn: "⚙️ Configuración de empresa",
@@ -140,6 +149,15 @@
       navComprasBtn: "🧾 Purchases",
       navGastosBtn: "💸 Expenses",
       navLiquidacionesBtn: "💰 Weekly settlement",
+      navBancoBtn: "🏦 Bank center",
+      bankAllAccounts: "All accounts",
+      bankDescriptionHeading: "Bank / description",
+      bankClassificationHeading: "Classification",
+      bankActionHeading: "Action",
+      bankRuleSafetyNote: "Creates suggestions for future transactions; it never posts automatically to accounting.",
+      bankRuleContains: "Description contains",
+      bankRuleEquals: "Exact description",
+      bankRuleSave: "Save rule",
       navReportesBtn: "📈 Reports",
       navUsuariosBtn: "🔐 Users",
       navConfiguracionBtn: "⚙️ Company settings",
@@ -217,6 +235,7 @@
       instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
+      banco: ["Centro bancario", "Revisa, empareja, divide y categoriza los movimientos de Plaid."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Configuración de empresa", "Identidad, preferencias regionales y marca de documentos."],
       papelera: ["Papelera y recuperación", "Restaura registros archivados conservando sus identificadores."],
@@ -238,6 +257,7 @@
       instalaciones: ["Installation calendar", "Installation schedule, assignees and team routes."],
       reportes: ["Advanced reports", "Commercial summary, profitability, receivables and purchases."],
       liquidaciones: ["Weekly settlement", "Professional tracking of owner pay and business reserves."],
+      banco: ["Bank center", "Review, match, split and categorize Plaid transactions."],
       usuarios: ["Users", "Team access, roles and permissions."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
       papelera: ["Trash & recovery", "Restore archived records while preserving their original IDs."],
@@ -404,6 +424,7 @@
     setText("navComprasBtn", t("navComprasBtn"));
     setText("navGastosBtn", t("navGastosBtn"));
     setText("navLiquidacionesBtn", t("navLiquidacionesBtn"));
+    setText("navBancoBtn", t("navBancoBtn"));
     setText("navReportesBtn", t("navReportesBtn"));
     setText("navUsuariosBtn", t("navUsuariosBtn"));
     setText("navConfiguracionBtn", t("navConfiguracionBtn"));

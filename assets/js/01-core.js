@@ -123,6 +123,7 @@
       instalaciones: ["Calendario de instalación", "Agenda de instalaciones, responsables y rutas del equipo."],
       reportes: ["Reportes avanzados", "Resumen comercial, rentabilidad, cuentas por cobrar y compras."],
       contabilidad: ["Accounting · Beta", "Provisional double-entry ledger and trial balance."],
+      banco: ["Centro bancario", "Revisa, empareja, divide y categoriza los movimientos de Plaid."],
       liquidaciones: ["Liquidación semanal", "Control profesional del pago al propietario y reservas del negocio."],
       usuarios: ["Usuarios", "Accesos, roles y permisos del equipo."],
       configuracion: ["Company settings", "Business identity, regional preferences and document branding."],
@@ -378,7 +379,7 @@
 
       const btnNew = $("btnNewMain");
       btnNew.classList.remove("hidden");
-      if (["dashboard", "produccion", "liquidaciones", "configuracion", "papelera"].includes(view)) btnNew.classList.add("hidden");
+      if (["dashboard", "produccion", "liquidaciones", "banco", "configuracion", "papelera"].includes(view)) btnNew.classList.add("hidden");
       if (view === "clientes") btnNew.textContent = "+ Nuevo cliente";
       if (view === "prospectos") btnNew.textContent = "+ Nuevo prospecto";
       if (view === "vendedores") btnNew.textContent = "+ New salesperson";
@@ -614,6 +615,7 @@
       if (module === "auditoria") return isAdmin();
       if (module === "vendedores") return isAdmin();
       if (module === "liquidaciones") return isOwner();
+      if (module === "banco") return isOwner();
       if (["reportes", "contabilidad"].includes(module)) return isAdmin();
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
@@ -626,6 +628,7 @@
       if (module === "papelera") return isAdmin();
       if (module === "auditoria") return false;
       if (module === "liquidaciones") return isOwner();
+      if (module === "banco") return isOwner();
       if (["dashboard", "reportes", "contabilidad", "configuracion", "cuentascrm"].includes(module)) return false;
       const level = getCurrentModulePermission(module);
       return module === "usuarios"
@@ -713,7 +716,7 @@
 
       const newBtn = $("btnNewMain");
       if (newBtn) {
-        const shouldHide = ["dashboard", "produccion", "liquidaciones", "configuracion", "papelera", "auditoria", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
+        const shouldHide = ["dashboard", "produccion", "liquidaciones", "banco", "configuracion", "papelera", "auditoria", "cuentascrm"].includes(state.currentView) || !canEditModule(state.currentView);
         newBtn.classList.toggle("hidden", shouldHide);
       }
 

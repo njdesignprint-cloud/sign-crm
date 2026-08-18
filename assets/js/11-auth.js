@@ -99,6 +99,7 @@
       const unsubPlaidAccounts = userRef().collection("plaidAccounts").onSnapshot(snapshot => {
         state.plaidAccounts = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
         if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
+        if (typeof renderBankFeed === "function") renderBankFeed();
       }, error => console.error(error));
       const unsubPlaidItems = userRef().collection("plaidItems").onSnapshot(snapshot => {
         state.plaidItems = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
@@ -107,6 +108,7 @@
       const unsubPlaidTransactions = userRef().collection("plaidTransactions").limit(500).onSnapshot(snapshot => {
         state.plaidTransactions = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
         if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
+        if (typeof renderBankFeed === "function") renderBankFeed();
       }, error => console.error(error));
 
       const unsubProspects = prospectsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {
@@ -404,6 +406,7 @@
       bindRealtime();
       setView(isSuperAdmin() && state.currentView === "cuentascrm" ? "cuentascrm" : (canManageUsers() && state.currentView === "usuarios" ? "usuarios" : "dashboard"));
       applyPermissionUi();
+      if (typeof window.initializeBankFeed === "function") window.initializeBankFeed();
       if (typeof renderPlatformAccounts === "function") renderPlatformAccounts();
     }
     function handleSignedOut() {

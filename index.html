@@ -149,6 +149,7 @@
 
   <button id="navGastosBtn" data-view="gastos" data-nav-icon="💸">💸 Gastos</button>
   <button id="navLiquidacionesBtn" data-view="liquidaciones" data-nav-icon="💰">💰 Liquidación semanal</button>
+  <button id="navBancoBtn" data-view="banco" data-nav-icon="🏦">🏦 Centro bancario</button>
   <button id="navReportesBtn" data-view="reportes" data-nav-icon="📈">📈 Reportes</button>
   <button id="navContabilidadBtn" data-view="contabilidad" data-nav-icon="📚">📚 Contabilidad beta</button>
 
@@ -1098,6 +1099,16 @@
             </div>
             <div id="settlementHistoryEmpty" class="empty hidden">Todavía no hay semanas cerradas.</div>
           </div>
+        </section>
+
+        <section id="view-banco" class="view hidden">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Centro bancario</h2><div class="section-note">Revisa cada movimiento antes de incorporarlo a tu control financiero. Emparejar evita duplicar registros que ya existen.</div></div><div class="actions-row"><select id="bankAccountFilter" class="input"><option value="">Todas las cuentas</option></select><button id="bankFeedSyncBtn" class="btn btn-primary" type="button">Sincronizar con Plaid</button></div></div>
+            <div class="stats"><div class="stat"><div class="label">Por revisar</div><div id="bankPendingCount" class="value warn-text">0</div></div><div class="stat"><div class="label">Entradas revisadas</div><div id="bankIncomeTotal" class="value ok-text">$0.00</div></div><div class="stat"><div class="label">Salidas revisadas</div><div id="bankExpenseTotal" class="value danger-text">$0.00</div></div></div>
+            <div class="filters mt-12"><select id="bankStatusFilter" class="input"><option value="pending">Pendientes</option><option value="categorized">Categorizados</option><option value="matched">Emparejados</option><option value="excluded">Excluidos</option><option value="all">Todos</option></select><select id="bankDirectionFilter" class="input"><option value="">Entradas y salidas</option><option value="in">Dinero recibido</option><option value="out">Dinero gastado</option></select><input id="bankSearch" class="input" type="search" placeholder="Buscar descripción o comercio" /><input id="bankFrom" class="input" type="date" aria-label="Desde"/><input id="bankTo" class="input" type="date" aria-label="Hasta"/></div>
+          </div>
+          <div class="panel"><div class="panel-head"><div><h2>Movimientos</h2><div id="bankFeedNote" class="section-note">Los movimientos nuevos permanecen pendientes hasta que los confirmes.</div></div></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Banco / descripción</th><th>Cuenta</th><th>Monto</th><th>Clasificación</th><th>Acción</th></tr></thead><tbody id="bankFeedBody"></tbody></table></div><div id="bankFeedEmpty" class="empty hidden">No hay movimientos con estos filtros.</div></div>
+          <div class="panel"><div class="panel-head"><div><h2>Reglas bancarias</h2><div class="section-note">Crean sugerencias para movimientos futuros; nunca registran automáticamente en la contabilidad.</div></div></div><div class="filters"><input id="bankRuleName" class="input" placeholder="Nombre de la regla"/><select id="bankRuleDirection" class="input"><option value="out">Dinero gastado</option><option value="in">Dinero recibido</option></select><select id="bankRuleOperator" class="input"><option value="contains">Descripción contiene</option><option value="equals">Descripción exacta</option></select><input id="bankRuleValue" class="input" placeholder="Ej. Adobe"/><select id="bankRuleCategory" class="input"></select><button id="bankRuleSaveBtn" class="btn btn-primary" type="button">Guardar regla</button></div><div id="bankRuleList" class="stack mt-12"></div></div>
         </section>
 
         <section id="view-contabilidad" class="view hidden">
@@ -2796,7 +2807,7 @@
   <script src="assets/js/00-opening-balance-csv.js?v=20260815-4"></script>
   <script src="assets/js/00-accounts-payable-core.js?v=20260815-1"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260816-accounting-nav-2"></script>
+  <script src="assets/js/01-core.js?v=20260818-bank-center-1"></script>
   <script src="assets/js/02-clients.js?v=20260808-2"></script>
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
   <script src="assets/js/22-salespeople.js?v=20260809-3"></script>
@@ -2806,6 +2817,7 @@
     <script src="assets/js/30-bank-reconciliation.js?v=20260817-production-1"></script>
     <script async src="https://cdn.plaid.com/link/v2/stable/link-initialize.js" onload="window.dispatchEvent(new Event('plaid-sdk-ready'))"></script>
     <script src="assets/js/31-plaid.js?v=20260817-production-2"></script>
+    <script src="assets/js/33-bank-feed.js?v=20260818-bank-center-2"></script>
     <script src="assets/js/32-stripe.js?v=20260817-platform-1"></script>
   <script src="assets/js/24-trash.js?v=20260816-sales-doc-trash-1"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
@@ -2819,13 +2831,13 @@
     <script src="assets/js/08-providers-compras.js?v=20260815-4"></script>
   <script src="assets/js/09-users.js?v=20260809-2"></script>
   <script src="assets/js/10-backup-misc.js?v=20260808-2"></script>
-  <script src="assets/js/11-auth.js?v=20260817-production-accounting-2"></script>
+  <script src="assets/js/11-auth.js?v=20260818-bank-center-2"></script>
     <script src="assets/js/12-init.js?v=20260815-2"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260809-1"></script>
   <script src="assets/js/16-advance-control.js?v=20260809-1"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
-  <script src="assets/js/18-i18n.js?v=20260816-accounting-nav-2"></script>
+  <script src="assets/js/18-i18n.js?v=20260818-bank-center-2"></script>
   <script src="assets/js/25-i18n-complete.js?v=20260816-bank-1"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
