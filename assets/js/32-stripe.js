@@ -12,9 +12,10 @@
       $("stripeStatus").textContent=result.connected?(result.onlinePaymentsActive?t("Ready","Listo"):t("Onboarding pending","Registro pendiente")):t("Not connected","No conectado");
       $("stripeStatus").className=`pill ${result.onlinePaymentsActive?"st-aprobado":"st-pendiente"}`;
       $("stripeStatusNote").textContent=result.connected
-        ? (result.onlinePaymentsActive?t(`Cards and bank payments are enabled in Stripe ${result.environment==="live"?"production":"test"} mode.`, `Tarjetas y pagos bancarios están habilitados en el modo de ${result.environment==="live"?"producción":"prueba"} de Stripe.`):t(`${result.requirementsDue||0} Stripe requirements remain for card and bank payments. Continue onboarding.`, `Quedan ${result.requirementsDue||0} requisitos de Stripe para pagos con tarjeta y banco. Continúa el registro.`))
+        ? (result.onlinePaymentsActive?(result.mode==="platform"?t("NJ Design & Print uses the verified platform Stripe account for invoice payments.","NJ Design & Print usa la cuenta principal verificada de Stripe para cobrar facturas."):t(`Cards and bank payments are enabled in Stripe ${result.environment==="live"?"production":"test"} mode.`, `Tarjetas y pagos bancarios están habilitados en el modo de ${result.environment==="live"?"producción":"prueba"} de Stripe.`)):t(`${result.requirementsDue||0} Stripe requirements remain for card and bank payments. Continue onboarding.`, `Quedan ${result.requirementsDue||0} requisitos de Stripe para pagos con tarjeta y banco. Continúa el registro.`))
         : t("Connect Stripe to enable secure invoice payments.","Conecta Stripe para habilitar pagos seguros en las facturas.");
-      $("stripeConnectBtn").textContent=result.connected?t("Continue Stripe onboarding","Continuar registro de Stripe"):t("Connect Stripe","Conectar Stripe");
+      $("stripeConnectBtn").textContent=result.mode==="platform"?t("Verified Stripe account","Cuenta Stripe verificada"):(result.connected?t("Continue Stripe onboarding","Continuar registro de Stripe"):t("Connect Stripe","Conectar Stripe"));
+      $("stripeConnectBtn").disabled=result.mode==="platform";
     }catch(error){ console.error(error); $("stripeStatusNote").textContent=t("Stripe configuration is not available yet.","La configuración de Stripe todavía no está disponible."); }
     finally{if(button)button.disabled=false;}
   }
