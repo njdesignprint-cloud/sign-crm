@@ -104,6 +104,7 @@
       const unsubPlaidItems = userRef().collection("plaidItems").onSnapshot(snapshot => {
         state.plaidItems = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
         if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
+        if (typeof renderBankFeed === "function") renderBankFeed();
       }, error => console.error(error));
       const unsubPlaidTransactions = userRef().collection("plaidTransactions").limit(500).onSnapshot(snapshot => {
         state.plaidTransactions = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));

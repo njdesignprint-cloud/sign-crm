@@ -14,3 +14,6 @@ test('bank reviews and rules can only be written by server callables',()=>{
 test('rules remain suggestions and matching verifies amounts',()=>{
   assert.match(html,/nunca registran automáticamente/);assert.match(server,/targetAmounts\.some/);assert.match(server,/autoConfirm:false/);
 });
+test('sync never fails silently when no Plaid item exists',()=>{
+  assert.match(client,/Conectar banco primero/);assert.match(client,/setView\('configuracion'\)/);assert.match(client,/\$\('plaidSyncBtn'\)\?\.click\(\)/);
+});
