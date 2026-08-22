@@ -122,7 +122,7 @@
     function editSalesDocument(id) {
       const item = state.salesDocuments.find(document => document.id === id);
       if (!item || !guardWrite("edit sales documents", "trabajos")) return;
-      if (item.status === "converted" || item.status === "void") return showToast(salesDocLanguage() === "es" ? "Este documento financiero ya no se puede editar." : "This financial document can no longer be edited.");
+      if (["accepted", "rejected", "converted", "void"].includes(item.status)) return showToast(salesDocLanguage() === "es" ? "Este documento ya tiene una respuesta final y no se puede editar. Crea una nueva versión si necesitas cambios." : "This document has a final response and cannot be edited. Create a new version if changes are needed.");
       state.editingSalesDocumentId = id;
       $("salesDocType").value = item.type || "estimate";
       $("salesDocType").disabled = true;
@@ -171,11 +171,14 @@
       const linkedJobId = cleanText($("salesDocJobId").value);
       const linkedJob = state.jobs.find(item => item.id === linkedJobId);
       if (type === "invoice" && linkedJob && getPaymentsTotal(linkedJob) > totals.total) return showToast(salesDocLanguage() === "es" ? "El total de la factura no puede ser menor que los pagos ya cobrados en el trabajo." : "The invoice total cannot be lower than payments already collected for the job.");
+      const editedDocument = state.salesDocuments.find(item => item.id === state.editingSalesDocumentId);
+      const selectedStatus = $("salesDocStatus").value || "draft";
       const payload = {
         type, clientId, jobId:linkedJobId, language:$("salesDocLanguage").value === "es" ? "es" : "en",
         serviceAddress:cleanText($("salesDocAddress").value),
         clientSnapshot:{ name:client.name || "", company:client.company || "", email:client.email || "", phone:client.phone || "", address:cleanText($("salesDocAddress").value) },
-        issueDate:$("salesDocIssueDate").value || today(), dueDate:$("salesDocDueDate").value, status:$("salesDocStatus").value || "draft",
+        issueDate:$("salesDocIssueDate").value || today(), dueDate:$("salesDocDueDate").value,
+        status:type === "estimate" && editedDocument?.status === "changes_requested" && selectedStatus === "changes_requested" ? "sent" : selectedStatus,
         paymentTerms:$("salesDocTerms")?.value || "custom", depositMode:$("salesDocDepositMode")?.value === "fixed" ? "fixed" : "percent", depositValue:Math.max(0, Number($("salesDocDepositValue")?.value || 0)), customerMessage:cleanText($("salesDocCustomerMessage").value), paymentInstructions:cleanText($("salesDocPaymentInstructions")?.value), internalNotes:cleanText($("salesDocInternalNotes").value),
         ...totals, updatedAt:firebase.firestore.FieldValue.serverTimestamp(), updatedBy:state.userEmail || ""
       };
@@ -253,7 +256,7 @@
         const balance = item.type === "invoice" ? salesDocBalance(item) : 0;
         // Keep paid and partially paid invoices editable so an incorrect document
         // can still be voided without deleting its payment history.
-        const editable = item.status !== "converted" && item.status !== "void";
+        const editable = !["accepted", "rejected", "converted", "void"].includes(item.status);
         const currentClientEmail = salesDocClient(item)?.email || item.clientSnapshot?.email || "";
         const canEmail = canWriteData("trabajos") && item.status !== "void" && currentClientEmail;
         const emailLabel = item.emailStatus === "sent" ? (language === "es" ? "Reenviar" : "Resend") : (language === "es" ? "Enviar" : "Send");
@@ -294,48 +297,81 @@
 
     function buildSalesDocumentPdf(id) {
       const item = state.salesDocuments.find(document => document.id === id);
+      return buildSalesDocumentPdfFromItem(item);
+    }
+
+    function buildSalesDocumentPdfFromItem(item) {
       if (!item || !window.jspdf?.jsPDF) return null;
       const lang = item.language === "es" ? "es" : "en";
       const t = (en, es) => lang === "es" ? es : en;
       const { jsPDF } = window.jspdf; const pdf = new jsPDF();
       const color = typeof companyPdfColor === "function" ? companyPdfColor() : [15, 23, 42];
-      // Customer-facing documents keep the page white, including the header.
-      const logo = $("companyLogoPreview");
-      if (COMPANY.logoUrl && logo?.complete && Number(logo.naturalWidth || 0) > 0) {
-        try {
-          const maxWidth = 34; const maxHeight = 25;
-          const ratio = Number(logo.naturalWidth) / Math.max(1, Number(logo.naturalHeight));
-          const width = ratio >= 1 ? maxWidth : maxHeight * ratio;
-          const height = ratio >= 1 ? maxWidth / ratio : maxHeight;
-          pdf.addImage(logo, undefined, 14 + (maxWidth - width) / 2, 5 + (maxHeight - height) / 2, width, height, undefined, "FAST");
-        } catch (error) {
-          console.warn("The configured company logo could not be embedded in the sales document PDF.", error);
-        }
-      }
       const issuerName = typeof pdfCompanyName === "function" ? pdfCompanyName() : (COMPANY.legalName || COMPANY.name || "SignShop HQ");
       const paymentPhone = COMPANY.phone || "-";
-      const headerTextX = 54;
-      pdf.setTextColor(25,25,25); pdf.setFont(undefined,"bold"); pdf.setFontSize(19); pdf.text(issuerName, headerTextX, 14);
-      pdf.setFont(undefined,"normal"); pdf.setTextColor(75,75,75); pdf.setFontSize(9.5);
-      const companyContact = [COMPANY.phone, COMPANY.email, COMPANY.website].filter(Boolean).join(" · ");
-      pdf.text(pdf.splitTextToSize(companyContact, 140).slice(0, 2), headerTextX, 22);
-      pdf.setTextColor(25,25,25); pdf.setFont(undefined,"bold"); pdf.setFontSize(16); pdf.text(`${salesDocLabel(item.type, lang)} ${item.number || ""}`, 14, 45); pdf.setFont(undefined,"normal");
-      pdf.setFontSize(9); pdf.text(`${t("Issue date", "Fecha")}: ${item.issueDate || "-"}`, 14, 52); pdf.text(`${t("Expiration / due", "Vencimiento")}: ${item.dueDate || "-"}`, 196, 52, { align:"right" });
-      const customer = item.clientSnapshot || {}; pdf.setFontSize(11); pdf.setFont(undefined,"bold"); pdf.text(t("Bill to", "Cliente"), 14, 62); pdf.setFont(undefined,"normal"); pdf.setFontSize(9);
-      // Show the company name when available; do not repeat it with the contact name.
+      const documentTitle = salesDocLabel(item.type, lang).toUpperCase();
+      const customer = item.clientSnapshot || {};
+      const job = state.jobs.find(entry => entry.id === item.jobId) || {};
       const customerHeading = customer.company || customer.name || "-";
       const customerContact = customer.company && customer.name && customer.name !== customer.company ? customer.name : "";
-      pdf.text([customerHeading, customerContact, item.serviceAddress || customer.address || "", customer.phone || "", customer.email || ""].filter(Boolean), 14, 68);
-      pdf.autoTable({ startY:88, head:[[t("Product / service","Producto / servicio"),t("Description","Descripción"),t("Qty","Cant."),t("Rate","Precio"),t("Amount","Importe")]], body:(item.lines || []).map(line => [line.productService || "-", line.description || "-", Number(line.quantity || 0).toFixed(2), money(line.rate), money(line.amount)]), theme:"grid", headStyles:{ fillColor:color } });
-      let y = pdf.lastAutoTable.finalY + 7; pdf.setFontSize(9); pdf.text(`${t("Subtotal","Subtotal")}: ${money(item.subtotal)}`, 196, y, {align:"right"}); y += 5;
-      if (Number(item.discount || 0) > 0) { pdf.text(`${t("Discount","Descuento")}: -${money(item.discount)}`,196,y,{align:"right"}); y += 5; }
-      if (Number(item.taxPercent || 0) > 0) { pdf.text(`${t("Sales tax","Impuesto")} (${Number(item.taxPercent).toFixed(2)}%): ${money(item.tax)}`,196,y,{align:"right"}); y += 6; } pdf.setFont(undefined,"bold"); pdf.setFontSize(12); pdf.text(`${t("TOTAL","TOTAL")}: ${money(item.total)}`,196,y,{align:"right"}); pdf.setFont(undefined,"normal"); y += 9;
-      if (item.type === "estimate") { const deposit = item.depositMode === "fixed" ? Math.min(Number(item.total||0),Number(item.depositValue||0)) : Number(item.total||0)*Number(item.depositValue ?? item.depositPercent ?? 0)/100; pdf.setFontSize(9); pdf.text(`${t("Required deposit","Anticipo requerido")}: ${item.depositMode === "fixed" ? money(deposit) : `${Number(item.depositValue ?? item.depositPercent ?? 0).toFixed(2)}% (${money(deposit)})`}`,14,y); y += 8; }
-      if (item.customerMessage) { pdf.setFontSize(8.5); pdf.text(pdf.splitTextToSize(item.customerMessage,182),14,y); y += pdf.splitTextToSize(item.customerMessage,182).length * 4 + 5; }
-      if (item.paymentInstructions) { pdf.setFont(undefined,"bold"); pdf.text(t("Payment instructions","Instrucciones de pago"),14,y); pdf.setFont(undefined,"normal"); y += 4; const paymentLines=pdf.splitTextToSize(item.paymentInstructions,182); pdf.text(paymentLines,14,y); y += paymentLines.length*4+5; }
+      const paid = item.type === "invoice" ? salesDocPaid(item) : 0;
+      const balance = item.type === "invoice" ? salesDocBalance(item) : Number(item.total || 0);
+      const deposit = item.type === "estimate" ? (item.depositMode === "fixed" ? Math.min(Number(item.total||0),Number(item.depositValue||0)) : Number(item.total||0)*Number(item.depositValue ?? item.depositPercent ?? 0)/100) : 0;
+      const drawHeader = () => {
+        pdf.setFillColor(17,19,20); pdf.rect(0,0,210,35,"F");
+        pdf.setFillColor(...color); pdf.rect(0,34,210,1,"F");
+        if (typeof addPdfBrandMark === "function") addPdfBrandMark(pdf);
+        pdf.setTextColor(255,255,255); pdf.setFont(undefined,"bold"); pdf.setFontSize(19); pdf.text(documentTitle,196,14,{align:"right"});
+        pdf.setTextColor(...color); pdf.setFontSize(9); pdf.text(issuerName.toUpperCase(),196,22,{align:"right"});
+        pdf.setTextColor(238,240,242); pdf.setFont(undefined,"normal"); pdf.setFontSize(7.5); pdf.text(COMPANY.website || COMPANY.email || "",196,28,{align:"right"});
+      };
+      const section = (title, x, y, width) => {
+        pdf.setFillColor(17,19,20); pdf.roundedRect(x,y,width,8,2,2,"F");
+        pdf.setTextColor(...color); pdf.setFont(undefined,"bold"); pdf.setFontSize(8.5); pdf.text(title.toUpperCase(),x+4,y+5.3);
+      };
+      const label = (text, x, y) => { pdf.setFont(undefined,"bold"); pdf.setTextColor(91,101,117); pdf.setFontSize(6.5); pdf.text(text.toUpperCase(),x,y); };
+      const value = (text, x, y, maxWidth=80) => { pdf.setFont(undefined,"normal"); pdf.setTextColor(23,25,29); pdf.setFontSize(8); pdf.text(pdf.splitTextToSize(String(text || "-"),maxWidth).slice(0,2),x,y); };
+      drawHeader();
+      pdf.setFillColor(247,248,250); pdf.setDrawColor(216,221,229); pdf.roundedRect(14,41,182,19,2,2,"FD");
+      const meta = [[t("Document number","Número"),item.number || "-"],[t("Issue date","Fecha"),item.issueDate || "-"],[item.type === "estimate" ? t("Valid until","Válido hasta") : t("Due date","Vencimiento"),item.dueDate || "-"],[t("PO / work order","PO / orden"),job.number || job.workOrder || "-"]];
+      meta.forEach((entry,index)=>{ const x=20+(index*44); label(entry[0],x,48); value(entry[1],x,55,39); });
+      section(t("Bill to & project","Cliente y proyecto"),14,65,182);
+      pdf.setDrawColor(216,221,229); pdf.roundedRect(14,73,182,28,2,2,"S"); pdf.line(105,78,105,96);
+      label(t("Client / company","Cliente / empresa"),20,81); value(customerHeading,20,87,78);
+      label(t("Contact","Contacto"),20,93); value([customerContact,customer.email,customer.phone].filter(Boolean).join(" | ") || "-",20,98,78);
+      label(t("Project name","Proyecto"),112,81); value(job.title || job.name || item.lines?.[0]?.productService || "-",112,87,77);
+      label(t("Project / site address","Dirección del proyecto"),112,93); value(item.serviceAddress || customer.address || "-",112,98,77);
+      section(t("Products & services","Productos y servicios"),14,106,182);
+      pdf.autoTable({
+        startY:114,
+        margin:{left:14,right:14,top:42,bottom:20},
+        head:[[t("Description / deliverable","Descripción / entregable"),t("Qty","Cant."),t("Rate","Precio"),t("Amount","Importe")]],
+        body:(item.lines || []).map(line => [[line.productService,line.description].filter(Boolean).join(" - ") || "-", Number(line.quantity || 0).toFixed(2), money(line.rate), money(line.amount)]),
+        theme:"grid",
+        headStyles:{fillColor:[242,244,247],textColor:[24,26,30],fontStyle:"bold",halign:"center",lineColor:[216,221,229],lineWidth:.25},
+        bodyStyles:{textColor:[35,38,44],lineColor:[216,221,229],lineWidth:.25,cellPadding:3,fontSize:8},
+        columnStyles:{0:{cellWidth:100},1:{cellWidth:20,halign:"center"},2:{cellWidth:31,halign:"right"},3:{cellWidth:31,halign:"right"}},
+        didDrawPage:data=>{ if(data.pageNumber>1) drawHeader(); }
+      });
+      let y = pdf.lastAutoTable.finalY + 7;
+      if (y > 220) { pdf.addPage(); drawHeader(); y=44; }
+      section(t("Notes & payment terms","Notas y condiciones"),14,y,108); section(item.type === "invoice" ? t("Invoice total","Total factura") : t("Estimate total","Total estimado"),126,y,70); y += 8;
+      const notesTop=y; pdf.setDrawColor(216,221,229); pdf.roundedRect(14,y,108,58,2,2,"S"); pdf.roundedRect(126,y,70,58,2,2,"S");
+      label(t("Notes / payment instructions","Notas / instrucciones de pago"),20,y+8);
+      const message=[item.customerMessage,item.paymentInstructions].filter(Boolean).join("\n") || t("Thank you for your business.","Gracias por su confianza.");
+      pdf.setFont(undefined,"normal"); pdf.setTextColor(55,61,70); pdf.setFontSize(7.3); pdf.text(pdf.splitTextToSize(message,96).slice(0,5),20,y+14);
       const terms = lang === "es" ? [`OPCIONES DE PAGO: Zelle ${paymentPhone}, cheque o tarjeta de crédito (cargo del 3.5%).`, "Los trabajos con un total de $250 o menos deben pagarse en su totalidad antes de comenzar. Para trabajos mayores, se requiere un anticipo del 50%; el saldo restante deberá pagarse antes de la instalación. El pago confirma la aceptación de todos los diseños aprobados y de estos términos. Todos los pagos son finales y no reembolsables.", `${issuerName} no se hace responsable por daños a servicios subterráneos sin marcar, áreas ajardinadas, pintura, estuco, revestimientos, ladrillos o superficies pavimentadas durante las inspecciones o la instalación. Los cambios solicitados después de aprobar el diseño pueden generar cargos adicionales.`] : [`PAYMENT OPTIONS: Zelle ${paymentPhone}, check, or credit card (3.5% fee).`, "Jobs totaling $250 or less must be paid in full before work begins. For jobs over $250, a 50% deposit is required and the remaining balance is due before installation. Payment confirms acceptance of all approved designs and these terms. All payments are final and non-refundable.", `${issuerName} is not responsible for damage to unmarked utilities, landscaping, paint, stucco, siding, brick, or paved surfaces during surveys or installation. Changes requested after design approval may incur additional charges.`];
-      if (y > 225) { pdf.addPage(); y = 20; } pdf.setFontSize(7.5); terms.forEach(paragraph => { const lines = pdf.splitTextToSize(paragraph,182); pdf.text(lines,14,y); y += lines.length * 3.5 + 3; }); y += 4;
-      pdf.setFontSize(9); pdf.text(`${t("Customer Signature","Firma del cliente")}: ______________________________`,14,y); y += 9; pdf.text(`${t("Date","Fecha")}: ______________________________`,14,y);
+      pdf.setFillColor(244,248,238); pdf.roundedRect(20,notesTop+34,96,18,1,1,"F"); pdf.setTextColor(55,61,70); pdf.setFontSize(6.2); pdf.text(pdf.splitTextToSize(terms[1],91).slice(0,5),23,notesTop+39);
+      const totals = [[t("Subtotal","Subtotal"),money(item.subtotal)],[t("Discount","Descuento"),Number(item.discount||0)?`-${money(item.discount)}`:money(0)],[`${t("Sales tax","Impuesto")} (${Number(item.taxPercent||0).toFixed(2)}%)`,money(item.tax)],[documentTitle,money(item.total)],[item.type === "invoice" ? t("Amount paid","Pagado") : t("Required deposit","Anticipo"),money(item.type === "invoice" ? paid : deposit)],[item.type === "invoice" ? t("Balance due","Saldo pendiente") : t("Remaining after deposit","Resto después del anticipo"),money(item.type === "invoice" ? balance : Math.max(0,Number(item.total||0)-deposit))]];
+      totals.forEach((row,index)=>{ const rowY=notesTop+8+(index*8); if(index===3){pdf.setFillColor(244,248,238);pdf.rect(130,rowY-5.2,62,7,"F");} if(index===5){pdf.setFillColor(...color);pdf.rect(130,rowY-5.2,62,7,"F");} pdf.setFont(undefined,index>=3?"bold":"normal");pdf.setTextColor(24,27,31);pdf.setFontSize(7.5);pdf.text(row[0],133,rowY);pdf.text(row[1],189,rowY,{align:"right"});});
+      y=notesTop+65; section(item.type === "invoice" ? t("Payment information","Información de pago") : t("Customer approval","Aprobación del cliente"),14,y,182); y+=8;
+      pdf.setFillColor(247,248,250); pdf.setDrawColor(216,221,229); pdf.roundedRect(14,y,182,18,2,2,"FD");
+      if(item.type === "invoice") {
+        const status=salesDocLabel(salesDocEffectiveStatus(item),lang); const fields=[[t("Payment method","Método"),paid>0?t("Recorded payment","Pago registrado"):t("Pending","Pendiente")],[t("Payment reference","Referencia"),item.number||"-"],[t("Payment date","Fecha de pago"),item.paidAt||"-"],[t("Status / terms","Estado / términos"),`${status} / ${item.paymentTerms||"-"}`]];
+        fields.forEach((entry,index)=>{const x=20+(index*44);label(entry[0],x,y+7);value(entry[1],x,y+14,39);});
+      } else {
+        const response=item.approvalResponse||{}; const fields=[[t("Customer Signature","Firma del cliente"),response.signerName||"________________"],[t("Email","Correo"),response.signerEmail||customer.email||"-"],[t("Approval date","Fecha de aprobación"),response.acceptedAtIso||response.submittedAt?.toDate?.()?.toISOString?.()||"________________"],[t("Status","Estado"),salesDocLabel(item.status,lang)]];
+        fields.forEach((entry,index)=>{const x=20+(index*44);label(entry[0],x,y+7);value(entry[1],x,y+14,39);});
+      }
       return pdf;
     }
 
@@ -352,24 +388,48 @@
       window.open(pdf.output("bloburl"), "_blank", "noopener");
     }
 
-    async function emailSalesDocument(id, button) {
+    let pendingSalesEmailId = "";
+    function salesEmailRecipients(value) { return cleanText(value).split(/[;,]/).map(part => part.trim()).filter(Boolean); }
+    function renderSalesEmailPreview() {
+      const item = state.salesDocuments.find(document => document.id === pendingSalesEmailId); if (!item) return;
+      const es = item.language === "es", issuer = COMPANY.tradeName || COMPANY.legalName || COMPANY.name || "SignShop HQ";
+      const customer = salesDocClient(item)?.company || salesDocClient(item)?.name || item.clientSnapshot?.company || item.clientSnapshot?.name || (es ? "cliente" : "customer");
+      const balance = item.type === "invoice" ? Math.max(0, Number(item.total||0)-Number(item.paidAmount||0)) : Number(item.total||0);
+      const message = cleanText($("salesEmailMessage").value);
+      const action = item.type === "invoice" ? (es ? "Ver y pagar" : "View and pay") : (es ? "Revisar y aceptar" : "Review and approve");
+      $("salesEmailPreview").innerHTML = `${COMPANY.logoUrl ? `<img src="${safe(COMPANY.logoUrl)}" alt="${safe(issuer)}">` : `<h2>${safe(issuer)}</h2>`}<div class="email-preview-hero"><h2>${es ? (item.type === "invoice" ? "¡Tu factura está lista!" : "¡Tu estimado está listo!") : (item.type === "invoice" ? "Your invoice is ready!" : "Your estimate is ready!")}</h2><small>${item.type === "invoice" ? (es ? "SALDO PENDIENTE" : "BALANCE DUE") : (es ? "TOTAL DEL ESTIMADO" : "ESTIMATE TOTAL")}</small><div class="email-preview-amount">${money(balance)}</div></div><div class="email-preview-message">${safe(es ? `Hola ${customer},` : `Hello ${customer},`)}\n\n${safe(message)}</div><span class="email-preview-action" style="background:${safe(COMPANY.brandColor || "#2563eb")}">${action}</span><div class="email-preview-company"><strong>${safe(issuer)}</strong><br>${safe(COMPANY.address || "")}<br>${safe(COMPANY.email || "")} ${safe(COMPANY.phone || "")}</div><small>Powered securely by SignShop HQ</small>`;
+    }
+    function openSalesEmailReview(id) {
       const item = state.salesDocuments.find(document => document.id === id);
       const recipient = salesDocClient(item)?.email || item?.clientSnapshot?.email || "";
       if (!item || !recipient) return showToast(salesDocLanguage() === "es" ? "El cliente no tiene un correo válido." : "The customer does not have a valid email address.");
-      const prompt = salesDocLanguage() === "es" ? `¿Enviar ${item.number || "el documento"} a ${recipient}?` : `Send ${item.number || "the document"} to ${recipient}?`;
-      if (!window.confirm(prompt)) return;
+      const es = item.language === "es", issuer = COMPANY.tradeName || COMPANY.legalName || COMPANY.name || "SignShop HQ", type = item.type === "invoice" ? (es ? "Factura" : "Invoice") : (es ? "Estimado" : "Estimate");
+      pendingSalesEmailId = id;
+      $("salesEmailReviewTitle").textContent = es ? `Revisar y enviar ${type.toLowerCase()} ${item.number||""}` : `Review and send ${type.toLowerCase()} ${item.number||""}`;
+      $("salesEmailFrom").textContent = `${issuer} <documents@signshophq.com>`; $("salesEmailTo").value = recipient; $("salesEmailCc").value = ""; $("salesEmailBcc").value = ""; $("salesEmailSendCopy").checked = true; $("salesEmailAttachPdf").checked = true;
+      $("salesEmailSubject").value = es ? `${type} ${item.number||""} de ${issuer}` : `${type} ${item.number||""} from ${issuer}`;
+      $("salesEmailMessage").value = es ? (item.type === "invoice" ? "Agradecemos tu preferencia. Revisa los detalles de la factura y utiliza el botón para realizar el pago seguro." : "Revisa los detalles del estimado. Si tienes alguna pregunta, contáctanos. Esperamos trabajar contigo.") : (item.type === "invoice" ? "We appreciate your business. Review the invoice details and use the button to make a secure payment." : "Please review the estimate details. Contact us with any questions. We look forward to working with you.");
+      $("salesEmailSendCopyLabel").textContent = es ? "Enviar una copia a mi empresa" : "Send a copy to my business"; $("salesEmailAttachPdfLabel").textContent = es ? "Adjuntar copia PDF" : "Attach PDF copy"; $("sendSalesDocumentEmailBtn").textContent = es ? `Enviar ${type.toLowerCase()}` : `Send ${type.toLowerCase()}`;
+      renderSalesEmailPreview(); openModal("salesDocumentEmailModal");
+    }
+    async function sendReviewedSalesDocumentEmail() {
+      const id = pendingSalesEmailId, item = state.salesDocuments.find(document => document.id === id), button = $("sendSalesDocumentEmailBtn");
+      if (!item) return;
+      const to = salesEmailRecipients($("salesEmailTo").value), cc = salesEmailRecipients($("salesEmailCc").value), bcc = salesEmailRecipients($("salesEmailBcc").value);
+      if (!to.length) return showToast(item.language === "es" ? "Escribe un destinatario válido." : "Enter a valid recipient.");
       const pdf = buildSalesDocumentPdf(id);
       if (!pdf) return showToast(salesDocLanguage() === "es" ? "No se pudo generar el PDF." : "The PDF could not be generated.");
       button.disabled = true;
       const original = button.textContent;
-      button.textContent = salesDocLanguage() === "es" ? "Enviando…" : "Sending…";
+      button.textContent = item.language === "es" ? "Enviando…" : "Sending…";
       try {
         const callable = cloudFunctions.httpsCallable("sendSalesDocumentEmail");
-        await callable({ ownerId:state.accountOwnerId || state.uid, documentId:id, pdfBase64:pdf.output("datauristring").split(",")[1] });
-        showToast(salesDocLanguage() === "es" ? `Correo enviado a ${recipient}.` : `Email sent to ${recipient}.`);
+        await callable({ ownerId:state.accountOwnerId || state.uid, documentId:id, pdfBase64:pdf.output("datauristring").split(",")[1], to, cc, bcc, subject:$("salesEmailSubject").value, message:$("salesEmailMessage").value, sendCopy:$("salesEmailSendCopy").checked, attachPdf:$("salesEmailAttachPdf").checked });
+        closeModal("salesDocumentEmailModal", true); pendingSalesEmailId = "";
+        showToast(item.language === "es" ? `Correo enviado a ${to.join(", ")}.` : `Email sent to ${to.join(", ")}.`);
       } catch (error) {
         console.error(error);
-        showToast(error?.message || (salesDocLanguage() === "es" ? "No se pudo enviar el correo." : "The email could not be sent."));
+        showToast(error?.message || (item.language === "es" ? "No se pudo enviar el correo." : "The email could not be sent."));
       } finally { button.disabled = false; button.textContent = original; }
     }
 
@@ -445,7 +505,9 @@
     $("salesDocTaxEnabled")?.addEventListener("change", calculateSalesDocumentForm);
     ["salesDocumentSearch","salesDocumentTypeFilter","salesDocumentStatusFilter"].forEach(id => { $(id)?.addEventListener("input", renderSalesDocuments); $(id)?.addEventListener("change", renderSalesDocuments); });
     $("salesDocTerms")?.addEventListener("change", () => { const days={due_on_receipt:0,net_15:15,net_30:30,net_60:60}[$("salesDocTerms").value]; if(days == null)return; const base=new Date(`${$("salesDocIssueDate").value || today()}T12:00:00`); base.setDate(base.getDate()+days); $("salesDocDueDate").value=base.toISOString().slice(0,10); });
-    $("salesDocumentsTableBody")?.addEventListener("click", event => { const edit = event.target.closest("[data-sales-doc-edit]"); const convert = event.target.closest("[data-sales-doc-convert]"); const preview = event.target.closest("[data-sales-doc-preview]"); const pdf = event.target.closest("[data-sales-doc-pdf]"); const email = event.target.closest("[data-sales-doc-email]"); const read = event.target.closest("[data-sales-doc-read]"); const payment = event.target.closest("[data-sales-doc-payment]"); const remove = event.target.closest("[data-sales-doc-delete]"); if (edit) editSalesDocument(edit.dataset.salesDocEdit); if (convert) convertEstimateToInvoice(convert.dataset.salesDocConvert); if (preview) previewSalesDocumentPdf(preview.dataset.salesDocPreview); if (pdf) exportSalesDocumentPdf(pdf.dataset.salesDocPdf); if (email) emailSalesDocument(email.dataset.salesDocEmail, email); if (read) salesDocumentsRef().doc(read.dataset.salesDocRead).update({ customerResponseUnread:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(console.error); if (remove) deleteSalesDocument(remove.dataset.salesDocDelete); if (payment) { const invoice = state.salesDocuments.find(item => item.id === payment.dataset.salesDocPayment); if (invoice?.jobId) { resetPaymentForm(invoice.jobId); state.workingPaymentInvoiceId = invoice.id; $("paymentJobId").disabled = true; $("paymentAmount").value = salesDocBalance(invoice).toFixed(2); $("paymentNote").value = `${invoice.number || "Invoice"}`; openModal("paymentModal"); } } });
+    $("salesDocumentsTableBody")?.addEventListener("click", event => { const edit = event.target.closest("[data-sales-doc-edit]"); const convert = event.target.closest("[data-sales-doc-convert]"); const preview = event.target.closest("[data-sales-doc-preview]"); const pdf = event.target.closest("[data-sales-doc-pdf]"); const email = event.target.closest("[data-sales-doc-email]"); const read = event.target.closest("[data-sales-doc-read]"); const payment = event.target.closest("[data-sales-doc-payment]"); const remove = event.target.closest("[data-sales-doc-delete]"); if (edit) editSalesDocument(edit.dataset.salesDocEdit); if (convert) convertEstimateToInvoice(convert.dataset.salesDocConvert); if (preview) previewSalesDocumentPdf(preview.dataset.salesDocPreview); if (pdf) exportSalesDocumentPdf(pdf.dataset.salesDocPdf); if (email) openSalesEmailReview(email.dataset.salesDocEmail); if (read) salesDocumentsRef().doc(read.dataset.salesDocRead).update({ customerResponseUnread:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(console.error); if (remove) deleteSalesDocument(remove.dataset.salesDocDelete); if (payment) { const invoice = state.salesDocuments.find(item => item.id === payment.dataset.salesDocPayment); if (invoice?.jobId) { resetPaymentForm(invoice.jobId); state.workingPaymentInvoiceId = invoice.id; $("paymentJobId").disabled = true; $("paymentAmount").value = salesDocBalance(invoice).toFixed(2); $("paymentNote").value = `${invoice.number || "Invoice"}`; openModal("paymentModal"); } } });
+    ["salesEmailSubject","salesEmailMessage"].forEach(id => $(id)?.addEventListener("input", renderSalesEmailPreview));
+    $("sendSalesDocumentEmailBtn")?.addEventListener("click", sendReviewedSalesDocumentEmail);
     window.renderSalesDocuments = renderSalesDocuments;
     window.resetSalesDocumentForm = resetSalesDocumentForm;
     window.applySalesDocumentsLanguage = applySalesDocumentsLanguage;

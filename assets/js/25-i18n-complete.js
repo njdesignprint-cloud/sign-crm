@@ -1,5 +1,6 @@
 (function(){
   const translations={
+    "Design Proof / Aprobación de diseño":"Design Proof / Design approval","Sin enviar":"Not sent","Carga el PDF completo que debe revisar el cliente. Cada envío crea una revisión nueva e invalida el enlace anterior.":"Upload the complete PDF the customer must review. Every send creates a new revision and invalidates the previous link.","Separa varios correos con comas. El correo guardado del cliente siempre recibirá la aprobación.":"Separate multiple emails with commas. The customer's saved email will always receive the approval.","Enviar para aprobación":"Send for approval","PDF aprobado":"Approved PDF",
     "Clientes":"Clients","Trabajos":"Jobs","Producción":"Production","Instalación":"Installation","Inventario":"Inventory","Proveedores":"Suppliers","Compras":"Purchases","Gastos":"Expenses","Reportes":"Reports","Usuarios":"Users",
     "Nuevo cliente":"New client","Nuevo trabajo":"New job","Guardar cliente":"Save client","Guardar trabajo":"Save job","Cancelar":"Cancel","Cerrar":"Close","Editar":"Edit","Eliminar":"Archive","Restaurar":"Restore",
     "Nombre":"Name","Empresa":"Company","Teléfono":"Phone","Correo":"Email","Dirección":"Address","Notas":"Notes","Acciones":"Actions","Estado":"Status","Fecha":"Date","Entrega":"Due date","Prioridad":"Priority","Responsable":"Assignee",
@@ -17,6 +18,7 @@
     "Usuario activo:":"Active user:","Cerrar sesión":"Sign out","Respaldo JSON":"JSON backup","Importar JSON":"Import JSON","Papelera y recuperación":"Trash & recovery","Reparar conexión":"Repair connection"
   };
   const placeholders={
+    "Contraseña":"Password","Nombre completo (al crear cuenta)":"Full name (when creating an account)","Empresa (al crear cuenta)":"Company (when creating an account)",
     "Buscar por nombre, empresa, teléfono o email":"Search by name, company, phone or email","Buscar por cliente o trabajo":"Search by client or job","Buscar cliente o número de documento":"Search customer or document number","Nombre del cliente":"Client name","Empresa":"Company","Correo electrónico":"Email address","Dirección":"Address","Ciudad / Estado":"City / State","Notas del cliente":"Client notes","Trabajo / proyecto":"Job / project","Precio final al cliente":"Final customer price","Descripción del trabajo / cotización":"Job / estimate description","Notas generales internas":"Internal notes","Buscar por empresa, nombre o correo":"Search company, name or email","Ej. Letrero exterior para fachada":"E.g. Exterior storefront sign","Qué se fabricará, medidas, acabado e instalación":"What will be made, dimensions, finish and installation","Información que solo verá tu equipo":"Information only your team can see","Mensaje que aparecerá en el documento":"Message shown on the document","Solamente tu equipo puede ver esto":"Only your team can see this","Producto o servicio":"Product or service","Eliminar":"Remove"
   };
   Object.assign(translations,{
@@ -105,7 +107,7 @@
   const attributeTranslations={...translations,...placeholders};
   const reverseAttributeTranslations=Object.fromEntries(Object.entries(attributeTranslations).map(([es,en])=>[en,es]));
   const originals=new WeakMap(); const attrOriginals=new WeakMap();
-  function lang(){try{return localStorage.getItem("signshophq_lang_v2")||"en"}catch(_){return"en"}}
+  function lang(){try{return localStorage.getItem("signshophq_lang_v2")||(/^es\b/i.test(navigator.language||"")?"es":"en")}catch(_){return /^es\b/i.test(navigator.language||"")?"es":"en"}}
   function translateNode(node){
     if(node.nodeType===3){const raw=node.nodeValue||"";const source=originals.get(node)||raw;const key=source.trim();if(!key)return;if(!originals.has(node))originals.set(node,source);const replacement=lang()==="en"?translations[key]:reverseTranslations[key];node.nodeValue=replacement?source.replace(key,replacement):source;}
     if(node.nodeType!==1)return;const el=node;

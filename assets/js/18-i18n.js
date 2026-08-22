@@ -1,7 +1,7 @@
 
 (function () {
   const LANGS = ["es", "en"];
-  const DEFAULT_LANG = "en";
+  const DEFAULT_LANG = /^es\b/i.test(navigator.language || "") ? "es" : "en";
   const LANGUAGE_STORAGE_KEY = "signshophq_lang_v2";
 
   const TEXTS = {
@@ -369,16 +369,14 @@
 
   function updateLangButtons() {
     const lang = getLang();
-    const esBtn = document.getElementById("btnLangEs");
-    const enBtn = document.getElementById("btnLangEn");
-    if (esBtn) {
-      esBtn.classList.toggle("btn-info", lang === "es");
-      esBtn.classList.toggle("btn-secondary", lang !== "es");
-    }
-    if (enBtn) {
-      enBtn.classList.toggle("btn-info", lang === "en");
-      enBtn.classList.toggle("btn-secondary", lang !== "en");
-    }
+    [document.getElementById("btnLangEs"), document.getElementById("authBtnLangEs")].filter(Boolean).forEach(btn => {
+      btn.classList.toggle("btn-info", lang === "es");
+      btn.classList.toggle("btn-secondary", lang !== "es");
+    });
+    [document.getElementById("btnLangEn"), document.getElementById("authBtnLangEn")].filter(Boolean).forEach(btn => {
+      btn.classList.toggle("btn-info", lang === "en");
+      btn.classList.toggle("btn-secondary", lang !== "en");
+    });
   }
 
   function setTopShellTexts() {
@@ -682,6 +680,8 @@
   function bindLanguageButtons() {
     document.getElementById("btnLangEs")?.addEventListener("click", () => setLanguage("es"));
     document.getElementById("btnLangEn")?.addEventListener("click", () => setLanguage("en"));
+    document.getElementById("authBtnLangEs")?.addEventListener("click", () => setLanguage("es"));
+    document.getElementById("authBtnLangEn")?.addEventListener("click", () => setLanguage("en"));
   }
 
   patchFunctions();

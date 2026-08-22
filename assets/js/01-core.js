@@ -89,7 +89,7 @@
       installationCalendarDate: new Date(),
       jobsViewMode: "table",
       jobsQuickFilter: "all",
-      language: "en"
+      language: /^es\b/i.test(navigator.language || "") ? "es" : "en"
     };
     window.state = state;
 

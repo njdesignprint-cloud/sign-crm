@@ -1,0 +1,252 @@
+:root{
+  --brand:#2563eb;--brand-hover:#1d4ed8;--info:#0369a1;--ok:#15803d;--warn:#9a4d00;--danger:#b91c1c;--purple:#6d28d9;
+  --bg:#f3f6fa;--panel:#ffffff;--panel-2:#eef2f7;--card:#ffffff;--line:#cbd5e1;--text:#172033;--muted:#526176;
+  --surface-raised:#ffffff;--surface-input:#ffffff;--surface-subtle:#e9eef5;--focus-ring:rgba(37,99,235,.22);
+  --row-even:#f5f7fa;--row-hover:#eaf2ff;--sidebar-bg:#eef2f7;--sidebar-line:#cbd5e1;--sidebar-text:#172033;--sidebar-muted:#526176;
+  --shadow:0 5px 18px rgba(15,23,42,.07);--shadow-strong:0 18px 45px rgba(15,23,42,.16);
+}
+:root[data-theme="light"]{
+  --brand:#2563eb;--brand-hover:#1d4ed8;--info:#0369a1;--ok:#15803d;--warn:#9a4d00;--danger:#b91c1c;--purple:#6d28d9;
+  --bg:#f3f6fa;--panel:#ffffff;--panel-2:#eef2f7;--card:#ffffff;--line:#cbd5e1;--text:#172033;--muted:#526176;
+  --surface-raised:#ffffff;--surface-input:#ffffff;--surface-subtle:#e9eef5;--focus-ring:rgba(37,99,235,.22);
+  --row-even:#f5f7fa;--row-hover:#eaf2ff;--sidebar-bg:#eef2f7;--sidebar-line:#cbd5e1;--sidebar-text:#172033;--sidebar-muted:#526176;
+  --shadow:0 5px 18px rgba(15,23,42,.07);--shadow-strong:0 18px 45px rgba(15,23,42,.16);
+}
+html,body{background:var(--bg)!important;color:var(--text)!important}
+body{transition:background-color .18s ease,color .18s ease}
+.content,.view{background:var(--bg)}
+.panel,.stat,.mini-stat,.alert-card,.box,.modal,.modal-card,.settings-preview-card,.accounting-sales-card,.state-box,.info-item,.approval-card{background:var(--panel)!important;color:var(--text);border-color:var(--line)!important;box-shadow:var(--shadow)}
+.input,.select,.textarea,.readonly,.user-chip,.jobs-quick-filter,.job-tab-btn,.lang button{background:var(--surface-input)!important;color:var(--text)!important;border-color:var(--line)!important}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--brand)!important;box-shadow:0 0 0 3px var(--focus-ring)!important}
+.btn-secondary,.action-btn{background:var(--surface-subtle)!important;color:var(--text)!important;border-color:var(--line)!important}
+.btn-primary,.submit-btn,.action-btn.active{background:var(--brand)!important;color:#fff!important;border-color:var(--brand)!important}
+.btn-primary:hover,.submit-btn:hover{background:var(--brand-hover)!important}
+.panel-head,th,td,.sidebar-foot{border-color:var(--line)!important}
+th,.muted,.help,.section-note,.title p,.brand-sub,.stat .label,.mini-stat .label,.alert-card .label,td small{color:var(--muted)!important}
+a,.download-link,.brand-text{color:var(--brand)}
+.ok-text{color:var(--ok)!important}.warn-text{color:var(--warn)!important}.danger-text{color:var(--danger)!important}.info-text{color:var(--info)!important}.purple-text{color:var(--purple)!important}
+.sidebar{background:var(--sidebar-bg)!important;border-color:var(--sidebar-line)!important;color:var(--sidebar-text)!important}
+.sidebar .brand,.sidebar .layout-sidebar-group-title{color:var(--sidebar-text)!important}
+.sidebar .brand-sub,.sidebar .nav button{color:var(--sidebar-muted)!important}
+.sidebar .user-chip{background:color-mix(in srgb,var(--sidebar-bg) 72%,var(--panel))!important;border-color:var(--sidebar-line)!important;color:var(--sidebar-muted)!important}
+.sidebar .nav button.active,.sidebar .nav button:hover{color:var(--sidebar-text)!important;background:rgba(37,99,235,.12)!important;border-color:rgba(37,99,235,.34)!important}
+.auth-wrap,.approval-shell{background:radial-gradient(circle at top left,rgba(37,99,235,.08),transparent 32%),var(--bg)!important}
+.auth-intro{justify-content:flex-start!important;padding:54px 46px!important;background:radial-gradient(circle at 18% 14%,rgba(37,99,235,.13),transparent 36%),linear-gradient(145deg,#f8fbff,#eaf1fb)!important;color:var(--text)}
+.auth-intro .auth-sub{color:var(--muted)!important}.auth-form-panel{background:var(--panel)!important}
+.auth-language-switcher{position:fixed;top:20px;right:20px;z-index:5;display:flex;gap:6px;padding:5px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.auth-language-switcher .btn{min-width:44px;padding:7px 10px}
+.auth-brand-row{margin-bottom:28px!important}
+.auth-eyebrow{color:#2563eb!important}
+.auth-benefits>div{color:#334155!important}
+.auth-benefits span{background:#dcfce7!important;color:#15803d!important}
+.auth-registration-fields+.auth-credentials,.auth-credentials{margin-top:0}
+#authRegistrationFields:not(.hidden){margin-bottom:12px}
+.auth-reset{display:block!important;width:auto!important;margin-left:auto!important;margin-right:auto!important;padding:9px 14px!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;color:#075985!important}
+.auth-reset:hover{background:#e0f2fe!important;border-color:#bae6fd!important;transform:none!important}
+.total-box,.selected-action{background:rgba(37,99,235,.08)!important;border-color:rgba(37,99,235,.25)!important}
+.total-box strong{color:var(--brand)!important}
+.job-tabs{background:color-mix(in srgb,var(--bg) 96%,transparent)!important}
+.job-workflow-summary>div,.job-advanced-pricing,.jobs-workspace-tools,.jobs-advanced-filters,.operations-alert-item,.quickbooks-step,.accounting-sales-center{background:var(--surface-raised)!important;border-color:var(--line)!important}
+.settings-preview-card{background:var(--panel)!important}
+.btn-info{background:rgba(2,132,199,.10)!important;color:#075985!important;border-color:rgba(2,132,199,.28)!important}
+.btn-danger{background:rgba(220,38,38,.08)!important;color:#991b1b!important;border-color:rgba(220,38,38,.25)!important}
+:root[data-theme="light"] :is(.st-cotizacion,.prospect-status-contact,.pr-media,.stock-low,.role-readonly,.sales-document-type-badge.estimate){color:#92400e!important}
+:root[data-theme="light"] :is(.st-aprobado,.pr-baja,.mv-adjust,.role-admin,.sales-document-type-badge.invoice){color:#075985!important}
+:root[data-theme="light"] :is(.st-diseno,.st-produccion,.prospect-status-visit,.role-employee){color:#5b21b6!important}
+:root[data-theme="light"] :is(.st-instalacion,.prospect-status-followup){color:#115e59!important}
+:root[data-theme="light"] :is(.st-entregado,.st-pagado,.prospect-status-won,.stock-ok,.mv-entry,.state-active){color:#166534!important}
+:root[data-theme="light"] :is(.st-cancelado,.prospect-status-lost,.pr-alta,.stock-out,.mv-output,.state-disabled){color:#991b1b!important}
+:root[data-theme="light"] :is(.prospect-status-new){color:#334155!important}
+:root[data-theme="light"] :is(.prospect-status-contacted,.role-owner,.audit-field){color:#1e40af!important}
+:root[data-theme="light"] :is(.prospect-status-quote){color:#9a3412!important}
+.settings-color-option{border-color:var(--card)!important}
+.table-wrap{background:var(--panel)}
+thead tr{background:var(--surface-subtle)!important}
+th{color:var(--muted)!important;border-bottom:1px solid var(--line)!important}
+tbody tr{background:var(--panel);transition:background-color .14s ease,box-shadow .14s ease}
+tbody tr:nth-child(even){background:var(--row-even)}
+tbody tr:hover{background:var(--row-hover)}
+tbody td{border-bottom:1px solid var(--line)!important}
+#view-clientes tbody tr,#view-trabajos tbody tr{box-shadow:inset 3px 0 0 transparent}
+#view-clientes tbody tr:hover,#view-trabajos tbody tr:hover{box-shadow:inset 3px 0 0 var(--brand)}
+:root[data-theme="light"] .panel{border-color:#cbd5e1!important}
+:root[data-theme="light"] .sidebar-icon-btn{background:#fff;color:var(--sidebar-text);border-color:var(--sidebar-line)}
+:root[data-theme="light"] .sidebar-foot .btn-secondary{background:#fff!important}
+#view-produccion .grid-4 .check-item{background:var(--surface-input)!important;border-color:var(--line)!important}
+#jobModal :is(.summary-box,.advance-stat,.advance-row,.check-item,.log-item,.payment-item){
+  background:var(--surface-raised)!important;
+  color:var(--text)!important;
+  border-color:var(--line-strong,var(--line))!important;
+}
+#jobModal .summary-box{
+  background:var(--surface-subtle)!important;
+  border-style:solid!important;
+}
+#jobModal .summary-box>div,
+#jobModal .advance-summary-card,
+#jobModal .advance-check{
+  background:var(--surface-input)!important;
+  color:var(--text)!important;
+  border-color:var(--line)!important;
+}
+#jobModal :is(.summary-box,.advance-stat,.advance-row,.check-item,.log-item) :is(strong,span,div,label){
+  color:inherit;
+}
+#jobModal :is(.summary-box,.advance-stat,.advance-row,.check-item,.log-item) .section-note,
+#jobModal :is(.summary-box,.advance-stat) span{
+  color:var(--muted)!important;
+}
+#productionBoardWrap::-webkit-scrollbar-thumb,#view-produccion .kanban-list::-webkit-scrollbar-thumb{background:#b7c3d3!important}
+#productionBoardWrap::-webkit-scrollbar-track{background:#e7ecf2!important}
+#view-produccion .kanban-col{background:var(--surface-subtle)!important;border:1px solid var(--line)!important}
+#view-produccion .kanban-col-head{background:linear-gradient(180deg,rgba(233,238,245,.98),rgba(233,238,245,.90))!important}
+#view-produccion .kanban-card,.production-card{background:var(--panel)!important;border-color:var(--line)!important;box-shadow:0 5px 15px rgba(15,23,42,.08)!important}
+.production-card-cell{background:var(--surface-subtle)!important;border-color:var(--line)!important}
+.production-card-notes{background:#eff6ff!important;border-left-color:#60a5fa!important;color:var(--muted)!important}
+.production-mini-btn,.production-card-actions .production-mini-btn:first-child{background:var(--surface-subtle)!important;color:var(--text)!important;border-color:var(--line)!important}
+.production-card-actions .production-mini-btn:last-child{background:#eff6ff!important;color:#1d4ed8!important;border-color:#bfdbfe!important}
+.production-empty{background:rgba(255,255,255,.64)!important;border-color:#b7c3d3!important;color:var(--muted)!important}
+.calendar-cell{background:var(--panel)!important;border-color:var(--line)!important;color:var(--text)!important}
+.calendar-cell.muted{background:var(--surface-subtle)!important;color:var(--muted)!important;opacity:.72!important}
+.calendar-cell.today{border-color:var(--brand)!important;background:#eff6ff!important}
+.permission-note{background:var(--surface-subtle)!important;border-color:var(--line)!important;color:var(--muted)!important}
+.modal-backdrop{background:rgba(15,23,42,.62)!important;backdrop-filter:blur(4px)}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media(max-width:600px){.auth-language-switcher{position:absolute;top:10px;right:10px}.auth-wrap{padding-top:62px!important}.auth-intro{padding:32px 28px!important}}
+
+/* Light-only contrast repairs for legacy components that used dark-theme colors. */
+:root[data-theme="light"] .toast{
+  background:#ffffff!important;
+  color:var(--text)!important;
+  border:1px solid var(--line-strong,var(--line))!important;
+  box-shadow:var(--shadow-strong)!important;
+}
+:root[data-theme="light"] .production-advance-line strong{color:#3f6212!important}
+:root[data-theme="light"] .module-badge{color:#1d4ed8!important;background:#eff6ff!important;border-color:#93c5fd!important}
+:root[data-theme="light"] .settings-preview-label{color:#92400e!important}
+:root[data-theme="light"] .quickbooks-step-head>span{background:#dbeafe!important;border-color:#93c5fd!important;color:#1e40af!important}
+:root[data-theme="light"] .settings-preview-document>span{color:#1d4ed8!important}
+:root[data-theme="light"] .settings-preview-logo{background:color-mix(in srgb,var(--brand) 35%,#fff)!important;color:#0f172a!important;border:2px solid var(--brand)!important}
+
+/* Visual hierarchy: make interactive areas and grouped information obvious. */
+:root[data-theme="light"]{
+  --line-strong:#aebdce;
+  --card-tint:#f8fbff;
+  --control-tint:#f5f9ff;
+  --button-tint:#e4ebf5;
+  --button-border:#aebdce;
+  --shadow-card:0 7px 20px rgba(15,23,42,.09);
+  --shadow-control:0 2px 5px rgba(15,23,42,.07);
+}
+
+/* Cards and sections should read as separate groups, not one white canvas. */
+:root[data-theme="light"] :is(.panel,.stat,.mini-stat,.alert-card,.box,.info-item,.settings-preview-card){
+  border:1px solid var(--line-strong)!important;
+  box-shadow:var(--shadow-card)!important;
+}
+:root[data-theme="light"] :is(.stat,.mini-stat,.alert-card,.info-item){
+  background:linear-gradient(145deg,#fff 0%,var(--card-tint) 100%)!important;
+}
+:root[data-theme="light"] .panel-head{
+  background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
+}
+
+/* Accounting document cards retain a clear type-specific identity. */
+:root[data-theme="light"] .accounting-sales-center{
+  background:#f8fafc!important;
+  border:1px solid var(--line-strong)!important;
+  box-shadow:0 4px 14px rgba(15,23,42,.06);
+}
+:root[data-theme="light"] .accounting-sales-card{
+  border:1px solid var(--line-strong)!important;
+  box-shadow:0 5px 14px rgba(15,23,42,.10)!important;
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
+}
+:root[data-theme="light"] .accounting-sales-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 9px 22px rgba(15,23,42,.14)!important;
+}
+:root[data-theme="light"] .accounting-sales-all{
+  background:linear-gradient(145deg,#fff,#f3efff)!important;
+  border-left:6px solid #7c3aed!important;
+}
+:root[data-theme="light"] .accounting-sales-estimate{
+  background:linear-gradient(145deg,#fff,#fff7e6)!important;
+  border-left:6px solid #d97706!important;
+}
+:root[data-theme="light"] .accounting-sales-invoice{
+  background:linear-gradient(145deg,#fff,#eaf3ff)!important;
+  border-left:6px solid var(--brand)!important;
+}
+
+/* Inputs look writable even before they receive focus. */
+:root[data-theme="light"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea,.input,.select,.textarea){
+  background:var(--control-tint)!important;
+  border:1.5px solid #94a3b8!important;
+  box-shadow:inset 0 1px 2px rgba(15,23,42,.05),var(--shadow-control)!important;
+}
+:root[data-theme="light"] :is(input,textarea)::placeholder{color:#64748b!important;opacity:1}
+:root[data-theme="light"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea,.input,.select,.textarea):hover{
+  border-color:#64748b!important;
+}
+:root[data-theme="light"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea,.input,.select,.textarea):focus{
+  background:#fff!important;
+  border-color:var(--brand)!important;
+  box-shadow:0 0 0 2px var(--focus-ring)!important;
+}
+
+/* Secondary actions remain neutral, but carry the same visual weight as primary actions. */
+:root[data-theme="light"] :is(.btn-secondary,.action-btn,.production-mini-btn,.job-tab-btn,.lang button,.sidebar-icon-btn){
+  background:linear-gradient(180deg,#f8fafc 0%,var(--button-tint) 100%)!important;
+  border:1px solid var(--button-border)!important;
+  color:#172033!important;
+  box-shadow:0 2px 6px rgba(15,23,42,.10)!important;
+  font-weight:750;
+}
+:root[data-theme="light"] :is(.btn-secondary,.action-btn,.production-mini-btn,.job-tab-btn,.lang button,.sidebar-icon-btn):hover{
+  background:#dbe7f6!important;
+  border-color:#7f93aa!important;
+  transform:translateY(-1px);
+}
+:root[data-theme="light"] :is(.btn-info){
+  background:#e0f2fe!important;
+  border-color:#7dd3fc!important;
+  box-shadow:0 2px 6px rgba(2,132,199,.14)!important;
+  font-weight:750;
+}
+:root[data-theme="light"] :is(.btn-danger){
+  background:#fee2e2!important;
+  border-color:#fca5a5!important;
+  box-shadow:0 2px 6px rgba(220,38,38,.12)!important;
+  font-weight:750;
+}
+:root[data-theme="light"] button:disabled{box-shadow:none!important;transform:none!important;opacity:.58}
+
+/* Every module in the sidebar is a distinct, easy-to-scan target. */
+:root[data-theme="light"] .sidebar .nav button{
+  background:rgba(255,255,255,.62)!important;
+  border:1px solid transparent!important;
+  border-radius:11px;
+  margin:2px 0;
+  color:#40516a!important;
+  transition:background .14s ease,border-color .14s ease,box-shadow .14s ease,transform .14s ease;
+}
+:root[data-theme="light"] .sidebar .nav button:hover{
+  background:#fff!important;
+  border-color:#b8c7d9!important;
+  box-shadow:0 3px 9px rgba(15,23,42,.09)!important;
+  transform:translateX(2px);
+}
+:root[data-theme="light"] .sidebar .nav button.active{
+  background:#dce9fb!important;
+  border-color:#8bb4ec!important;
+  box-shadow:inset 4px 0 0 var(--brand),0 3px 10px rgba(37,99,235,.12)!important;
+  color:#172033!important;
+}
+:root[data-theme="light"] .layout-sidebar-group-title{
+  color:#334155!important;
+  font-weight:800;
+  letter-spacing:.045em;
+  border-bottom:1px solid #cbd5e1;
+  padding-bottom:6px;
+}

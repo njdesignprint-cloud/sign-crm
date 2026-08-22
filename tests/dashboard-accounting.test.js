@@ -20,7 +20,7 @@ test("dashboard net profit subtracts job internal costs and period expenses", ()
     jobs.includes('$("mProfit").textContent = money(periodSales - periodExpenses);'),
     false
   );
-  assert.equal(html.includes('assets/js/03-jobs.js?v=20260810-2'), true);
+  assert.equal(html.includes('assets/js/03-jobs.js?v=20260822-design-proof-cc-1'), true);
   assert.equal(reports.includes("const netProfit = sales - internalCosts - expenses.reduce"), true);
   assert.equal(reports.includes("computeJob(job).profit, 0) - expenses.reduce"), false);
 });
@@ -77,6 +77,6 @@ test("dashboard and reports count only confirmed collections and subtract refund
   assert.equal(reports.includes("const collected = confirmedJobs.reduce"), true);
   assert.equal(reports.includes(".filter(payment => monthKey(payment.date) === key)"), true);
   assert.equal(html.includes('id="dashCollectedHelp"'), true);
-  assert.equal(html.includes('assets/js/03-jobs.js?v=20260810-2'), true);
+  assert.equal(html.includes('assets/js/03-jobs.js?v=20260822-design-proof-cc-1'), true);
   assert.equal(html.includes('assets/js/06-installation-reports.js?v=20260810-2'), true);
 });

@@ -152,6 +152,56 @@
       setClientApprovalDateField("jobEstimateSentAt", approval.sentAt || "");
       setClientApprovalDateField("jobClientApprovedAt", approval.approvedAt || "");
       setClientApprovalDateField("jobClientApprovalLinkExpiresAt", approval.linkExpiresAt || "");
+      const selectedClient = getClientById(cleanText($("jobClientId")?.value || ""));
+      if ($("jobDesignProofTo")) $("jobDesignProofTo").value = selectedClient?.email || "";
+      if ($("jobDesignProofCc")) $("jobDesignProofCc").value = "";
+      renderJobDesignProof(state.editingJobId ? getJobById(state.editingJobId) : null);
+    }
+
+    function renderJobDesignProof(job = null) {
+      const proof = job?.designProof || {}, language = state.language === "es" ? "es" : "en";
+      const labels = language === "es" ? { none:"Sin enviar", sent:"Enviado", approved:"Aprobado", changes_requested:"Solicita cambios", email_failed:"Error de correo" } : { none:"Not sent", sent:"Sent", approved:"Approved", changes_requested:"Changes requested", email_failed:"Email error" };
+      const status = proof.status || "none";
+      if ($("jobDesignProofBadge")) { $("jobDesignProofBadge").textContent = labels[status] || status; $("jobDesignProofBadge").className = `pill ${status === "approved" ? "st-aprobado" : status === "changes_requested" || status === "email_failed" ? "st-cancelado" : status === "sent" ? "st-produccion" : ""}`; }
+      if ($("jobDesignProofDetails")) $("jobDesignProofDetails").textContent = proof.proofId ? `${proof.fileName || "Design Proof.pdf"} · ${language === "es" ? "Revisión" : "Revision"} ${proof.revision || 1}${proof.respondedBy ? ` · ${language === "es" ? "Respondido por" : "Responded by"}: ${proof.respondedBy}` : ""}${proof.responseComment ? ` · ${proof.responseComment}` : ""}` : (language === "es" ? "Guarda el trabajo antes de enviar una prueba." : "Save the job before sending a proof.");
+      $("openJobDesignProofCertificateBtn")?.classList.toggle("hidden", status !== "approved" || !proof.proofId);
+    }
+
+    function fileAsBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "").split(",")[1] || ""); reader.onerror = reject; reader.readAsDataURL(file); }); }
+
+    async function sendJobDesignProof() {
+      if (!state.editingJobId) return showToast(state.language === "es" ? "Primero guarda el trabajo." : "Save the job first.");
+      if (!guardWrite("send design proof", "trabajos")) return;
+      const input = $("jobDesignProofFile"), file = input?.files?.[0], to = cleanText($("jobDesignProofTo")?.value || ""), cc = cleanText($("jobDesignProofCc")?.value || "");
+      if (!to) return showToast(state.language === "es" ? "Agrega al menos un correo en Para." : "Add at least one email in To.");
+      if (!file || file.type !== "application/pdf") return showToast(state.language === "es" ? "Selecciona un archivo PDF." : "Select a PDF file.");
+      if (file.size > 8_000_000) return showToast(state.language === "es" ? "El PDF no puede superar 8 MB." : "The PDF cannot exceed 8 MB.");
+      const job = getJobById(state.editingJobId) || {}, prior = job.designProof || {};
+      const warning = prior.proofId ? (state.language === "es" ? `Esto enviará la revisión ${Number(prior.revision || 0) + 1} e invalidará el enlace anterior. ¿Continuar?` : `This will send revision ${Number(prior.revision || 0) + 1} and invalidate the previous link. Continue?`) : (state.language === "es" ? "¿Enviar este PDF al cliente para aprobación?" : "Send this PDF to the customer for approval?");
+      if (!window.confirm(warning)) return;
+      const button = $("sendJobDesignProofBtn"), original = button.textContent; button.disabled = true; button.textContent = state.language === "es" ? "Enviando…" : "Sending…";
+      try {
+        const pdfBase64 = await fileAsBase64(file);
+        const result = (await cloudFunctions.httpsCallable("sendJobDesignProof")({ ownerId:state.accountOwnerId || state.uid, jobId:state.editingJobId, fileName:file.name, to, cc, pdfBase64 })).data || {};
+        job.designProof = { ...(job.designProof || {}), proofId:result.proofId, revision:result.revision, status:"sent", fileName:file.name, recipient:result.recipient };
+        if ($("jobDesignApprovalStatus")) $("jobDesignApprovalStatus").value = "enviado";
+        renderJobDesignProof(job); input.value = "";
+        showToast(state.language === "es" ? `Revisión ${result.revision} enviada a ${(result.to || [result.recipient]).join(", ")}${result.cc?.length ? ` · CC: ${result.cc.join(", ")}` : ""}.` : `Revision ${result.revision} sent to ${(result.to || [result.recipient]).join(", ")}${result.cc?.length ? ` · CC: ${result.cc.join(", ")}` : ""}.`);
+      } catch (error) { console.error(error); showToast(error?.message || (state.language === "es" ? "No se pudo enviar la prueba." : "The proof could not be sent.")); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+
+    async function openJobDesignProofCertificate() {
+      const proof = getJobById(state.editingJobId)?.designProof || {};
+      if (!proof.proofId) return;
+      const preview = window.open("about:blank", "_blank");
+      try {
+        const result = (await cloudFunctions.httpsCallable("getDesignProofCertificate")({ proofId:proof.proofId })).data || {};
+        if (!result.pdfBase64) throw new Error("Certificate unavailable");
+        const bytes = Uint8Array.from(atob(result.pdfBase64), character => character.charCodeAt(0)), url = URL.createObjectURL(new Blob([bytes], { type:"application/pdf" }));
+        if (preview) preview.location.href = url; else window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } catch (error) { if (preview) preview.close(); console.error(error); showToast(state.language === "es" ? "No se pudo abrir el PDF aprobado." : "The approved PDF could not be opened."); }
     }
     function getCurrentClientApprovalForm() {
       const token = cleanText($("jobApprovalToken")?.value || "");
@@ -217,6 +267,8 @@
       });
       $("copyClientEstimateLinkBtn")?.addEventListener("click", copyClientApprovalLink);
       $("previewClientEstimateBtn")?.addEventListener("click", previewClientApproval);
+      $("sendJobDesignProofBtn")?.addEventListener("click", sendJobDesignProof);
+      $("openJobDesignProofCertificateBtn")?.addEventListener("click", openJobDesignProofCertificate);
     }
     function getClientApprovalSummaryText(job = {}) {
       const approval = getJobClientApproval(job);

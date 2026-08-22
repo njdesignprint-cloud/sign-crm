@@ -16,7 +16,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260816-sales-center-1" />
+  <script src="assets/js/00-theme.js?v=20260822-light-only-1"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260822-light-contrast-3" />
+  <link rel="stylesheet" href="assets/css/theme.css?v=20260822-light-contrast-3" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -51,6 +53,10 @@
 
 
   <section id="authScreen" class="auth-wrap">
+    <div class="auth-language-switcher" aria-label="Language / Idioma">
+      <button id="authBtnLangEs" class="btn btn-secondary" type="button">ES</button>
+      <button id="authBtnLangEn" class="btn btn-secondary" type="button">EN</button>
+    </div>
     <div class="auth-card auth-login-card">
       <section class="auth-intro">
         <div class="auth-brand-row">
@@ -70,9 +76,12 @@
       <section class="auth-form-panel">
         <div id="authFormTitle" class="auth-form-title">Access your workspace</div>
 
-        <div class="stack">
+        <div id="authRegistrationFields" class="stack hidden">
           <input id="authFullName" class="input" type="text" placeholder="Full name (when creating an account)" />
           <input id="authCompanyName" class="input" type="text" placeholder="Company (when creating an account)" />
+        </div>
+
+        <div class="stack auth-credentials">
           <input id="authEmail" class="input" type="email" placeholder="Email address" />
           <input id="authPassword" class="input" type="password" placeholder="Password" />
         </div>
@@ -82,7 +91,7 @@
           <button id="btnRegister" class="btn btn-secondary">Create account</button>
         </div>
 
-        <button id="btnReset" class="btn btn-info full mt-12">Reset password</button>
+        <button id="btnReset" class="btn btn-secondary auth-reset mt-12">Reset password</button>
 
         <div id="authHelpText" class="help">
           New accounts require approval before accessing a workspace.
@@ -2065,6 +2074,15 @@
             Base interna lista para enviar el estimado al cliente y registrar aprobación del precio y del diseño. En el siguiente paso activamos el enlace público y la respuesta desde el celular del cliente.
           </div>
 
+          <div class="box mt-12" style="border-color:#84cc16">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><strong>Design Proof / Aprobación de diseño</strong><span id="jobDesignProofBadge" class="pill">Sin enviar</span></div>
+            <p class="section-note mt-10">Carga el PDF completo que debe revisar el cliente. Cada envío crea una revisión nueva e invalida el enlace anterior.</p>
+            <div class="grid-2 mt-12"><label class="field-label"><span>Para</span><input id="jobDesignProofTo" class="input" maxlength="2000" placeholder="cliente@empresa.com"></label><label class="field-label"><span>CC</span><input id="jobDesignProofCc" class="input" maxlength="2000" placeholder="otro@empresa.com, oficina@empresa.com"></label></div>
+            <div class="section-note mt-10">Separa varios correos con comas. El correo guardado del cliente siempre recibirá la aprobación.</div>
+            <div class="grid-2 mt-12"><input id="jobDesignProofFile" class="input" type="file" accept="application/pdf,.pdf"><div class="actions-row"><button id="sendJobDesignProofBtn" class="btn btn-primary" type="button">Enviar para aprobación</button><button id="openJobDesignProofCertificateBtn" class="btn btn-secondary hidden" type="button">PDF aprobado</button></div></div>
+            <div id="jobDesignProofDetails" class="section-note mt-10">Guarda el trabajo antes de enviar una prueba.</div>
+          </div>
+
           <input id="jobApprovalToken" type="hidden" />
 
           <div class="grid-3 mt-12">
@@ -2782,6 +2800,25 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="salesDocumentEmailModal">
+    <div class="modal modal-wide email-review-modal">
+      <div class="modal-head"><h3 id="salesEmailReviewTitle">Review email</h3><button class="btn btn-secondary btn-small" data-close="salesDocumentEmailModal">Close</button></div>
+      <div class="modal-body email-review-layout">
+        <section class="email-review-form">
+          <div class="field-label"><span>From</span><div id="salesEmailFrom" class="input readonly"></div></div>
+          <label class="field-label"><span>To</span><input id="salesEmailTo" class="input" type="email"></label>
+          <div class="grid-2"><label class="field-label"><span>CC</span><input id="salesEmailCc" class="input" placeholder="email@example.com"></label><label class="field-label"><span>BCC</span><input id="salesEmailBcc" class="input" placeholder="email@example.com"></label></div>
+          <label class="check-item"><input id="salesEmailSendCopy" type="checkbox" checked> <span id="salesEmailSendCopyLabel">Send a copy to my business</span></label>
+          <label class="field-label"><span>Subject</span><input id="salesEmailSubject" class="input" maxlength="240"></label>
+          <label class="field-label"><span>Email message</span><textarea id="salesEmailMessage" class="textarea" maxlength="3000"></textarea></label>
+          <label class="check-item"><input id="salesEmailAttachPdf" type="checkbox" checked> <span id="salesEmailAttachPdfLabel">Attach PDF copy</span></label>
+        </section>
+        <section id="salesEmailPreview" class="email-preview-card" aria-label="Email preview"></section>
+      </div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="salesDocumentEmailModal">Cancel</button><button id="sendSalesDocumentEmailBtn" class="btn btn-primary">Send</button></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="vendorPaymentModal">
     <div class="modal-card">
       <div class="modal-head"><h3>Record vendor payment</h3><button class="btn btn-secondary btn-small" data-close="vendorPaymentModal">Close</button></div>
@@ -2807,7 +2844,7 @@
   <script src="assets/js/00-opening-balance-csv.js?v=20260815-4"></script>
   <script src="assets/js/00-accounts-payable-core.js?v=20260815-1"></script>
   <script src="assets/js/01-job-quick-filters.js?v=20260728-2"></script>
-  <script src="assets/js/01-core.js?v=20260818-bank-center-1"></script>
+  <script src="assets/js/01-core.js?v=20260822-language-choice-1"></script>
   <script src="assets/js/02-clients.js?v=20260808-2"></script>
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
   <script src="assets/js/22-salespeople.js?v=20260809-3"></script>
@@ -2821,9 +2858,9 @@
     <script src="assets/js/32-stripe.js?v=20260817-platform-1"></script>
   <script src="assets/js/24-trash.js?v=20260816-sales-doc-trash-1"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
-<script src="assets/js/27-sales-documents.js?v=20260817-large-aligned-pdf-header-2"></script>
+<script src="assets/js/27-sales-documents.js?v=20260822-email-cc-1"></script>
   <script src="assets/js/02-payment-utils.js?v=20260730-3"></script>
-  <script src="assets/js/03-jobs.js?v=20260810-2"></script>
+  <script src="assets/js/03-jobs.js?v=20260822-design-proof-cc-1"></script>
   <script src="assets/js/04-expenses.js?v=20260809-2"></script>
   <script src="assets/js/05-inventory.js?v=20260817-accounting-1"></script>
   <script src="assets/js/06-installation-reports.js?v=20260810-2"></script>
@@ -2837,8 +2874,8 @@
   <script src="assets/js/15-weekly-settlements.js?v=20260809-1"></script>
   <script src="assets/js/16-advance-control.js?v=20260809-1"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
-  <script src="assets/js/18-i18n.js?v=20260818-bank-center-2"></script>
-  <script src="assets/js/25-i18n-complete.js?v=20260816-bank-1"></script>
+  <script src="assets/js/18-i18n.js?v=20260822-language-choice-1"></script>
+  <script src="assets/js/25-i18n-complete.js?v=20260822-language-choice-1"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>
   <script src="assets/js/21-navigation-shell.js?v=20260728-4"></script>

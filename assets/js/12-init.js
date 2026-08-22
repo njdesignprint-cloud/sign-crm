@@ -13,8 +13,21 @@
     }));
     document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.dataset.close)));
 
-    $("btnLogin").addEventListener("click", login);
-    $("btnRegister").addEventListener("click", register);
+    let authRegistrationMode = false;
+    function setAuthRegistrationMode(enabled) {
+      authRegistrationMode = !!enabled;
+      $("authRegistrationFields")?.classList.toggle("hidden", !authRegistrationMode);
+      $("btnRegister")?.setAttribute("aria-expanded", String(authRegistrationMode));
+      if (authRegistrationMode) $("authFullName")?.focus();
+    }
+    $("btnLogin").addEventListener("click", () => {
+      if (authRegistrationMode) return setAuthRegistrationMode(false);
+      login();
+    });
+    $("btnRegister").addEventListener("click", () => {
+      if (!authRegistrationMode) return setAuthRegistrationMode(true);
+      register();
+    });
     $("btnReset").addEventListener("click", resetPassword);
     $("btnLogout").addEventListener("click", () => { if (confirmDiscardAllModalDrafts()) logout(); });
     $("btnStatusLogout")?.addEventListener("click", () => { if (confirmDiscardAllModalDrafts()) logout(); });
