@@ -13,18 +13,26 @@ const pages = [
   "terms.html",
 ];
 
-test("SignShop HQ pages use the C1 brand mark", () => {
+test("SignShop HQ pages use the official favicon", () => {
   for (const page of pages) {
     const html = fs.readFileSync(path.join(frontend, page), "utf8");
-    assert.match(html, /signshophq-mark-c1\.svg/, `${page} must use the C1 mark`);
-    assert.doesNotMatch(html, /signshophq-icon(?:-contrast)?\.png/, `${page} must not use the previous mark`);
+    assert.match(html, /assets\/images\/favicon\.ico/, `${page} must use the official favicon`);
+    assert.doesNotMatch(html, /signshophq-mark-c1\.svg/, `${page} must not use the provisional C1 mark`);
   }
 });
 
-test("C1 brand mark is a compact accessible SVG with the approved colors", () => {
-  const svg = fs.readFileSync(path.join(frontend, "assets/images/signshophq-mark-c1.svg"), "utf8");
-  assert.match(svg, /viewBox="0 0 128 128"/);
-  assert.match(svg, /<title[^>]*>SignShop HQ<\/title>/);
-  for (const color of ["#1265F5", "#082B59", "#12B8B0"]) assert.match(svg, new RegExp(color, "i"));
-  assert.doesNotMatch(svg, /(?:filter|gradient|script|foreignObject)/i);
+test("official brand files are valid PNG and ICO assets", () => {
+  const png = fs.readFileSync(path.join(frontend, "assets/images/signshop-header.png"));
+  const ico = fs.readFileSync(path.join(frontend, "assets/images/favicon.ico"));
+  assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual([...ico.subarray(0, 4)], [0, 0, 1, 0]);
+  assert.ok(png.length > 10000);
+  assert.ok(ico.length > 1000);
+});
+
+test("visible SignShop HQ headers use the official horizontal logo", () => {
+  for (const page of ["index.html", "client-approval-public.html", "invoice-payment-public.html", "privacy.html", "terms.html"]) {
+    const html = fs.readFileSync(path.join(frontend, page), "utf8");
+    assert.match(html, /assets\/images\/signshop-header\.png/, `${page} must use the official horizontal logo`);
+  }
 });

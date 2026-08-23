@@ -64,7 +64,7 @@
       border-right:1px solid var(--line);
     }
     .auth-brand-row{display:flex;align-items:center;gap:14px;margin-bottom:36px}
-    .auth-brand-row img{display:block;width:56px;height:56px;object-fit:contain}
+    .auth-brand-row img{display:block;width:min(280px,100%);height:auto;max-height:94px;object-fit:contain;object-position:left center}
     .auth-brand-row .logo{font-size:18px}
     .auth-eyebrow{color:#93c5fd;font-size:12px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
     .auth-intro h1{font-size:clamp(30px,4vw,44px);line-height:1.08;letter-spacing:-.035em;margin:14px 0 0;max-width:560px}
@@ -84,7 +84,7 @@
     }
     .logo span{color:var(--brand)}
     .status-brand{display:flex;align-items:center;gap:12px}
-    .status-brand img{display:block;object-fit:contain}
+    .status-brand img{display:block;width:180px;height:auto;max-height:60px;object-fit:contain;object-position:left center}
 
     .auth-sub,.help,.section-note{
       color:var(--muted);
@@ -174,14 +174,7 @@
       min-height:48px;
       margin-bottom:8px;
     }
-    .app-brand-mark img{
-      display:block;
-      width:48px;
-      height:48px;
-      flex:0 0 48px;
-      object-fit:contain;
-      border-radius:0;
-    }
+    .app-brand-mark img{display:block;width:210px;height:auto;max-height:70px;flex:0 1 auto;object-fit:contain;object-position:left center;border-radius:0}
     .app-brand-mark .brand{margin-bottom:0}
 
     .brand-sub{
@@ -1676,7 +1669,7 @@ body.sidebar-collapsed .app{grid-template-columns:88px minmax(0,1fr)}
 body.sidebar-collapsed .sidebar{padding-left:12px;padding-right:12px}
 body.sidebar-collapsed .sidebar-header{display:grid;justify-items:center}
 body.sidebar-collapsed .sidebar-header .app-brand-mark{display:block}
-body.sidebar-collapsed .app-brand-mark img{width:46px;height:46px;margin:auto}
+body.sidebar-collapsed .app-brand-mark img{width:54px;height:54px;margin:auto;object-fit:cover;object-position:left center}
 body.sidebar-collapsed .app-brand-mark .brand,
 body.sidebar-collapsed .brand-sub,
 body.sidebar-collapsed .layout-sidebar-group-title,
@@ -1718,7 +1711,7 @@ body.sidebar-collapsed .nav button.active::before{top:8px;bottom:8px;left:-4px}
   .sidebar-header .app-brand-mark,
   body.sidebar-collapsed .sidebar-header .app-brand-mark{display:flex}
   body.sidebar-collapsed .app-brand-mark .brand{display:block}
-  .app-brand-mark img,body.sidebar-collapsed .app-brand-mark img{width:48px;height:48px;margin:0}
+  .app-brand-mark img,body.sidebar-collapsed .app-brand-mark img{width:180px;height:auto;max-height:60px;margin:0;object-fit:contain}
   .brand-sub,body.sidebar-collapsed .brand-sub{display:block!important;margin-bottom:16px}
   .nav,body.sidebar-collapsed .nav{display:grid;grid-template-columns:1fr;gap:7px;max-height:none;flex:1;padding:4px 4px 12px 0;overflow-y:auto}
   .nav button,body.sidebar-collapsed .nav button{height:auto;padding:12px 14px;text-align:left;font-size:13px;overflow:hidden}
