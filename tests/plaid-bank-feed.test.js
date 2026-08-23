@@ -15,5 +15,10 @@ test('rules remain suggestions and matching verifies amounts',()=>{
   assert.match(html,/nunca registran automáticamente/);assert.match(server,/targetAmounts\.some/);assert.match(server,/autoConfirm:false/);
 });
 test('sync never fails silently when no Plaid item exists',()=>{
-  assert.match(client,/Conectar banco primero/);assert.match(client,/setView\('configuracion'\)/);assert.match(client,/\$\('plaidSyncBtn'\)\?\.click\(\)/);
+  assert.match(client,/Conectar banco primero/);assert.match(client,/setView\('configuracion'\)/);assert.match(client,/syncPlaidTransactions/);assert.doesNotMatch(client,/\$\('plaidSyncBtn'\)\?\.click\(\)/);
+});
+test('bank synchronization remains enabled after Plaid state loads and reports progress',()=>{
+  const plaid=fs.readFileSync(path.join(root,'assets/js/31-plaid.js'),'utf8'),auth=fs.readFileSync(path.join(root,'assets/js/11-auth.js'),'utf8');
+  assert.match(plaid,/window\.renderPlaidSettings=render/);assert.match(plaid,/window\.syncPlaidTransactions=sync/);assert.match(plaid,/Sincronizando…/);
+  assert.match(plaid,/showToast\(summary\)/);assert.match(auth,/state\.plaidItems = snapshot\.docs[\s\S]*renderPlaidSettings\(\)/);
 });

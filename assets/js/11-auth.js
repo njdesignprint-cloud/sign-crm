@@ -107,6 +107,7 @@
         }, error => console.error(error));
         unsubPlaidItems = userRef().collection("plaidItems").onSnapshot(snapshot => {
           state.plaidItems = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+          if (typeof renderPlaidSettings === "function") renderPlaidSettings();
           if (typeof renderPlaidDashboard === "function") renderPlaidDashboard();
           if (typeof renderBankFeed === "function") renderBankFeed();
         }, error => console.error(error));
@@ -119,6 +120,7 @@
         state.plaidAccounts = [];
         state.plaidItems = [];
         state.plaidTransactions = [];
+        if (typeof renderPlaidSettings === "function") renderPlaidSettings();
       }
 
       const unsubProspects = prospectsRef().orderBy("createdAt", "desc").onSnapshot(snapshot => {

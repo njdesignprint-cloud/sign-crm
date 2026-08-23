@@ -106,12 +106,19 @@
 
   async function sync() {
     const itemId=currentItemId(); if(!itemId)return showToast(text("Connect a bank account first.", "Primero conecta una cuenta bancaria."));
-    const button=$("plaidSyncBtn"); button.disabled=true;
+    const settingsButton=$("plaidSyncBtn"), dashboardButton=$("dashboardBankSyncBtn"), feedButton=$("bankFeedSyncBtn");
+    const buttons=[settingsButton,dashboardButton,feedButton].filter(Boolean), originalLabels=buttons.map(button=>button.textContent);
+    buttons.forEach(button=>{button.disabled=true;button.textContent=text("Synchronizing…","Sincronizando…");});
     try {
       const result=await call("plaidSyncTransactions",{ ownerId:owner(), itemId });
-      $("plaidSyncNote").textContent=isProduction()?text(`${result.added||0} new, ${result.modified||0} updated and ${result.removed||0} removed bank transactions processed.`,`${result.added||0} movimientos nuevos, ${result.modified||0} actualizados y ${result.removed||0} eliminados procesados.`):text(`${result.added||0} new Sandbox transactions imported.`,`${result.added||0} movimientos Sandbox nuevos importados.`);
-      showToast(text("Bank transactions synchronized.", "Movimientos bancarios sincronizados."));
-    } catch(error) { console.error(error); showToast(error.message); } finally { button.disabled=false; }
+      const summary=isProduction()?text(`${result.added||0} new, ${result.modified||0} updated and ${result.removed||0} removed bank transactions processed.`,`${result.added||0} movimientos nuevos, ${result.modified||0} actualizados y ${result.removed||0} eliminados procesados.`):text(`${result.added||0} new Sandbox transactions imported.`,`${result.added||0} movimientos Sandbox nuevos importados.`);
+      $("plaidSyncNote").textContent=summary;
+      showToast(summary);
+    } catch(error) { console.error(error); showToast(error.message); } finally {
+      buttons.forEach((button,index)=>{button.disabled=false;button.textContent=originalLabels[index];});
+      render();
+      if(typeof renderBankFeed==="function")renderBankFeed();
+    }
   }
 
   $("plaidConnectBtn")?.addEventListener("click",()=>connect(false)); $("plaidUpdateBtn")?.addEventListener("click",()=>connect(true)); $("plaidDisconnectBtn")?.addEventListener("click",disconnect); $("plaidSyncBtn")?.addEventListener("click",sync); $("dashboardBankSyncBtn")?.addEventListener("click",sync);
@@ -119,5 +126,5 @@
   window.addEventListener("crm-language-changed",render);
   window.addEventListener("plaid-sdk-ready",()=>{ render(); resumeOAuth().catch(console.error); });
   firebase.auth().onAuthStateChanged(()=>{render();resumeOAuth().catch(console.error);});
-  render(); window.renderPlaidDashboard=renderDashboard;
+  render(); window.renderPlaidSettings=render; window.renderPlaidDashboard=renderDashboard; window.syncPlaidTransactions=sync;
 })();
