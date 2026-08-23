@@ -18,6 +18,7 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+    window.initializeSignShopAppCheck?.();
     const auth = firebase.auth();
     const db = firebase.firestore();
     const cloudFunctions = firebase.app().functions("us-central1");

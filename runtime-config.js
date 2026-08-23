@@ -1,5 +1,8 @@
 window.SIGNSHOPHQ_RUNTIME_CONFIG = Object.freeze({
   environment: "production",
+  appCheck: Object.freeze({
+    recaptchaEnterpriseSiteKey: "6Lc1-JQtAAAAAFgCSq6NILkHQ1SZj-_A6NCC3CRI"
+  }),
   firebase: Object.freeze({
     apiKey: "AIzaSyAAf9HnAJppIMUx3cz2RdrR2dkgLx8InSI",
     authDomain: "sign-crm-a7bda.firebaseapp.com",

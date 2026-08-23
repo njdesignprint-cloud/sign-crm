@@ -1,6 +1,6 @@
 (function(){
   const config=window.SIGNSHOPHQ_RUNTIME_CONFIG;if(!config?.firebase) return;
-  firebase.initializeApp(config.firebase);const functions=firebase.app().functions("us-central1");
+  firebase.initializeApp(config.firebase);window.initializeSignShopAppCheck?.();const functions=firebase.app().functions("us-central1");
   const token=new URLSearchParams(location.search).get("token")||"", result=new URLSearchParams(location.search).get("result")||"";
   const $=id=>document.getElementById(id), money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n||0));
   const safe=v=>String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
