@@ -64,7 +64,7 @@
       border-right:1px solid var(--line);
     }
     .auth-brand-row{display:flex;align-items:center;gap:14px;margin-bottom:36px}
-    .auth-brand-row img{display:block;width:56px;height:56px;border-radius:15px;box-shadow:0 10px 26px rgba(0,0,0,.25)}
+    .auth-brand-row img{display:block;width:56px;height:56px;object-fit:contain}
     .auth-brand-row .logo{font-size:18px}
     .auth-eyebrow{color:#93c5fd;font-size:12px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
     .auth-intro h1{font-size:clamp(30px,4vw,44px);line-height:1.08;letter-spacing:-.035em;margin:14px 0 0;max-width:560px}
@@ -83,6 +83,8 @@
       font-size:15px;
     }
     .logo span{color:var(--brand)}
+    .status-brand{display:flex;align-items:center;gap:12px}
+    .status-brand img{display:block;object-fit:contain}
 
     .auth-sub,.help,.section-note{
       color:var(--muted);
@@ -178,8 +180,7 @@
       height:48px;
       flex:0 0 48px;
       object-fit:contain;
-      border-radius:12px;
-      box-shadow:0 0 0 1px rgba(184,255,0,.35), 0 0 16px rgba(184,255,0,.14);
+      border-radius:0;
     }
     .app-brand-mark .brand{margin-bottom:0}
 

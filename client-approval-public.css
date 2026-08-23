@@ -31,6 +31,8 @@ body {
   box-shadow: 0 24px 80px rgba(0,0,0,.35);
 }
 .approval-header { margin-bottom: 20px; }
+.public-brand-lockup { display: flex; align-items: center; gap: 12px; }
+.public-brand-lockup img { display: block; width: 48px; height: 48px; object-fit: contain; }
 .brand { font-size: 28px; font-weight: 900; letter-spacing: .02em; }
 .brand span { color: var(--brand); }
 .muted { color: var(--muted); }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">SignShop HQ</title>
+  <desc id="desc">Geometric folded ribbon forming the letter S</desc>
+  <path fill="#1265F5" d="M24 20 55 4l49 25-31 16-49-25Z"/>
+  <path fill="#082B59" d="m24 20 49 25 31 16-31 16-49-25V20Z"/>
+  <path fill="#12B8B0" d="m24 52 18-9v18l-18-9Z"/>
+  <path fill="#1265F5" d="m55 76 49-15v31l-55 32-25-13 49-34-18-1Z"/>
+</svg>
