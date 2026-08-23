@@ -825,6 +825,25 @@
     #salesDocumentModal .modal-body{max-width:1280px;margin:0 auto;width:100%;}
     #salesDocumentModal .modal-foot{position:sticky;bottom:0;z-index:2;background:var(--panel);}
 
+    #salesDocumentEmailModal .email-review-modal{width:min(1120px,100%);overflow:hidden}
+    #salesDocumentEmailModal .email-review-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.9fr);gap:20px;max-height:calc(92vh - 150px);overflow:auto}
+    #salesDocumentEmailModal .email-review-form{display:grid;align-content:start;gap:12px;min-width:0}
+    #salesDocumentEmailModal .field-label{display:grid;gap:6px;color:var(--text)}
+    #salesDocumentEmailModal .field-label>span{font-size:12px;font-weight:800;color:var(--muted)}
+    #salesDocumentEmailModal .check-item{background:var(--card);border:1px solid var(--line);color:var(--text);min-height:46px}
+    #salesDocumentEmailModal .email-preview-card{align-self:start;min-width:0;padding:24px;background:#fff;color:#172033;border:1px solid #dbe2ea;border-radius:16px;box-shadow:0 12px 28px rgba(15,23,42,.10);overflow:hidden}
+    #salesDocumentEmailModal .email-preview-card>img{display:block;width:auto;max-width:180px;height:auto;max-height:72px;object-fit:contain;margin:0 0 20px}
+    #salesDocumentEmailModal .email-preview-card>h2{margin:0 0 20px;color:#172033}
+    #salesDocumentEmailModal .email-preview-hero{margin:0 -24px 22px;padding:24px;background:#f1f5f9;text-align:center;border-block:1px solid #e2e8f0}
+    #salesDocumentEmailModal .email-preview-hero h2{margin:0 0 16px;color:#172033;font-size:24px}
+    #salesDocumentEmailModal .email-preview-hero small{display:block;color:#64748b;font-weight:800;letter-spacing:.08em}
+    #salesDocumentEmailModal .email-preview-amount{margin-top:6px;color:#0f172a;font-size:34px;font-weight:900}
+    #salesDocumentEmailModal .email-preview-message{white-space:pre-line;line-height:1.65;color:#334155}
+    #salesDocumentEmailModal .email-preview-action{display:inline-block;margin:22px 0;padding:12px 18px;border-radius:9px;color:#fff;font-weight:800}
+    #salesDocumentEmailModal .email-preview-company{padding-top:18px;border-top:1px solid #e2e8f0;line-height:1.55;color:#475569}
+    #salesDocumentEmailModal .email-preview-card>small{display:block;margin-top:18px;color:#64748b}
+    @media(max-width:820px){#salesDocumentEmailModal .email-review-layout{grid-template-columns:1fr;max-height:calc(92vh - 140px)}}
+
     .toast{
       position:fixed;
       right:18px;

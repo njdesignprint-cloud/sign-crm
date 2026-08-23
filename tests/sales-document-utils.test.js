@@ -75,3 +75,12 @@ test("sales documents preserve a per-document address and provide a full-page pr
   assert.match(html, /id="salesDocAddress"/);
   assert.match(html, /id="previewSalesDocumentBtn"/);
 });
+
+test("email review keeps controls readable and company logos bounded", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "../assets/css/styles.css"), "utf8");
+  const page = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
+  assert.match(styles, /#salesDocumentEmailModal \.check-item\{background:var\(--card\)/);
+  assert.match(styles, /\.email-preview-card>img\{[^}]*max-width:180px;[^}]*max-height:72px/);
+  assert.match(styles, /\.email-review-layout\{display:grid;grid-template-columns:/);
+  assert.match(page, /styles\.css\?v=20260823-email-review-1/);
+});
