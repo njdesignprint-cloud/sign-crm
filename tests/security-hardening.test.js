@@ -9,9 +9,26 @@ const read=file=>fs.readFileSync(path.join(root,file),"utf8");
 test("Firestore has a deny-by-default fallback and protects financial imports",()=>{
   const rules=read("firestore.rules.proposed");
   assert.match(rules,/match \/\{document=\*\*\} \{ allow read,write: if false; \}/);
-  for(const collection of ["plaidItems","plaidAccounts","plaidTransactions","journalEntries","bankTransactions"]){
+  for(const collection of ["plaidItems","plaidAccounts","plaidTransactions"]){
+    assert.match(rules,new RegExp(`match /${collection}/\\{id\\} \\{ allow read: if signedIn\\(\\) && request\\.auth\\.uid == ownerUid; allow write: if false; \\}`));
+  }
+  for(const collection of ["journalEntries","bankTransactions"]){
     assert.match(rules,new RegExp(`match /${collection}/\\{id\\} \\{ allow read: if admin\\(ownerUid\\); allow write: if false; \\}`));
   }
+});
+
+test("Plaid data is subscribed only for the workspace owner",()=>{
+  const auth=read("frontend/assets/js/11-auth.js");
+  assert.match(auth,/if \(isOwner\(\)\) \{[\s\S]*collection\("plaidAccounts"\)[\s\S]*collection\("plaidItems"\)[\s\S]*collection\("plaidTransactions"\)/);
+  assert.match(auth,/else \{\s*state\.plaidAccounts = \[\];\s*state\.plaidItems = \[\];\s*state\.plaidTransactions = \[\];/);
+});
+
+test("the bank summary belongs to the dashboard, not prospects",()=>{
+  const html=read("frontend/index.html");
+  const dashboard=html.slice(html.indexOf('<section id="view-dashboard"'),html.indexOf('<section id="view-clientes"'));
+  const prospects=html.slice(html.indexOf('<section id="view-prospectos"'),html.indexOf('<section id="view-vendedores"'));
+  assert.match(dashboard,/id="dashboardBankCard"/);
+  assert.doesNotMatch(prospects,/id="dashboardBankCard"/);
 });
 
 test("production hosting sends browser security headers",()=>{

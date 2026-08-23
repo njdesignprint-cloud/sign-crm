@@ -844,7 +844,7 @@
       const hasActiveInvitation = !!(invitedAccess && invitedAccess.active !== false);
       const baseAccountStatus = savedPlatformStatus === "blocked"
         ? "blocked"
-        : (state.isSuperAdmin || hasActiveInvitation || ownRootExists ? "active" : (savedPlatformStatus || "pending"));
+        : (state.isSuperAdmin || hasActiveInvitation ? "active" : (savedPlatformStatus || (ownRootExists ? "active" : "pending")));
 
       let workspaceDoc = null;
       try {

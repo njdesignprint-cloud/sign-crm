@@ -7,8 +7,8 @@ test('bank center exposes the guarded QuickBooks-style review workflow',()=>{
 });
 test('bank reviews and rules can only be written by server callables',()=>{
   assert.match(server,/export const plaidReviewTransaction = onCall/);assert.match(server,/export const plaidManageRule = onCall/);
-  assert.match(rules,/match \/plaidTransactions\/\{id\} \{ allow read: if admin\(ownerUid\); allow write: if false; \}/);
-  assert.match(rules,/match \/plaidRules\/\{id\} \{ allow read: if admin\(ownerUid\); allow write: if false; \}/);
+  assert.match(rules,/match \/plaidTransactions\/\{id\} \{ allow read: if signedIn\(\) && request\.auth\.uid == ownerUid; allow write: if false; \}/);
+  assert.match(rules,/match \/plaidRules\/\{id\} \{ allow read: if signedIn\(\) && request\.auth\.uid == ownerUid; allow write: if false; \}/);
   assert.doesNotMatch(client,/\.collection\([^)]+plaidTransactions[^)]*\)\.(add|set|update)/);
 });
 test('rules remain suggestions and matching verifies amounts',()=>{

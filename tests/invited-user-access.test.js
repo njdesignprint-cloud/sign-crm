@@ -6,8 +6,9 @@ const path = require("node:path");
 test("an active invitation activates first login without platform approval", () => {
   const core = fs.readFileSync(path.join(__dirname, "../assets/js/01-core.js"), "utf8");
   assert.match(core, /const hasActiveInvitation = !!\(invitedAccess && invitedAccess\.active !== false\)/);
-  assert.match(core, /state\.isSuperAdmin \|\| hasActiveInvitation \|\| ownRootExists \? "active"/);
+  assert.match(core, /state\.isSuperAdmin \|\| hasActiveInvitation \? "active" : \(savedPlatformStatus \|\| \(ownRootExists \? "active" : "pending"\)\)/);
   assert.match(core, /savedPlatformStatus === "blocked"/);
+  assert.doesNotMatch(core, /state\.isSuperAdmin \|\| hasActiveInvitation \|\| ownRootExists \? "active"/);
 });
 
 test("invited users update only their UID membership presence", () => {
