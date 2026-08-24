@@ -390,7 +390,7 @@
       y=notesTop+65; section(item.type === "invoice" ? t("Payment information","Información de pago") : t("Customer approval","Aprobación del cliente"),14,y,182); y+=8;
       pdf.setFillColor(247,248,250); pdf.setDrawColor(216,221,229); pdf.roundedRect(14,y,182,18,2,2,"FD");
       if(item.type === "invoice") {
-        const status=salesDocLabel(salesDocEffectiveStatus(item),lang); const fields=[[t("Payment method","Método"),paid>0?t("Recorded payment","Pago registrado"):t("Pending","Pendiente")],[t("Payment reference","Referencia"),item.number||"-"],[t("Payment date","Fecha de pago"),item.paidAt||"-"],[t("Status / terms","Estado / términos"),`${status} / ${item.paymentTerms||"-"}`]];
+        const status=salesDocLabel(salesDocEffectiveStatus(item),lang), paidAtValue=item.paidAt?.toDate?.()?.toISOString?.().slice(0,10)||String(item.paidAt||"-").slice(0,10); const fields=[[t("Payment method","Método"),paid>0?t("Stripe / recorded payment","Stripe / pago registrado"):t("Pending","Pendiente")],[t("Payment reference","Referencia"),item.stripePaymentIntentId||item.number||"-"],[t("Payment date","Fecha de pago"),paidAtValue],[t("Status / terms","Estado / términos"),`${status} / ${item.paymentTerms||"-"}`]];
         fields.forEach((entry,index)=>{const x=20+(index*44);label(entry[0],x,y+7);value(entry[1],x,y+14,39);});
       } else {
         const response=item.approvalResponse||{}; const fields=[[t("Customer Signature","Firma del cliente"),response.signerName||"________________"],[t("Email","Correo"),response.signerEmail||customer.email||"-"],[t("Approval date","Fecha de aprobación"),response.acceptedAtIso||response.submittedAt?.toDate?.()?.toISOString?.()||"________________"],[t("Status","Estado"),salesDocLabel(item.status,lang)]];
