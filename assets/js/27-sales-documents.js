@@ -209,12 +209,34 @@
       } catch (error) { console.error(error); showToast(salesDocLanguage() === "es" ? "No se pudo guardar el documento." : "Could not save the document."); }
     }
 
-    async function convertEstimateToInvoice(id) {
+    let pendingEstimateConversionId = "";
+    function conversionMode() { return document.querySelector('input[name="estimateConversionMode"]:checked')?.value || "full"; }
+    function updateEstimateConversionUi() {
+      const estimate = state.salesDocuments.find(document => document.id === pendingEstimateConversionId), mode = conversionMode(); if (!estimate) return;
+      const remaining=Math.max(0,Number(estimate.total||0)-Math.max(0,Number(estimate.convertedAmount||0)));
+      $("estimateConversionPartialFields").classList.toggle("hidden", mode !== "partial"); $("estimateConversionManualLines").classList.toggle("hidden", mode !== "manual");
+      let amount = remaining;
+      if (mode === "partial") { const value=Math.max(0,Number($("estimateConversionPartialValue").value||0)); amount=$("estimateConversionPartialType").value==="percent"?amount*Math.min(100,value)/100:Math.min(amount,value); }
+      if (mode === "manual") amount=Math.min(remaining,[...document.querySelectorAll(".estimate-conversion-line-amount")].reduce((sum,input)=>sum+Math.max(0,Number(input.value||0)),0));
+      $("estimateConversionSummary").textContent=`${salesDocLanguage()==="es"?"Total aproximado de la factura":"Approximate invoice total"}: ${money(amount)}`;
+    }
+    function convertEstimateToInvoice(id) {
       if (!guardWrite("convert estimates", "trabajos")) return;
       const estimate = state.salesDocuments.find(document => document.id === id && document.type === "estimate");
       if (!estimate || estimate.status === "converted") return;
       if (estimate.status !== "accepted") return showToast(salesDocLanguage() === "es" ? "Primero marca el estimado como aprobado." : "Mark the estimate as accepted first.");
-      if (!window.confirm(salesDocLanguage() === "es" ? "¿Convertir este estimado en factura?" : "Convert this estimate to an invoice?")) return;
+      const remainingRatio=Math.min(1,Math.max(0,(Number(estimate.total||0)-Number(estimate.convertedAmount||0))/Math.max(.01,Number(estimate.total||0))));
+      if(remainingRatio<=0)return showToast(salesDocLanguage()==="es"?"Este estimado ya fue facturado por completo.":"This estimate has already been fully invoiced.");
+      pendingEstimateConversionId=id; document.querySelector('input[name="estimateConversionMode"][value="full"]').checked=true;
+      $("estimateConversionManualLines").innerHTML=(estimate.lines||[]).map((line,index)=>`<label class="field-label"><span>${safe(line.description||line.productService||`Line ${index+1}`)}</span><input class="input estimate-conversion-line-amount" data-line-index="${index}" type="number" min="0" step="0.01" value="${(Number(line.amount||0)*remainingRatio).toFixed(2)}"></label>`).join("");
+      updateEstimateConversionUi(); openModal("estimateConversionModal");
+    }
+    async function confirmEstimateConversion() {
+      const estimate=state.salesDocuments.find(document=>document.id===pendingEstimateConversionId), mode=conversionMode(); if(!estimate)return;
+      const estimateTotal=Math.max(0,Number(estimate.total||0)), alreadyConverted=Math.max(0,Number(estimate.convertedAmount||0)), remaining=Math.max(0,estimateTotal-alreadyConverted), remainingRatio=Math.min(1,remaining/Math.max(.01,estimateTotal)); let ratio=remainingRatio, lines=(estimate.lines||[]).map(line=>({...line}));
+      if(mode==="partial"){const value=Math.max(0,Number($("estimateConversionPartialValue").value||0));ratio=$("estimateConversionPartialType").value==="percent"?remainingRatio*Math.min(1,value/100):Math.min(remainingRatio,value/Math.max(.01,estimateTotal));}
+      if(mode==="manual"){lines=lines.map((line,index)=>{const amount=Math.max(0,Number(document.querySelector(`.estimate-conversion-line-amount[data-line-index="${index}"]`)?.value||0)),quantity=Math.max(.01,Number(line.quantity||1));return {...line,rate:amount/quantity,amount};}).filter(line=>Number(line.amount||0)>0);const requestedRatio=lines.reduce((sum,line)=>sum+Number(line.amount||0),0)/Math.max(.01,(estimate.lines||[]).reduce((sum,line)=>sum+Number(line.amount||0),0));ratio=Math.min(remainingRatio,requestedRatio);if(requestedRatio>ratio){const scale=ratio/requestedRatio;lines=lines.map(line=>({...line,rate:Number(line.rate||0)*scale,amount:Number(line.amount||0)*scale}));}}else if(ratio<1){lines=lines.map(line=>({...line,rate:Number(line.rate||0)*ratio,amount:Number(line.amount||0)*ratio}));}
+      if(!lines.length||ratio<=0)return showToast(salesDocLanguage()==="es"?"Selecciona una cantidad válida.":"Choose a valid amount.");
       try {
         await db.runTransaction(async transaction => {
           const invoiceRef = salesDocumentsRef().doc();
@@ -222,16 +244,18 @@
           let jobId = estimate.jobId || "";
           if (!jobId) {
             const jobRef = jobsRef().doc(); jobId = jobRef.id;
-            transaction.set(jobRef, { clientId:estimate.clientId, title:estimate.lines?.[0]?.description || number, status:"Aprobado", date:estimate.issueDate || today(), dueDate:estimate.dueDate || "", priority:"Media", sale:Number(estimate.total || 0), description:(estimate.lines || []).map(line => line.description).filter(Boolean).join(" · "), notes:"", materials:[], quote:{ items:(estimate.lines || []).map(line => ({ description:line.description, quantity:line.quantity, unitPrice:line.rate })), discountType:"fixed", discountValue:Number(estimate.discount || 0), taxPercent:Number(estimate.taxPercent || 0) }, checklist:{}, payments:[], internalNotesLog:[], activityLog:[newLogEntry("factura", `${number} created from ${estimate.number || "estimate"}.`)], createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+            transaction.set(jobRef, { clientId:estimate.clientId, title:lines[0]?.description || number, status:"Aprobado", date:estimate.issueDate || today(), dueDate:estimate.dueDate || "", priority:"Media", sale:Number(estimate.total || 0)*ratio, description:lines.map(line => line.description).filter(Boolean).join(" · "), notes:"", materials:[], quote:{ items:lines.map(line => ({ description:line.description, quantity:line.quantity, unitPrice:line.rate })), discountType:"fixed", discountValue:Number(estimate.discount || 0)*ratio, taxPercent:Number(estimate.taxPercent || 0) }, checklist:{}, payments:[], internalNotesLog:[], activityLog:[newLogEntry("factura", `${number} created from ${estimate.number || "estimate"}.`)], createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
           } else {
-            transaction.update(jobsRef().doc(jobId), { status:"Aprobado", sale:Number(estimate.total || 0), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+            transaction.update(jobsRef().doc(jobId), { status:"Aprobado", sale:Number(estimate.total || 0)*ratio, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
           }
-          const invoice = { ...estimate, type:"invoice", number, jobId, sourceEstimateId:estimate.id, status:"draft", paidAmount:Math.min(Number(estimate.total || 0), availableJobCollectedForInvoice(jobId)), createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp(), createdBy:state.userEmail || "" };
+          const invoiceTotal=Number(estimate.total||0)*ratio;
+          const invoice = { ...estimate, type:"invoice", number, jobId, lines, subtotal:Number(estimate.subtotal||0)*ratio, discount:Number(estimate.discount||0)*ratio, tax:Number(estimate.tax||0)*ratio, total:invoiceTotal, sourceEstimateId:estimate.id, conversionMode:mode, conversionRatio:ratio, status:"draft", paidAmount:Math.min(invoiceTotal, availableJobCollectedForInvoice(jobId)), createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp(), createdBy:state.userEmail || "" };
           delete invoice.id;
           delete invoice.approvalTokenHash; delete invoice.approvalLinkExpiresAt; delete invoice.approvalResponse; delete invoice.customerResponseUnread; delete invoice.customerResponseAt;
           transaction.set(invoiceRef, invoice);
-          transaction.update(salesDocumentsRef().doc(estimate.id), { status:"converted", convertedInvoiceId:invoiceRef.id, customerResponseUnread:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+          transaction.update(salesDocumentsRef().doc(estimate.id), { status:alreadyConverted+invoiceTotal>=estimateTotal-.01?"converted":"accepted", convertedInvoiceId:invoiceRef.id, convertedAmount:firebase.firestore.FieldValue.increment(invoiceTotal), customerResponseUnread:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
         });
+        markModalSaved("estimateConversionModal"); closeModal("estimateConversionModal",true); pendingEstimateConversionId="";
         showToast(salesDocLanguage() === "es" ? "Factura creada desde el estimado." : "Invoice created from estimate.");
       } catch (error) { console.error(error); showToast(salesDocLanguage() === "es" ? "No se pudo convertir." : "Could not convert estimate."); }
     }
@@ -406,7 +430,7 @@
       const es = item.language === "es", issuer = COMPANY.tradeName || COMPANY.legalName || COMPANY.name || "SignShop HQ", type = item.type === "invoice" ? (es ? "Factura" : "Invoice") : (es ? "Estimado" : "Estimate");
       pendingSalesEmailId = id;
       $("salesEmailReviewTitle").textContent = es ? `Revisar y enviar ${type.toLowerCase()} ${item.number||""}` : `Review and send ${type.toLowerCase()} ${item.number||""}`;
-      $("salesEmailFrom").textContent = `${issuer} <documents@signshophq.com>`; $("salesEmailTo").value = recipient; $("salesEmailCc").value = ""; $("salesEmailBcc").value = ""; $("salesEmailSendCopy").checked = true; $("salesEmailAttachPdf").checked = true;
+      $("salesEmailFrom").textContent = `${issuer} <documents@signshophq.com>`; $("salesEmailTo").value = recipient; $("salesEmailCc").value = ""; $("salesEmailBcc").value = ""; $("salesEmailSendCopy").checked = true; $("salesEmailAttachPdf").checked = false;
       $("salesEmailSubject").value = es ? `${type} ${item.number||""} de ${issuer}` : `${type} ${item.number||""} from ${issuer}`;
       $("salesEmailMessage").value = es ? (item.type === "invoice" ? "Agradecemos tu preferencia. Revisa los detalles de la factura y utiliza el botón para realizar el pago seguro." : "Revisa los detalles del estimado. Si tienes alguna pregunta, contáctanos. Esperamos trabajar contigo.") : (item.type === "invoice" ? "We appreciate your business. Review the invoice details and use the button to make a secure payment." : "Please review the estimate details. Contact us with any questions. We look forward to working with you.");
       $("salesEmailSendCopyLabel").textContent = es ? "Enviar una copia a mi empresa" : "Send a copy to my business"; $("salesEmailAttachPdfLabel").textContent = es ? "Adjuntar copia PDF" : "Attach PDF copy"; $("sendSalesDocumentEmailBtn").textContent = es ? `Enviar ${type.toLowerCase()}` : `Send ${type.toLowerCase()}`;
@@ -508,6 +532,10 @@
     $("salesDocumentsTableBody")?.addEventListener("click", event => { const edit = event.target.closest("[data-sales-doc-edit]"); const convert = event.target.closest("[data-sales-doc-convert]"); const preview = event.target.closest("[data-sales-doc-preview]"); const pdf = event.target.closest("[data-sales-doc-pdf]"); const email = event.target.closest("[data-sales-doc-email]"); const read = event.target.closest("[data-sales-doc-read]"); const payment = event.target.closest("[data-sales-doc-payment]"); const remove = event.target.closest("[data-sales-doc-delete]"); if (edit) editSalesDocument(edit.dataset.salesDocEdit); if (convert) convertEstimateToInvoice(convert.dataset.salesDocConvert); if (preview) previewSalesDocumentPdf(preview.dataset.salesDocPreview); if (pdf) exportSalesDocumentPdf(pdf.dataset.salesDocPdf); if (email) openSalesEmailReview(email.dataset.salesDocEmail); if (read) salesDocumentsRef().doc(read.dataset.salesDocRead).update({ customerResponseUnread:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(console.error); if (remove) deleteSalesDocument(remove.dataset.salesDocDelete); if (payment) { const invoice = state.salesDocuments.find(item => item.id === payment.dataset.salesDocPayment); if (invoice?.jobId) { resetPaymentForm(invoice.jobId); state.workingPaymentInvoiceId = invoice.id; $("paymentJobId").disabled = true; $("paymentAmount").value = salesDocBalance(invoice).toFixed(2); $("paymentNote").value = `${invoice.number || "Invoice"}`; openModal("paymentModal"); } } });
     ["salesEmailSubject","salesEmailMessage"].forEach(id => $(id)?.addEventListener("input", renderSalesEmailPreview));
     $("sendSalesDocumentEmailBtn")?.addEventListener("click", sendReviewedSalesDocumentEmail);
+    document.querySelectorAll('input[name="estimateConversionMode"]').forEach(input=>input.addEventListener("change",updateEstimateConversionUi));
+    ["estimateConversionPartialType","estimateConversionPartialValue"].forEach(id=>$(id)?.addEventListener("input",updateEstimateConversionUi));
+    $("estimateConversionManualLines")?.addEventListener("input",updateEstimateConversionUi);
+    $("confirmEstimateConversionBtn")?.addEventListener("click",()=>withSaveButton("confirmEstimateConversionBtn",salesDocLanguage()==="es"?"Creando…":"Creating…",confirmEstimateConversion));
     window.renderSalesDocuments = renderSalesDocuments;
     window.resetSalesDocumentForm = resetSalesDocumentForm;
     window.applySalesDocumentsLanguage = applySalesDocumentsLanguage;

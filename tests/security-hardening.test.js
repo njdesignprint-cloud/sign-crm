@@ -58,12 +58,12 @@ test("App Check is initialized on authenticated and public Firebase pages",()=>{
   assert.match(runtime,/recaptchaEnterpriseSiteKey/);
   assert.match(helper,/ReCaptchaEnterpriseProvider/);
   assert.match(helper,/\.activate\([^,]+,true\)/);
-  for(const page of ["index.html","invoice-payment-public.html","client-approval-public.html","design-proof-public.html"]){
+  for(const page of ["index.html","invoice-payment-public.html","client-approval-public.html","estimate-review-public.html","invoice-view-public.html","design-proof-public.html"]){
     const html=read(`frontend/${page}`);
     assert.match(html,/firebase-app-check-compat\.js/);
     assert.match(html,/app-check\.js/);
   }
-  for(const script of ["assets/js/01-core.js","16-invoice-payment-public.js","15-client-approval-public.js","design-proof-public.js"]){
+  for(const script of ["assets/js/01-core.js","16-invoice-payment-public.js","15-client-approval-public.js","estimate-review-public.js","invoice-view-public.js","design-proof-public.js"]){
     assert.match(read(`frontend/${script}`),/initializeSignShopAppCheck/);
   }
 });

@@ -2800,6 +2800,20 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="estimateConversionModal">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="estimateConversionTitle">¿Cuánto deseas facturar?</h3><button class="btn btn-secondary btn-small" data-close="estimateConversionModal">Cerrar</button></div>
+      <div class="modal-body">
+        <label class="check-item"><input type="radio" name="estimateConversionMode" value="full" checked> <span id="estimateConversionFullLabel">Total restante de todas las líneas</span></label>
+        <label class="check-item"><input type="radio" name="estimateConversionMode" value="partial"> <span id="estimateConversionPartialLabel">Porcentaje o cantidad</span></label>
+        <div id="estimateConversionPartialFields" class="grid-2 mt-10 hidden"><select id="estimateConversionPartialType" class="select"><option value="percent">Porcentaje %</option><option value="amount">Cantidad $</option></select><input id="estimateConversionPartialValue" class="input" type="number" min="0.01" step="0.01" value="50"></div>
+        <label class="check-item"><input type="radio" name="estimateConversionMode" value="manual"> <span id="estimateConversionManualLabel">Cantidad manual por cada línea</span></label>
+        <div id="estimateConversionManualLines" class="hidden mt-10"></div>
+        <div id="estimateConversionSummary" class="permission-note mt-12"></div>
+      </div><div class="modal-foot"><button class="btn btn-secondary" data-close="estimateConversionModal">Cancelar</button><button id="confirmEstimateConversionBtn" class="btn btn-primary">Crear factura</button></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="salesDocumentEmailModal">
     <div class="modal modal-wide email-review-modal">
       <div class="modal-head"><h3 id="salesEmailReviewTitle">Review email</h3><button class="btn btn-secondary btn-small" data-close="salesDocumentEmailModal">Close</button></div>
@@ -2858,7 +2872,7 @@
     <script src="assets/js/32-stripe.js?v=20260817-platform-1"></script>
   <script src="assets/js/24-trash.js?v=20260816-sales-doc-trash-1"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
-<script src="assets/js/27-sales-documents.js?v=20260822-email-cc-1"></script>
+<script src="assets/js/27-sales-documents.js?v=20260823-qb-flow-1"></script>
   <script src="assets/js/02-payment-utils.js?v=20260730-3"></script>
   <script src="assets/js/03-jobs.js?v=20260822-design-proof-cc-1"></script>
   <script src="assets/js/04-expenses.js?v=20260809-2"></script>

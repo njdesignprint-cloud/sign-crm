@@ -8,6 +8,8 @@ const pages = [
   "index.html",
   "client-approval-public.html",
   "invoice-payment-public.html",
+  "estimate-review-public.html",
+  "invoice-view-public.html",
   "design-proof-public.html",
   "privacy.html",
   "terms.html",
@@ -31,7 +33,7 @@ test("official brand files are valid PNG and ICO assets", () => {
 });
 
 test("visible SignShop HQ headers use the official horizontal logo", () => {
-  for (const page of ["index.html", "client-approval-public.html", "invoice-payment-public.html", "privacy.html", "terms.html"]) {
+  for (const page of ["index.html", "client-approval-public.html", "invoice-payment-public.html", "estimate-review-public.html", "invoice-view-public.html", "privacy.html", "terms.html"]) {
     const html = fs.readFileSync(path.join(frontend, page), "utf8");
     assert.match(html, /assets\/images\/signshop-header\.png/, `${page} must use the official horizontal logo`);
   }

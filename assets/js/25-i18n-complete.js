@@ -1,5 +1,6 @@
 (function(){
   const translations={
+    "¿Cuánto deseas facturar?":"How much do you want to invoice?","Total restante de todas las líneas":"Remaining total of all lines","Cantidad $":"Amount $","Cantidad manual por cada línea":"Manual amount for each line",
     "Design Proof / Aprobación de diseño":"Design Proof / Design approval","Sin enviar":"Not sent","Carga el PDF completo que debe revisar el cliente. Cada envío crea una revisión nueva e invalida el enlace anterior.":"Upload the complete PDF the customer must review. Every send creates a new revision and invalidates the previous link.","Separa varios correos con comas. El correo guardado del cliente siempre recibirá la aprobación.":"Separate multiple emails with commas. The customer's saved email will always receive the approval.","Enviar para aprobación":"Send for approval","PDF aprobado":"Approved PDF",
     "Clientes":"Clients","Trabajos":"Jobs","Producción":"Production","Instalación":"Installation","Inventario":"Inventory","Proveedores":"Suppliers","Compras":"Purchases","Gastos":"Expenses","Reportes":"Reports","Usuarios":"Users",
     "Nuevo cliente":"New client","Nuevo trabajo":"New job","Guardar cliente":"Save client","Guardar trabajo":"Save job","Cancelar":"Cancel","Cerrar":"Close","Editar":"Edit","Eliminar":"Archive","Restaurar":"Restore",
