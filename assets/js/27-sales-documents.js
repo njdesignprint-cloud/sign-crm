@@ -396,6 +396,7 @@
         const response=item.approvalResponse||{}; const fields=[[t("Customer Signature","Firma del cliente"),response.signerName||"________________"],[t("Email","Correo"),response.signerEmail||customer.email||"-"],[t("Approval date","Fecha de aprobación"),response.acceptedAtIso||response.submittedAt?.toDate?.()?.toISOString?.()||"________________"],[t("Status","Estado"),salesDocLabel(item.status,lang)]];
         fields.forEach((entry,index)=>{const x=20+(index*44);label(entry[0],x,y+7);value(entry[1],x,y+14,39);});
       }
+      pdf.__salesDocumentFieldLayout={pageIndex:pdf.getNumberOfPages()-1,boxTopMm:y};
       return pdf;
     }
 
@@ -448,7 +449,7 @@
       button.textContent = item.language === "es" ? "Enviando…" : "Sending…";
       try {
         const callable = cloudFunctions.httpsCallable("sendSalesDocumentEmail");
-        await callable({ ownerId:state.accountOwnerId || state.uid, documentId:id, pdfBase64:pdf.output("datauristring").split(",")[1], to, cc, bcc, subject:$("salesEmailSubject").value, message:$("salesEmailMessage").value, sendCopy:$("salesEmailSendCopy").checked, attachPdf:$("salesEmailAttachPdf").checked });
+        await callable({ ownerId:state.accountOwnerId || state.uid, documentId:id, pdfBase64:pdf.output("datauristring").split(",")[1], fieldLayout:pdf.__salesDocumentFieldLayout||null, to, cc, bcc, subject:$("salesEmailSubject").value, message:$("salesEmailMessage").value, sendCopy:$("salesEmailSendCopy").checked, attachPdf:$("salesEmailAttachPdf").checked });
         closeModal("salesDocumentEmailModal", true); pendingSalesEmailId = "";
         showToast(item.language === "es" ? `Correo enviado a ${to.join(", ")}.` : `Email sent to ${to.join(", ")}.`);
       } catch (error) {
