@@ -37,9 +37,53 @@ test("production hosting sends browser security headers",()=>{
   const values=Object.fromEntries(headers.map(header=>[header.key,header.value]));
   assert.match(values["Content-Security-Policy"],/frame-ancestors 'none'/);
   assert.match(values["Content-Security-Policy"],/script-src[^;]+https:\/\/www\.google\.com[^;]+https:\/\/www\.recaptcha\.net/);
+  assert.match(values["Content-Security-Policy"],/script-src-elem 'self'/);
+  assert.doesNotMatch(values["Content-Security-Policy"],/script-src 'self' 'unsafe-inline'/);
   assert.equal(values["X-Content-Type-Options"],"nosniff");
   assert.equal(values["X-Frame-Options"],"DENY");
   assert.match(values["Strict-Transport-Security"],/max-age=31536000/);
+  const htmlCache=config.hosting.headers.find(rule=>rule.source==="**/*.html");
+  assert.match(htmlCache.headers[0].value,/no-store/);
+  const rootCache=config.hosting.headers.find(rule=>rule.source==="/");
+  assert.match(rootCache.headers[0].value,/no-store/);
+});
+
+test("legal pages do not require inline script blocks",()=>{
+  for(const page of ["privacy.html","terms.html"]){
+    const html=read(`frontend/${page}`);
+    assert.match(html,/script src="legal-language\.js"/);
+    assert.doesNotMatch(html,/<script>/);
+  }
+});
+
+test("authentication avoids account enumeration and restricts registration to invitations",()=>{
+  const auth=read("frontend/assets/js/11-auth.js");
+  assert.match(auth,/No pudimos iniciar sesión/);
+  assert.doesNotMatch(auth,/Ese usuario no existe/);
+  assert.doesNotMatch(auth,/La contraseña es incorrecta/);
+  assert.match(auth,/password\.length < 10/);
+  assert.match(auth,/!isSuper && !isInvited/);
+  assert.match(auth,/await user\.delete\(\)/);
+  assert.match(auth,/Si el correo pertenece a una cuenta/);
+});
+
+test("owners can enroll in SMS MFA and complete an MFA sign-in challenge",()=>{
+  const html=read("frontend/index.html");
+  const auth=read("frontend/assets/js/11-auth.js");
+  const mfa=read("frontend/assets/js/34-mfa.js");
+  assert.match(html,/id="mfaPhoneNumber"/);
+  assert.match(html,/id="mfaVerifyEmailBtn"/);
+  assert.match(html,/id="authMfaModal"/);
+  assert.match(html,/id="authMfaModal" class="modal-backdrop"/);
+  assert.match(html,/class="modal auth-mfa-dialog"/);
+  assert.match(auth,/auth\/multi-factor-auth-required/);
+  assert.match(mfa,/user\.multiFactor/);
+  assert.match(mfa,/multiFactorUser\(user\)\.getSession\(\)/);
+  assert.match(mfa,/PhoneMultiFactorGenerator\.assertion/);
+  assert.match(mfa,/resolveSignIn\(assertion\)/);
+  assert.match(mfa,/sendEmailVerification/);
+  assert.doesNotMatch(mfa,/sendEmailVerification\(\{\s*url:/);
+  assert.match(mfa,/auth\/unverified-email/);
 });
 
 test("public invoice rendering escapes customer-controlled descriptions",()=>{

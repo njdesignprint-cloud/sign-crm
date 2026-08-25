@@ -101,9 +101,18 @@
       $("expenseNotes").value = "";
       $("expenseRecordType").value = "expense";
       $("expenseWorkerName").value = "";
+      $("expenseWorkerId").value = "";
+      $("expenseWorkerEmail").value = "";
+      $("expenseWorkerPhone").value = "";
+      $("expenseWorkerAddress").value = "";
+      $("expenseWorkerType").value = "contractor";
       $("expenseWorkerRole").value = "";
+      $("expensePaymentReference").value = "";
       $("expensePeriodFrom").value = "";
       $("expensePeriodTo").value = "";
+      $("expenseWorkerLanguage").value = state.language === "es" ? "es" : "en";
+      ["expenseFederalWithholding","expenseSocialSecurity","expenseMedicare","expenseOtherDeduction"].forEach(id => $(id).value = "");
+      $("expenseBackupWithholding").checked = false;
       $("expensePaymentMethod").value = "Efectivo";
       $("expenseApplyToAdvance").checked = true;
       setWorkerPaymentLines([]);
@@ -120,6 +129,7 @@
       $("recurringCategory").value = "Operación";
       $("recurringAmount").value = "";
       $("recurringDay").value = "1";
+      $("recurringPaymentMethod").value = "Efectivo";
       $("recurringNotes").value = "";
       $("recurringActive").checked = true;
     }
@@ -140,6 +150,7 @@
     function toggleWorkerPaymentFields() {
       const isWorkerPayment = $("expenseRecordType")?.value === "worker_payment";
       $("workerPaymentFields")?.classList.toggle("hidden", !isWorkerPayment);
+      if ($("saveExpenseBtn")) $("saveExpenseBtn").textContent = isWorkerPayment ? "Revisar pago" : "Guardar gasto";
       if ($("expenseAmount")) $("expenseAmount").readOnly = isWorkerPayment && getWorkerPaymentLines().length > 0;
       if (isWorkerPayment && $("expenseCategory")) $("expenseCategory").value = "Nómina";
     }
@@ -174,9 +185,13 @@
       });
       const lines = getWorkerPaymentLines();
       const total = lines.reduce((sum, item) => sum + item.amount, 0);
+      const deductions = ["expenseFederalWithholding","expenseSocialSecurity","expenseMedicare","expenseOtherDeduction"].reduce((sum,id) => sum + Math.max(Number($(id)?.value || 0),0),0);
+      const net = Math.max(total - deductions, 0);
       if ($("workerPaymentLinesTotal")) $("workerPaymentLinesTotal").textContent = money(total);
+      if ($("workerPaymentDeductionsTotal")) $("workerPaymentDeductionsTotal").textContent = money(deductions);
+      if ($("workerPaymentNetTotal")) $("workerPaymentNetTotal").textContent = money(net);
       if ($("expenseRecordType")?.value === "worker_payment" && lines.length) {
-        $("expenseAmount").value = total.toFixed(2);
+        $("expenseAmount").value = net.toFixed(2);
         $("expenseAmount").readOnly = true;
       } else if ($("expenseAmount")) $("expenseAmount").readOnly = false;
     }
@@ -210,7 +225,11 @@
       $("savePaymentBtn").textContent = state.language === "en" ? "Save changes" : "Guardar cambios";
       openModal("paymentModal");
     }
-    async function saveExpense() {
+    function workerPaymentReceiptNumber() {
+      const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+      return `WPR-${stamp}`;
+    }
+    async function saveExpense(options = {}) {
       if (!guardWrite("guardar gastos", "gastos")) return;
       const payload = {
         concept: cleanText($("expenseConcept").value),
@@ -221,20 +240,55 @@
         notes: cleanText($("expenseNotes").value),
         recordType: $("expenseRecordType").value === "worker_payment" ? "worker_payment" : "expense",
         workerName: cleanText($("expenseWorkerName").value),
+        workerId: cleanText($("expenseWorkerId").value),
+        workerEmail: cleanText($("expenseWorkerEmail").value).toLowerCase(),
+        workerPhone: cleanText($("expenseWorkerPhone").value),
+        workerAddress: cleanText($("expenseWorkerAddress").value),
+        workerType: $("expenseWorkerType").value === "employee" ? "employee" : "contractor",
         workerRole: cleanText($("expenseWorkerRole").value),
+        paymentReference: cleanText($("expensePaymentReference").value),
         periodFrom: cleanText($("expensePeriodFrom").value),
         periodTo: cleanText($("expensePeriodTo").value),
+        documentLanguage: $("expenseWorkerLanguage").value === "es" ? "es" : "en",
+        federalWithholding: Math.max(Number($("expenseFederalWithholding").value || 0), 0),
+        socialSecurity: Math.max(Number($("expenseSocialSecurity").value || 0), 0),
+        medicare: Math.max(Number($("expenseMedicare").value || 0), 0),
+        otherDeduction: Math.max(Number($("expenseOtherDeduction").value || 0), 0),
+        backupWithholding: !!$("expenseBackupWithholding").checked,
         paymentMethod: cleanText($("expensePaymentMethod").value),
         workerPaymentItems: getWorkerPaymentLines(),
         applyToAdvance: $("expenseRecordType").value === "worker_payment" && !!$("expenseApplyToAdvance").checked,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      if (options.reviewed) payload.workerEmail = cleanText($("workerPaymentReviewTo")?.value).toLowerCase();
 
       if (payload.recordType === "worker_payment" && !payload.workerName) return showToast("Escribe el nombre del trabajador.");
       if (payload.recordType === "worker_payment" && !payload.jobId) return showToast("Selecciona el trabajo relacionado para descontar correctamente este pago.");
+      if (payload.recordType === "worker_payment" && payload.periodFrom && payload.periodTo && payload.periodFrom > payload.periodTo) return showToast("La fecha inicial no puede ser posterior a la fecha final.");
+      if (payload.recordType === "worker_payment" && payload.workerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.workerEmail)) return showToast("Revisa el correo del trabajador.");
       if (payload.recordType === "worker_payment" && !payload.concept) payload.concept = `Pago a ${payload.workerName}`;
       if (!payload.concept) return showToast("Escribe el concepto del gasto.");
       if (payload.amount <= 0) return showToast("El monto debe ser mayor que 0.");
+      if (payload.recordType === "worker_payment") {
+        const gross = payload.workerPaymentItems.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        const deductions = payload.federalWithholding + payload.socialSecurity + payload.medicare + payload.otherDeduction;
+        if (deductions > gross) return showToast("Las deducciones no pueden superar el pago bruto.");
+        payload.grossPayment = Number(gross.toFixed(2));
+        payload.totalDeductions = Number(deductions.toFixed(2));
+        payload.amount = Number(Math.max(gross - deductions, 0).toFixed(2));
+        const existing = state.editingExpenseId ? state.expenses.find(item => item.id === state.editingExpenseId) : null;
+        payload.receiptNumber = existing?.receiptNumber || workerPaymentReceiptNumber();
+        if (!options.reviewed) {
+          const preview = buildWorkerPaymentReceiptPdf({ id:state.editingExpenseId || "draft", ...payload });
+          $("workerPaymentReviewTo").value = payload.workerEmail;
+          $("workerPaymentReviewSubject").value = payload.documentLanguage === "es" ? `Recibo de pago ${payload.receiptNumber}` : `Worker payment receipt ${payload.receiptNumber}`;
+          $("workerPaymentReviewMessage").value = payload.documentLanguage === "es" ? `Hola ${payload.workerName}, adjuntamos tu recibo de pago.` : `Hello ${payload.workerName}, attached is your worker payment receipt.`;
+          $("confirmWorkerPaymentBtn").textContent = payload.workerEmail ? (payload.documentLanguage === "es" ? "Registrar y enviar" : "Record and send") : (payload.documentLanguage === "es" ? "Registrar sin correo" : "Record without email");
+          $("workerPaymentReviewPdf").src = preview.output("datauristring");
+          openModal("workerPaymentReviewModal");
+          return;
+        }
+      }
 
       try {
         let savedExpenseId = state.editingExpenseId || "";
@@ -252,7 +306,16 @@
           showToast("Gasto guardado.");
         }
         await postAccountingSource("expense", savedExpenseId);
+        if (payload.recordType === "worker_payment" && payload.workerEmail) {
+          try {
+            const pdf = buildWorkerPaymentReceiptPdf({ id:savedExpenseId, ...payload });
+            const pdfBase64 = pdf.output("datauristring").replace(/^data:application\/pdf;filename=[^;]*;base64,|^data:application\/pdf;base64,/, "");
+            await cloudFunctions.httpsCallable("sendSalesDocumentEmail")({ kind:"worker_payment", ownerId:state.accountOwnerId || state.uid, expenseId:savedExpenseId, pdfBase64, to:payload.workerEmail, subject:$("workerPaymentReviewSubject").value, message:$("workerPaymentReviewMessage").value });
+            showToast(`Pago guardado y recibo enviado a ${payload.workerEmail}.`);
+          } catch (emailError) { console.error(emailError); showToast("El pago quedó guardado, pero no se pudo enviar el correo. Puedes intentarlo nuevamente al editarlo."); }
+        } else if (payload.recordType === "worker_payment") showToast("Pago guardado sin correo; puedes descargar el PDF desde la tabla.");
         markModalSaved("expenseModal");
+        closeModal("workerPaymentReviewModal", true);
         closeModal("expenseModal", true);
       } catch (error) {
         console.error(error);
@@ -266,6 +329,7 @@
         category: cleanText($("recurringCategory").value),
         amount: Number($("recurringAmount").value || 0),
         dayOfMonth: Number($("recurringDay").value || 1),
+        paymentMethod: cleanText($("recurringPaymentMethod").value) || "Efectivo",
         notes: cleanText($("recurringNotes").value),
         active: !!$("recurringActive").checked,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -390,10 +454,16 @@
       }
     }
     async function ensureRecurringExpensesForCurrentMonth() {
+      if (!canWriteData("gastos")) return;
       const month = currentMonthKey();
       const actives = state.recurringExpenses.filter(item => item.active);
+      const now = new Date();
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const currentDay = now.getDate();
 
       for (const recurring of actives) {
+        const dueDay = Math.min(Math.max(Number(recurring.dayOfMonth || 1), 1), lastDay);
+        if (currentDay < dueDay) continue;
         const docId = `rec-${recurring.id}-${month}`;
         const targetDoc = expensesRef().doc(docId);
         const snapshot = await targetDoc.get();
@@ -405,6 +475,7 @@
             amount: Number(recurring.amount || 0),
             date: getMonthDate(recurring.dayOfMonth),
             notes: recurring.notes ? `${recurring.notes} · Generado automáticamente` : "Generado automáticamente",
+            paymentMethod: recurring.paymentMethod || "Efectivo",
             recurringId: recurring.id,
             generatedMonth: month,
             autoGenerated: true,
@@ -434,9 +505,21 @@
       $("expenseNotes").value = item.notes || "";
       $("expenseRecordType").value = item.recordType === "worker_payment" ? "worker_payment" : "expense";
       $("expenseWorkerName").value = item.workerName || "";
+      $("expenseWorkerId").value = item.workerId || "";
+      $("expenseWorkerEmail").value = item.workerEmail || "";
+      $("expenseWorkerPhone").value = item.workerPhone || "";
+      $("expenseWorkerAddress").value = item.workerAddress || "";
+      $("expenseWorkerType").value = item.workerType === "employee" ? "employee" : "contractor";
       $("expenseWorkerRole").value = item.workerRole || "";
+      $("expensePaymentReference").value = item.paymentReference || "";
       $("expensePeriodFrom").value = item.periodFrom || "";
       $("expensePeriodTo").value = item.periodTo || "";
+      $("expenseWorkerLanguage").value = item.documentLanguage === "es" ? "es" : "en";
+      $("expenseFederalWithholding").value = Number(item.federalWithholding || 0) || "";
+      $("expenseSocialSecurity").value = Number(item.socialSecurity || 0) || "";
+      $("expenseMedicare").value = Number(item.medicare || 0) || "";
+      $("expenseOtherDeduction").value = Number(item.otherDeduction || 0) || "";
+      $("expenseBackupWithholding").checked = !!item.backupWithholding;
       $("expensePaymentMethod").value = item.paymentMethod || "Efectivo";
       $("expenseApplyToAdvance").checked = item.recordType === "worker_payment" && item.applyToAdvance !== false;
       setWorkerPaymentLines(item.workerPaymentItems || []);
@@ -455,6 +538,7 @@
       $("recurringCategory").value = item.category || "Operación";
       $("recurringAmount").value = item.amount ?? "";
       $("recurringDay").value = item.dayOfMonth ?? 1;
+      $("recurringPaymentMethod").value = item.paymentMethod || "Efectivo";
       $("recurringNotes").value = item.notes || "";
       $("recurringActive").checked = !!item.active;
       openModal("recurringModal");
@@ -471,7 +555,11 @@
           <td>${money(expense.amount)}</td>
           <td>${safe(formatDate(expense.date))}</td>
           <td><small>${safe(job ? getJobDisplayLabel(job) : "-")}</small></td>
-          <td>${(Array.isArray(expense.photos) ? expense.photos.length : 0)}</td>
+          <td>${(() => {
+            const photos = Array.isArray(expense.photos) ? expense.photos.filter(photo => /^https:\/\//i.test(String(photo?.url || ""))) : [];
+            if (!photos.length) return "0";
+            return `<details><summary class="link-button">Ver (${photos.length})</summary><div class="stack mt-8">${photos.map((photo, index) => `<a href="${safe(photo.url)}" target="_blank" rel="noopener noreferrer">${safe(photo.fileName || `Comprobante ${index + 1}`)}</a>`).join("")}</div></details>`;
+          })()}</td>
           <td><small>${safe(expense.notes || "-")}</small></td>
           <td>
             <div class="actions-row">
@@ -488,11 +576,13 @@
     }
     $("expenseRecordType")?.addEventListener("change", toggleWorkerPaymentFields);
     $("addWorkerPaymentLineBtn")?.addEventListener("click", () => {
+      if (document.querySelectorAll(".worker-payment-line").length >= 4) return showToast("El recibo permite un máximo de cuatro conceptos por pago.");
       $("workerPaymentLines")?.appendChild(createWorkerPaymentLine({}));
       recalcWorkerPaymentLines();
     });
     $("workerPaymentLines")?.addEventListener("input", recalcWorkerPaymentLines);
     $("workerPaymentLines")?.addEventListener("change", recalcWorkerPaymentLines);
+    ["expenseFederalWithholding","expenseSocialSecurity","expenseMedicare","expenseOtherDeduction"].forEach(id => $(id)?.addEventListener("input", recalcWorkerPaymentLines));
     $("workerPaymentLines")?.addEventListener("click", event => {
       const button = event.target.closest("[data-remove-worker-line]");
       if (!button) return;

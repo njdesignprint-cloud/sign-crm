@@ -623,6 +623,13 @@
     }
     .check-item input{transform:scale(1.15)}
 
+    #estimateConversionModal .check-item{
+      background:var(--card);
+      color:var(--text);
+      border-color:var(--line);
+      margin-bottom:8px;
+    }
+
     .calendar-wrap{padding:18px}
     .calendar-label{font-weight:800;font-size:18px}
 

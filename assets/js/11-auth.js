@@ -274,15 +274,11 @@
         await auth.signInWithEmailAndPassword(email, password);
       } catch (error) {
         console.error(error);
-        if (["auth/invalid-credential", "auth/invalid-login-credentials"].includes(error.code)) {
-          showToast("Correo o contraseña incorrectos, o la cuenta no existe.");
-        } else if (error.code === "auth/user-not-found") {
-          showToast("Ese usuario no existe. Primero pulsa Crear cuenta.");
-        } else if (error.code === "auth/wrong-password") {
-          showToast("La contraseña es incorrecta.");
-        } else {
-          showToast(error.message || "No se pudo iniciar sesión.");
+        if (error.code === "auth/multi-factor-auth-required" && typeof window.beginMfaSignIn === "function") {
+          await window.beginMfaSignIn(error);
+          return;
         }
+        showToast("No pudimos iniciar sesión. Revisa tus datos o recupera tu contraseña.");
       }
     }
     async function register() {
@@ -291,7 +287,9 @@
       const name = cleanText($("authFullName")?.value || "");
       const companyName = cleanText($("authCompanyName")?.value || "");
       if (!email || !password) return showToast("Escribe correo y contraseña.");
-      if (password.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres.");
+      if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+        return showToast("Usa al menos 10 caracteres, con mayúscula, minúscula y número.");
+      }
 
       const isSuper = SUPERADMIN_EMAILS.includes(normalizedEmail(email));
 
@@ -318,7 +316,15 @@
           console.error("No se pudo leer teamAccess después del registro:", innerError);
         }
 
-        const status = isSuper || isInvited ? "active" : "pending";
+        if (!isSuper && !isInvited) {
+          await user.delete();
+          sessionStorage.removeItem("register_name");
+          sessionStorage.removeItem("register_company");
+          showToast("La creación de cuentas requiere una invitación del propietario.");
+          return;
+        }
+
+        const status = "active";
         const appRole = isSuper ? "superadmin" : (isInvited ? "employee" : "owner");
 
         await db.collection("platformUsers").doc(user.uid).set({
@@ -343,7 +349,7 @@
           lastSeenAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        if (!isInvited) {
+        if (isSuper && !isInvited) {
           await db.collection("platformWorkspaces").doc(user.uid).set({
             ownerUid: user.uid,
             ownerEmail: normalizedEmail(email),
@@ -362,15 +368,13 @@
 
         showToast(isInvited
           ? "Cuenta creada y ligada al espacio compartido."
-          : "Cuenta creada. Quedó pendiente de activación en Cuentas CRM.");
+          : "Cuenta administrativa creada y activada.");
       } catch (error) {
         console.error(error);
-        if (error.code === "auth/email-already-in-use") {
-          showToast("Ese correo ya existe. Usa Entrar o Recuperar contraseña.");
-        } else if (error.code === "auth/operation-not-allowed") {
+        if (error.code === "auth/operation-not-allowed") {
           showToast("El acceso por correo no está disponible. Contacta al soporte de SignShop HQ.");
         } else {
-          showToast(error.message || "No se pudo crear la cuenta.");
+          showToast("No pudimos crear la cuenta. Verifica tu invitación o contacta al propietario.");
         }
       }
     }
@@ -380,10 +384,10 @@
 
       try {
         await auth.sendPasswordResetEmail(email);
-        showToast("Te envié un correo para restablecer la contraseña.");
+        showToast("Si el correo pertenece a una cuenta, recibirá instrucciones para restablecer la contraseña.");
       } catch (error) {
         console.error(error);
-        showToast(error.message || "No se pudo enviar el correo.");
+        showToast("Si el correo pertenece a una cuenta, recibirá instrucciones para restablecer la contraseña.");
       }
     }
     async function logout() {

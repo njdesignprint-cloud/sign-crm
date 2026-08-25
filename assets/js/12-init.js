@@ -62,6 +62,7 @@
     $("reviewJobCloseBtn")?.addEventListener("click", () => openJobCloseReview(state.editingJobId));
     $("confirmJobCloseBtn")?.addEventListener("click", confirmJobClose);
     $("saveExpenseBtn").addEventListener("click", () => withSaveButton("saveExpenseBtn", "Guardando gasto…", saveExpense));
+    $("confirmWorkerPaymentBtn")?.addEventListener("click", () => withSaveButton("confirmWorkerPaymentBtn", "Registrando y enviando…", () => saveExpense({ reviewed:true })));
     $("uploadDesignBtn").addEventListener("click", openDesignUploadWidget);
     $("uploadExpensePhotoBtn").addEventListener("click", openExpenseUploadWidget);
     $("galleryPrevBtn").addEventListener("click", galleryPrev);

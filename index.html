@@ -15,11 +15,12 @@
   <script src="app-check.js?v=20260823-1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 
   <script src="assets/js/00-theme.js?v=20260822-light-only-1"></script>
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260823-official-logo-1" />
-  <link rel="stylesheet" href="assets/css/theme.css?v=20260822-light-contrast-3" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260824-payment-ui-1" />
+  <link rel="stylesheet" href="assets/css/theme.css?v=20260824-mfa-dialog-1" />
   <!-- Próximo paso: aquí añadiremos el CSS del módulo Producción cuando te pase ese archivo. -->
   <style>
     .lang-switcher{
@@ -88,7 +89,7 @@
 
         <div class="auth-actions mt-16">
           <button id="btnLogin" class="btn btn-primary">Sign in</button>
-          <button id="btnRegister" class="btn btn-secondary">Create account</button>
+          <button id="btnRegister" class="btn btn-secondary">Accept invitation</button>
         </div>
 
         <button id="btnReset" class="btn btn-secondary auth-reset mt-12">Reset password</button>
@@ -101,7 +102,7 @@
           <strong id="authGuideTitle">New to SignShop HQ?</strong>
 
           <div id="authGuideCompany" class="section-note mt-10">
-            <strong>New company:</strong> complete your details and select <strong>Create account</strong>. We will let you know when access is approved.
+            <strong>Invited team member:</strong> complete your details and select <strong>Accept invitation</strong>.
           </div>
 
           <div id="authGuideEmployee" class="section-note mt-12">
@@ -1539,6 +1540,20 @@
           <div class="settings-layout">
             <div class="settings-form-stack">
               <section class="panel settings-panel">
+                <div class="panel-head"><div><h2>Seguridad de la cuenta · MFA</h2><div class="section-note">Protege tu acceso con un código enviado por SMS después de escribir la contraseña.</div></div><span id="mfaStatus" class="pill st-pendiente">Sin configurar</span></div>
+                <div class="settings-fields">
+                  <div id="mfaEnrollmentForm" class="grid-2">
+                    <div id="mfaEmailVerificationWrap" class="field-label hidden"><span>Antes de activar MFA</span><button id="mfaVerifyEmailBtn" class="btn btn-secondary" type="button">Enviar correo de verificación</button></div>
+                    <label class="field-label">Teléfono con código de país<input id="mfaPhoneNumber" class="input" type="tel" autocomplete="tel" placeholder="+1 346 000 0000" /></label>
+                    <div class="field-label"><span>Primer paso</span><button id="mfaSendCodeBtn" class="btn btn-secondary" type="button">Enviar código</button></div>
+                    <label id="mfaCodeField" class="field-label hidden">Código recibido<input id="mfaEnrollmentCode" class="input" inputmode="numeric" autocomplete="one-time-code" maxlength="8" /></label>
+                    <div id="mfaConfirmWrap" class="field-label hidden"><span>Segundo paso</span><button id="mfaConfirmCodeBtn" class="btn btn-primary" type="button">Confirmar y activar MFA</button></div>
+                  </div>
+                  <div id="mfaEnrollmentNote" class="permission-note">El teléfono se registra directamente con Firebase Authentication. No se guarda en los documentos del CRM.</div>
+                  <div id="mfaRecaptcha"></div>
+                </div>
+              </section>
+              <section class="panel settings-panel">
                 <div class="panel-head"><div><h2>Stripe Connect · Pagos</h2><div class="section-note">Cada negocio conecta su propia cuenta y recibe directamente los pagos de sus clientes.</div></div><span id="stripeStatus" class="pill st-pendiente">No conectado</span></div>
                 <div class="settings-fields">
                   <div class="permission-note" id="stripeEnvironmentNote">Test environment: no real money moves. Stripe collects and protects banking and tax information; SignShop HQ does not store it.</div>
@@ -1907,6 +1922,9 @@
           <label class="field-label">Default commission base<select id="salespersonCommissionBase" class="select"><option value="collected">Customer payments actually collected</option><option value="subtotal">Sale subtotal before tax</option><option value="gross_profit">Gross profit</option></select></label>
           <label class="field-label">Payment schedule<select id="salespersonPaymentSchedule" class="select"><option value="monthly">Monthly</option><option value="biweekly">Every two weeks</option><option value="per_job">After each eligible job</option></select></label>
           <label class="field-label">Status<select id="salespersonStatus" class="select"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+          <label class="field-label">Document language<select id="salespersonDocumentLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select></label>
+          <label class="field-label">Salesperson ID<input id="salespersonExternalId" class="input" /></label>
+          <label class="field-label">Department / territory<input id="salespersonTerritory" class="input" /></label>
         </div>
         <textarea id="salespersonNotes" class="textarea mt-12" placeholder="Internal notes (do not enter SSN or sensitive tax IDs)"></textarea>
       </div>
@@ -1916,23 +1934,45 @@
 
   <div class="modal-backdrop" id="commissionSettlementModal">
     <div class="modal modal-wide">
-      <div class="modal-head"><h3 id="commissionSettlementTitle">New commission settlement</h3><button class="btn btn-secondary btn-small" data-close="commissionSettlementModal">Close</button></div>
+      <div class="modal-head"><h3 id="commissionSettlementTitle">Nueva liquidación de comisión</h3><button class="btn btn-secondary btn-small" data-close="commissionSettlementModal">Cerrar</button></div>
       <div class="modal-body">
         <input id="commissionSettlementSalespersonId" type="hidden" />
         <div class="grid-3">
-          <label class="field-label">Payment date<input id="commissionSettlementDate" class="input" type="date" /></label>
-          <label class="field-label">Period from<input id="commissionSettlementFrom" class="input" type="date" /></label>
-          <label class="field-label">Period to<input id="commissionSettlementTo" class="input" type="date" /></label>
-          <label class="field-label">Payment method<select id="commissionSettlementMethod" class="select"><option value="check">Check</option><option value="ach">ACH / bank transfer</option><option value="cash">Cash</option><option value="zelle">Zelle</option><option value="other">Other</option></select></label>
-          <label class="field-label grid-span-2">Reference / confirmation<input id="commissionSettlementReference" class="input" /></label>
+          <label class="field-label">Fecha del pago<input id="commissionSettlementDate" class="input" type="date" /></label>
+          <label class="field-label">Período desde<input id="commissionSettlementFrom" class="input" type="date" /></label>
+          <label class="field-label">Período hasta<input id="commissionSettlementTo" class="input" type="date" /></label>
+          <label class="field-label">Método de pago<select id="commissionSettlementMethod" class="select"><option value="check">Cheque</option><option value="ach">ACH / transferencia bancaria</option><option value="cash">Efectivo</option><option value="zelle">Zelle</option><option value="other">Otro</option></select></label>
+          <label class="field-label grid-span-2">Referencia / confirmación<input id="commissionSettlementReference" class="input" /></label>
         </div>
-        <div class="section-note mt-12">Only unpaid earned commission is available. Previously settled amounts are automatically deducted. The period dates label the statement; the list includes every currently outstanding job.</div>
-        <div class="table-wrap mt-12"><table><thead><tr><th>Include</th><th>Job / client</th><th>Rate</th><th>Earned</th><th>Previously paid</th><th>Available</th></tr></thead><tbody id="commissionSettlementLines"></tbody></table></div>
-        <div id="commissionSettlementNoLines" class="empty hidden">This salesperson has no unpaid earned commissions.</div>
-        <textarea id="commissionSettlementNotes" class="textarea mt-12" placeholder="Payment notes"></textarea>
-        <div class="summary-box"><div><span>Selected jobs</span><strong id="commissionSettlementSelectedCount">0</strong></div><div><span>Settlement total</span><strong id="commissionSettlementTotal">$0.00</strong></div></div>
+        <div class="grid-3 mt-12">
+          <label class="field-label">Estado<select id="commissionSettlementStatus" class="select"><option value="paid">Pagado</option><option value="pending">Pendiente</option></select></label>
+          <label class="field-label">Bonificaciones<input id="commissionSettlementBonuses" class="input" type="number" step="0.01" value="0" /></label>
+          <label class="field-label">Contracargos<input id="commissionSettlementChargebacks" class="input" type="number" step="0.01" value="0" /></label>
+          <label class="field-label">Otras deducciones<input id="commissionSettlementDeductions" class="input" type="number" step="0.01" value="0" /></label>
+          <label class="field-label">Saldo anterior<input id="commissionSettlementPriorBalance" class="input" type="number" step="0.01" value="0" /></label>
+          <label class="field-label">Preparado por<input id="commissionSettlementPreparedBy" class="input" /></label>
+          <label class="field-label">Aprobado por<input id="commissionSettlementApprovedBy" class="input" /></label>
+        </div>
+        <div class="section-note mt-12">Se muestran trabajos creados dentro del período con comisión ganada y pendiente. Los pagos liquidados anteriormente se descuentan automáticamente.</div>
+        <div class="table-wrap mt-12"><table><thead><tr><th>Incluir</th><th>Trabajo / cliente</th><th>Total del trabajo</th><th>Base elegible</th><th>Cálculo de comisión</th><th>Pagado anteriormente</th><th>Disponible</th></tr></thead><tbody id="commissionSettlementLines"></tbody></table></div>
+        <div id="commissionSettlementNoLines" class="empty hidden">Este vendedor no tiene comisiones pendientes dentro del período.</div>
+        <textarea id="commissionSettlementNotes" class="textarea mt-12" placeholder="Notas del pago"></textarea>
+        <div class="grid-3 mt-12">
+          <label class="field-label">Ajuste 1 / motivo<input id="commissionAdjustment1Reason" class="input" /></label><label class="field-label">Importe<input id="commissionAdjustment1Amount" class="input" type="number" step="0.01" value="0" /></label><label class="field-label">Fecha efectiva<input id="commissionAdjustment1Date" class="input" type="date" /></label>
+          <label class="field-label">Ajuste 2 / motivo<input id="commissionAdjustment2Reason" class="input" /></label><label class="field-label">Importe<input id="commissionAdjustment2Amount" class="input" type="number" step="0.01" value="0" /></label><label class="field-label">Fecha efectiva<input id="commissionAdjustment2Date" class="input" type="date" /></label>
+          <label class="field-label">Ajuste 3 / motivo<input id="commissionAdjustment3Reason" class="input" /></label><label class="field-label">Importe<input id="commissionAdjustment3Amount" class="input" type="number" step="0.01" value="0" /></label><label class="field-label">Fecha efectiva<input id="commissionAdjustment3Date" class="input" type="date" /></label>
+        </div>
+        <div class="summary-box"><div><span>Trabajos seleccionados</span><strong id="commissionSettlementSelectedCount">0</strong></div><div><span>Total de liquidación</span><strong id="commissionSettlementTotal">$0.00</strong></div></div>
       </div>
-      <div class="modal-foot"><button class="btn btn-secondary" data-close="commissionSettlementModal">Cancel</button><button id="saveCommissionSettlementBtn" class="btn btn-primary">Record payment</button></div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="commissionSettlementModal">Cancelar</button><button id="saveCommissionSettlementBtn" class="btn btn-primary">Revisar PDF y correo</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="commissionSettlementReviewModal">
+    <div class="modal modal-wide">
+      <div class="modal-head"><h3>Revisar liquidación antes de registrar</h3><button class="btn btn-secondary btn-small" data-close="commissionSettlementReviewModal">Cerrar</button></div>
+      <div class="modal-body"><div class="grid-2"><label class="field-label">Enviar a<input id="commissionReviewTo" class="input" type="email" /></label><label class="field-label">Idioma<select id="commissionReviewLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select></label><label class="field-label grid-span-2">Asunto<input id="commissionReviewSubject" class="input" /></label></div><textarea id="commissionReviewMessage" class="textarea mt-12" placeholder="Mensaje del correo"></textarea><iframe id="commissionReviewPdf" title="Vista previa del PDF" style="width:100%;height:620px;border:1px solid #dbe3ec;border-radius:10px;margin-top:12px"></iframe></div>
+      <div class="modal-foot"><button id="commissionReviewBackBtn" class="btn btn-secondary">Volver y editar</button><button id="commissionSaveOnlyBtn" class="btn btn-info">Registrar sin enviar</button><button id="commissionSaveSendBtn" class="btn btn-primary">Registrar y enviar</button></div>
     </div>
   </div>
 
@@ -2370,15 +2410,22 @@
           <input id="expenseAmount" type="number" min="0" step="0.01" class="input" placeholder="Monto" />
           <input id="expenseDate" type="date" class="input" />
           <select id="expenseJobId" class="select"></select>
+          <select id="expensePaymentMethod" class="select" aria-label="Método de pago">
+            <option>Efectivo</option><option>Zelle</option><option>Cheque</option><option>Transferencia</option><option>Tarjeta de crédito</option><option>Tarjeta de débito</option><option>Otro</option>
+          </select>
         </div>
         <div id="workerPaymentFields" class="grid-2 mt-12 hidden">
-          <input id="expenseWorkerName" class="input" placeholder="Nombre del trabajador" />
+          <input id="expenseWorkerName" class="input" placeholder="Nombre completo del trabajador" />
+          <input id="expenseWorkerId" class="input" placeholder="ID del trabajador (no SSN)" />
+          <input id="expenseWorkerEmail" type="email" class="input" placeholder="Correo del trabajador" />
+          <input id="expenseWorkerPhone" class="input" placeholder="Teléfono del trabajador" />
+          <input id="expenseWorkerAddress" class="input" placeholder="Dirección del trabajador" />
+          <select id="expenseWorkerType" class="select"><option value="contractor">Contratista</option><option value="employee">Empleado</option></select>
           <input id="expenseWorkerRole" class="input" placeholder="Labor realizada" />
+          <input id="expensePaymentReference" class="input" placeholder="Referencia de cheque / transacción" />
           <label class="field-label">Período desde<input id="expensePeriodFrom" type="date" class="input" /></label>
           <label class="field-label">Período hasta<input id="expensePeriodTo" type="date" class="input" /></label>
-          <select id="expensePaymentMethod" class="select">
-            <option>Efectivo</option><option>Zelle</option><option>Cheque</option><option>Transferencia</option><option>Otro</option>
-          </select>
+          <label class="field-label">Idioma del recibo<select id="expenseWorkerLanguage" class="select"><option value="en">English</option><option value="es">Español</option></select></label>
           <label class="advance-check"><input id="expenseApplyToAdvance" type="checkbox" checked /> Descontar del anticipo disponible</label>
           <div class="section-note">Este pago reduce la ganancia del trabajo y, si está marcado, el anticipo disponible; nunca cambia lo cobrado ni el saldo del cliente.</div>
           <div style="grid-column:1/-1" class="box">
@@ -2387,7 +2434,18 @@
               <button id="addWorkerPaymentLineBtn" type="button" class="btn btn-info btn-small">+ Agregar concepto</button>
             </div>
             <div id="workerPaymentLines" class="stack mt-12"></div>
-            <div class="section-note mt-12">Total desglosado: <strong id="workerPaymentLinesTotal">$0.00</strong></div>
+            <div class="section-note mt-12">Pago bruto: <strong id="workerPaymentLinesTotal">$0.00</strong></div>
+          </div>
+          <div style="grid-column:1/-1" class="box">
+            <strong>Deducciones de nómina (si corresponde)</strong>
+            <div class="grid-4 mt-12">
+              <input id="expenseFederalWithholding" type="number" min="0" step="0.01" class="input" placeholder="Retención federal" />
+              <input id="expenseSocialSecurity" type="number" min="0" step="0.01" class="input" placeholder="Seguro Social" />
+              <input id="expenseMedicare" type="number" min="0" step="0.01" class="input" placeholder="Medicare" />
+              <input id="expenseOtherDeduction" type="number" min="0" step="0.01" class="input" placeholder="Otra deducción autorizada" />
+            </div>
+            <label class="advance-check mt-12"><input id="expenseBackupWithholding" type="checkbox" /> Se aplicó retención de respaldo al contratista, si correspondía</label>
+            <div class="section-note mt-12">Total deducciones: <strong id="workerPaymentDeductionsTotal">$0.00</strong> · Pago neto: <strong id="workerPaymentNetTotal">$0.00</strong></div>
           </div>
         </div>
         <textarea id="expenseNotes" class="textarea mt-12" placeholder="Notas del gasto"></textarea>
@@ -2407,6 +2465,14 @@
         <button class="btn btn-secondary" data-close="expenseModal">Cancelar</button>
         <button id="saveExpenseBtn" class="btn btn-primary">Guardar gasto</button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="workerPaymentReviewModal">
+    <div class="modal modal-wide">
+      <div class="modal-head"><h3>Revisar pago al trabajador</h3><button class="btn btn-secondary btn-small" data-close="workerPaymentReviewModal">Cerrar</button></div>
+      <div class="modal-body"><div class="grid-2"><label class="field-label">Enviar a<input id="workerPaymentReviewTo" type="email" class="input" /></label><label class="field-label">Asunto<input id="workerPaymentReviewSubject" class="input" /></label></div><textarea id="workerPaymentReviewMessage" class="textarea mt-12" placeholder="Mensaje del correo"></textarea><iframe id="workerPaymentReviewPdf" title="Vista previa del recibo de pago" style="width:100%;height:620px;border:1px solid #dbe3ec;border-radius:10px;margin-top:12px"></iframe></div>
+      <div class="modal-foot"><button class="btn btn-secondary" data-close="workerPaymentReviewModal">Volver</button><button id="confirmWorkerPaymentBtn" class="btn btn-primary">Registrar y enviar</button></div>
     </div>
   </div>
 
@@ -2431,6 +2497,9 @@
           </select>
           <input id="recurringAmount" type="number" min="0" step="0.01" class="input" placeholder="Monto" />
           <input id="recurringDay" type="number" min="1" max="31" class="input" placeholder="Día del mes" />
+          <select id="recurringPaymentMethod" class="select" aria-label="Método de pago">
+            <option>Efectivo</option><option>Zelle</option><option>Cheque</option><option>Transferencia</option><option>Tarjeta de crédito</option><option>Tarjeta de débito</option><option>Otro</option>
+          </select>
         </div>
         <textarea id="recurringNotes" class="textarea mt-12" placeholder="Notas"></textarea>
         <div class="mt-12">
@@ -2848,6 +2917,23 @@
     </div>
   </div>
 
+  <div id="authMfaModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal auth-mfa-dialog" role="dialog" aria-modal="true" aria-labelledby="authMfaTitle" aria-describedby="authMfaDescription">
+      <button class="auth-mfa-close" type="button" data-close="authMfaModal" aria-label="Cerrar">&times;</button>
+      <div class="auth-mfa-icon" aria-hidden="true"><span></span></div>
+      <div class="auth-mfa-content">
+        <div class="auth-mfa-kicker">ACCESO SEGURO</div>
+        <h2 id="authMfaTitle">Verificación en dos pasos</h2>
+        <p id="authMfaDescription">Enviamos un código de seguridad a tu teléfono. Escríbelo para confirmar que eres tú.</p>
+        <label class="auth-mfa-label" for="authMfaCode">Código de verificación</label>
+        <input id="authMfaCode" class="input auth-mfa-code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="8" placeholder="000000" aria-label="Código de verificación" />
+        <div class="auth-mfa-hint">El código puede tardar unos segundos en llegar.</div>
+        <div id="authMfaRecaptcha"></div>
+        <button id="authMfaConfirmBtn" class="btn btn-primary auth-mfa-submit" type="button">Verificar y entrar</button>
+      </div>
+    </div>
+  </div>
+
 <div id="toast" class="toast"></div>
 
   <script src="assets/js/00-job-save-utils.js?v=20260728-2"></script>
@@ -2861,7 +2947,7 @@
   <script src="assets/js/01-core.js?v=20260822-language-choice-1"></script>
   <script src="assets/js/02-clients.js?v=20260808-2"></script>
   <script src="assets/js/02-prospects.js?v=20260730-12"></script>
-  <script src="assets/js/22-salespeople.js?v=20260809-3"></script>
+  <script src="assets/js/22-salespeople.js?v=20260824-statement-fit-1"></script>
   <script src="assets/js/23-company-settings.js?v=20260809-1"></script>
     <script src="assets/js/28-quickbooks.js?v=20260815-2"></script>
     <script src="assets/js/29-accounting.js?v=20260817-clean-start-2"></script>
@@ -2869,6 +2955,7 @@
     <script async src="https://cdn.plaid.com/link/v2/stable/link-initialize.js" onload="window.dispatchEvent(new Event('plaid-sdk-ready'))"></script>
     <script src="assets/js/31-plaid.js?v=20260823-sync-fix-1"></script>
     <script src="assets/js/33-bank-feed.js?v=20260823-sync-fix-1"></script>
+  <script src="assets/js/34-mfa.js?v=20260824-mfa-5"></script>
     <script src="assets/js/32-stripe.js?v=20260817-platform-1"></script>
   <script src="assets/js/24-trash.js?v=20260816-sales-doc-trash-1"></script>
   <script src="assets/js/26-audit-log.js?v=20260728-1"></script>
@@ -2882,13 +2969,13 @@
     <script src="assets/js/08-providers-compras.js?v=20260815-4"></script>
   <script src="assets/js/09-users.js?v=20260809-2"></script>
   <script src="assets/js/10-backup-misc.js?v=20260808-2"></script>
-  <script src="assets/js/11-auth.js?v=20260823-sync-fix-1"></script>
+  <script src="assets/js/11-auth.js?v=20260824-security-1"></script>
     <script src="assets/js/12-init.js?v=20260815-2"></script>
   <script src="assets/js/13-production.js?v=20260728-2"></script>
   <script src="assets/js/15-weekly-settlements.js?v=20260809-1"></script>
   <script src="assets/js/16-advance-control.js?v=20260809-1"></script>
   <script src="assets/js/17-advance-visual.js?v=20260730-3"></script>
-  <script src="assets/js/18-i18n.js?v=20260822-language-choice-1"></script>
+  <script src="assets/js/18-i18n.js?v=20260824-security-1"></script>
   <script src="assets/js/25-i18n-complete.js?v=20260822-language-choice-1"></script>
   <script src="assets/js/19-job-workflow.js?v=20260730-8"></script>
   <script src="assets/js/20-operations-alerts.js?v=20260728-2"></script>

@@ -3,6 +3,9 @@
       subtotal: "sale subtotal before sales tax",
       gross_profit: "gross profit (sale subtotal less documented direct job costs)"
     };
+    let commissionSettlementRequestId = "";
+    let commissionSettlementReview = null;
+    let commissionSettlementPreviewUrl = "";
 
     function salespersonText(en, es) { return state.language === "es" ? es : en; }
     function commissionBaseLabel(key = "collected") {
@@ -113,7 +116,7 @@
     }
     function getJobCommissionBreakdown(job = {}) {
       const client = state.clients.find(item => item.id === job.clientId) || {};
-      const terms = job.commission?.salespersonId ? job.commission : {
+      const terms = Object.hasOwn(job, "commission") ? (job.commission || {}) : {
         salespersonId: client.salespersonId || "", salespersonName: client.salespersonNameSnapshot || "",
         percent: client.commissionPercent || 0, base: client.commissionBase || "collected"
       };
@@ -155,14 +158,25 @@
       const monthStart = `${today().slice(0, 7)}-01`;
       $("commissionSettlementFrom").value = monthStart; $("commissionSettlementTo").value = today();
       $("commissionSettlementMethod").value = "check"; $("commissionSettlementReference").value = ""; $("commissionSettlementNotes").value = "";
+      $("commissionSettlementStatus").value = "paid";
+      ["commissionSettlementBonuses","commissionSettlementChargebacks","commissionSettlementDeductions","commissionSettlementPriorBalance","commissionAdjustment1Amount","commissionAdjustment2Amount","commissionAdjustment3Amount"].forEach(field => $(field).value = "0");
+      [1,2,3].forEach(index => { $(`commissionAdjustment${index}Reason`).value = ""; $(`commissionAdjustment${index}Date`).value = ""; });
+      $("commissionSettlementPreparedBy").value = COMPANY.representativeName || COMPANY.legalName || COMPANY.name || state.userEmail || ""; $("commissionSettlementApprovedBy").value = "";
+      commissionSettlementRequestId = (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`).replace(/[^A-Za-z0-9-]/g, "");
       renderCommissionSettlementLines(); openModal("commissionSettlementModal");
     }
     function renderCommissionSettlementLines() {
       const salespersonId = $("commissionSettlementSalespersonId")?.value || "";
-      const lines = state.jobs.map(job => ({ job, calc: getJobCommissionBreakdown(job) })).filter(item => item.calc.salespersonId === salespersonId && item.calc.available > 0.005);
+      const periodFrom = $("commissionSettlementFrom")?.value || "";
+      const periodTo = $("commissionSettlementTo")?.value || "";
+      const lines = state.jobs.map(job => ({ job, calc: getJobCommissionBreakdown(job) })).filter(item => {
+        const jobDate = cleanText(item.job.date);
+        const inPeriod = (!periodFrom || jobDate >= periodFrom) && (!periodTo || jobDate <= periodTo);
+        return inPeriod && item.calc.salespersonId === salespersonId && item.calc.available > 0.005;
+      });
       $("commissionSettlementLines").innerHTML = lines.map(({ job, calc }) => {
         const client = getClientById(job.clientId);
-        return `<tr><td><input type="checkbox" data-commission-line="${safe(job.id)}" data-commission-amount="${calc.available.toFixed(2)}" checked /></td><td><strong>${safe(job.title || salespersonText("Job", "Trabajo"))}</strong><br><small>${safe(clientLabel(client))}</small></td><td>${calc.rate.toFixed(2)}%<br><small>${safe(commissionBaseLabel(calc.baseType))}</small></td><td>${money(calc.earned)}</td><td>${money(calc.previouslyPaid)}</td><td><strong>${money(calc.available)}</strong>${calc.overpaid ? `<br><small class="danger-text">${salespersonText("Overpaid", "Pagado de más")} ${money(calc.overpaid)}</small>` : ""}</td></tr>`;
+        return `<tr><td><input type="checkbox" data-commission-line="${safe(job.id)}" data-commission-amount="${calc.available.toFixed(2)}" checked /></td><td><strong>${safe(job.title || salespersonText("Job", "Trabajo"))}</strong><br><small>${safe(clientLabel(client))}</small></td><td><strong>${money(job.sale || 0)}</strong><br><small>${salespersonText("Job total", "Total registrado")}</small></td><td><strong>${money(calc.projectedBase)}</strong><br><small>${safe(commissionBaseLabel(calc.baseType))}</small></td><td><strong>${money(calc.projectedBase)} × ${calc.rate.toFixed(2)}% = ${money(calc.projected)}</strong><br><small>${salespersonText("Earned to date", "Ganada hasta hoy")}: ${money(calc.earned)}</small></td><td>${money(calc.previouslyPaid)}</td><td><strong>${money(calc.available)}</strong>${calc.overpaid ? `<br><small class="danger-text">${salespersonText("Overpaid", "Pagado de más")} ${money(calc.overpaid)}</small>` : ""}</td></tr>`;
       }).join("");
       $("commissionSettlementNoLines").classList.toggle("hidden", lines.length > 0);
       document.querySelectorAll("[data-commission-line]").forEach(input => input.addEventListener("change", updateCommissionSettlementTotal));
@@ -173,7 +187,14 @@
       const total = checked.reduce((sum, input) => sum + Number(input.dataset.commissionAmount || 0), 0);
       $("commissionSettlementSelectedCount").textContent = String(checked.length); $("commissionSettlementTotal").textContent = money(total);
     }
+    function commissionSettlementDocumentId(salespersonId, lineItems) {
+      const source = `${salespersonId}|${lineItems.map(line => `${line.jobId}:${line.earnedAtSettlement}:${line.previouslyPaid}:${line.amount}`).sort().join("|")}`;
+      let hash = 2166136261;
+      for (let index = 0; index < source.length; index += 1) { hash ^= source.charCodeAt(index); hash = Math.imul(hash, 16777619); }
+      return `commission-${(hash >>> 0).toString(16)}-${lineItems.length}`;
+    }
     async function saveCommissionSettlement() {
+      return prepareCommissionSettlementReview();
       if (!guardWrite("record commission payments", "vendedores")) return;
       const salespersonId = $("commissionSettlementSalespersonId").value;
       const person = state.salespeople.find(item => item.id === salespersonId);
@@ -190,10 +211,25 @@
       if (total <= 0) return showToast("There is no outstanding commission to pay.");
       const button = $("saveCommissionSettlementBtn"); button.disabled = true;
       try {
-        const settlement = await commissionSettlementsRef().add({ salespersonId, salespersonName: person.name, paymentDate: $("commissionSettlementDate").value || today(), periodFrom, periodTo, method: $("commissionSettlementMethod").value || "other", reference: cleanText($("commissionSettlementReference").value), notes: cleanText($("commissionSettlementNotes").value), status: "paid", lineItems, total: Number(total.toFixed(2)), recordedBy: state.userEmail || "", createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        const settlementId = commissionSettlementDocumentId(salespersonId, lineItems);
+        const settlement = commissionSettlementsRef().doc(settlementId);
+        const payload = { salespersonId, salespersonName: person.name, paymentDate: $("commissionSettlementDate").value || today(), periodFrom, periodTo, method: $("commissionSettlementMethod").value || "other", reference: cleanText($("commissionSettlementReference").value), notes: cleanText($("commissionSettlementNotes").value), status: "paid", lineItems, total: Number(total.toFixed(2)), requestId:commissionSettlementRequestId, recordedBy: state.userEmail || "", createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        await firebase.firestore().runTransaction(async transaction => {
+          const existing = await transaction.get(settlement);
+          if (existing.exists) throw new Error("duplicate-commission-settlement");
+          transaction.set(settlement, payload);
+        });
         await postAccountingSource("commission", settlement.id);
-        closeModal("commissionSettlementModal"); showToast("Commission payment recorded.");
-      } catch (error) { console.error(error); showToast("The commission payment could not be recorded."); }
+        let emailMessage = "";
+        try {
+          const pdf = buildCommissionSettlementPdf({ id:settlement.id, ...payload });
+          if (typeof addPdfFooter === "function") addPdfFooter(pdf, "customer");
+          const pdfBase64 = pdf.output("datauristring").replace(/^data:application\/pdf;filename=[^;]*;base64,|^data:application\/pdf;base64,/, "");
+          const result = (await cloudFunctions.httpsCallable("sendSalesDocumentEmail")({ kind:"commission_settlement", ownerId:state.accountOwnerId || state.uid, settlementId:settlement.id, pdfBase64 })).data || {};
+          emailMessage = result.sent ? ` Correo enviado a ${result.recipient}.` : " El vendedor no tiene un correo válido; el pago quedó guardado sin enviar correo.";
+        } catch (emailError) { console.error(emailError); emailMessage = " El pago quedó guardado, pero no se pudo enviar el correo."; }
+        closeModal("commissionSettlementModal"); showToast(`Pago de comisión registrado.${emailMessage}`);
+      } catch (error) { console.error(error); showToast(error?.message === "duplicate-commission-settlement" ? "Esta comisión ya fue liquidada. Actualiza la lista antes de continuar." : "No se pudo registrar el pago de comisión."); }
       finally { button.disabled = false; }
     }
     async function voidCommissionSettlement(id) {
@@ -230,6 +266,8 @@
       $("salespersonCommissionBase").value = "collected";
       $("salespersonPaymentSchedule").value = "monthly";
       $("salespersonStatus").value = "active";
+      $("salespersonDocumentLanguage").value = state.language === "es" ? "es" : "en";
+      $("salespersonExternalId").value = ""; $("salespersonTerritory").value = "";
     }
     async function saveSalesperson() {
       if (!guardWrite("save salespeople", "vendedores")) return;
@@ -240,6 +278,8 @@
         address: cleanText($("salespersonAddress").value), commissionPercent: Math.max(0, Math.min(100, percent)),
         commissionBase: cleanText($("salespersonCommissionBase").value) || "collected",
         paymentSchedule: cleanText($("salespersonPaymentSchedule").value) || "monthly",
+        documentLanguage: $("salespersonDocumentLanguage").value === "es" ? "es" : "en",
+        externalId: cleanText($("salespersonExternalId").value), territory: cleanText($("salespersonTerritory").value),
         status: $("salespersonStatus").value === "inactive" ? "inactive" : "active",
         notes: cleanText($("salespersonNotes").value), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
@@ -258,6 +298,8 @@
       $("salespersonAddress").value = item.address || ""; $("salespersonCommissionPercent").value = Number(item.commissionPercent || 0);
       $("salespersonCommissionBase").value = item.commissionBase || "collected"; $("salespersonPaymentSchedule").value = item.paymentSchedule || "monthly";
       $("salespersonStatus").value = item.status === "inactive" ? "inactive" : "active"; $("salespersonNotes").value = item.notes || "";
+      $("salespersonDocumentLanguage").value = item.documentLanguage === "es" ? "es" : "en";
+      $("salespersonExternalId").value = item.externalId || ""; $("salespersonTerritory").value = item.territory || "";
       openModal("salespersonModal");
     }
     async function deleteSalesperson(id) {
@@ -328,20 +370,53 @@
       pdf.autoTable({ startY: typeof createModulePdf === "function" ? 56 : 29, head: [["Salesperson", "Contact", "Default rate", "Base", "Clients", "Outstanding", "Status"]], body: state.salespeople.length ? state.salespeople.map(item => [item.name, item.email || item.phone || "-", `${Number(item.commissionPercent || 0).toFixed(2)}%`, COMMISSION_BASE_LABELS[item.commissionBase] || COMMISSION_BASE_LABELS.collected, state.clients.filter(client => client.salespersonId === item.id).length, money(getSalespersonOutstanding(item.id)), item.status === "inactive" ? "Inactive" : "Active"]) : (typeof pdfEmptyRow === "function" ? pdfEmptyRow(7) : [["No records found","","","","","",""]]), headStyles: { fillColor: typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42] }, styles: { fontSize: 8 } });
       if (typeof savePdf === "function") savePdf(pdf, `Salespeople_Commissions_${today()}.pdf`); else pdf.save(`Salespeople_Commissions_${today()}.pdf`);
     }
-    function exportCommissionSettlementPdf(id) {
-      const item = state.commissionSettlements.find(row => row.id === id); if (!item) return showToast("Settlement not found.");
-      const { jsPDF } = window.jspdf; const pdf = typeof createModulePdf === "function" ? createModulePdf("Commission payment statement", "Payment record and acknowledgment") : new jsPDF("p", "mm", "letter");
+    function buildCommissionSettlementPdfLegacy(item) {
+      const { jsPDF } = window.jspdf; const pdf = typeof createModulePdf === "function" ? createModulePdf(pdfText("Commission payment statement", "Liquidación de pago de comisión"), pdfText("Payment record and acknowledgment", "Registro y confirmación del pago")) : new jsPDF("p", "mm", "letter");
+      const methodLabels = { check:"Cheque", ach:"ACH / transferencia bancaria", cash:"Efectivo", zelle:"Zelle", other:"Otro" };
       pdf.setTextColor(35,35,35); pdf.setFontSize(10);
-      pdf.autoTable({ startY: typeof createModulePdf === "function" ? 56 : 38, head: [["Field", "Details"]], body: [["Company", COMPANY.legalName || COMPANY.name],["Salesperson", item.salespersonName || "-"],["Payment date", item.paymentDate || "-"],["Statement period", `${item.periodFrom || "-"} to ${item.periodTo || "-"}`],["Payment method", item.method || "-"],["Reference", item.reference || "-"],["Status", item.status === "void" ? "VOID" : "PAID"]], headStyles:{fillColor:typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42]}, styles:{fontSize:9} });
+      pdf.autoTable({ startY: typeof createModulePdf === "function" ? 56 : 38, head: [[pdfText("Field", "Campo"), pdfText("Details", "Detalles")]], body: [[pdfText("Company", "Empresa"), COMPANY.legalName || COMPANY.name],[pdfText("Salesperson", "Vendedor"), item.salespersonName || "-"],[pdfText("Payment date", "Fecha del pago"), item.paymentDate || "-"],[pdfText("Statement period", "Período liquidado"), `${item.periodFrom || "-"} ${pdfText("to", "a")} ${item.periodTo || "-"}`],[pdfText("Payment method", "Método de pago"), methodLabels[item.method] || item.method || "-"],[pdfText("Reference", "Referencia"), item.reference || "-"],[pdfText("Status", "Estado"), item.status === "void" ? pdfText("VOID", "ANULADA") : pdfText("PAID", "PAGADA")]], headStyles:{fillColor:typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42]}, styles:{fontSize:9} });
       const settlementLines = item.lineItems || [];
-      pdf.autoTable({ startY: pdf.lastAutoTable.finalY + 8, head: [["Job", "Client", "Rate", "Base", "Amount"]], body: settlementLines.length ? settlementLines.map(line => [line.jobTitle || "-", line.clientName || "-", `${Number(line.rate || 0).toFixed(2)}%`, COMMISSION_BASE_LABELS[line.base] || line.base || "-", money(line.amount)]) : (typeof pdfEmptyRow === "function" ? pdfEmptyRow(5) : [["No records found","","","",""]]), headStyles:{fillColor:typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42]}, styles:{fontSize:8} });
-      let y = pdf.lastAutoTable.finalY + 10; pdf.setFont(undefined,"bold"); pdf.setFontSize(12); pdf.text(`TOTAL PAID: ${money(item.total)}`,14,y); y += 10; pdf.setFont(undefined,"normal"); pdf.setFontSize(9); y = pdfWrappedText(pdf, `Notes: ${item.notes || "-"}`,14,y,188) + 14;
-      if (y > 235) { pdf.addPage(); y = 25; } pdf.text("Company representative: __________________________",14,y); pdf.text("Salesperson: __________________________",112,y); y += 10; pdf.text("Signature: ______________________________________",14,y); pdf.text("Signature: ______________________________",112,y); y += 10; pdf.text("Date: __________________________________________",14,y); pdf.text("Date: __________________________________",112,y);
-      pdf.setFontSize(7); pdf.setTextColor(100,100,100); pdf.text("This statement acknowledges the listed commission payment. Keep a signed copy with business records.",14,267);
+      pdf.autoTable({ startY: pdf.lastAutoTable.finalY + 8, head: [[pdfText("Job", "Trabajo"), pdfText("Client", "Cliente"), pdfText("Rate", "Tarifa"), pdfText("Base", "Base"), pdfText("Amount", "Importe")]], body: settlementLines.length ? settlementLines.map(line => [line.jobTitle || "-", line.clientName || "-", `${Number(line.rate || 0).toFixed(2)}%`, commissionBaseLabel(line.base), money(line.amount)]) : (typeof pdfEmptyRow === "function" ? pdfEmptyRow(5) : [["No se encontraron registros","","","",""]]), headStyles:{fillColor:typeof companyPdfColor === "function" ? companyPdfColor() : [15,23,42]}, styles:{fontSize:8} });
+      let y = pdf.lastAutoTable.finalY + 10; pdf.setFont(undefined,"bold"); pdf.setFontSize(12); pdf.text(`${pdfText("TOTAL PAID", "TOTAL PAGADO")}: ${money(item.total)}`,14,y); y += 10; pdf.setFont(undefined,"normal"); pdf.setFontSize(9); y = pdfWrappedText(pdf, `${pdfText("Notes", "Notas")}: ${item.notes || "-"}`,14,y,188) + 14;
+      if (y > 235) { pdf.addPage(); y = 25; } pdf.text(pdfText("Company representative: __________________________", "Representante de la empresa: _____________________"),14,y); pdf.text(pdfText("Salesperson: __________________________", "Vendedor: __________________________"),112,y); y += 10; pdf.text(pdfText("Signature: ______________________________________", "Firma: _________________________________________"),14,y); pdf.text(pdfText("Signature: ______________________________", "Firma: ______________________________"),112,y); y += 10; pdf.text(pdfText("Date: __________________________________________", "Fecha: _________________________________________"),14,y); pdf.text(pdfText("Date: __________________________________", "Fecha: _________________________________"),112,y);
+      return pdf;
+    }
+    async function exportCommissionSettlementPdfLegacy(id) {
+      const item = state.commissionSettlements.find(row => row.id === id); if (!item) return showToast("No se encontró la liquidación.");
+      const pdf = buildCommissionSettlementPdf(item);
       if (typeof savePdf === "function") savePdf(pdf, `Commission_Statement_${pdfSafeFileName(item.salespersonName, "salesperson")}_${item.paymentDate || today()}.pdf`);
       else pdf.save(`Commission_Statement_${(item.salespersonName || "salesperson").replace(/[^a-z0-9]+/gi,"_")}_${item.paymentDate || today()}.pdf`);
-      showToast("Commission statement PDF downloaded.");
+      showToast("PDF de liquidación descargado.");
     }
+    function commissionMoney(value) { return Number(value || 0).toLocaleString("en-US", { style:"currency", currency:"USD" }); }
+    function commissionDisplayDate(value, language="en") { if(!/^\d{4}-\d{2}-\d{2}$/.test(value||""))return value||""; const [year,month,day]=value.split("-"); return language==="es"?`${day}/${month}/${year}`:`${month}/${day}/${year}`; }
+    function commissionDisplayNumber(id="",paymentDate="") { const year=(paymentDate||today()).slice(0,4),suffix=(id.match(/[a-f0-9]{4,}/i)?.[0]||id||"0000").slice(-6).toUpperCase(); return `COM-${year}-${suffix}`; }
+    function commissionInvoiceOrWorkOrder(job={}) { const invoice=state.salesDocuments.find(document=>document.type==="invoice"&&document.status!=="void"&&document.jobId===job.id); return invoice?.number||job.number||job.workOrder||job.workOrderNumber||job.invoiceNumber||`WO-${String(job.id||"").slice(-6).toUpperCase()}`; }
+    function commissionCompactProjectTitle(value="",maxLength=46) { const title=cleanText(value); return title.length<=maxLength?title:`${title.slice(0,maxLength-3).trimEnd()}...`; }
+    function collectCommissionSettlementPayload() {
+      const salespersonId=$("commissionSettlementSalespersonId").value, person=state.salespeople.find(row=>row.id===salespersonId), selected=Array.from(document.querySelectorAll("[data-commission-line]:checked"));
+      if(!person||!selected.length)throw new Error("Selecciona al menos una comisión ganada."); if(selected.length>6)throw new Error("La plantilla permite hasta 6 trabajos por liquidación.");
+      const periodFrom=$("commissionSettlementFrom").value||"",periodTo=$("commissionSettlementTo").value||""; if(periodFrom&&periodTo&&periodFrom>periodTo)throw new Error("La fecha inicial no puede ser posterior a la final.");
+      const lineItems=selected.map(input=>{const job=getJobById(input.dataset.commissionLine),calc=getJobCommissionBreakdown(job),client=getClientById(job.clientId);return{jobId:job.id,jobTitle:job.title||"Job",invoiceWo:commissionInvoiceOrWorkOrder(job),clientId:job.clientId||"",clientName:clientLabel(client),paidDate:job.lastPaymentDate||$("commissionSettlementDate").value||today(),saleAmount:Number(job.sale||0),eligibleBase:Number(calc.projectedBase||0),rate:calc.rate,base:calc.baseType,earnedAtSettlement:Number(calc.earned.toFixed(2)),previouslyPaid:Number(calc.previouslyPaid.toFixed(2)),amount:Number(calc.available.toFixed(2))};});
+      const grossCommission=lineItems.reduce((sum,row)=>sum+row.amount,0),adjustments=[1,2,3].map(index=>({reason:cleanText($(`commissionAdjustment${index}Reason`).value),amount:Number($(`commissionAdjustment${index}Amount`).value||0),effectiveDate:$(`commissionAdjustment${index}Date`).value||""}));
+      const bonuses=Number($("commissionSettlementBonuses").value||0),chargebacks=Math.abs(Number($("commissionSettlementChargebacks").value||0)),otherDeductions=Math.abs(Number($("commissionSettlementDeductions").value||0)),priorBalance=Number($("commissionSettlementPriorBalance").value||0),total=grossCommission+bonuses-chargebacks-otherDeductions+priorBalance+adjustments.reduce((sum,row)=>sum+row.amount,0);
+      return{salespersonId,salespersonName:person.name,salespersonExternalId:person.externalId||"",salespersonEmail:person.email||"",salespersonPhone:person.phone||"",territory:person.territory||"",documentLanguage:person.documentLanguage==="es"?"es":"en",paymentDate:$("commissionSettlementDate").value||today(),periodFrom,periodTo,method:$("commissionSettlementMethod").value||"other",reference:cleanText($("commissionSettlementReference").value),notes:cleanText($("commissionSettlementNotes").value),status:$("commissionSettlementStatus").value==="pending"?"pending":"paid",preparedBy:cleanText($("commissionSettlementPreparedBy").value),approvedBy:cleanText($("commissionSettlementApprovedBy").value),lineItems,adjustments,grossCommission:Number(grossCommission.toFixed(2)),bonuses,chargebacks,otherDeductions,priorBalance,total:Number(total.toFixed(2)),requestId:commissionSettlementRequestId,recordedBy:state.userEmail||""};
+    }
+    function setCommissionPdfField(form,name,value,fontSize=0){try{const field=form.getTextField(name);field.setText(String(value??""));if(fontSize)field.setFontSize(fontSize);}catch(error){console.warn(`PDF field ${name} unavailable`,error);}}
+    function setCommissionPdfMultilineField(form,name,lines){try{const field=form.getTextField(name);field.enableMultiline();field.setFontSize(6);field.setText(lines.filter(Boolean).join("\n"));}catch(error){console.warn(`PDF field ${name} unavailable`,error);}}
+    async function buildCommissionSettlementPdf(item){
+      if(!window.PDFLib)throw new Error("No se pudo cargar el generador PDF."); const language=item.documentLanguage==="es"?"es":"en",response=await fetch(`assets/pdf/commission-payment-statement-${language}.pdf`); if(!response.ok)throw new Error("No se pudo abrir la plantilla PDF.");
+      const document=await PDFLib.PDFDocument.load(await response.arrayBuffer()),form=document.getForm(),methods={check:language==="es"?"Cheque":"Check",ach:language==="es"?"ACH / transferencia":"ACH / bank transfer",cash:language==="es"?"Efectivo":"Cash",zelle:"Zelle",other:language==="es"?"Otro":"Other"};
+      const preparedBy=/@/.test(item.preparedBy||"")?(COMPANY.representativeName||COMPANY.legalName||COMPANY.name):item.preparedBy;
+      const values={settlement_number:item.displayNumber||commissionDisplayNumber(item.id||commissionSettlementDocumentId(item.salespersonId,item.lineItems||[]),item.paymentDate),period_start:commissionDisplayDate(item.periodFrom,language),period_end:commissionDisplayDate(item.periodTo,language),payment_date:commissionDisplayDate(item.paymentDate,language),settlement_status:item.status==="pending"?(language==="es"?"PENDIENTE":"PENDING"):(language==="es"?"PAGADO":"PAID"),salesperson_name:item.salespersonName,salesperson_id:item.salespersonExternalId,email_phone:[item.salespersonEmail,item.salespersonPhone].filter(Boolean).join(" / "),department_territory:item.territory,commission_plan_rule:(item.lineItems||[]).map(row=>`${Number(row.rate||0).toFixed(2)}%`).filter((v,i,a)=>a.indexOf(v)===i).join(", "),payment_method:methods[item.method]||item.method,payment_reference:item.reference,gross_commission:commissionMoney(item.grossCommission),bonuses:commissionMoney(item.bonuses),chargebacks:commissionMoney(item.chargebacks),other_deductions:commissionMoney(item.otherDeductions),prior_balance:commissionMoney(item.priorBalance),net_payment:commissionMoney(item.total),prepared_by:preparedBy||COMPANY.representativeName||COMPANY.legalName||COMPANY.name,approved_by:item.approvedBy,salesperson_signature:"",acknowledgment_date:""}; Object.entries(values).forEach(([name,value])=>setCommissionPdfField(form,name,value));
+      (item.lineItems||[]).slice(0,6).forEach((line,index)=>{const n=index+1,currentJob=getJobById(line.jobId)||{},visibleReference=/^[A-Za-z0-9_-]{14,}$/.test(line.invoiceWo||"")?commissionInvoiceOrWorkOrder(currentJob):(line.invoiceWo||commissionInvoiceOrWorkOrder(currentJob));setCommissionPdfMultilineField(form,`line_${n}_customer_project`,[line.clientName,commissionCompactProjectTitle(line.jobTitle)]);setCommissionPdfField(form,`line_${n}_invoice_wo`,visibleReference,7);setCommissionPdfField(form,`line_${n}_paid_date`,commissionDisplayDate(line.paidDate,language),7);setCommissionPdfField(form,`line_${n}_sale_amount`,commissionMoney(line.saleAmount));setCommissionPdfField(form,`line_${n}_eligible_base`,commissionMoney(line.eligibleBase));setCommissionPdfField(form,`line_${n}_rate`,`${Number(line.rate||0).toFixed(2)}%`);setCommissionPdfField(form,`line_${n}_commission`,commissionMoney(line.amount));});
+      (item.adjustments||[]).slice(0,3).forEach((row,index)=>{const n=index+1;setCommissionPdfField(form,`adjustment_${n}_reason`,row.reason);setCommissionPdfField(form,`adjustment_${n}_amount`,row.amount?commissionMoney(row.amount):"");setCommissionPdfField(form,`adjustment_${n}_effective_date`,row.effectiveDate);}); form.updateFieldAppearances(await document.embedFont(PDFLib.StandardFonts.Helvetica));form.flatten();
+      if(item.notes){const page=document.addPage([612,792]),font=await document.embedFont(PDFLib.StandardFonts.Helvetica),bold=await document.embedFont(PDFLib.StandardFonts.HelveticaBold);page.drawRectangle({x:0,y:720,width:612,height:72,color:PDFLib.rgb(.08,.1,.14)});page.drawRectangle({x:0,y:712,width:612,height:8,color:PDFLib.rgb(.56,.8,.12)});page.drawText(language==="es"?"NOTAS DE LA LIQUIDACION":"SETTLEMENT NOTES",{x:40,y:750,size:18,font:bold,color:PDFLib.rgb(1,1,1)});let line="",y=675;for(const word of String(item.notes).split(/\s+/)){const candidate=`${line} ${word}`.trim();if(font.widthOfTextAtSize(candidate,11)>530){page.drawText(line,{x:40,y,size:11,font,color:PDFLib.rgb(.12,.15,.2)});line=word;y-=18;}else line=candidate;}if(line)page.drawText(line,{x:40,y,size:11,font,color:PDFLib.rgb(.12,.15,.2)});} return document.save();
+    }
+    function bytesToBase64(bytes){let binary="";for(let offset=0;offset<bytes.length;offset+=32768)binary+=String.fromCharCode(...bytes.subarray(offset,offset+32768));return btoa(binary);}
+    async function prepareCommissionSettlementReview(){try{const payload=collectCommissionSettlementPayload();payload.id=commissionSettlementDocumentId(payload.salespersonId,payload.lineItems);const bytes=await buildCommissionSettlementPdf(payload);commissionSettlementReview={payload,bytes};if(commissionSettlementPreviewUrl)URL.revokeObjectURL(commissionSettlementPreviewUrl);commissionSettlementPreviewUrl=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));$("commissionReviewPdf").src=commissionSettlementPreviewUrl;$("commissionReviewTo").value=payload.salespersonEmail||"";$("commissionReviewLanguage").value=payload.documentLanguage;const issuer=COMPANY.legalName||COMPANY.name||"SignShop HQ";$("commissionReviewSubject").value=payload.documentLanguage==="es"?`Liquidación de comisión · ${payload.paymentDate} · ${issuer}`:`Commission payment statement · ${payload.paymentDate} · ${issuer}`;$("commissionReviewMessage").value=payload.documentLanguage==="es"?`Hola ${payload.salespersonName},\n\nAdjuntamos la información de tu pago de comisión por ${commissionMoney(payload.total)}.`:`Hello ${payload.salespersonName},\n\nAttached is your commission payment statement for ${commissionMoney(payload.total)}.`;closeModal("commissionSettlementModal");openModal("commissionSettlementReviewModal");}catch(error){console.error(error);showToast(error.message||"No se pudo preparar la vista previa.");}}
+    async function finalizeCommissionSettlement(sendEmail){if(!commissionSettlementReview)return;const{payload,bytes}=commissionSettlementReview,button=sendEmail?$("commissionSaveSendBtn"):$("commissionSaveOnlyBtn");button.disabled=true;try{const ref=commissionSettlementsRef().doc(payload.id),stored={...payload,emailStatus:sendEmail?"pending":"not_sent",createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};delete stored.id;await firebase.firestore().runTransaction(async transaction=>{if((await transaction.get(ref)).exists)throw new Error("duplicate-commission-settlement");transaction.set(ref,stored);});await postAccountingSource("commission",ref.id);let message=" Pago registrado sin enviar correo.";if(sendEmail){const result=(await cloudFunctions.httpsCallable("sendSalesDocumentEmail")({kind:"commission_settlement",ownerId:state.accountOwnerId||state.uid,settlementId:ref.id,pdfBase64:bytesToBase64(bytes),to:cleanText($("commissionReviewTo").value),subject:cleanText($("commissionReviewSubject").value),message:cleanText($("commissionReviewMessage").value),language:$("commissionReviewLanguage").value})).data||{};message=result.sent?` Correo enviado a ${result.recipient}.`:" El vendedor no tiene un correo válido.";}closeModal("commissionSettlementReviewModal");commissionSettlementReview=null;showToast(`Pago de comisión registrado.${message}`);}catch(error){console.error(error);showToast(error?.message==="duplicate-commission-settlement"?"Esta comisión ya fue liquidada.":"No se pudo completar la liquidación.");}finally{button.disabled=false;}}
+    async function exportCommissionSettlementPdf(id){const item=state.commissionSettlements.find(row=>row.id===id);if(!item)return showToast("No se encontró la liquidación.");try{const bytes=await buildCommissionSettlementPdf(item),link=document.createElement("a");link.href=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));link.download=`Commission_Statement_${(item.salespersonName||"salesperson").replace(/[^a-z0-9]+/gi,"_")}_${item.paymentDate||today()}.pdf`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);showToast("PDF de liquidación descargado.");}catch(error){console.error(error);showToast("No se pudo generar el PDF.");}}
     document.addEventListener("click", event => {
       const edit = event.target.closest("[data-edit-salesperson]"); if (edit) editSalesperson(edit.dataset.editSalesperson);
       const remove = event.target.closest("[data-delete-salesperson]"); if (remove) deleteSalesperson(remove.dataset.deleteSalesperson);
@@ -351,6 +426,12 @@
       const voidButton = event.target.closest("[data-void-commission-settlement]"); if (voidButton) voidCommissionSettlement(voidButton.dataset.voidCommissionSettlement);
     });
     $("salespersonSearch")?.addEventListener("input", renderSalespeople);
+    $("commissionSettlementFrom")?.addEventListener("change", renderCommissionSettlementLines);
+    $("commissionSettlementTo")?.addEventListener("change", renderCommissionSettlementLines);
+    $("commissionReviewBackBtn")?.addEventListener("click",()=>{closeModal("commissionSettlementReviewModal");openModal("commissionSettlementModal");});
+    $("commissionSaveOnlyBtn")?.addEventListener("click",()=>finalizeCommissionSettlement(false));
+    $("commissionSaveSendBtn")?.addEventListener("click",()=>finalizeCommissionSettlement(true));
+    $("commissionReviewLanguage")?.addEventListener("change",async event=>{if(!commissionSettlementReview)return;try{commissionSettlementReview.payload.documentLanguage=event.target.value==="es"?"es":"en";commissionSettlementReview.bytes=await buildCommissionSettlementPdf(commissionSettlementReview.payload);if(commissionSettlementPreviewUrl)URL.revokeObjectURL(commissionSettlementPreviewUrl);commissionSettlementPreviewUrl=URL.createObjectURL(new Blob([commissionSettlementReview.bytes],{type:"application/pdf"}));$("commissionReviewPdf").src=commissionSettlementPreviewUrl;}catch(error){console.error(error);showToast("No se pudo cambiar el idioma del PDF.");}});
     window.addEventListener("crm-language-changed", () => {
       fillJobSalespersonSelect(cleanText($("jobSalespersonId")?.value));
       fillClientSalespersonSelect(cleanText($("clientSalespersonId")?.value));

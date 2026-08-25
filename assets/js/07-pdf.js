@@ -433,20 +433,30 @@
     }
     function exportExpensesPdf() {
       const rows = getFilteredExpenses();
+      const expenseTotal = rows.reduce((sum, expense) => sum + Math.max(Number(expense.amount || 0), 0), 0);
       const pdf = createModulePdf(pdfText('Expenses', 'Gastos'), pdfText('Filtered and recurring expenses', 'Gastos filtrados y recurrentes'));
       pdf.autoTable({
         startY: 56,
-        head: [[pdfText("Description", "Concepto"), pdfText("Category", "Categoría"), pdfText("Amount", "Monto"), pdfText("Date", "Fecha"), pdfText("Photos", "Fotos"), pdfText("Notes", "Notas")]],
+        head: [[pdfText("Description", "Concepto"), pdfText("Category", "Categoría"), pdfText("Amount", "Monto"), pdfText("Date", "Fecha"), pdfText("Payment", "Pago"), pdfText("Job", "Trabajo"), pdfText("Notes", "Notas")]],
         body: rows.length ? rows.map(expense => [
           expense.concept || '-',
           expense.category || '-',
           money(expense.amount),
           expense.date || '-',
-          Array.isArray(expense.photos) ? String(expense.photos.length) : '0',
+          expense.paymentMethod || '-',
+          (() => { const job = getJobById(expense.jobId || ''); return job ? getJobDisplayLabel(job) : '-'; })(),
           expense.notes || '-'
-        ]) : pdfEmptyRow(6),
+        ]) : pdfEmptyRow(7),
         headStyles: { fillColor: [20,22,27] },
-        styles: { fontSize: 9 }
+        styles: { fontSize: 8 }
+      });
+
+      pdf.autoTable({
+        startY: pdf.lastAutoTable.finalY + 6,
+        body: [[pdfText("Filtered expense total", "Total de gastos filtrados"), money(expenseTotal)]],
+        theme: "grid",
+        styles: { fontSize: 10, fontStyle: "bold" },
+        columnStyles: { 1: { halign: "right" } }
       });
 
       pdf.autoTable({
@@ -467,52 +477,60 @@
       savePdf(pdf, `Expenses_${today()}.pdf`);
       showToast('PDF de gastos exportado.');
     }
+    function buildWorkerPaymentReceiptPdf(expense) {
+      const job = getJobById(expense.jobId || "");
+      const client = job ? getClientById(job.clientId) : null;
+      const es = expense.documentLanguage === "es";
+      const tx = (en, spanish) => es ? spanish : en;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "letter");
+      const green = [128, 211, 19], black = [16, 18, 20], line = [214, 221, 229], pale = [246, 248, 250];
+      const section = (title, y) => { pdf.setFillColor(...black); pdf.roundedRect(13, y, 190, 8, 2, 2, "F"); pdf.setTextColor(...green); pdf.setFont(undefined,"bold"); pdf.setFontSize(10); pdf.text(title, 17, y + 5.3); pdf.setTextColor(25,25,25); return y + 8; };
+      pdf.setFillColor(...black); pdf.rect(0,0,216,32,"F"); pdf.setFillColor(...green); pdf.rect(0,32,216,1.5,"F"); addPdfBrandMark(pdf,216);
+      pdf.setTextColor(255,255,255); pdf.setFont(undefined,"bold"); pdf.setFontSize(17); pdf.text(tx("WORKER PAYMENT RECEIPT","RECIBO DE PAGO AL TRABAJADOR"),202,14,{align:"right"});
+      pdf.setTextColor(...green); pdf.setFontSize(9); pdf.text(tx("PAYMENT RECORD","REGISTRO DE PAGO"),202,21,{align:"right"});
+      pdf.setTextColor(255,255,255); pdf.setFontSize(7.5); pdf.text(pdfCompanyName().toUpperCase(),202,27,{align:"right"});
+      const summary = [
+        [tx("RECEIPT NUMBER","NÚMERO DE RECIBO"), expense.receiptNumber || expense.id || "-"],
+        [tx("PAYMENT DATE","FECHA DE PAGO"), expense.date || "-"],
+        [tx("PERIOD START","INICIO DEL PERÍODO"), expense.periodFrom || "-"],
+        [tx("PERIOD END","FIN DEL PERÍODO"), expense.periodTo || "-"],
+        [tx("PAYMENT METHOD","MÉTODO DE PAGO"), expense.paymentMethod || "-"]
+      ];
+      pdf.autoTable({startY:40,head:[summary.map(row=>row[0])],body:[summary.map(row=>row[1])],theme:"grid",headStyles:{fillColor:pale,textColor:[86,98,115],fontSize:6.5},bodyStyles:{fontSize:8,minCellHeight:8},styles:{lineColor:line,lineWidth:.25,cellPadding:2}});
+      let y = section(tx("WORKER & PAYMENT INFORMATION","INFORMACIÓN DEL TRABAJADOR Y DEL PAGO"), pdf.lastAutoTable.finalY + 6);
+      pdf.autoTable({
+        startY:y,
+        head: [[tx("WORKER / PAYEE FULL NAME","NOMBRE COMPLETO"),tx("WORKER ID (NO SSN)","ID DEL TRABAJADOR (NO SSN)"),tx("CHECK / TRANSACTION REFERENCE","REFERENCIA DE CHEQUE / TRANSACCIÓN")]],
+        body: [
+          [expense.workerName || "-",expense.workerId || "-",expense.paymentReference || "-"],
+          [`${tx("Address","Dirección")}: ${expense.workerAddress || "-"}`,`${tx("Email / phone","Correo / teléfono")}: ${[expense.workerEmail,expense.workerPhone].filter(Boolean).join(" · ") || "-"}`,`${tx("Worker type","Tipo")}: ${expense.workerType === "employee" ? tx("Employee","Empleado") : tx("Contractor","Contratista")}`]
+        ],
+        theme:"grid",headStyles:{fillColor:pale,textColor:[86,98,115],fontSize:6.5},bodyStyles:{fontSize:7.5,minCellHeight:9},styles:{lineColor:line,lineWidth:.25,cellPadding:2}
+      });
+      y = section(tx("COMPENSATION DETAIL","DETALLE DE COMPENSACIÓN"), pdf.lastAutoTable.finalY + 6);
+      const paymentItems = Array.isArray(expense.workerPaymentItems) ? expense.workerPaymentItems : [];
+      const detailRows = paymentItems.map(item=>[`${item.description || "-"}${job ? ` · ${getJobDisplayLabel(job)}` : ""}${client ? ` · ${client.company || client.name || ""}` : ""}`,Number(item.quantity||0).toFixed(2),money(item.rate),money(item.amount)]);
+      while(detailRows.length<4) detailRows.push(["","","",""]);
+      pdf.autoTable({startY:y,head:[[tx("DESCRIPTION / PROJECT","DESCRIPCIÓN / PROYECTO"),tx("HOURS / QTY","HORAS / CANT."),tx("RATE","TARIFA"),tx("AMOUNT","MONTO")]],body:detailRows.slice(0,4),foot:[["","",tx("GROSS PAYMENT","PAGO BRUTO"),money(expense.grossPayment ?? paymentItems.reduce((s,i)=>s+Number(i.amount||0),0))]],theme:"grid",headStyles:{fillColor:pale,textColor:[25,25,25],fontSize:6.5},footStyles:{fillColor:[242,248,235],textColor:[25,25,25],fontStyle:"bold"},styles:{lineColor:line,lineWidth:.25,fontSize:7,cellPadding:1.8,minCellHeight:7},columnStyles:{0:{cellWidth:90},1:{cellWidth:29},2:{cellWidth:29},3:{cellWidth:38}}});
+      y = section(tx("DEDUCTIONS & NET PAYMENT","DEDUCCIONES Y PAGO NETO"), pdf.lastAutoTable.finalY + 6);
+      const deductions = [[tx("FEDERAL WITHHOLDING","RETENCIÓN FEDERAL"),expense.federalWithholding],[tx("SOCIAL SECURITY","SEGURO SOCIAL"),expense.socialSecurity],["MEDICARE",expense.medicare],[tx("OTHER AUTHORIZED DEDUCTION","OTRA DEDUCCIÓN AUTORIZADA"),expense.otherDeduction],[tx("TOTAL DEDUCTIONS","TOTAL DEDUCCIONES"),expense.totalDeductions]];
+      pdf.autoTable({startY:y,head:[deductions.map(row=>row[0])],body:[deductions.map(row=>money(row[1]||0))],foot:[[expense.backupWithholding?"[X]":"[ ]",tx("Contractor backup withholding applied, if required","Retención de respaldo aplicada al contratista, si correspondía"),"",tx("NET PAYMENT RECEIVED","PAGO NETO RECIBIDO"),money(expense.amount)]],theme:"grid",headStyles:{fillColor:pale,textColor:[86,98,115],fontSize:5.8},bodyStyles:{fontSize:7},footStyles:{fillColor:[239,248,220],textColor:[25,25,25],fontStyle:"bold",fontSize:6.5},styles:{lineColor:line,lineWidth:.25,cellPadding:1.8}});
+      y = section(tx("PAYMENT ACKNOWLEDGMENT","CONFIRMACIÓN DEL PAGO"), pdf.lastAutoTable.finalY + 6);
+      pdf.setFont(undefined,"normal"); pdf.setFontSize(6.6); pdf.setTextColor(70,78,90);
+      const acknowledgment = tx("The worker acknowledges receipt of the net payment shown above. Signature confirms receipt only; it does not waive wage rights, change worker classification, or replace required payroll, W-2, W-9, or 1099-NEC records.","El trabajador reconoce haber recibido el pago neto indicado. La firma confirma únicamente la recepción; no renuncia a derechos salariales, no cambia la clasificación laboral ni sustituye los registros requeridos de nómina, W-2, W-9 o 1099-NEC.");
+      pdf.text(pdf.splitTextToSize(acknowledgment,182),17,y+7);
+      pdf.autoTable({startY:y+16,head:[[tx("PAYMENT NOTES / WORK PERFORMED","NOTAS DEL PAGO / TRABAJO REALIZADO")]],body:[[expense.notes || expense.workerRole || "-"]],theme:"grid",headStyles:{fillColor:pale,textColor:[86,98,115],fontSize:6.5},bodyStyles:{fontSize:7,minCellHeight:10},styles:{lineColor:line,lineWidth:.25,cellPadding:2}});
+      y = pdf.lastAutoTable.finalY + 7; pdf.setFont(undefined,"bold"); pdf.setFontSize(6); pdf.setTextColor(86,98,115);
+      pdf.text(tx("WORKER SIGNATURE / TYPED NAME","FIRMA / NOMBRE DEL TRABAJADOR"),14,y); pdf.text(tx("DATE","FECHA"),93,y); pdf.text(tx("COMPANY REPRESENTATIVE","REPRESENTANTE DE LA EMPRESA"),119,y); pdf.text(tx("DATE","FECHA"),184,y);
+      pdf.setDrawColor(...line); pdf.line(14,y+9,88,y+9); pdf.line(93,y+9,113,y+9); pdf.line(119,y+9,179,y+9); pdf.line(184,y+9,203,y+9); pdf.setFont(undefined,"normal"); pdf.text(COMPANY.representativeName || "",119,y+7);
+      pdf.setDrawColor(...green); pdf.line(13,270,203,270); pdf.setFontSize(5.8); pdf.setTextColor(95,105,118); pdf.text(`${pdfCompanyName()} | ${COMPANY.website || ""} | ${tx("Keep a copy with payroll or contractor payment records","Conserve una copia con los registros de nómina o contratistas")}`,13,274); pdf.text(`${tx("Worker Payment Receipt","Recibo de pago al trabajador")} | ${tx("Page 1 of 1","Página 1 de 1")}`,203,274,{align:"right"}); pdf.setFontSize(5); pdf.text(tx("Record of payment only. This document is not tax, payroll, or legal advice and is not a substitute for required tax forms.","Solo constancia de pago. Este documento no constituye asesoría fiscal, laboral ni legal y no sustituye formularios requeridos."),13,277);
+      return pdf;
+    }
     function exportWorkerPaymentReceiptPdf(expenseId) {
       const expense = state.expenses.find(item => item.id === expenseId && item.recordType === "worker_payment");
       if (!expense) return showToast(pdfText("Worker payment not found.", "No se encontró el pago al trabajador."));
-      const job = getJobById(expense.jobId || "");
-      const client = job ? getClientById(job.clientId) : null;
-      const pdf = createModulePdf(pdfText("WORKER PAYMENT RECEIPT", "COMPROBANTE DE PAGO AL TRABAJADOR"), pdfText("Payment record and acknowledgment", "Registro y confirmación del pago"));
-      pdf.autoTable({
-        startY: 56,
-        head: [[pdfText("Field", "Campo"), pdfText("Details", "Detalles")]],
-        body: [
-          [pdfText("Worker", "Trabajador"), expense.workerName || "-"],
-          [pdfText("Work performed", "Labor realizada"), expense.workerRole || expense.concept || "-"],
-          [pdfText("Related job", "Trabajo relacionado"), job ? getJobDisplayLabel(job) : "-"],
-          [pdfText("Customer", "Cliente"), client ? (client.company || client.name || "-") : "-"],
-          [pdfText("Payment date", "Fecha del pago"), expense.date || "-"],
-          [pdfText("Work period", "Período trabajado"), `${expense.periodFrom || "-"} ${pdfText("to", "a")} ${expense.periodTo || "-"}`],
-          [pdfText("Payment method", "Método de pago"), expense.paymentMethod || "-"],
-          [pdfText("Amount paid", "Monto pagado"), money(expense.amount)],
-          [pdfText("Notes", "Notas"), expense.notes || "-"]
-        ],
-        headStyles:{fillColor:companyPdfColor()}, styles:{fontSize:9}
-      });
-      const paymentItems = Array.isArray(expense.workerPaymentItems) ? expense.workerPaymentItems : [];
-      if (paymentItems.length) {
-        const unitLabels = { job: pdfText("Job", "Trabajo"), hour: pdfText("Hours", "Horas"), day: pdfText("Days", "Días"), unit: pdfText("Units", "Unidades"), other: pdfText("Other", "Otro") };
-        pdf.autoTable({
-          startY: pdf.lastAutoTable.finalY + 8,
-          head: [[pdfText("Work description", "Descripción de la labor"), pdfText("Unit", "Unidad"), pdfText("Quantity", "Cantidad"), pdfText("Rate", "Tarifa"), pdfText("Subtotal", "Subtotal")]],
-          body: paymentItems.map(item => [item.description || "-", unitLabels[item.unit] || item.unit || "-", Number(item.quantity || 0).toFixed(2), money(item.rate), money(item.amount)]),
-          foot: [[pdfText("TOTAL PAID", "TOTAL PAGADO"), "", "", "", money(expense.amount)]],
-          headStyles:{fillColor:companyPdfColor()}, footStyles:{fillColor:companyPdfColor()}, styles:{fontSize:8}
-        });
-      }
-      let y = pdf.lastAutoTable.finalY + 14;
-      pdf.setFontSize(9);
-      pdf.text(pdfText("The worker acknowledges receipt of the payment described above.", "El trabajador confirma haber recibido el pago descrito anteriormente."), 14, y);
-      y += 18;
-      pdf.text(`${pdfText("Company representative", "Representante de la empresa")}: ______________________________`, 14, y);
-      pdf.text(`${pdfText("Worker", "Trabajador")}: ______________________________`, 112, y);
-      y += 13;
-      pdf.text(`${pdfText("Signature", "Firma")}: ______________________________`, 14, y);
-      pdf.text(`${pdfText("Signature", "Firma")}: ______________________________`, 112, y);
-      y += 13;
-      pdf.text(`${pdfText("Date", "Fecha")}: ______________________________`, 14, y);
-      pdf.text(`${pdfText("Date", "Fecha")}: ______________________________`, 112, y);
-      savePdf(pdf, `Worker_Payment_${expense.workerName || expense.date || today()}.pdf`, "internal");
+      buildWorkerPaymentReceiptPdf(expense).save(`Worker_Payment_${expense.workerName || expense.date || today()}.pdf`);
       showToast(pdfText("Worker payment receipt exported.", "Comprobante de pago exportado."));
     }
     function exportJobFinancialSummaryPdf(jobId) {

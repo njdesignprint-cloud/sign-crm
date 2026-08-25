@@ -82,5 +82,5 @@ test("email review keeps controls readable and company logos bounded", () => {
   assert.match(styles, /#salesDocumentEmailModal \.check-item\{background:var\(--card\)/);
   assert.match(styles, /\.email-preview-card>img\{[^}]*max-width:180px;[^}]*max-height:72px/);
   assert.match(styles, /\.email-review-layout\{display:grid;grid-template-columns:/);
-  assert.match(page, /styles\.css\?v=20260823-official-logo-1/);
+  assert.match(page, /styles\.css\?v=20260824-payment-ui-1/);
 });

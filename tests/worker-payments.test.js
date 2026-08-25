@@ -26,15 +26,18 @@ test("worker payments reduce available job deposit once without changing custome
   assert.doesNotMatch(dashboard, /monthProfitBase - monthExpenses/);
 });
 
-test("worker payment receipts use the active company PDF and include signatures", () => {
+test("worker payment receipts follow the supplied detailed template and support reviewed email", () => {
   assert.match(pdf, /function exportWorkerPaymentReceiptPdf/);
-  assert.match(pdf, /createModulePdf/);
+  assert.match(pdf, /function buildWorkerPaymentReceiptPdf/);
   assert.match(pdf, /The worker acknowledges receipt/);
-  assert.match(pdf, /Company representative/);
-  assert.match(pdf, /Signature/);
+  assert.match(pdf, /COMPANY REPRESENTATIVE/);
+  assert.match(pdf, /WORKER SIGNATURE/);
   assert.match(html, /id="workerPaymentLines"/);
+  assert.match(html, /id="workerPaymentReviewPdf"/);
   assert.match(expenses, /workerPaymentItems: getWorkerPaymentLines\(\)/);
+  assert.match(expenses, /kind:"worker_payment"/);
+  assert.match(expenses, /máximo de cuatro conceptos/);
   assert.match(expenses, /quantity \* item\.rate/);
-  assert.match(pdf, /Work description/);
-  assert.match(pdf, /TOTAL PAID/);
+  assert.match(pdf, /DESCRIPTION \/ PROJECT/);
+  assert.match(pdf, /NET PAYMENT RECEIVED/);
 });
